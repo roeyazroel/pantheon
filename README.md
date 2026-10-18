@@ -20,12 +20,23 @@ when they get crowded. You never place houses. Near the camera, a few hundred re
 citizens walk between their homes, the fields, the building site and the shrine. A new house
 goes up as housing grows and fields spread around the village.
 
+**Milestone 3 (First God)** makes you a god. You are Ilyra, a Minor Spirit followed by most of
+one village on an island of eight. Your followers worship at their shrines, and their worship
+gives you Divine Power. Spend it on miracles: Food, Heal, Bless Crops, Lightning and, once you
+are a Lesser God, Mass Healing. You can only work miracles where your influence reaches, and
+your influence spreads with your followers. People who see a miracle change their minds about
+you. Help them when they need it and they love you. Strike them and they fear you; fear converts
+quickly but does not last. Neglect your followers in a famine and they doubt you and leave.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
   (pinned by [ADR-001](docs/ADR/ADR-001-godot-dotnet-pinned-version.md)).
 - [.NET SDK 8.0](https://dotnet.microsoft.com/download/dotnet/8.0) or newer.
-- A GPU with Vulkan support (the project uses the Forward+ renderer).
+- A GPU with Vulkan support, or Metal on macOS (the project uses the Forward+ renderer).
+
+On macOS with Homebrew: `brew install --cask dotnet-sdk@8 godot-mono` installs both; the Godot
+executable is then `godot-mono`.
 
 The Terrain3D GDExtension is vendored in `game/addons/terrain_3d`; nothing else needs to be
 installed.
@@ -61,6 +72,10 @@ covers:
   and settlement steps, and the famine and settler hotkeys;
 - the representative citizens: tier selection, roles, homes, routines, smooth reroutes, and
   that showing them never changes the world;
+- belief and miracles: drift, conversion, love against fear, worship and Divine Power, ranks,
+  influence, every check on a cast (a god cannot cast without enough power), every miracle's
+  effects and what witnesses make of them;
+- the HUD model, alerts, map overlays and the migration of Milestone 2 saves;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -76,16 +91,21 @@ covers:
 | Grab and drag the ground | Hold the right mouse button and drag |
 | Zoom (towards the cursor) | Mouse wheel, `=` / `-`, keypad `+` / `-` |
 | Rotate | Q / E, or hold the middle mouse button and drag |
-| Focus the settlement | F or Home |
+| Select a miracle (again to deselect) | 1–9, or click it in the miracle bar |
+| Cast the selected miracle at the cursor | Left mouse button |
+| Deselect the miracle | Esc |
+| Next map overlay (influence, faith, food), then off | O |
+| Look at the next settlement | F or Home |
 | Toggle region boundaries | B |
 | Toggle the debug overlay | F1 |
 | Next region debug map layer, then off | F3 |
 | New world from a random seed | F2 |
 | Quicksave / quickload | F5 / F9 |
 | Pause / resume the simulation | Space |
-| Simulation speed ×1 / ×4 / ×16 | 1 / 2 / 3 |
+| Simulation speed slower / faster (×1, ×4, ×16) | `[` / `]` |
 | Pause and step the simulation by one tick | `.` |
 | Pause and run to the next settlement step | `,` |
+| Grant your god 500 Divine Power (debug) | F4 |
 | Spoil every settlement's food stores (debug) | F6 |
 | Settlers arrive: every settlement grows by half (debug) | F7 |
 
@@ -94,25 +114,27 @@ The camera has three zoom bands, by distance from the point it looks at: **Close
 fixed 10 ticks per second, independent of the frame rate. Choosing a speed also resumes a paused
 simulation.
 
-## The living settlement
+## The living settlements
 
-The settlement is simulated as a whole (Tier 1, statistical): population, food, housing,
+Each settlement is simulated as a whole (Tier 1, statistical): population, food, housing,
 health and the house being built. It steps once per simulated second, every tenth tick, so ×4
 and ×16 speed it up. Each step:
 
 - Most inhabitants work. They farm the land regions around the settlement, with diminishing
   returns, so each site has its own limit. When the settlement is crowded and has food in
-  store, some of them build the next house instead, one house at a time.
+  store, some of them build the next house instead, one house at a time. Followers of a god
+  spend part of their time worshipping instead of farming.
 - Everyone eats. Surplus food is stored up to what the houses can hold, and the rest spoils.
 - When food runs short, health falls with the share of people left hungry, and recovers once
   everyone is fed again.
 - Children are born while there is free housing, a food surplus and stocked stores; fewer when
   health is low. People die at a low baseline rate, faster when health is low.
 
-Seed 1234 starts with 40 people in 12 houses and levels off at about 540 people in 129 houses
-after about 25 simulated minutes (about 90 seconds at ×16). Once it has levelled off, press
-F7 and then F6 to start a famine. Health falls and deaths rise until the land feeds everyone
-again. Then health recovers and the stores refill.
+The island has eight settlements, founded on the best land at least five regions (320 m) apart
+with 26 to 54 people each. With seed 1234 your home village, Duskwater, grows from 30 people to
+about 390 in 15 simulated minutes (about a minute at ×16). Press F7 and then F6 to start a
+famine. Food runs out, your followers' doubt rises, and unless you help them some turn away;
+and if the land cannot feed the newcomers, health falls and deaths rise until it can.
 
 Near the camera (within 450 m of a settlement), the settlement switches to Tier 2 and shows
 representative citizens: one figure per inhabitant, up to 300, each standing for several
@@ -124,10 +146,44 @@ fields (Tier 1); the simulation is the same in both tiers. Balance values are in
 `game/Data/settlement_rules.json` and presentation values (layout, colours, tier distances,
 routines) in `game/Data/settlement_view.json`.
 
+## Being a god
+
+The bar at the top shows your god and rank, your Divine Power with its income per second, your
+followers and the next rank. The miracle bar at the bottom shows each miracle's key and cost (or
+its cooldown); hover over a button to read what it does.
+
+- **Followers and power.** In every settlement, a share of the people follow you. Followers
+  spend part of their working time at the shrine instead of in the fields, and their worship
+  raises Divine Power: more followers, stronger faith, and love or fear all raise it.
+- **Influence.** Your influence spreads from the settlements that follow you, further the more
+  followers they have; press O to see it. A miracle needs influence at the target and costs more
+  where your influence is weak.
+- **Casting.** Select a miracle and move the cursor: a ring shows its radius, green where you can
+  cast it and red where you cannot, and the hint names the settlements it would reach, its cost,
+  or what stands in the way. Click to cast.
+- **What people think.** Faith (they believe you exist), Love, Fear and Doubt drift every
+  second. Comfortable followers grow fond of you. Hunger and illness breed doubt and wear down
+  love, and fear fades in safety. People who follow no god join you through faith, love and fear,
+  and doubt drives them away; fear works fast, love holds. Miracles change the minds of everyone
+  who sees them, and help that was needed earns more love. Strangers who see a miracle start to
+  believe.
+- **Ranks.** At 100 followers you become a Lesser God, then a God at 400, a Greater God at 1,200,
+  a High God at 3,000 and Ascendant at 8,000. You never lose a rank. Higher ranks unlock
+  miracles.
+- **Alerts** on the right tell you when a settlement that follows you starves, when a settlement
+  comes to follow you or turns away, and when you reach a rank. Click one to look there.
+
+A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
+followers grow hungry. Try Lightning to see how fear behaves.
+
 ## Debug tools
 
-- **F1** shows the debug panel: frame rate, tick, seed, terrain renderer, camera band, the
-  region under the cursor with its statistics, and for each settlement:
+- **F1** shows the debug panel (hidden at the start): frame rate, tick, seed, terrain renderer,
+  camera band, one line per god (power and income, rank, followers, the next rank), the region
+  under the cursor with its statistics and every god's influence there, one line per settlement,
+  and, for the settlement nearest the cursor:
+  - its belief: the share that follows no god, its hardship and comfort, and for each god the
+    followers, Faith, Love, Fear, Doubt, worshippers and the power they raise;
   - population / housing, houses and health;
   - food stored / storage, the net change per second, production and consumption;
   - the jobs (farming, building, not working) and the farmland;
@@ -141,7 +197,10 @@ routines) in `game/Data/settlement_view.json`.
   like the camera's starting view. Each press shows the next layer: biome, elevation,
   temperature, moisture, fertility, vegetation, then off. Numeric layers run from dark (the
   lowest value) to bright (the highest), and the legend gives the range. The region under the
-  cursor is white and settlement regions are red. The map stays up when F1 hides the panel.
+  cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
+  vegetation come blessing and your god's influence, both on a fixed 0 to 1 scale.
+- **O** cycles the map overlays: influence, faith and food.
+- **F4** grants your god 500 Divine Power.
 - **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
   tick changed. Space resumes.
 - **`,`** pauses and runs the ticks up to and including the next settlement step, so the panel
@@ -167,6 +226,12 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 25–2600). |
 | `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). |
 | `--screenshot=<file.png>` | Together with `--quit-after-frames`, save a screenshot just before quitting (not in headless mode). |
+| `--divine-power=<n>` | Your god starts with `n` Divine Power. |
+| `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
+| `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
+| `--overlay=influence\|faith\|food` | Start with a map overlay shown. |
+| `--focus=<n>` | Start looking at settlement `n` (1 is your home); `--cast` targets it. |
+| `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -179,24 +244,28 @@ F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a 
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 2`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 3`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
-(version 1) still load: each settlement starts healthy with no house under construction.
+(version 1) still load: each settlement starts healthy with no house under construction. Saves
+from Milestones 1 and 2 (versions 1 and 2) get the Milestone 3 god, Ilyra, followed in their one
+settlement.
 
 ## Repository layout
 
 ```text
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
-  Data/               worldgen.json, settlement_rules.json, settlement_view.json, biome_palette.json
+  Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
+                      settlement_view.json, biome_palette.json, divine_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
-  Pantheon.Domain/        World, region and settlement state and content contracts
-  Pantheon.Simulation/    Seeded RNG, noise, terrain and world generation, the settlement model, tick systems
+  Pantheon.Domain/        World, region, settlement, god and belief state, events, and content contracts
+  Pantheon.Simulation/    Seeded RNG, noise, terrain and world generation, the settlement and belief models,
+                          influence, miracles, tick systems
   Pantheon.Persistence/   Versioned JSON saves with migrations, and content parsing
-  Pantheon.Game/          Engine-agnostic session, scheduler, camera model, readouts, settlement
-                          layout and representative citizens
+  Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
+                          HUD model, alerts, overlays, settlement layout and representative citizens
   Pantheon.Networking/    Reserved for host-authoritative ENet networking (ADR-003)
   Pantheon.Tests/         xUnit tests
 docs/                 The owner's specification (PANTHEON_SPEC.md, the source of truth), the progress
@@ -209,8 +278,9 @@ Start with the specification, [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), an
 summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in
-[.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) and
-[.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md).
+[.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md),
+[.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md) and
+[.docs/milestone-3-first-god.md](.docs/milestone-3-first-god.md).
 
 ## Contributing
 

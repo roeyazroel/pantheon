@@ -18,7 +18,7 @@ rule is followed by the conventions that meet it in this repository.
 
 - The milestones, with their deliverables and playable outcomes, are sections 116–130 of the
   specification. Cite milestones by those numbers.
-- Each milestone has a plan in `.docs/`, for example `.docs/milestone-1-foundation.md`, with its
+- Each milestone has a plan in `.docs/`, for example `.docs/milestone-3-first-god.md`, with its
   architecture, diagrams, code plan, tasks and test plan. The plan is the contract for the
   milestone. Update its tasks and results in the same change as the code.
 - Work in small steps that each build, pass the tests and still launch into an explorable world.
@@ -112,12 +112,13 @@ rule is followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
-- Current tools: the F1 debug panel (with the settlement and tier readouts), the B region grid,
-  the F3 region debug map, the `.` single-tick step, the `,` settlement step, F6 (spoil the
-  food stores) and F7 (settlers arrive), the launch options `--seed`, `--load`, `--terrain`,
-  `--advance-ticks` and `--camera-distance`, and scripted smoke runs with
-  `--quit-after-frames` and `--screenshot` that end with a one-line summary per settlement.
-  The README lists them.
+- Current tools: the F1 debug panel (gods, influence, the selected settlement's economy, tier
+  and belief), the B region grid, the F3 region debug map (including blessing and influence),
+  the O map overlays (influence, faith, food), the `.` single-tick step, the `,` settlement step,
+  F4 (+500 Divine Power), F6 (spoil the food stores) and F7 (settlers arrive), the launch options
+  `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
+  `--cast`, `--select`, `--overlay`, `--focus` and `--debug-panel`, and scripted smoke runs with
+  `--quit-after-frames` and `--screenshot`. The README lists them.
 
 ## Where things go
 

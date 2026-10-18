@@ -19,6 +19,12 @@ public sealed record SettlementRules
     /// <summary>Farmers a land region can usefully employ; past this, extra farmers add less and less food.</summary>
     public required float FarmersPerRegion { get; init; }
 
+    /// <summary>Extra yield share of fully blessed farmland: production scales by <c>1 + bonus × mean blessing</c>.</summary>
+    public required float BlessingYieldBonus { get; init; }
+
+    /// <summary>Share of the workers who worship instead of farming, in a settlement whose people all follow a god with full Faith.</summary>
+    public required float WorshipWorkforceShare { get; init; }
+
     /// <summary>Food per farmer per step on land of fertility 1 while farmland is plentiful.</summary>
     public required float FoodPerFarmerPerStep { get; init; }
 

@@ -1,0 +1,84 @@
+{
+  // Miracles, in the order of the miracle bar (keys 1-9). PowerCost is the cost at full influence;
+  // CooldownTicks are simulation ticks (10 per second); Radius is in metres; InfluenceRequirement is
+  // the influence (0..1) the god needs at the target. Witness is the change in belief of the people
+  // the miracle reaches; people further away (divine_rules.json WitnessRadius) feel less of it.
+  // Gratitude scales the Love by how much the people needed the miracle.
+  "Miracles": [
+    {
+      "Id": "food",
+      "Name": "Food",
+      "Description": "Fills the granaries of the settlement beneath it.",
+      "Domain": "Prosperity",
+      "Scale": "Minor",
+      "PowerCost": 40.0,
+      "CooldownTicks": 100,
+      "Radius": 40.0,
+      "InfluenceRequirement": 0.1,
+      "MinimumRank": "MinorSpirit",
+      "Effects": [ { "Kind": "AddFood", "Amount": 150.0 } ],
+      "Witness": { "Faith": 0.18, "Love": 0.2, "Fear": 0.0, "Doubt": -0.15 },
+      "Gratitude": "Food"
+    },
+    {
+      "Id": "heal",
+      "Name": "Heal",
+      "Description": "Restores the health of the settlement beneath it.",
+      "Domain": "Life",
+      "Scale": "Minor",
+      "PowerCost": 50.0,
+      "CooldownTicks": 150,
+      "Radius": 40.0,
+      "InfluenceRequirement": 0.1,
+      "MinimumRank": "MinorSpirit",
+      "Effects": [ { "Kind": "Heal", "Amount": 0.3 } ],
+      "Witness": { "Faith": 0.18, "Love": 0.2, "Fear": 0.0, "Doubt": -0.15 },
+      "Gratitude": "Health"
+    },
+    {
+      "Id": "bless_crops",
+      "Name": "Bless Crops",
+      "Description": "Blesses the farmland around the target; blessed land yields more for a while.",
+      "Domain": "Nature",
+      "Scale": "Minor",
+      "PowerCost": 90.0,
+      "CooldownTicks": 300,
+      "Radius": 150.0,
+      "InfluenceRequirement": 0.2,
+      "MinimumRank": "MinorSpirit",
+      "Effects": [ { "Kind": "Bless", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.12, "Love": 0.12, "Fear": 0.0, "Doubt": -0.1 },
+      "Gratitude": "Food"
+    },
+    {
+      "Id": "lightning",
+      "Name": "Lightning",
+      "Description": "Strikes the target. People who see it fear you; people it strikes die.",
+      "Domain": "Storm",
+      "Scale": "Minor",
+      "PowerCost": 60.0,
+      "CooldownTicks": 100,
+      "Radius": 25.0,
+      "InfluenceRequirement": 0.1,
+      "MinimumRank": "MinorSpirit",
+      "Effects": [ { "Kind": "Smite", "Amount": 3.0 } ],
+      "Witness": { "Faith": 0.2, "Love": -0.12, "Fear": 0.35, "Doubt": -0.2 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "mass_healing",
+      "Name": "Mass Healing",
+      "Description": "Restores the health of every settlement in a wide circle.",
+      "Domain": "Life",
+      "Scale": "Regional",
+      "PowerCost": 300.0,
+      "CooldownTicks": 600,
+      "Radius": 300.0,
+      "InfluenceRequirement": 0.3,
+      "MinimumRank": "LesserGod",
+      "Effects": [ { "Kind": "Heal", "Amount": 0.5 } ],
+      "Witness": { "Faith": 0.15, "Love": 0.15, "Fear": 0.0, "Doubt": -0.15 },
+      "Gratitude": "Health"
+    }
+  ]
+}

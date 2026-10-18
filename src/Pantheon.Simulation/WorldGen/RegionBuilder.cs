@@ -99,6 +99,7 @@ public static class RegionBuilder
             Moisture = meanMoisture,
             Fertility = ComputeFertility(rule, meanMoisture, meanTemperature, landFraction),
             Vegetation = ComputeVegetation(rule, meanMoisture, landFraction),
+            Blessing = 0f,
         };
     }
 

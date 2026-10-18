@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using Pantheon.Domain.Belief;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
@@ -18,6 +19,15 @@ public sealed record DebugSnapshot
 
     /// <summary>Settlement rules, for the settlement readouts and the step cadence.</summary>
     public required SettlementRules SettlementRules { get; init; }
+
+    /// <summary>Divine rules, for the god and belief readouts.</summary>
+    public required DivineRules DivineRules { get; init; }
+
+    /// <summary>The god the local player controls, if any.</summary>
+    public int? LocalGodId { get; init; }
+
+    /// <summary>Settlement shown in detail; the others get one line each. <c>null</c> shows the first.</summary>
+    public int? SelectedSettlementId { get; init; }
 
     /// <summary>Whether the simulation clock is paused.</summary>
     public required bool IsPaused { get; init; }

@@ -48,6 +48,9 @@ internal static class SaveMigrations
             case 1:
                 UpgradeFrom1(root);
                 break;
+            case 2:
+                UpgradeFrom2(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
@@ -73,6 +76,83 @@ internal static class SaveMigrations
                 AddMember(settlement, "ConstructionProgress", 0f, fromVersion: 1);
             }
         }
+    }
+
+    /// <summary>
+    /// Version 2 to 3 (Milestone 3): the world gains gods, settlements beliefs and regions a
+    /// blessing, and the founding settings describe one settlement. Version 2 had no gods, so the
+    /// world gets the Milestone 3 player god, Ilyra, with 100 Divine Power, followed in the first
+    /// settlement as a new world's home settlement is; the other settlements know no god yet.
+    /// </summary>
+    private static void UpgradeFrom2(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        AddNode(world, "Gods", new JsonArray(new JsonObject
+        {
+            ["Id"] = 1,
+            ["Name"] = "Ilyra",
+            ["Controller"] = "Human",
+            ["DivinePower"] = 100f,
+            ["Rank"] = "MinorSpirit",
+            ["Cooldowns"] = new JsonArray(),
+        }), fromVersion: 2);
+
+        if (world["Settlements"] is JsonArray settlements)
+        {
+            var first = true;
+            foreach (var node in settlements)
+            {
+                if (node is JsonObject settlement)
+                {
+                    AddNode(settlement, "Beliefs", first ? new JsonArray(HomeBelief()) : new JsonArray(), fromVersion: 2);
+                    first = false;
+                }
+            }
+        }
+
+        if (world["Regions"] is JsonObject regions && regions["Cells"] is JsonArray cells)
+        {
+            foreach (var node in cells)
+            {
+                if (node is JsonObject cell)
+                {
+                    AddMember(cell, "Blessing", 0f, fromVersion: 2);
+                }
+            }
+        }
+
+        if (world["Generation"] is JsonObject generation && generation["StartingSettlement"] is JsonObject founding)
+        {
+            AddNode(founding, "Count", 1, fromVersion: 2);
+            AddNode(founding, "MinimumSpacing", 5, fromVersion: 2);
+            AddMember(founding, "PopulationVariation", 0f, fromVersion: 2);
+        }
+    }
+
+    /// <summary>The Milestone 3 home belief of the player god, given to the first settlement of a version 2 save.</summary>
+    private static JsonObject HomeBelief() => new()
+    {
+        ["GodId"] = 1,
+        ["Adherence"] = 0.6f,
+        ["Faith"] = 0.5f,
+        ["Love"] = 0.3f,
+        ["Fear"] = 0.1f,
+        ["Doubt"] = 0.15f,
+    };
+
+    /// <summary>Adds a member that the older version could not contain; a present one means the save was edited or corrupted.</summary>
+    private static void AddNode(JsonObject target, string name, JsonNode value, int fromVersion)
+    {
+        if (target.ContainsKey(name))
+        {
+            throw new SaveFormatException($"A version {fromVersion} save must not contain '{name}'.");
+        }
+
+        target[name] = value;
     }
 
     /// <summary>Adds a member that the older version could not contain; a present one means the save was edited or corrupted.</summary>

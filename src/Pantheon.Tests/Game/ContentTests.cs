@@ -26,6 +26,44 @@ public sealed class ContentTests
     }
 
     [Fact]
+    public void ShippedDivineContent_Parses()
+    {
+        var content = TestContent.Shipped;
+
+        Assert.Equal(10, content.DivineRules.StepIntervalTicks);
+        Assert.Equal(["food", "heal", "bless_crops", "lightning", "mass_healing"], content.Miracles.Miracles.Select(m => m.Id));
+        Assert.NotEmpty(content.Pantheon.Gods);
+        Assert.Equal(Pantheon.Domain.Gods.GodController.Human, content.Pantheon.Gods[0].Controller);
+        Assert.All(content.Miracles.Miracles, m => Assert.Equal(m.Id, TestContent.DivineView.EffectFor(m.Id).MiracleId));
+        Assert.Equal(content.WorldGen.StartingSettlement.Names.Count, content.WorldGen.StartingSettlement.Names.Distinct().Count());
+    }
+
+    [Theory]
+    [InlineData("divine_rules.json", "\"ConversionPerStep\": 0.05", "\"ConversionPerStep\": 1.5", "ConversionPerStep")]
+    [InlineData("miracles.json", "\"InfluenceRequirement\": 0.1,", "\"InfluenceRequirement\": 4.0,", "InfluenceRequirement")]
+    [InlineData("miracles.json", "\"Id\": \"heal\"", "\"Id\": \"food\"", "used more than once")]
+    [InlineData("gods.json", "\"Name\": \"Ilyra\"", "\"Name\": \" \"", "blank")]
+    [InlineData("worldgen.json", "\"Count\": 8", "\"Count\": 80", "Names must hold a name for every settlement")]
+    public void DivineContent_WithOutOfRangeValue_FailsValidation(string file, string from, string to, string expected)
+    {
+        var text = TestContent.ReadText(file);
+        Assert.Contains(from, text, StringComparison.Ordinal);
+        var files = GameContentFiles.Read(name => name == file ? text.Replace(from, to, StringComparison.Ordinal) : TestContent.ReadText(name));
+
+        var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(files));
+        Assert.Contains(file, exception.Message, StringComparison.Ordinal);
+        Assert.Contains(expected, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Miracles_WithUnknownEffect_Throw()
+    {
+        var json = TestContent.ReadText("miracles.json").Replace("\"Kind\": \"Smite\"", "\"Kind\": \"Meteor\"", StringComparison.Ordinal);
+
+        Assert.Throws<ContentFormatException>(() => ContentJson.ParseMiracles(json));
+    }
+
+    [Fact]
     public void ShippedPalette_Parses()
     {
         var palette = TestContent.Palette;
@@ -48,7 +86,9 @@ public sealed class ContentTests
     {
         var rules = TestContent.ReadText(ContentJson.SettlementRulesFileName).Replace("\"WorkforceShare\": 0.6", "\"WorkforceShare\": 2.5", StringComparison.Ordinal);
 
-        var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(TestContent.ReadText(ContentJson.WorldGenFileName), rules));
+        var files = GameContentFiles.Read(TestContent.ReadText) with { SettlementRules = rules };
+
+        var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(files));
         Assert.Contains("WorkforceShare", exception.Message);
     }
 

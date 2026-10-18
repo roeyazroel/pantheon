@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Pantheon.Domain.Belief;
 using Pantheon.Domain.World;
 
 namespace Pantheon.Domain.Settlements;
@@ -34,4 +36,7 @@ public sealed class SettlementState
 
     /// <summary>Work done on the house under construction, in builder-steps; 0 while no house is being built.</summary>
     public required float ConstructionProgress { get; set; }
+
+    /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
+    public required List<GodBelief> Beliefs { get; init; }
 }

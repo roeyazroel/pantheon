@@ -21,8 +21,11 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
    assemblies for `System.Random`, clock and tick-count reads and GUIDs.
 6. **Data-driven content** where practical (`game/Data/*.json`), parsed strictly (unknown or
    missing members are errors).
-7. **No speculative infrastructure or optimisation.** Reserved areas (gods, belief, creatures,
-   diplomacy, weather, events, networking) contain only a README until their milestone.
+7. **No speculative infrastructure or optimisation.** Reserved areas (creatures, diplomacy,
+   weather, networking) contain only a README until their milestone.
+8. **Commands go through an authority.** A player's intent (today, casting a miracle) is a
+   request that `MiracleCaster` checks against the world before anything changes (spec §73,
+   ADR-009). `GameSession` is the local authority; a multiplayer host will run the same check.
 
 ## Repository layout
 
@@ -35,16 +38,20 @@ game/                         Godot 4.7.2 project (res://)
   Pantheon.csproj             Godot.NET.Sdk/4.7.2 project: assembly "Pantheon", namespace Pantheon.Client
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
   Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
-  Data/                       worldgen.json, settlement_rules.json, settlement_view.json, biome_palette.json
+  Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json
+                              (simulation); settlement_view.json, biome_palette.json, divine_view.json (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
-  Pantheon.Domain/            State and content contracts: World, Ecology, Settlements (+ reserved folders)
-  Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Systems, SimulationEngine
+  Pantheon.Domain/            State and content contracts: World, Ecology, Settlements, Gods, Belief, Miracles,
+                              Events (+ reserved folders)
+  Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
+                              Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
-                              diagnostics, settlement layout, Tier 2 representative citizens (Population)
+                              diagnostics, HUD model, alerts, overlays, settlement layout,
+                              Tier 2 representative citizens (Population)
   Pantheon.Networking/        Reserved for host-authoritative ENet (ADR-003)
   Pantheon.Tests/             xUnit tests (headless)
 tools/                        Maintenance scripts (vendor-terrain3d.sh)
@@ -100,17 +107,28 @@ files and compiled assemblies and fails when either rule is broken.
 ### Domain (`Pantheon.Domain`)
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
-  (RNG state), `Regions` (`RegionGrid`) and `Settlements`.
+  (RNG state), `Regions` (`RegionGrid`), `Settlements` and `Gods`.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
-  `Moisture`, `Fertility`, `Vegetation` (0..1).
+  `Moisture`, `Fertility`, `Vegetation` (0..1) and `Blessing` (0..1, from miracles; it fades).
 - `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Housing`
   (capacity in people), `Health` (0..1) and `ConstructionProgress` (work done on the one house
-  being built; 0 when none is under way). These aggregates are the canonical population
-  (Tier 1, ADR-004 and ADR-008).
-- Content contracts: `WorldGenSettings` (and its nested settings records) and `SettlementRules`
-  (the per-step balance of the settlement model, `game/Data/settlement_rules.json`).
+  being built; 0 when none is under way) and `Beliefs`. These aggregates are the canonical
+  population (Tier 1, ADR-004 and ADR-008).
+- `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
+  follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt` (0..1).
+  Followers are `Population × Adherence` and are never stored (ADR-009).
+- `GodState`: `Id`, `Name`, `Controller` (Human or Ai), `DivinePower`, `Rank` (never falls) and
+  `Cooldowns`. Followers and influence are derived from the beliefs.
+- `CastMiracleRequest` (god, miracle id, target): the intent that the authority checks (§73).
+- `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
+  `FamineStarted`) raised during a tick or a command and never saved.
+- Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
+  (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
+  `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
+  `MiracleCatalog` and `MiracleDefinition` (`miracles.json`) and `PantheonSetup` (the gods of a
+  new world, `gods.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -126,33 +144,46 @@ files and compiled assemblies and fails when either rule is broken.
   3. Moisture (noise plus coastal bonus) and temperature (noise minus elevation lapse rate).
   4. Each sample is classified by data-driven `BiomeRule`s (first match wins).
 - `WorldGen/RegionBuilder` aggregates samples per region (means plus majority biome) and derives
-  fertility and vegetation. `SettlementFounder` places the starting settlement on the best
-  fertile land region near the island centre, healthy and with nothing under construction.
+  fertility and vegetation. `SettlementFounder.FoundAll` places up to `Count` settlements (8) on
+  the best habitable regions, at least `MinimumSpacing` regions apart so their farmland never
+  overlaps, with names and populations drawn from seeded streams. `PantheonFounder` creates the
+  gods of `gods.json`, each followed in its own home settlement, best site first.
 - `Settlements/SettlementEconomy`: the settlement rules as pure functions: the farmland survey,
   the labour split into farmers and builders, production with diminishing returns,
   consumption, storage, health, birth and death chances, and `Assess`, which previews the next
   step for the debug panel. `Settlements/SettlementSystem` applies one Tier 1 step to every
   settlement (see [Settlement simulation and population tiers](#settlement-simulation-and-population-tiers)).
   `SettlementRulesValidator` lists every invalid rule.
+- `Belief/BeliefModel`: the belief rules as pure functions (conditions, drift, pull and push,
+  conversion within the free share, worshippers, worship intensity, Divine Power, impulses).
+  `BeliefSystem` applies one belief step (see [Gods, belief and miracles](#gods-belief-and-miracles)).
+  `InfluenceField` derives a god's influence from its followers. `GodStanding` counts followers,
+  sums power and picks ranks.
+- `Miracles/MiracleBook` validates and indexes the miracles; `MiracleCaster` checks requests
+  (§73), computes costs and applies accepted casts.
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-- `SimulationEngine.Step(WorldState)` runs the systems in order (today the settlement system,
-  wrapped in an `IntervalSystem` of `StepIntervalTicks`) with a `SimulationRandom` restored
-  from `WorldState.Random`, writes the RNG state back, and increments `Tick`.
+- `SimulationEngine.Step(WorldState, events)` runs the systems in order (the settlement step,
+  then the belief step, each in an `IntervalSystem`) with a `SimulationRandom` restored from
+  `WorldState.Random`, collects the events they raise, writes the RNG state back and increments
+  `Tick`.
 - `Terrain/TerrainRaycaster`: ray against the heightfield (used for cursor picking).
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 2, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 3, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
   a time by `SaveMigrations`, then deserialized with the same strict options, so a migrated
   save gets exactly the checks of a current one. Version 1 → 2 gives every settlement
-  `"Health": 1` and `"ConstructionProgress": 0`. A missing, unsupported or newer version raises
-  `SaveFormatException` with a clear message.
+  `"Health": 1` and `"ConstructionProgress": 0`. Version 2 → 3 adds the Milestone 3 player god
+  (Ilyra, 100 Divine Power) followed by 60% of the first settlement, empty beliefs elsewhere, no
+  blessing on any region and founding settings for one settlement. A missing, unsupported or
+  newer version raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
-  in 0..1.
+  and blessing in 0..1, god ids and Divine Power, and beliefs (known gods, one each, values in
+  0..1, shares adding up to at most 1).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -160,14 +191,18 @@ files and compiled assemblies and fails when either rule is broken.
 ### Application (`Pantheon.Game`)
 
 - `GameSession`: creates or loads worlds, owns `WorldState` + `TerrainField`, runs the
-  scheduler, saves and loads, and raises `WorldReplaced` so presentation rebuilds.
+  scheduler, saves and loads, and raises `WorldReplaced` so presentation rebuilds. It is the local
+  authority: `LocalGodId` is the first human god, `CheckCast` and `FindReached` preview a cast,
+  `CastMiracle` sends the request through `MiracleCaster` with the local god as issuer, and
+  `DrainEvents` hands the tick and command events to the client.
   `StepOneTick` runs one tick through the same engine call as the scheduler; `RunTicks` and
   `StepToNextSettlementStep` run several. `SimulationSeconds` is the simulation time including
   the scheduler's progress towards the next tick, which drives the citizens' routines.
 - `SessionCommands`: the player commands behind the world and simulation hotkeys (quicksave,
   quickload, new world, pause, speed presets, single-tick step, settlement step) and the debug
-  drivers (spoil the food stores, add settlers, advance ticks at launch). Each returns the
-  status line shown in the overlay.
+  drivers (spoil the food stores, add settlers, advance ticks at launch), plus casting a miracle,
+  stepping the speed presets and the F4 grant of Divine Power. Each returns the status line shown
+  in the overlay.
 - `SimulationScheduler`: fixed-step accumulator (10 ticks/s × time scale, pause, a cap on
   ticks per frame so a long frame cannot cause a spiral of death).
 - `Camera/GodCameraModel`: engine-agnostic god-camera math: focus, yaw and distance targets
@@ -186,6 +221,17 @@ files and compiled assemblies and fails when either rule is broken.
   `PresentationHash` (SplitMix64) gives presentation variation without consuming a simulation
   random stream. `PresentationContent` bundles the biome palette and the settlement view
   settings.
+- `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
+  followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable) and
+  the target hint. `Divine/DivineText` words ranks and cast verdicts.
+- `Alerts/AlertFeed` turns events into alerts for the local player (§59): only those about the
+  player's god or followers, never the same alert twice within 30 simulated seconds, the most
+  urgent kept when full.
+- `Presentation/OverlayMap` builds the map overlays (§58): influence (the god's colour, opacity by
+  influence), faith and food (each settlement's lands on a red-to-green ramp).
+  `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
+  looks. `SettlementLabel` adds the main god's share; `SettlementPicker` finds the settlement
+  nearest a point.
 - `Population/*`: Tier 2 representative citizens, derived from `WorldState` and never saved:
   `TierSelector`, `RepresentativeRoster`, `CitizenRoutine` and `SettlementCrowd` (see
   [Settlement simulation and population tiers](#settlement-simulation-and-population-tiers)).
@@ -217,7 +263,18 @@ files and compiled assemblies and fails when either rule is broken.
       figure (a body tinted per role, a head), recoloured when the roster changes.
   - `Regions/RegionBoundaryOverlay`: region grid lines draped on the terrain, plus a hover highlight.
 - `UI/DebugOverlay`: FPS, tick, seed, terrain backend, camera band, region under cursor,
-  settlement readouts, boundary toggle and status messages, plus the F3 region debug map.
+  settlement readouts, boundary toggle and status messages, plus the F3 region debug map. Hidden
+  at the start; F1 shows it.
+- `UI/Hud`: the player HUD, built in code: the top bar, the miracle bar with the target hint and
+  the clickable alerts. It shows `HudModel`s and reports clicks.
+- `Bootstrap/DivineController`: the player's divine interface. It selects miracles (keys 1–9 or
+  the bar), casts at the cursor on a left click, drains the session's events into effects and
+  alerts, and refreshes the HUD, the targeting ring and the overlay.
+- `Presentation/Divine/DivinePresenter`: the targeting ring (a decal with a procedural ring
+  texture), the map overlay (one decal over the world with one pixel per region) and miracle
+  effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a
+  glow, freed when done).
+- Settlement labels show the main god's share and take its colour once it holds the majority.
 
 ## Frame and tick flow
 
@@ -242,9 +299,12 @@ sequenceDiagram
         Engine->>Settle: Update(tick context)
         opt last tick of each 10-tick interval (1 Hz at x1)
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
+            Engine->>State: belief step (drift, conversion, power, ranks, blessings)
         end
         Engine->>State: RNG state, Tick++
     end
+    Root->>Session: DrainEvents() (via DivineController)
+    Root->>View: effects and alerts for the events, HUD, targeting ring, overlay
     Root->>View: Sync(world), SetHoveredRegion(region under cursor)
     Root->>View: UpdateCitizens(world, simulation seconds, camera position)
     View->>Crowd: SelectTier, Refresh, Advance (reads WorldState only)
@@ -373,14 +433,68 @@ stateDiagram-v2
     end note
 ```
 
+## Gods, belief and miracles
+
+ADR-009 records the decisions; the Milestone 3 plan
+([.docs/milestone-3-first-god.md](../.docs/milestone-3-first-god.md)) has the formulas and the
+measured balance.
+
+- **Belief step** (`BeliefSystem`, every `DivineRules.StepIntervalTicks` ticks, after the
+  settlement step). For each settlement:
+  - the conditions: hardship is the worse of ill health and hunger, and comfort is health × food
+    security;
+  - every belief drifts from its values before the step: Faith grows with worship, erodes with
+    Doubt and is forgotten by non-followers; Love grows with comfort among followers, fades and
+    wears down in hardship; Fear fades in safety; Doubt drifts towards a "silence" level and rises
+    among followers in hardship;
+  - each god converts part of the free share with a pull of `Faith × (base + Love + Fear) ×
+    (1 − Doubt)` and loses followers with a push of `Doubt × (base + Fear) × (1 − Love)`; gains
+    are scaled so the shares never pass 1;
+  - crossing half of the people raises `FollowingChanged`.
+
+  Then every god gains its worshippers' Divine Power and the rank its followers earn
+  (`RankAchieved`), and blessings fade.
+- **Worship** takes `WorshipWorkforceShare × devotion` of the workers out of the fields. Power per
+  step is worshippers × intensity (rising with Love and more with Fear) × shrine ×
+  `PowerPerWorshipperPerStep`.
+- **Influence** is derived, never saved. Each settlement with followers is a source with strength
+  `min(1, k × adherence × Faith)`, fading linearly to a reach that grows with √followers. Sources
+  combine as `1 − Π(1 − i)`.
+- **Miracles** (`miracles.json`): Food, Heal, Bless Crops, Lightning and Mass Healing.
+  `MiracleCaster` checks the request:
+  - in §73's order: god, miracle, issuer, rank, cooldown, world, influence, power;
+  - the cost is `cost × (1 + factor × (1 − influence))`.
+
+  When it accepts, it applies the effects to the settlements within `Radius + SettlementRadius`
+  and to the regions within `Radius`. It changes the belief of everyone within that distance plus
+  `WitnessRadius`: closer people feel more, Love scales with need, and strangers start to believe.
+  It raises `MiracleCast`.
+
+```mermaid
+flowchart LR
+    Followers["Settlement beliefs<br/>(adherence, Faith, Love, Fear, Doubt)"] --> Worship["Worshippers<br/>(leave the fields)"]
+    Worship --> Power["Divine Power"]
+    Followers --> Influence["InfluenceField (derived)"]
+    Power --> Cast{"MiracleCaster<br/>§73 checks"}
+    Influence --> Cast
+    Cast -- accepted --> Effects["Effects: food, health,<br/>blessing, deaths"]
+    Cast -- accepted --> Witness["Witnesses' belief<br/>(scaled by closeness and need)"]
+    Effects --> Conditions["Hardship and comfort"]
+    Conditions --> Followers
+    Witness --> Followers
+```
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
 The readouts are built by pure functions in `Pantheon.Game.Diagnostics` and only displayed by
 the client.
 
-- F1: the debug panel, built by `DebugReadout` from a `DebugSnapshot`. `SettlementReadout`
-  adds, per settlement: population / housing, houses and health; food stored / storage with
+- F1: the debug panel (hidden at the start), built by `DebugReadout` from a `DebugSnapshot`.
+  `BeliefReadout` adds a line per god (power and income, rank, followers, next rank) and every
+  god's influence under the cursor. The settlement nearest the cursor is shown in detail, with its
+  belief conditions and each belief (followers, values, worshippers and the power they raise); the
+  others get one line each. `SettlementReadout` adds, for the detailed settlement: population / housing, houses and health; food stored / storage with
   the net change per second, production and consumption; the jobs (farming, building, not
   working) and the farmland; expected births and deaths per second; the house under
   construction and the time to the next settlement step; the simulation tier, with the
@@ -390,7 +504,8 @@ the client.
   the panel shows rates rather than samples.
 - B: the region grid and the hover outline (`RegionBoundaryOverlay`).
 - F3: the region debug map. `RegionDebugMap.Build` turns one `RegionDebugLayer` (biome,
-  elevation, temperature, moisture, fertility or vegetation) into a `RegionDebugMapImage` with
+  elevation, temperature, moisture, fertility, vegetation, blessing or the local god's
+  influence) into a `RegionDebugMapImage` with
   one RGBA8 pixel per region and a legend. Numeric layers use a dark-to-bright ramp from the
   lowest to the highest value; the region under the cursor is white and settlement regions are
   red. `GameRoot` rebuilds it only when the layer, the cursor region, the tick or the world
@@ -403,9 +518,13 @@ the client.
 - F6 (`SpoilFood`) empties every settlement's food stores, and F7 (`AddSettlers`) grows every
   settlement by half (at least 10 people). Together they drive a famine: the stores run out,
   health falls, deaths rise and the settlement recovers once the land feeds it again.
+- F4 (`GrantPower`) gives the player's god 500 Divine Power.
+- O cycles the player map overlays (influence, faith, food), which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
   runs n ticks before the first frame and `--camera-distance=<m>` sets the starting camera
-  distance, so a grown settlement can be captured up close. Unattended runs end with a
+  distance, so a grown settlement can be captured up close. `--divine-power`, `--cast`,
+  `--select`, `--overlay`, `--focus` and `--debug-panel` script captures of casting, targeting and
+  overlays; in scripted runs the cursor falls back to the screen centre. Unattended runs end with a
   one-line summary per settlement (`DebugReadout.Summarize`), including its tier and the
   citizens shown.
 
@@ -431,11 +550,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 2 (current)
+    alt version 3 (current)
         Save->>Save: deserialize (strict)
-    else version 1
-        Save->>Mig: Upgrade(json, 1)
-        Mig-->>Save: JsonObject at version 2 (settlements get Health 1, ConstructionProgress 0)
+    else version 1 or 2
+        Save->>Mig: Upgrade(json, version)
+        Mig-->>Save: JsonObject at version 3 (1→2: health, construction; 2→3: player god, beliefs, blessings)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
@@ -468,7 +587,9 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
 ## Determinism
 
 - World generation is a pure function of `(WorldSeed, WorldGenSettings)`.
-- Tick results are a pure function of `WorldState` (including RNG state) and `SettlementRules`.
+- Tick results are a pure function of `WorldState` (including RNG state), `SettlementRules` and
+  `DivineRules`, and a cast is a pure function of the world, the request and the content; the
+  belief step and the caster draw no random numbers.
   The settlement step's births and deaths draw from the saved `SimulationRandom` in settlement
   list order, so a run continues identically across a save and load.
 - Presentation never consumes a simulation random stream. The settlement layout and the Tier 2
@@ -488,7 +609,12 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   (including the single-tick and settlement steps, F6 and F7), content parsing, launch options,
   presentation helpers and the settlement layout, the Tier 2 roster, routines, tier selection
   and crowd (including that it never changes the world), the debug readouts and region debug
-  map, and the Terrain3D shader patch. The tests load the shipped `game/Data/*.json`.
+  map, and the Terrain3D shader patch. Since Milestone 3 it also covers the belief rules and
+  step, influence, every miracle check and effect, the session as the authority, the HUD model,
+  alerts, overlays, the version 2 → 3 migration (against `save-v2.json`, written by the
+  Milestone 2 build) and several settlements. The tests load the shipped `game/Data/*.json`;
+  rule tests pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`) so retuning
+  the data does not change their meaning.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
   above, no Godot reference in core projects, no unseeded randomness or clock in core
   assemblies, and Windows, macOS and Linux libraries (debug and release) in every vendored
@@ -505,8 +631,8 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
 - Breaking changes to the save shape bump `WorldSaveSerializer.CurrentSaveVersion` and add a
   `SaveMigrations` step from the previous version, tested against a save written by the
   previous build.
-- The step, the layout, the tiers and the views iterate over every settlement, so more
-  settlements should need no rework there. Nothing has run with two yet: world generation
-  founds one, no test uses more, and the focus key goes to the first.
+- The step, the layout, the tiers and the views iterate over every settlement, and world
+  generation founds eight. The belief rules already share each settlement's free share between
+  gods, so a rival god (Milestone 5) adds AI decisions, not new belief rules.
 - Tier 3 adds agents with effects and promotion and demotion that write back to the
   aggregates; the milestone that adds it amends or supersedes ADR-008.

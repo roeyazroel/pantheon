@@ -16,7 +16,7 @@ public static class SettlementEconomy
     /// <param name="grid">Region grid.</param>
     /// <param name="regionId">The settlement's region.</param>
     /// <param name="radius">Farmland radius in regions; 0 is the settlement's own region only.</param>
-    /// <returns>The number of farmable regions and their mean fertility. The square is clipped at the grid edge.</returns>
+    /// <returns>The number of farmable regions and their mean fertility and blessing. The square is clipped at the grid edge.</returns>
     public static FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius)
     {
         ArgumentNullException.ThrowIfNull(grid);
@@ -26,6 +26,7 @@ public static class SettlementEconomy
         var (column, row) = grid.GetCoordinates(regionId);
         var count = 0;
         var fertility = 0f;
+        var blessing = 0f;
         for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
         {
             for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
@@ -35,11 +36,12 @@ public static class SettlementEconomy
                 {
                     count++;
                     fertility += SimMath.Clamp01(region.Fertility);
+                    blessing += SimMath.Clamp01(region.Blessing);
                 }
             }
         }
 
-        return new FarmlandSurvey(count, count > 0 ? fertility / count : 0f);
+        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count) : new FarmlandSurvey(0, 0f);
     }
 
     /// <summary>Whether a region can be farmed: dry land with fertile soil.</summary>
@@ -110,13 +112,32 @@ public static class SettlementEconomy
     }
 
     /// <summary>
+    /// How devoted the settlement is as a whole: the sum over the gods it knows of their followers'
+    /// share times their Faith, from 0 (nobody believes) to 1 (everyone follows a god with full Faith).
+    /// </summary>
+    /// <param name="settlement">Settlement state.</param>
+    /// <returns>Devotion (0..1).</returns>
+    public static float ComputeDevotion(SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(settlement);
+        var devotion = 0f;
+        foreach (var belief in settlement.Beliefs)
+        {
+            devotion += SimMath.Clamp01(belief.Adherence) * SimMath.Clamp01(belief.Faith);
+        }
+
+        return SimMath.Clamp01(devotion);
+    }
+
+    /// <summary>
     /// Splits the workforce for one step. Builders work only while a house is wanted and funded, and
     /// are capped by the builder share, the builders one site takes and the work left on the house.
+    /// Worshippers are <c>WorshipWorkforceShare</c> of the workers, scaled by the settlement's devotion.
     /// Everyone else who works farms.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="settlement">Settlement state.</param>
-    /// <returns>Workers, farmers and builders.</returns>
+    /// <returns>Workers, farmers, builders and worshippers.</returns>
     public static LabourAllocation AllocateLabour(SettlementRules rules, SettlementState settlement)
     {
         ArgumentNullException.ThrowIfNull(rules);
@@ -129,14 +150,15 @@ public static class SettlementEconomy
             builders = Math.Min(Math.Min(workers * rules.MaxBuilderShare, rules.BuildersPerSite), remainingWork);
         }
 
-        return new LabourAllocation(workers, workers - builders, builders);
+        var worshippers = Math.Min(workers - builders, workers * rules.WorshipWorkforceShare * ComputeDevotion(settlement));
+        return new LabourAllocation(workers, workers - builders - worshippers, builders, worshippers);
     }
 
     /// <summary>
     /// Food harvested in one step with diminishing returns:
     /// <c>FoodPerFarmerPerStep * meanFertility * capacity * (1 - e^(-farmers / capacity))</c>, where
-    /// <c>capacity = FarmersPerRegion * land regions</c>. A few farmers each harvest about
-    /// <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
+    /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>.
+    /// A few farmers each harvest about <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="farmers">Workers in the fields.</param>
@@ -152,7 +174,8 @@ public static class SettlementEconomy
         }
 
         var maximumYield = rules.FoodPerFarmerPerStep * SimMath.Clamp01(land.MeanFertility) * capacity;
-        return maximumYield * (1f - MathF.Exp(-farmers / capacity));
+        var blessing = 1f + (rules.BlessingYieldBonus * SimMath.Clamp01(land.MeanBlessing));
+        return maximumYield * blessing * (1f - MathF.Exp(-farmers / capacity));
     }
 
     /// <summary>Share of the population's food need that is met.</summary>

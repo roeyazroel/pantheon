@@ -46,28 +46,73 @@ public sealed class WorldGenerationTests
     }
 
     [Fact]
-    public void GeneratedWorld_HasFullRegionGridAndOneSettlementOnLand()
+    public void GeneratedWorld_HasFullRegionGridAndSpacedSettlementsOnLand()
     {
         var settings = TestContent.Shipped.WorldGen;
         var world = WorldGenerator.Generate(Seed, settings);
         var state = world.State;
+        var founding = settings.StartingSettlement;
 
         Assert.Equal(0, state.Tick);
         Assert.Equal(settings.RegionsPerSide, state.Regions.Columns);
         Assert.Equal(settings.RegionsPerSide, state.Regions.Rows);
         Assert.Equal(settings.HeightmapResolution / settings.RegionsPerSide * settings.VertexSpacing, state.Regions.RegionSize);
         Assert.Equal(Enumerable.Range(0, settings.RegionsPerSide * settings.RegionsPerSide), state.Regions.Cells.Select(cell => cell.Id));
+        Assert.All(state.Regions.Cells, cell => Assert.Equal(0f, cell.Blessing));
 
-        var settlement = Assert.Single(state.Settlements);
-        var region = state.Regions.GetRegion(settlement.RegionId);
-        Assert.NotEqual(Biome.Sea, region.Biome);
-        Assert.True(region.Fertility > 0f);
-        Assert.True(world.Terrain.SampleHeight(settlement.Position.X, settlement.Position.Z) >= 1.5f);
-        Assert.Equal(state.Regions.GetRegionCenter(settlement.RegionId), settlement.Position);
-        Assert.Contains(settlement.Name, settings.StartingSettlement.Names);
-        Assert.Equal(settings.StartingSettlement.Population, settlement.Population);
-        Assert.Equal(settings.StartingSettlement.Housing, settlement.Housing);
-        Assert.Equal(settings.StartingSettlement.Food, settlement.Food);
+        Assert.InRange(state.Settlements.Count, 2, founding.Count);
+        Assert.Equal(Enumerable.Range(SettlementFounder.StartingSettlementId, state.Settlements.Count), state.Settlements.Select(s => s.Id));
+        Assert.Equal(state.Settlements.Count, state.Settlements.Select(s => s.Name).Distinct().Count());
+        foreach (var settlement in state.Settlements)
+        {
+            var region = state.Regions.GetRegion(settlement.RegionId);
+            Assert.NotEqual(Biome.Sea, region.Biome);
+            Assert.True(region.Fertility > 0f);
+            Assert.True(world.Terrain.SampleHeight(settlement.Position.X, settlement.Position.Z) >= 1.5f);
+            Assert.Equal(state.Regions.GetRegionCenter(settlement.RegionId), settlement.Position);
+            Assert.Contains(settlement.Name, founding.Names);
+            Assert.InRange(settlement.Population, founding.Population * (1f - founding.PopulationVariation) - 1f, founding.Population * (1f + founding.PopulationVariation) + 1f);
+            Assert.Equal(founding.Housing, settlement.Housing);
+            Assert.Equal(founding.Food, settlement.Food);
+            Assert.Empty(settlement.Beliefs);
+            foreach (var other in state.Settlements.Where(o => o.Id != settlement.Id))
+            {
+                var (c1, r1) = state.Regions.GetCoordinates(settlement.RegionId);
+                var (c2, r2) = state.Regions.GetCoordinates(other.RegionId);
+                Assert.True(Math.Max(Math.Abs(c1 - c2), Math.Abs(r1 - r2)) >= founding.MinimumSpacing);
+            }
+        }
+
+        Assert.Empty(state.Gods);
+    }
+
+    [Fact]
+    public void GeneratedWorld_WithPantheon_FoundsEachGodInItsHomeSettlement()
+    {
+        var content = TestContent.Shipped;
+
+        var state = WorldGenerator.Generate(Seed, content.WorldGen, content.Pantheon).State;
+
+        var god = Assert.Single(state.Gods);
+        Assert.Equal(PantheonFounder.FirstGodId, god.Id);
+        Assert.Equal(content.Pantheon.Gods[0].Name, god.Name);
+        Assert.Equal(content.Pantheon.StartingDivinePower, god.DivinePower);
+        var home = Assert.Single(state.Settlements[0].Beliefs);
+        Assert.Equal(god.Id, home.GodId);
+        Assert.Equal(content.Pantheon.HomeBelief.Adherence, home.Adherence);
+        Assert.Equal(content.Pantheon.HomeBelief.Faith, home.Faith);
+        Assert.All(state.Settlements.Skip(1), settlement => Assert.Empty(settlement.Beliefs));
+    }
+
+    [Fact]
+    public void SettlementSites_AreTheBestScoringSiteFirst()
+    {
+        var world = WorldGenerator.Generate(Seed, TestContent.Shipped.WorldGen);
+        var founding = TestContent.Shipped.WorldGen.StartingSettlement;
+
+        var single = SettlementFounder.SelectSites(world.State.Regions, world.Terrain, founding.CenterPreference, 1, founding.MinimumSpacing);
+
+        Assert.Equal(world.State.Settlements[0].RegionId, Assert.Single(single));
     }
 
     [Fact]

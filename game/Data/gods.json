@@ -1,0 +1,8 @@
+{
+  // The gods of a new world. Each is followed in its own home settlement, best site first.
+  "StartingDivinePower": 100.0,
+  "HomeBelief": { "Adherence": 0.6, "Faith": 0.5, "Love": 0.3, "Fear": 0.1, "Doubt": 0.15 },
+  "Gods": [
+    { "Name": "Ilyra", "Controller": "Human" }
+  ]
+}

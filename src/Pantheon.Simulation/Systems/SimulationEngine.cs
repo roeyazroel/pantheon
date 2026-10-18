@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Pantheon.Domain.Belief;
+using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
+using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Settlements;
 
@@ -17,12 +20,23 @@ public sealed class SimulationEngine
     private readonly ISimulationSystem[] _systems;
 
     /// <summary>
-    /// Creates the Milestone 2 system pipeline: the statistical settlement step, run once every
-    /// <see cref="SettlementRules.StepIntervalTicks"/> ticks.
+    /// Creates the settlement-only pipeline of Milestone 2: the statistical settlement step, run
+    /// once every <see cref="SettlementRules.StepIntervalTicks"/> ticks. Belief does not change.
     /// </summary>
     /// <param name="settlementRules">Tuning of the statistical settlement model.</param>
     public SimulationEngine(SettlementRules settlementRules)
         : this([CreateSettlementStep(settlementRules)])
+    {
+    }
+
+    /// <summary>
+    /// Creates the game's pipeline: the settlement step, then the belief step (ADR-009), each on its
+    /// own interval. On a tick where both are due, the belief step sees the settlement step's result.
+    /// </summary>
+    /// <param name="settlementRules">Tuning of the statistical settlement model.</param>
+    /// <param name="divineRules">Tuning of belief, worship and Divine Power.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules)
+        : this([CreateSettlementStep(settlementRules), CreateBeliefStep(divineRules, settlementRules)])
     {
     }
 
@@ -36,12 +50,13 @@ public sealed class SimulationEngine
 
     /// <summary>Advances the world by one tick.</summary>
     /// <param name="world">World to mutate.</param>
-    public void Step(WorldState world)
+    /// <param name="events">Receives the events raised during the tick; <c>null</c> to discard them.</param>
+    public void Step(WorldState world, List<WorldEvent>? events = null)
     {
         ArgumentNullException.ThrowIfNull(world);
 
         var random = SimulationRandom.FromState(world.Random);
-        var context = new TickContext(world, random);
+        var context = new TickContext(world, random, events ?? []);
         foreach (var system in _systems)
         {
             system.Update(context);
@@ -49,13 +64,6 @@ public sealed class SimulationEngine
 
         world.Random = random.GetState();
         world.Tick++;
-    }
-
-    /// <summary>Wraps a validated <see cref="SettlementSystem"/> in its step interval.</summary>
-    private static IntervalSystem CreateSettlementStep(SettlementRules rules)
-    {
-        var settlements = new SettlementSystem(rules);
-        return new IntervalSystem(settlements, rules.StepIntervalTicks);
     }
 
     /// <summary>Advances the world by several ticks.</summary>
@@ -68,5 +76,19 @@ public sealed class SimulationEngine
         {
             Step(world);
         }
+    }
+
+    /// <summary>Wraps a validated <see cref="SettlementSystem"/> in its step interval.</summary>
+    private static IntervalSystem CreateSettlementStep(SettlementRules rules)
+    {
+        var settlements = new SettlementSystem(rules);
+        return new IntervalSystem(settlements, rules.StepIntervalTicks);
+    }
+
+    /// <summary>Wraps a validated <see cref="BeliefSystem"/> in its step interval.</summary>
+    private static IntervalSystem CreateBeliefStep(DivineRules rules, SettlementRules settlementRules)
+    {
+        var belief = new BeliefSystem(rules, settlementRules);
+        return new IntervalSystem(belief, rules.StepIntervalTicks);
     }
 }

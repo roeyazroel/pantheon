@@ -17,10 +17,10 @@ public static class DebugReadout
     public const string CameraHints = "[WASD/arrows/screen edge] pan  [RMB drag] grab  [wheel, +/-] zoom  [Q/E, MMB drag] rotate";
 
     /// <summary>World and simulation key hints shown at the bottom of the overlay.</summary>
-    public const string KeyHints = "[F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [1/2/3] speed";
+    public const string KeyHints = "[1-9] miracle  [LMB] cast  [Esc] cancel  [O] overlay  [F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [ [ ] ] speed";
 
     /// <summary>Debug tool key hints shown at the bottom of the overlay.</summary>
-    public const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F6] spoil food  [F7] settlers";
+    public const string DebugHints = "[F1] panel  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F4] +500 power  [F6] spoil food  [F7] settlers";
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
@@ -40,10 +40,25 @@ public static class DebugReadout
             FormatSettlementStep(snapshot),
         };
 
+        BeliefReadout.AppendGods(lines, snapshot);
         AppendCursor(lines, world, snapshot.CursorWorldPosition);
+        if (snapshot.CursorWorldPosition is { } cursor && world.Regions.TryGetRegionIdAt(cursor.X, cursor.Z, out _))
+        {
+            BeliefReadout.AppendInfluence(lines, snapshot, new GroundPosition(cursor.X, cursor.Z));
+        }
+
+        var selected = FindSelected(world, snapshot.SelectedSettlementId);
         foreach (var settlement in world.Settlements)
         {
-            SettlementReadout.Append(lines, snapshot, settlement);
+            if (settlement == selected)
+            {
+                SettlementReadout.Append(lines, snapshot, settlement);
+                BeliefReadout.AppendBeliefs(lines, snapshot, settlement);
+            }
+            else
+            {
+                lines.Add(BeliefReadout.Summarize(settlement, world));
+            }
         }
 
         lines.Add(Format("Region boundaries {0}", snapshot.RegionBoundariesVisible ? "ON" : "OFF"));
@@ -85,6 +100,17 @@ public static class DebugReadout
         }
 
         return string.Join("; ", parts);
+    }
+
+    /// <summary>The settlement shown in detail: the selected one, else the first.</summary>
+    private static SettlementState? FindSelected(WorldState world, int? selectedId)
+    {
+        if (selectedId is { } id && world.Settlements.Find(s => s.Id == id) is { } selected)
+        {
+            return selected;
+        }
+
+        return world.Settlements.Count > 0 ? world.Settlements[0] : null;
     }
 
     /// <summary>Simulation rate, or the paused marker.</summary>

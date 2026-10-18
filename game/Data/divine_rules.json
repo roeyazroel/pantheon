@@ -1,0 +1,70 @@
+{
+  // Belief, worship, Divine Power and influence (ADR-009). The belief model steps once every
+  // StepIntervalTicks ticks (10 ticks = one simulated second at x1); every rate is per step.
+  // Values named ...PerStep, Faith..., Love..., Fear... and Doubt... are shares (0..1).
+  "StepIntervalTicks": 10,
+
+  // Divine Power per step = worshippers x intensity x infrastructure x PowerPerWorshipperPerStep, where
+  // worshippers = workers x WorshipWorkforceShare (settlement_rules.json) x adherence x Faith and
+  // intensity = Base + Love x LoveWorshipIntensity + Fear x FearWorshipIntensity.
+  "PowerPerWorshipperPerStep": 1.5,
+  "BaseWorshipIntensity": 0.5,
+  "LoveWorshipIntensity": 0.3,
+  "FearWorshipIntensity": 0.6,
+  "ShrineInfrastructure": 1.0,
+
+  // Conditions: hardship is the worse of ill health and hunger (stores below ComfortFoodPerPerson per person).
+  "ComfortFoodPerPerson": 2.0,
+
+  // Drift: Faith grows with worship, erodes with Doubt and is forgotten by non-followers; Love grows among comfortable followers,
+  // fades and wears down in hardship; Fear fades in safety; Doubt drifts towards SilenceDoubt and
+  // rises among followers in hardship.
+  "FaithFromWorship": 0.01,
+  "FaithErosionFromDoubt": 0.01,
+  "FaithForgettingPerStep": 0.008,
+  "LoveFromComfort": 0.004,
+  "LoveDecayPerStep": 0.002,
+  "LoveLossFromHardship": 0.01,
+  "FearDecayPerStep": 0.006,
+  "SilenceDoubt": 0.25,
+  "DoubtDriftPerStep": 0.004,
+  "DoubtFromHardship": 0.02,
+  "NewBelieverDoubt": 0.5,
+
+  // Conversion: pull = Faith x (Base + Love x LoveConversion + Fear x FearConversion) x (1 - Doubt) draws
+  // people who follow no god; push = Doubt x (Base + Fear x FearFragility) x (1 - Love x LoveLoyalty)
+  // drives followers away.
+  "ConversionPerStep": 0.05,
+  "BaseConversion": 0.3,
+  "LoveConversion": 0.5,
+  "FearConversion": 0.9,
+  "ApostasyPerStep": 0.04,
+  "BaseApostasy": 0.5,
+  "FearFragility": 1.0,
+  "LoveLoyalty": 0.6,
+  "ForgottenFaith": 0.01,
+
+  // Influence: each settlement with followers reaches InfluenceBaseRadius + InfluenceRadiusPerSqrtFollower x
+  // sqrt(followers) metres, with strength min(1, InfluenceStrength x adherence x Faith) at its centre.
+  "InfluenceBaseRadius": 400.0,
+  "InfluenceRadiusPerSqrtFollower": 20.0,
+  "InfluenceStrength": 2.5,
+
+  // Miracles: people within WitnessRadius metres of a miracle's reach see it; a miracle reaching within
+  // SettlementRadius metres of a settlement's centre touches it. Costs scale by 1 + WeakInfluenceCostFactor x
+  // (1 - influence). Love for a miracle that answers a need scales from GratitudeFloor (no need) to 1.
+  "WitnessRadius": 350.0,
+  "SettlementRadius": 60.0,
+  "WeakInfluenceCostFactor": 1.0,
+  "GratitudeFloor": 0.25,
+  "BlessingDecayPerStep": 0.008,
+
+  // Followers needed for each rank (spec section 13). A god never loses a rank.
+  "Ranks": [
+    { "Rank": "LesserGod", "Followers": 100 },
+    { "Rank": "God", "Followers": 400 },
+    { "Rank": "GreaterGod", "Followers": 1200 },
+    { "Rank": "HighGod", "Followers": 3000 },
+    { "Rank": "Ascendant", "Followers": 8000 }
+  ]
+}

@@ -41,6 +41,9 @@ public partial class GodCameraController : Node3D
     /// <summary>Ground (or sea surface) point under the mouse, updated every frame.</summary>
     public NVector3? CursorGroundPoint { get; private set; }
 
+    /// <summary>Whether the cursor point falls back to the screen centre while the mouse is away (scripted runs, so captures can show targeting).</summary>
+    public bool CenterCursorWhenAway { get; set; }
+
     /// <summary>Finds the camera node.</summary>
     public override void _Ready() => _camera = GetNode<Camera3D>("Camera3D");
 
@@ -81,7 +84,10 @@ public partial class GodCameraController : Node3D
         ApplyGrabPan();
         Model.Update(deltaSeconds, _groundHeight);
         ApplyPose();
-        CursorGroundPoint = _mouseInWindow && TryPickGround(GetViewport().GetMousePosition(), out var hit) ? hit : null;
+        var screenPoint = _mouseInWindow ? GetViewport().GetMousePosition()
+            : CenterCursorWhenAway ? GetViewport().GetVisibleRect().Size / 2f
+            : (Vector2?)null;
+        CursorGroundPoint = screenPoint is { } point && TryPickGround(point, out var hit) ? hit : null;
     }
 
     /// <summary>Handles mouse buttons (zoom, grab) and motion (drag-rotate).</summary>

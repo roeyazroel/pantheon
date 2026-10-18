@@ -10,6 +10,11 @@
   "FarmersPerRegion": 12.0,
   "FoodPerFarmerPerStep": 0.3,
 
+  // Blessed land (the Bless Crops miracle) yields up to this share more. A settlement's workers
+  // spend up to WorshipWorkforceShare of their time worshipping, scaled by its followers' Faith (ADR-009).
+  "BlessingYieldBonus": 0.6,
+  "WorshipWorkforceShare": 0.15,
+
   // Food.
   "FoodPerPersonPerStep": 0.05,
   "FoodStoragePerHousing": 8.0,

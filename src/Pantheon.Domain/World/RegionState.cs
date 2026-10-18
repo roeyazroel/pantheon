@@ -28,4 +28,7 @@ public sealed class RegionState
 
     /// <summary>Normalised vegetation cover (0..1).</summary>
     public required float Vegetation { get; set; }
+
+    /// <summary>Divine blessing of the land (0..1) from miracles; blessed farmland yields more, and it fades.</summary>
+    public required float Blessing { get; set; }
 }

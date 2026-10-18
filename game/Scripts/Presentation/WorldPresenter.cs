@@ -37,7 +37,7 @@ public sealed class WorldPresenter
         _palette = content.Palette;
         _terrain = TerrainPresenterFactory.Create(terrainPreference, root.AddLayer("Terrain"), camera);
         _water = new WaterPresenter(root.AddLayer("Water"));
-        _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView);
+        _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
     }
 

@@ -12,18 +12,17 @@ public static class GodotContentLoader
     private const string DataDirectory = "res://Data/";
 
     /// <summary>Loads and validates the simulation content.</summary>
-    /// <returns>World generation settings and settlement rules.</returns>
+    /// <returns>World generation, settlement and divine rules, the miracles and the gods.</returns>
     /// <exception cref="ContentFormatException">A file is malformed or out of range.</exception>
     /// <exception cref="IOException">A file cannot be read.</exception>
-    public static GameContent LoadGameContent() =>
-        GameContent.Parse(ReadText(ContentJson.WorldGenFileName), ReadText(ContentJson.SettlementRulesFileName));
+    public static GameContent LoadGameContent() => GameContent.Parse(GameContentFiles.Read(ReadText));
 
     /// <summary>Loads and validates the presentation content.</summary>
-    /// <returns>The palette and the settlement view settings.</returns>
+    /// <returns>The palette, the settlement view settings and the divine view settings.</returns>
     /// <exception cref="ContentFormatException">A file is malformed or out of range.</exception>
     /// <exception cref="IOException">A file cannot be read.</exception>
     public static PresentationContent LoadPresentationContent() =>
-        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName));
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName));
 
     /// <summary>Reads a whole content file as text.</summary>
     private static string ReadText(string fileName)

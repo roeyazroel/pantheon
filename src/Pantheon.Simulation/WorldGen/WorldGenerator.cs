@@ -1,4 +1,5 @@
 using System;
+using Pantheon.Domain.Gods;
 using Pantheon.Domain.World;
 using Pantheon.Domain.World.Generation;
 using Pantheon.Simulation.Randomness;
@@ -15,17 +16,25 @@ public static class WorldGenerator
     /// <summary>Name of the RNG stream that drives the tick systems.</summary>
     public const string SimulationStream = "simulation";
 
-    /// <summary>Generates terrain, regions and the starting settlement.</summary>
+    /// <summary>Generates terrain, regions and the starting settlements, without gods (for focused tests).</summary>
     /// <param name="seed">World seed.</param>
     /// <param name="settings">Data-driven generation settings; they are stored in the state.</param>
     /// <returns>The new world state and its terrain.</returns>
-    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings)
+    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings) => Generate(seed, settings, pantheon: null);
+
+    /// <summary>Generates terrain, regions, the starting settlements and the gods.</summary>
+    /// <param name="seed">World seed.</param>
+    /// <param name="settings">Data-driven generation settings; they are stored in the state.</param>
+    /// <param name="pantheon">The gods to create, each followed in its own home settlement; <c>null</c> for none.</param>
+    /// <returns>The new world state and its terrain.</returns>
+    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings, PantheonSetup? pantheon)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
         var terrain = TerrainGenerator.Generate(seed, settings);
         var regions = RegionBuilder.Build(terrain, settings);
-        var settlement = SettlementFounder.Found(regions, terrain, seed, settings.StartingSettlement);
+        var settlements = SettlementFounder.FoundAll(regions, terrain, seed, settings.StartingSettlement);
+        var gods = pantheon is null ? [] : PantheonFounder.Found(pantheon, settlements);
 
         var state = new WorldState
         {
@@ -34,7 +43,8 @@ public static class WorldGenerator
             Tick = 0,
             Random = new SimulationRandom(SeedMixer.Derive(seed, SimulationStream)).GetState(),
             Regions = regions,
-            Settlements = [settlement],
+            Settlements = settlements,
+            Gods = gods,
         };
 
         return new GeneratedWorld(state, terrain);

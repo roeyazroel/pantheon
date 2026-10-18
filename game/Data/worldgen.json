@@ -33,8 +33,13 @@
     { "Biome": "Forest", "MinMoisture": 0.55, "BaseFertility": 0.6, "BaseVegetation": 0.9 },
     { "Biome": "Grassland", "BaseFertility": 0.9, "BaseVegetation": 0.5 }
   ],
+  // Up to Count settlements on the best habitable regions, at least MinimumSpacing regions apart
+  // (with the farmland radius of 2, a spacing of 5 keeps their farmland apart).
   "StartingSettlement": {
+    "Count": 8,
+    "MinimumSpacing": 5,
     "Population": 40,
+    "PopulationVariation": 0.35,
     "Food": 120.0,
     "Housing": 60,
     "CenterPreference": 0.35,
@@ -46,7 +51,15 @@
       "Emberfield",
       "Mossgate",
       "Saltreach",
-      "Larkspur"
+      "Larkspur",
+      "Elar",
+      "Valen",
+      "Cinderford",
+      "Wrenmoor",
+      "Ashcombe",
+      "Fernhollow",
+      "Duskwater",
+      "Harrowmere"
     ]
   }
 }

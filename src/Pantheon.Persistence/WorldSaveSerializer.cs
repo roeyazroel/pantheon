@@ -16,9 +16,11 @@ public static class WorldSaveSerializer
 {
     /// <summary>
     /// Format version written by this build. Bump it, and add a step to <see cref="SaveMigrations"/>,
-    /// when the save shape changes. Version 2 (Milestone 2) added settlement health and construction progress.
+    /// when the save shape changes. Version 2 (Milestone 2) added settlement health and construction
+    /// progress; version 3 (Milestone 3) added gods, settlement beliefs, region blessings and the
+    /// founding settings for several settlements.
     /// </summary>
-    public const int CurrentSaveVersion = 2;
+    public const int CurrentSaveVersion = 3;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

@@ -31,6 +31,8 @@ internal static class SettlementWorlds
         WorkforceShare = 0.6f,
         FarmlandRadius = 2,
         FarmersPerRegion = 12f,
+        BlessingYieldBonus = 0.6f,
+        WorshipWorkforceShare = 0.15f,
         FoodPerFarmerPerStep = 0.3f,
         FoodPerPersonPerStep = 0.05f,
         FoodStoragePerHousing = 8f,
@@ -77,6 +79,7 @@ internal static class SettlementWorlds
                 Moisture = 0.5f,
                 Fertility = fertility,
                 Vegetation = 0.5f,
+                Blessing = 0f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -101,8 +104,10 @@ internal static class SettlementWorlds
                     Housing = housing,
                     Health = health,
                     ConstructionProgress = constructionProgress,
+                    Beliefs = [],
                 },
             },
+            Gods = [],
         };
     }
 

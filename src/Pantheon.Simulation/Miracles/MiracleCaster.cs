@@ -1,0 +1,259 @@
+using System;
+using System.Collections.Generic;
+using Pantheon.Domain.Belief;
+using Pantheon.Domain.Events;
+using Pantheon.Domain.Gods;
+using Pantheon.Domain.Miracles;
+using Pantheon.Domain.Settlements;
+using Pantheon.Domain.World;
+using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Settlements;
+
+namespace Pantheon.Simulation.Miracles;
+
+/// <summary>
+/// The authority for miracles (spec §73, ADR-009). <see cref="Check"/> answers whether a request
+/// may be cast and what it costs; <see cref="Cast"/> checks it again and, when accepted, spends the
+/// power, starts the cooldown, applies the effects and lets the witnesses' belief respond. Both
+/// are deterministic and draw no random numbers.
+/// </summary>
+public sealed class MiracleCaster
+{
+    private readonly DivineRules _rules;
+    private readonly SettlementRules _settlementRules;
+    private readonly MiracleBook _book;
+
+    /// <summary>Creates a caster over validated content.</summary>
+    /// <param name="rules">Divine rules.</param>
+    /// <param name="settlementRules">Settlement rules, for food storage.</param>
+    /// <param name="book">The miracles.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book)
+    {
+        DivineRulesValidator.Validate(rules);
+        ArgumentNullException.ThrowIfNull(settlementRules);
+        ArgumentNullException.ThrowIfNull(book);
+        _rules = rules;
+        _settlementRules = settlementRules;
+        _book = book;
+    }
+
+    /// <summary>Divine Power a miracle costs at a given influence: the base cost raised for weak influence.</summary>
+    /// <param name="rules">Divine rules.</param>
+    /// <param name="miracle">The miracle.</param>
+    /// <param name="influence">The god's influence at the target (0..1).</param>
+    /// <returns>The cost.</returns>
+    public static float ComputeCost(DivineRules rules, MiracleDefinition miracle, float influence)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(miracle);
+        return miracle.PowerCost * (1f + (rules.WeakInfluenceCostFactor * (1f - SimMath.Clamp01(influence))));
+    }
+
+    /// <summary>Checks a request in the order of spec §73 without changing the world.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="request">The request.</param>
+    /// <param name="issuerGodId">The god the issuer controls; <c>null</c> for the host itself, which may act for any god.</param>
+    /// <returns>The verdict.</returns>
+    public CastCheck Check(WorldState world, CastMiracleRequest request, int? issuerGodId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(request);
+        if (GodStanding.Find(world, request.GodId) is not { } god)
+        {
+            return new CastCheck(CastRejection.UnknownGod, null, 0f, 0f, 0);
+        }
+
+        if (_book.Find(request.MiracleId) is not { } miracle)
+        {
+            return new CastCheck(CastRejection.UnknownMiracle, null, 0f, 0f, 0);
+        }
+
+        var cooldown = CooldownTicksLeft(world, god, miracle.Id);
+        var inWorld = IsInsideWorld(world.Regions, request.Target);
+        var influence = inWorld ? InfluenceField.Build(_rules, world, god.Id).At(request.Target) : 0f;
+        var cost = ComputeCost(_rules, miracle, influence);
+        var rejection =
+            issuerGodId is { } issuer && issuer != god.Id ? CastRejection.NotAuthorized
+            : god.Rank < miracle.MinimumRank ? CastRejection.RankTooLow
+            : cooldown > 0 ? CastRejection.OnCooldown
+            : !inWorld ? CastRejection.OutsideWorld
+            : influence < miracle.InfluenceRequirement ? CastRejection.OutsideInfluence
+            : god.DivinePower < cost ? CastRejection.NotEnoughPower
+            : CastRejection.None;
+        return new CastCheck(rejection, miracle, influence, cost, cooldown);
+    }
+
+    /// <summary>Checks a request and, when it is accepted, casts the miracle.</summary>
+    /// <param name="world">World state to change.</param>
+    /// <param name="request">The request.</param>
+    /// <param name="issuerGodId">The god the issuer controls; <c>null</c> for the host itself.</param>
+    /// <param name="events">Receives the <see cref="MiracleCast"/> event of an accepted cast.</param>
+    /// <returns>The verdict; the world changed only if it is accepted.</returns>
+    public CastCheck Cast(WorldState world, CastMiracleRequest request, int? issuerGodId, ICollection<WorldEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        var check = Check(world, request, issuerGodId);
+        if (!check.IsAccepted || check.Miracle is not { } miracle)
+        {
+            return check;
+        }
+
+        var god = GodStanding.Find(world, request.GodId)!;
+        god.DivinePower = Math.Max(0f, god.DivinePower - check.Cost);
+        StartCooldown(god, miracle, world.Tick);
+
+        var reach = Reach(miracle);
+        var affected = new List<int>();
+        var deaths = 0;
+        foreach (var settlement in world.Settlements)
+        {
+            var distance = Distance(settlement.Position, request.Target);
+            var conditions = BeliefModel.AssessConditions(_rules, settlement);
+            if (distance <= reach)
+            {
+                affected.Add(settlement.Id);
+                deaths += ApplyEffects(miracle, settlement);
+            }
+
+            var closeness = distance <= reach ? 1f : SimMath.Clamp01(1f - ((distance - reach) / Math.Max(1f, _rules.WitnessRadius)));
+            if (closeness > 0f && settlement.Population > 0)
+            {
+                Witness(miracle, settlement, god.Id, closeness, conditions);
+            }
+        }
+
+        ApplyRegionEffects(miracle, world.Regions, request.Target);
+        events.Add(new MiracleCast
+        {
+            Tick = world.Tick,
+            GodId = god.Id,
+            MiracleId = miracle.Id,
+            Target = request.Target,
+            Cost = check.Cost,
+            AffectedSettlementIds = affected,
+            Deaths = deaths,
+        });
+        return check;
+    }
+
+    /// <summary>The settlements a miracle cast at a target would reach: those whose footprint lies within its radius.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="miracle">The miracle.</param>
+    /// <param name="target">Where it would be cast.</param>
+    /// <returns>The settlements, in world order.</returns>
+    public IReadOnlyList<SettlementState> FindReached(WorldState world, MiracleDefinition miracle, GroundPosition target)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(miracle);
+        var reach = Reach(miracle);
+        return world.Settlements.FindAll(settlement => Distance(settlement.Position, target) <= reach);
+    }
+
+    /// <summary>Ticks until a god can cast a miracle again.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="god">The god.</param>
+    /// <param name="miracleId">The miracle.</param>
+    /// <returns>0 when ready.</returns>
+    public static long CooldownTicksLeft(WorldState world, GodState god, string miracleId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(god);
+        foreach (var cooldown in god.Cooldowns)
+        {
+            if (string.Equals(cooldown.MiracleId, miracleId, StringComparison.Ordinal))
+            {
+                return Math.Max(0, cooldown.ReadyAtTick - world.Tick);
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>Distance from the target within which a settlement's centre must lie for the miracle to reach it.</summary>
+    private float Reach(MiracleDefinition miracle) => miracle.Radius + _rules.SettlementRadius;
+
+    /// <summary>Whether a point lies on the world's ground plane.</summary>
+    private static bool IsInsideWorld(RegionGrid grid, GroundPosition target) => grid.TryGetRegionIdAt(target.X, target.Z, out _);
+
+    /// <summary>Records when the god may cast the miracle again.</summary>
+    private static void StartCooldown(GodState god, MiracleDefinition miracle, long tick)
+    {
+        var ready = tick + miracle.CooldownTicks;
+        foreach (var cooldown in god.Cooldowns)
+        {
+            if (string.Equals(cooldown.MiracleId, miracle.Id, StringComparison.Ordinal))
+            {
+                cooldown.ReadyAtTick = ready;
+                return;
+            }
+        }
+
+        god.Cooldowns.Add(new MiracleCooldown { MiracleId = miracle.Id, ReadyAtTick = ready });
+    }
+
+    /// <summary>Applies the settlement effects to one settlement the miracle reaches.</summary>
+    /// <returns>People killed.</returns>
+    private int ApplyEffects(MiracleDefinition miracle, SettlementState settlement)
+    {
+        var deaths = 0;
+        foreach (var effect in miracle.Effects)
+        {
+            switch (effect.Kind)
+            {
+                case MiracleEffectKind.AddFood:
+                    var storage = SettlementEconomy.ComputeStorage(_settlementRules, settlement.Housing);
+                    settlement.Food = Math.Max(settlement.Food, Math.Min(storage, settlement.Food + effect.Amount));
+                    break;
+                case MiracleEffectKind.Heal:
+                    settlement.Health = Math.Min(1f, settlement.Health + effect.Amount);
+                    break;
+                case MiracleEffectKind.Smite:
+                    var killed = Math.Min(settlement.Population, (int)MathF.Round(effect.Amount));
+                    settlement.Population -= killed;
+                    deaths += killed;
+                    break;
+                case MiracleEffectKind.Bless:
+                    break;
+            }
+        }
+
+        return deaths;
+    }
+
+    /// <summary>Applies the region effects (blessing) to every region whose centre the miracle reaches.</summary>
+    private static void ApplyRegionEffects(MiracleDefinition miracle, RegionGrid grid, GroundPosition target)
+    {
+        foreach (var effect in miracle.Effects)
+        {
+            if (effect.Kind != MiracleEffectKind.Bless)
+            {
+                continue;
+            }
+
+            foreach (var region in grid.Cells)
+            {
+                if (Distance(grid.GetRegionCenter(region.Id), target) <= miracle.Radius)
+                {
+                    region.Blessing = Math.Max(region.Blessing, SimMath.Clamp01(effect.Amount));
+                }
+            }
+        }
+    }
+
+    /// <summary>Lets the people of a settlement who saw the miracle change their belief in the god.</summary>
+    private void Witness(MiracleDefinition miracle, SettlementState settlement, int godId, float closeness, SettlementConditions conditions)
+    {
+        var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
+        var loveScale = _rules.GratitudeFloor + ((1f - _rules.GratitudeFloor) * need);
+        var belief = BeliefModel.FindOrAdd(_rules, settlement, godId);
+        BeliefModel.ApplyImpulse(belief, miracle.Witness, closeness, loveScale);
+    }
+
+    /// <summary>Distance between two ground positions in metres.</summary>
+    private static float Distance(GroundPosition a, GroundPosition b)
+    {
+        var dx = a.X - b.X;
+        var dz = a.Z - b.Z;
+        return MathF.Sqrt((dx * dx) + (dz * dz));
+    }
+}

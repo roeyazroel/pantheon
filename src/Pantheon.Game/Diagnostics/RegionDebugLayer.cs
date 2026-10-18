@@ -20,4 +20,10 @@ public enum RegionDebugLayer
 
     /// <summary>Vegetation cover.</summary>
     Vegetation,
+
+    /// <summary>Divine blessing of the land.</summary>
+    Blessing,
+
+    /// <summary>The local player's god's influence at the region centre.</summary>
+    Influence,
 }

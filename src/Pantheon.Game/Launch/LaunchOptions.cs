@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using Pantheon.Domain.World;
+using Pantheon.Game.Presentation;
 
 namespace Pantheon.Game.Launch;
 
@@ -23,6 +24,12 @@ public sealed record LaunchOptions
         "camera-distance",
         "quit-after-frames",
         "screenshot",
+        "divine-power",
+        "cast",
+        "overlay",
+        "focus",
+        "debug-panel",
+        "select",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -48,6 +55,24 @@ public sealed record LaunchOptions
 
     /// <summary>Save a screenshot to this path just before the automatic quit.</summary>
     public string? ScreenshotPath { get; init; }
+
+    /// <summary>Divine Power the player's god starts with, replacing the generated value (debug).</summary>
+    public float? DivinePower { get; init; }
+
+    /// <summary>Miracles the player's god casts, in order, on the focused settlement once the world is ready (debug).</summary>
+    public IReadOnlyList<string> CastAtStart { get; init; } = [];
+
+    /// <summary>Map overlay shown at the start.</summary>
+    public OverlayKind? Overlay { get; init; }
+
+    /// <summary>Settlement (1 for the first) the camera starts on and <see cref="CastAtStart"/> targets.</summary>
+    public int? FocusSettlement { get; init; }
+
+    /// <summary>Miracle selected at the start, so a capture shows its targeting ring at the screen centre.</summary>
+    public string? SelectMiracle { get; init; }
+
+    /// <summary>Whether the F1 debug panel starts visible.</summary>
+    public bool? DebugPanel { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -127,6 +152,29 @@ public sealed record LaunchOptions
                     : Warn(options, warnings, $"'--quit-after-frames' needs a positive integer, got '{value}'.");
             case "screenshot":
                 return options with { ScreenshotPath = value };
+            case "divine-power":
+                return TryParsePositiveFloat(value, out var power)
+                    ? options with { DivinePower = power }
+                    : Warn(options, warnings, $"'--divine-power' needs a positive number, got '{value}'.");
+            case "cast":
+                return options with { CastAtStart = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) };
+            case "overlay":
+                return Enum.TryParse<OverlayKind>(value, ignoreCase: true, out var overlay) && Enum.IsDefined(overlay)
+                    ? options with { Overlay = overlay }
+                    : Warn(options, warnings, $"Unknown overlay '{value}'; expected influence, faith or food.");
+            case "focus":
+                return TryParsePositiveInt(value, out var focus)
+                    ? options with { FocusSettlement = focus }
+                    : Warn(options, warnings, $"'--focus' needs a settlement number from 1, got '{value}'.");
+            case "select":
+                return options with { SelectMiracle = value.Trim() };
+            case "debug-panel":
+                return value.Trim().ToLowerInvariant() switch
+                {
+                    "on" => options with { DebugPanel = true },
+                    "off" => options with { DebugPanel = false },
+                    _ => Warn(options, warnings, $"'--debug-panel' needs on or off, got '{value}'."),
+                };
             default:
                 throw new UnreachableException($"Option '--{name}' is listed in {nameof(KnownOptions)} but not handled.");
         }

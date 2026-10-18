@@ -37,6 +37,15 @@ internal static class TestContent
         RegionsPerSide = 16,
     };
 
+    /// <summary>
+    /// <see cref="SmallWorldGen"/> founding one settlement of exactly the starting population, so
+    /// tests written for the single settlement of Milestone 2 keep their numbers.
+    /// </summary>
+    public static WorldGenSettings SingleSettlementWorldGen => SmallWorldGen with
+    {
+        StartingSettlement = SmallWorldGen.StartingSettlement with { Count = 1, PopulationVariation = 0f },
+    };
+
     /// <summary>Shipped rules with high birth and death rates, so every settlement step uses the random stream.</summary>
     public static SettlementRules BusyRules => Shipped.SettlementRules with
     {
@@ -45,7 +54,13 @@ internal static class TestContent
     };
 
     /// <summary>Content with the small world and busy rules.</summary>
-    public static GameContent SmallBusy => new(SmallWorldGen, BusyRules);
+    public static GameContent SmallBusy => Shipped with { WorldGen = SmallWorldGen, SettlementRules = BusyRules };
+
+    /// <summary>The shipped content with the small world.</summary>
+    public static GameContent Small => Shipped with { WorldGen = SmallWorldGen };
+
+    /// <summary>The shipped divine view settings.</summary>
+    public static DivineViewSettings DivineView => ShippedPresentationContent.Value.DivineView;
 
     /// <summary>Reads one content file as text.</summary>
     /// <param name="fileName">File name inside <see cref="DataDirectory"/>.</param>
@@ -53,10 +68,9 @@ internal static class TestContent
     public static string ReadText(string fileName) => File.ReadAllText(Path.Combine(DataDirectory, fileName));
 
     /// <summary>Parses and validates the shipped simulation content.</summary>
-    private static GameContent LoadShipped() =>
-        GameContent.Parse(ReadText(ContentJson.WorldGenFileName), ReadText(ContentJson.SettlementRulesFileName));
+    private static GameContent LoadShipped() => GameContent.Parse(GameContentFiles.Read(ReadText));
 
     /// <summary>Parses and validates the shipped presentation content.</summary>
     private static PresentationContent LoadPresentation() =>
-        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName));
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName));
 }

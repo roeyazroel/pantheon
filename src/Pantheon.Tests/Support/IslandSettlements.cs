@@ -50,6 +50,7 @@ internal static class IslandSettlements
             Housing = housing,
             Health = 1f,
             ConstructionProgress = constructionProgress,
+            Beliefs = [],
         };
     }
 

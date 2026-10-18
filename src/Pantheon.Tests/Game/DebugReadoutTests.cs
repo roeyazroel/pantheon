@@ -14,7 +14,7 @@ namespace Pantheon.Tests.Game;
 /// <summary>The debug overlay text shows the required readouts.</summary>
 public sealed class DebugReadoutTests
 {
-    private static readonly WorldState World = WorldGenerator.Generate(new WorldSeed(1234), TestContent.SmallWorldGen).State;
+    private static readonly WorldState World = WorldGenerator.Generate(new WorldSeed(1234), TestContent.SingleSettlementWorldGen).State;
 
     [Fact]
     public void DebugReadout_ShowsCoreReadouts()
@@ -79,7 +79,7 @@ public sealed class DebugReadoutTests
         var lines = DebugReadout.Build(SettlementSnapshot(world)).Lines;
 
         Assert.Contains("  food 120.0 / 480   net +1.46/s   harvest 3.46/s   eaten 2.00/s", lines);
-        Assert.Contains("  jobs: 24 farming, 0 building, 16 not working   farmland 25 regions, fertility 0.50", lines);
+        Assert.Contains("  jobs: 24 farming, 0 building, 0.0 worshipping, 16 not working   farmland 25 regions, fertility 0.50, blessing 0.00", lines);
         Assert.Contains("  births 0.16/s   deaths 0.02/s   no house needed: 67% full, builds from 85%", lines);
         Assert.DoesNotContain(lines, line => line.StartsWith("  !", StringComparison.Ordinal));
     }
@@ -115,7 +115,7 @@ public sealed class DebugReadoutTests
 
         var lines = DebugReadout.Build(SettlementSnapshot(world)).Lines;
 
-        Assert.Contains(lines, line => line.StartsWith("  jobs: 28 farming, 7 building, 23 not working", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.StartsWith("  jobs: 28 farming, 7 building, 0.0 worshipping, 23 not working", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.EndsWith("building house 13: 45%", StringComparison.Ordinal));
         Assert.DoesNotContain(lines, line => line.StartsWith("  !", StringComparison.Ordinal));
     }
@@ -187,6 +187,7 @@ public sealed class DebugReadoutTests
         FramesPerSecond = 60.2,
         World = World,
         SettlementRules = TestContent.Shipped.SettlementRules,
+        DivineRules = TestContent.Shipped.DivineRules,
         IsPaused = false,
         TimeScale = 1.0,
         TicksPerSecond = 10.0,

@@ -5,6 +5,7 @@ using System.IO;
 using Godot;
 using Pantheon.Client.Camera;
 using Pantheon.Client.Presentation;
+using Pantheon.Client.Presentation.Divine;
 using Pantheon.Client.UI;
 using Pantheon.Domain.World;
 using Pantheon.Game;
@@ -26,6 +27,9 @@ public partial class GameRoot : Node3D
     private const string QuickSavePath = "user://saves/quicksave.json";
     private const float FocusDistance = 220f;
 
+    // The debug panel details the settlement nearest the cursor within this distance.
+    private const float SelectDistance = 250f;
+
     // F2 seeds stay short enough to read off the overlay and pass back with --seed.
     private const long MaxRandomSeed = 1_000_000_000;
 
@@ -34,6 +38,9 @@ public partial class GameRoot : Node3D
     private WorldPresenter _presenter = null!;
     private GodCameraController _camera = null!;
     private DebugOverlay _overlay = null!;
+    private DivinePresenter _divinePresenter = null!;
+    private DivineController _divine = null!;
+    private int _focusIndex = -1;
     private IReadOnlyList<(StringName Action, Action Run)> _hotkeys = [];
     private string? _status;
     private RegionDebugLayer? _regionMapLayer;
@@ -62,7 +69,13 @@ public partial class GameRoot : Node3D
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
         _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain);
+        _divinePresenter = new DivinePresenter(GetNode<Node3D>("World").AddLayer("Divine"), presentation.DivineView);
         _session = CreateSession(content, options);
+        var hud = new Hud { Name = "Hud" };
+        AddChild(hud);
+        hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
+        _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus);
+        _overlay.PanelVisible = options.DebugPanel ?? false;
         if (options.AdvanceTicks is { } ticks)
         {
             SetStatus(SessionCommands.AdvanceTicks(_session, ticks));
@@ -72,6 +85,7 @@ public partial class GameRoot : Node3D
         _hotkeys = CreateHotkeys();
 
         ShowWorld();
+        ApplyDivineOptions(options);
         if (options.CameraDistance is { } distance)
         {
             FocusSettlement(distance, snap: true);
@@ -81,6 +95,7 @@ public partial class GameRoot : Node3D
         if (options.QuitAfterFrames is { } frames)
         {
             _camera.EdgeScrollEnabled = false;
+            _camera.CenterCursorWhenAway = true;
             AddChild(SmokeTestDriver.Create(frames, options.ScreenshotPath, DescribeWorld));
         }
     }
@@ -94,6 +109,7 @@ public partial class GameRoot : Node3D
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
         var cursor = _camera.CursorGroundPoint;
+        _divine.Process(delta, cursor);
         var cursorRegion = RegionAt(cursor);
         _presenter.SetHoveredRegion(cursorRegion);
         UpdateRegionMap(cursorRegion);
@@ -107,6 +123,12 @@ public partial class GameRoot : Node3D
     /// <param name="event">Input event not consumed by the UI or the camera.</param>
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (@event.IsActionPressed(InputActions.MiracleCast) && _divine.TryCast(_camera.CursorGroundPoint))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         foreach (var (action, run) in _hotkeys)
         {
             if (@event.IsActionPressed(action))
@@ -124,25 +146,30 @@ public partial class GameRoot : Node3D
         (InputActions.ToggleRegionBoundaries, () => _presenter.RegionBoundariesVisible = !_presenter.RegionBoundariesVisible),
         (InputActions.ToggleDebugOverlay, () => _overlay.PanelVisible = !_overlay.PanelVisible),
         (InputActions.ToggleRegionMap, CycleRegionMap),
-        (InputActions.CameraFocusSettlement, () => FocusSettlement(FocusDistance, snap: false)),
+        (InputActions.CameraFocusSettlement, FocusNextSettlement),
         (InputActions.WorldNew, () => SetStatus(SessionCommands.NewWorld(_session, CreateRandomSeed()))),
         (InputActions.WorldQuickSave, () => SetStatus(SessionCommands.QuickSave(_session, GlobalQuickSavePath))),
         (InputActions.WorldQuickLoad, () => SetStatus(SessionCommands.QuickLoad(_session, GlobalQuickSavePath))),
         (InputActions.SimTogglePause, () => SetStatus(SessionCommands.TogglePause(_session))),
-        .. CreateSpeedHotkeys(),
+        (InputActions.SimSpeedDown, () => SetStatus(SessionCommands.ChangeSpeed(_session, -1))),
+        (InputActions.SimSpeedUp, () => SetStatus(SessionCommands.ChangeSpeed(_session, 1))),
+        .. CreateMiracleHotkeys(),
+        (InputActions.MiracleCancel, () => _divine.Select(null)),
+        (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
+        (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
         (InputActions.SimStepSettlement, () => SetStatus(SessionCommands.StepSettlement(_session))),
         (InputActions.DebugSpoilFood, () => SetStatus(SessionCommands.SpoilFood(_session))),
         (InputActions.DebugAddSettlers, () => SetStatus(SessionCommands.AddSettlers(_session))),
     ];
 
-    /// <summary>One hotkey per <see cref="SessionCommands.SpeedPresets"/> entry.</summary>
-    private IEnumerable<(StringName Action, Action Run)> CreateSpeedHotkeys()
+    /// <summary>One hotkey per slot of the miracle bar.</summary>
+    private IEnumerable<(StringName Action, Action Run)> CreateMiracleHotkeys()
     {
-        for (var i = 0; i < InputActions.SimSpeedPresets.Count; i++)
+        for (var i = 0; i < InputActions.MiracleSlots.Count; i++)
         {
-            var preset = i;
-            yield return (InputActions.SimSpeedPresets[preset], () => SetStatus(SessionCommands.SetSpeedPreset(_session, preset)));
+            var slot = i;
+            yield return (InputActions.MiracleSlots[slot], () => _divine.SelectSlot(slot));
         }
     }
 
@@ -175,19 +202,68 @@ public partial class GameRoot : Node3D
     private void ShowWorld()
     {
         _presenter.Rebuild(_session.World, _session.Terrain);
+        _divinePresenter.Rebuild(_session.Terrain, _session.World.Regions.Columns * _session.World.Regions.RegionSize);
+        _divine?.Reset();
+        _focusIndex = -1;
         _camera.SetTerrain(_session.Terrain);
         FocusSettlement(distance: null, snap: true);
     }
 
-    /// <summary>Moves the camera to the first settlement.</summary>
+    /// <summary>Moves the camera to the focused settlement (the first unless <c>--focus</c> chose another).</summary>
     /// <param name="distance">New camera distance, or <c>null</c> to keep the zoom.</param>
     /// <param name="snap">Jump there immediately instead of gliding.</param>
     private void FocusSettlement(float? distance, bool snap)
     {
-        if (_session.World.Settlements.Count > 0)
+        var settlements = _session.World.Settlements;
+        if (settlements.Count > 0)
         {
-            _camera.FocusOn(_session.World.Settlements[0].Position, distance, snap);
+            _camera.FocusOn(settlements[Math.Clamp(_focusIndex, 0, settlements.Count - 1)].Position, distance, snap);
         }
+    }
+
+    /// <summary>Applies the divine debug options: starting power, focus, casts and overlay.</summary>
+    private void ApplyDivineOptions(LaunchOptions options)
+    {
+        if (options.DivinePower is { } power && _session.LocalGod is { } god)
+        {
+            god.DivinePower = power;
+        }
+
+        if (options.FocusSettlement is { } focus && _session.World.Settlements.Count > 0)
+        {
+            _focusIndex = Math.Min(focus, _session.World.Settlements.Count) - 1;
+            FocusSettlement(distance: null, snap: true);
+        }
+
+        foreach (var miracle in options.CastAtStart)
+        {
+            var target = _session.World.Settlements.Count > 0 ? _session.World.Settlements[Math.Max(0, _focusIndex)].Position : default;
+            SetStatus(SessionCommands.CastMiracle(_session, miracle, target));
+        }
+
+        if (options.SelectMiracle is { } selected)
+        {
+            _divine.Select(selected);
+        }
+
+        while (_divine.Overlay != options.Overlay && options.Overlay is not null)
+        {
+            _divine.CycleOverlay();
+        }
+    }
+
+    /// <summary>Glides to the next settlement in turn, starting with the player's home.</summary>
+    private void FocusNextSettlement()
+    {
+        var settlements = _session.World.Settlements;
+        if (settlements.Count == 0)
+        {
+            return;
+        }
+
+        _focusIndex = (_focusIndex + 1) % settlements.Count;
+        _camera.FocusOn(settlements[_focusIndex].Position, FocusDistance, snap: false);
+        SetStatus($"Looking at {settlements[_focusIndex].Name}");
     }
 
     /// <summary>Shows the region debug map's next layer, or hides the map after the last one.</summary>
@@ -210,8 +286,14 @@ public partial class GameRoot : Node3D
         }
 
         _shownRegionMap = wanted;
-        _overlay.ShowRegionMap(wanted is { } map ? RegionDebugMap.Build(map.World, map.Layer, _palette, map.CursorRegion) : null);
+        _overlay.ShowRegionMap(wanted is { } map ? RegionDebugMap.Build(map.World, map.Layer, _palette, map.CursorRegion, InfluenceSamples(map.Layer)) : null);
     }
+
+    /// <summary>The local god's influence per region, for the influence layer of the debug map.</summary>
+    private float[]? InfluenceSamples(RegionDebugLayer layer) =>
+        layer == RegionDebugLayer.Influence && _session.LocalGodId is { } god
+            ? Pantheon.Simulation.Belief.InfluenceField.Build(_session.Content.DivineRules, _session.World, god).SampleRegions(_session.World.Regions)
+            : null;
 
     /// <summary>Region containing a world point, if any.</summary>
     private int? RegionAt(NVector3? point) =>
@@ -223,6 +305,11 @@ public partial class GameRoot : Node3D
         FramesPerSecond = Engine.GetFramesPerSecond(),
         World = _session.World,
         SettlementRules = _session.Content.SettlementRules,
+        DivineRules = _session.Content.DivineRules,
+        LocalGodId = _session.LocalGodId,
+        SelectedSettlementId = cursor is { } point
+            ? SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance)?.Id
+            : null,
         IsPaused = _session.Scheduler.IsPaused,
         TimeScale = _session.Scheduler.TimeScale,
         TicksPerSecond = _session.Scheduler.TicksPerSecond,

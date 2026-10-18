@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World.Generation;
 
@@ -31,4 +32,7 @@ public sealed class WorldState
 
     /// <summary>All settlements in the world.</summary>
     public required List<SettlementState> Settlements { get; init; }
+
+    /// <summary>All gods in the world, ordered by id.</summary>
+    public required List<GodState> Gods { get; init; }
 }

@@ -14,6 +14,7 @@ public sealed class SettlementPresenter
     private readonly Node3D _parent;
     private readonly SettlementRules _rules;
     private readonly SettlementViewSettings _settings;
+    private readonly DivineViewSettings _divine;
     private readonly SettlementAssets _assets = new();
     private readonly Dictionary<int, SettlementView> _views = [];
     private TerrainField? _terrain;
@@ -23,11 +24,13 @@ public sealed class SettlementPresenter
     /// <param name="parent">Node that will hold the settlements.</param>
     /// <param name="rules">Settlement rules, for the house count, construction progress and labour split.</param>
     /// <param name="settings">Settlement presentation settings.</param>
-    public SettlementPresenter(Node3D parent, SettlementRules rules, SettlementViewSettings settings)
+    /// <param name="divine">God colours, for the labels.</param>
+    public SettlementPresenter(Node3D parent, SettlementRules rules, SettlementViewSettings settings, DivineViewSettings divine)
     {
         _parent = parent;
         _rules = rules;
         _settings = settings;
+        _divine = divine;
     }
 
     /// <summary>Tier and representatives of every settlement after the latest <see cref="UpdateCitizens"/>.</summary>
@@ -59,11 +62,11 @@ public sealed class SettlementPresenter
         {
             if (_views.TryGetValue(settlement.Id, out var view))
             {
-                view.Sync(settlement);
+                view.Sync(settlement, world);
             }
             else
             {
-                _views[settlement.Id] = new SettlementView(_parent, _assets, _seed, settlement, _terrain, _rules, _settings);
+                _views[settlement.Id] = new SettlementView(_parent, _assets, _seed, settlement, _terrain, _rules, _settings, _divine, world);
             }
         }
     }

@@ -36,7 +36,7 @@ public static class InputActions
     /// <summary>Hold to rotate by dragging (middle mouse button).</summary>
     public static readonly StringName CameraDragRotate = "camera_drag_rotate";
 
-    /// <summary>Glide to the settlement (F, Home).</summary>
+    /// <summary>Glide to the next settlement (F, Home).</summary>
     public static readonly StringName CameraFocusSettlement = "camera_focus_settlement";
 
     /// <summary>Show or hide the region grid (B).</summary>
@@ -60,8 +60,29 @@ public static class InputActions
     /// <summary>Pause or resume the simulation (Space).</summary>
     public static readonly StringName SimTogglePause = "sim_toggle_pause";
 
-    /// <summary>Simulation speed presets (1, 2, 3), in the order of <c>SessionCommands.SpeedPresets</c>.</summary>
-    public static readonly IReadOnlyList<StringName> SimSpeedPresets = ["sim_speed_1", "sim_speed_2", "sim_speed_3"];
+    /// <summary>Next slower simulation speed preset ([).</summary>
+    public static readonly StringName SimSpeedDown = "sim_speed_down";
+
+    /// <summary>Next faster simulation speed preset (]).</summary>
+    public static readonly StringName SimSpeedUp = "sim_speed_up";
+
+    /// <summary>Select the miracles of the miracle bar (1–9), in order.</summary>
+    public static readonly IReadOnlyList<StringName> MiracleSlots =
+    [
+        "miracle_1", "miracle_2", "miracle_3", "miracle_4", "miracle_5", "miracle_6", "miracle_7", "miracle_8", "miracle_9",
+    ];
+
+    /// <summary>Cast the selected miracle at the cursor (left mouse button).</summary>
+    public static readonly StringName MiracleCast = "miracle_cast";
+
+    /// <summary>Deselect the miracle (Esc).</summary>
+    public static readonly StringName MiracleCancel = "miracle_cancel";
+
+    /// <summary>Show the next map overlay, or hide it after the last one (O).</summary>
+    public static readonly StringName ToggleMapOverlay = "toggle_map_overlay";
+
+    /// <summary>Debug: grant the player's god 500 Divine Power (F4).</summary>
+    public static readonly StringName DebugGrantPower = "debug_grant_power";
 
     /// <summary>Pause and run exactly one simulation tick (.).</summary>
     public static readonly StringName SimStepTick = "sim_step_tick";
@@ -81,6 +102,7 @@ public static class InputActions
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        .. SimSpeedPresets, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers,
+        .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
     ];
 }

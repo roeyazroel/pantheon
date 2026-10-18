@@ -32,6 +32,7 @@ internal sealed class SettlementView
     private readonly SettlementCrowd _crowd;
     private readonly CitizenView _citizens;
     private readonly Label3D _label;
+    private readonly DivineViewSettings _divine;
     private (int Housing, float ConstructionProgress)? _siteInputs;
 
     /// <summary>Creates the settlement's nodes under <paramref name="parent"/> and shows its current state.</summary>
@@ -42,9 +43,12 @@ internal sealed class SettlementView
     /// <param name="terrain">Terrain the settlement stands on.</param>
     /// <param name="rules">Settlement rules, for the house count, the work per house and the labour split.</param>
     /// <param name="settings">Settlement presentation settings.</param>
-    public SettlementView(Node3D parent, SettlementAssets assets, WorldSeed seed, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings)
+    /// <param name="divine">God colours, for the label.</param>
+    /// <param name="world">The world, for god names.</param>
+    public SettlementView(Node3D parent, SettlementAssets assets, WorldSeed seed, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings, DivineViewSettings divine, WorldState world)
     {
         _terrain = terrain;
+        _divine = divine;
         _rules = rules;
         _layout = settings.Layout;
         var root = parent.AddLayer(string.Create(CultureInfo.InvariantCulture, $"Settlement_{settlement.Id}"));
@@ -59,7 +63,7 @@ internal sealed class SettlementView
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
         root.AddChild(_label);
 
-        UpdateLabel(settlement);
+        UpdateLabel(settlement, world);
         ShowSite(settlement);
     }
 
@@ -68,9 +72,10 @@ internal sealed class SettlementView
 
     /// <summary>Updates the label and, when housing or construction changed, the houses, building site and fields.</summary>
     /// <param name="settlement">Current settlement state.</param>
-    public void Sync(SettlementState settlement)
+    /// <param name="world">The world, for god names.</param>
+    public void Sync(SettlementState settlement, WorldState world)
     {
-        UpdateLabel(settlement);
+        UpdateLabel(settlement, world);
         if ((settlement.Housing, settlement.ConstructionProgress) != _siteInputs)
         {
             ShowSite(settlement);
@@ -96,13 +101,20 @@ internal sealed class SettlementView
         return _crowd.GetStatus(settlement.Population, distance);
     }
 
-    /// <summary>Sets the label text when it changed.</summary>
-    private void UpdateLabel(SettlementState settlement)
+    /// <summary>Sets the label text when it changed, tinted by the god most of the people follow.</summary>
+    private void UpdateLabel(SettlementState settlement, WorldState world)
     {
-        var text = SettlementLabel.Format(settlement);
+        var text = SettlementLabel.Format(settlement, world);
         if (_label.Text != text)
         {
             _label.Text = text;
+        }
+
+        var main = SettlementLabel.MainBelief(settlement);
+        var tint = main is { Adherence: >= 0.5f } ? _divine.GodColor(main.GodId).ToGodot() : Colors.White;
+        if (_label.Modulate != tint)
+        {
+            _label.Modulate = tint;
         }
     }
 

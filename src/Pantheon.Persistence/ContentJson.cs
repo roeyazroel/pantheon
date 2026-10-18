@@ -1,5 +1,8 @@
 using System;
 using System.Text.Json;
+using Pantheon.Domain.Belief;
+using Pantheon.Domain.Gods;
+using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World.Generation;
 
@@ -17,6 +20,15 @@ public static class ContentJson
 
     /// <summary>File name of the settlement rules.</summary>
     public const string SettlementRulesFileName = "settlement_rules.json";
+
+    /// <summary>File name of the divine rules (belief, worship, power and influence).</summary>
+    public const string DivineRulesFileName = "divine_rules.json";
+
+    /// <summary>File name of the miracle catalog.</summary>
+    public const string MiraclesFileName = "miracles.json";
+
+    /// <summary>File name of the gods of a new world.</summary>
+    public const string GodsFileName = "gods.json";
 
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
@@ -52,4 +64,19 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The settlement rules.</returns>
     public static SettlementRules ParseSettlementRules(string json) => Parse<SettlementRules>(json, SettlementRulesFileName);
+
+    /// <summary>Parses <c>divine_rules.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The divine rules.</returns>
+    public static DivineRules ParseDivineRules(string json) => Parse<DivineRules>(json, DivineRulesFileName);
+
+    /// <summary>Parses <c>miracles.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The miracle catalog.</returns>
+    public static MiracleCatalog ParseMiracles(string json) => Parse<MiracleCatalog>(json, MiraclesFileName);
+
+    /// <summary>Parses <c>gods.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The pantheon setup.</returns>
+    public static PantheonSetup ParseGods(string json) => Parse<PantheonSetup>(json, GodsFileName);
 }

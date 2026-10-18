@@ -44,16 +44,16 @@ public sealed class SaveMigrationTests
     public void LoadVersion1_KeepsEveryOtherValue()
     {
         var expected = ReadFixture();
-        expected["SaveVersion"] = WorldSaveSerializer.CurrentSaveVersion;
         foreach (var settlement in expected["World"]!["Settlements"]!.AsArray().Select(node => node!.AsObject()))
         {
             settlement["Health"] = 1f;
             settlement["ConstructionProgress"] = 0f;
         }
 
-        var resaved = WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version1SavePath));
+        Version3Expectations.Apply(expected);
+        var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version1SavePath)));
 
-        Assert.Equal(expected.ToJsonString(Indented), resaved);
+        Assert.True(JsonNode.DeepEquals(expected, resaved), resaved!.ToJsonString(Indented));
     }
 
     [Fact]

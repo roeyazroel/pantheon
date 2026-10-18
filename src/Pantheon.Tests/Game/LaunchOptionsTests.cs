@@ -91,4 +91,30 @@ public sealed class LaunchOptionsTests
 
         Assert.Equal("Ignoring unknown option '--wat'.", Assert.Single(options.Warnings));
     }
+
+    [Fact]
+    public void LaunchOptions_ParsesDivineDebugOptions()
+    {
+        var options = LaunchOptions.Parse(["--divine-power=900", "--cast=food, lightning", "--overlay=Faith", "--focus=3", "--debug-panel=on", "--select=heal"]);
+
+        Assert.Equal(900f, options.DivinePower);
+        Assert.Equal(["food", "lightning"], options.CastAtStart);
+        Assert.Equal(Pantheon.Game.Presentation.OverlayKind.Faith, options.Overlay);
+        Assert.Equal(3, options.FocusSettlement);
+        Assert.True(options.DebugPanel);
+        Assert.Equal("heal", options.SelectMiracle);
+        Assert.Empty(options.Warnings);
+    }
+
+    [Fact]
+    public void LaunchOptions_WarnsAboutInvalidDivineOptions()
+    {
+        var options = LaunchOptions.Parse(["--divine-power=-1", "--overlay=weather", "--focus=0", "--debug-panel=maybe"]);
+
+        Assert.Null(options.DivinePower);
+        Assert.Null(options.Overlay);
+        Assert.Null(options.FocusSettlement);
+        Assert.Null(options.DebugPanel);
+        Assert.Equal(4, options.Warnings.Count);
+    }
 }

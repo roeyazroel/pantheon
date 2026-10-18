@@ -37,6 +37,7 @@ internal static class WorldAssert
             Assert.Equal(e.Moisture, a.Moisture);
             Assert.Equal(e.Fertility, a.Fertility);
             Assert.Equal(e.Vegetation, a.Vegetation);
+            Assert.Equal(e.Blessing, a.Blessing);
         }
 
         Assert.Equal(expected.Settlements.Count, actual.Settlements.Count);
@@ -53,7 +54,19 @@ internal static class WorldAssert
             Assert.Equal(e.Housing, a.Housing);
             Assert.Equal(e.Health, a.Health);
             Assert.Equal(e.ConstructionProgress, a.ConstructionProgress);
+            Assert.Equal(
+                JsonSerializer.Serialize(e.Beliefs, PantheonJson.SaveOptions),
+                JsonSerializer.Serialize(a.Beliefs, PantheonJson.SaveOptions));
         }
+
+        Assert.Equal(
+            JsonSerializer.Serialize(expected.Gods, PantheonJson.SaveOptions),
+            JsonSerializer.Serialize(actual.Gods, PantheonJson.SaveOptions));
+
+        // Everything else, including state added after these field checks were written.
+        Assert.Equal(
+            JsonSerializer.Serialize(expected, PantheonJson.SaveOptions),
+            JsonSerializer.Serialize(actual, PantheonJson.SaveOptions));
     }
 
     /// <summary>Asserts that two terrain fields hold identical samples.</summary>

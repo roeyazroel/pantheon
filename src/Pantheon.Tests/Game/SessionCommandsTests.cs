@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Persistence;
@@ -150,23 +151,29 @@ public sealed class SessionCommandsTests : IDisposable
     [Fact]
     public void SpoilFood_EmptiesEveryStore()
     {
-        var settlement = _session.World.Settlements[0];
+        var settlements = _session.World.Settlements;
+        Assert.True(settlements.Count > 1);
 
         var status = SessionCommands.SpoilFood(_session);
 
-        Assert.Equal($"Food stores spoiled: {settlement.Name} lost 120 food", status);
-        Assert.Equal(0f, settlement.Food);
+        Assert.Equal("Food stores spoiled: " + string.Join(", ", settlements.Select(s => $"{s.Name} lost 120 food")), status);
+        Assert.All(settlements, settlement => Assert.Equal(0f, settlement.Food));
     }
 
     [Fact]
     public void AddSettlers_AddsHalfThePopulation_AtLeastTheMinimum()
     {
-        var settlement = _session.World.Settlements[0];
+        var settlements = _session.World.Settlements;
+        foreach (var each in settlements)
+        {
+            each.Population = 40;
+        }
 
-        Assert.Equal($"Settlers arrived: {settlement.Name} +20 (now 60)", SessionCommands.AddSettlers(_session));
+        Assert.Equal("Settlers arrived: " + string.Join(", ", settlements.Select(s => $"{s.Name} +20")) .Replace(", ", " (now 60), ", StringComparison.Ordinal) + " (now 60)", SessionCommands.AddSettlers(_session));
 
+        var settlement = settlements[0];
         settlement.Population = 4;
-        Assert.Equal($"Settlers arrived: {settlement.Name} +{SessionCommands.MinimumSettlers} (now 14)", SessionCommands.AddSettlers(_session));
+        Assert.StartsWith($"Settlers arrived: {settlement.Name} +{SessionCommands.MinimumSettlers} (now 14)", SessionCommands.AddSettlers(_session), StringComparison.Ordinal);
     }
 
     [Fact]

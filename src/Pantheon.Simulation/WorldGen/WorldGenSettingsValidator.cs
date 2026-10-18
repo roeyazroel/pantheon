@@ -74,11 +74,21 @@ public static class WorldGenSettingsValidator
     /// <summary>Checks the starting settlement parameters.</summary>
     private static void ValidateStartingSettlement(StartingSettlementSettings settlement, List<string> errors)
     {
+        Require(settlement.Count >= 1, "StartingSettlement.Count must be at least 1.", errors);
+        Require(settlement.MinimumSpacing >= 1, "StartingSettlement.MinimumSpacing must be at least 1.", errors);
         Require(settlement.Population >= 1, "StartingSettlement.Population must be at least 1.", errors);
-        Require(settlement.Housing >= settlement.Population, "StartingSettlement.Housing must house the starting population.", errors);
+        Require(settlement.PopulationVariation is >= 0f and < 1f, "StartingSettlement.PopulationVariation must be at least 0 and below 1.", errors);
+        Require(
+            settlement.Housing >= MathF.Ceiling(settlement.Population * (1f + settlement.PopulationVariation)),
+            "StartingSettlement.Housing must house the largest starting population.",
+            errors);
         Require(settlement.Food >= 0f, "StartingSettlement.Food must not be negative.", errors);
         Require(settlement.CenterPreference >= 0f, "StartingSettlement.CenterPreference must not be negative.", errors);
-        Require(settlement.Names.Count > 0, "StartingSettlement.Names must contain at least one name.", errors);
+        Require(settlement.Names.Count >= settlement.Count, "StartingSettlement.Names must hold a name for every settlement.", errors);
+        Require(
+            new HashSet<string>(settlement.Names, StringComparer.Ordinal).Count == settlement.Names.Count,
+            "StartingSettlement.Names must not repeat a name.",
+            errors);
         foreach (var name in settlement.Names)
         {
             Require(!string.IsNullOrWhiteSpace(name), "StartingSettlement.Names must not contain blank names.", errors);

@@ -111,12 +111,14 @@ internal static class SettlementReadout
     /// <summary>The labour split and the farmland it works.</summary>
     private static string FormatJobs(SettlementState settlement, SettlementOutlook outlook) =>
         Format(
-            "  jobs: {0:0} farming, {1:0} building, {2:0} not working   farmland {3} regions, fertility {4:0.00}",
+            "  jobs: {0:0} farming, {1:0} building, {2:0.0} worshipping, {3:0} not working   farmland {4} regions, fertility {5:0.00}, blessing {6:0.00}",
             outlook.Labour.Farmers,
             outlook.Labour.Builders,
+            outlook.Labour.Worshippers,
             outlook.Labour.NotWorking(settlement.Population),
             outlook.Land.LandRegions,
-            outlook.Land.MeanFertility);
+            outlook.Land.MeanFertility,
+            outlook.Land.MeanBlessing);
 
     /// <summary>The house under way, or why none is wanted.</summary>
     private static string FormatConstruction(SettlementRules rules, SettlementState settlement, SettlementOutlook outlook, int houses)

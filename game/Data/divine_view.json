@@ -1,0 +1,14 @@
+{
+  // Presentation only: god colours (god 1 takes the first), the map overlays and the look of each miracle.
+  "GodColors": ["#f2c94c", "#d0473b", "#4a8fe0", "#7cc76a", "#b46ad8", "#e58a3a", "#5fd0c9", "#e7e2d6"],
+  "UnaffiliatedColor": "#9aa3a8",
+  "OverlayOpacity": 0.6,
+  // Styles: Shower (motes fall), Rise (motes rise), Wave (a spreading ring), Bolt (a lightning strike).
+  "Effects": [
+    { "MiracleId": "food", "Style": "Shower", "Color": "#f6cf57", "Seconds": 3.0 },
+    { "MiracleId": "heal", "Style": "Rise", "Color": "#7ef0a0", "Seconds": 3.0 },
+    { "MiracleId": "bless_crops", "Style": "Wave", "Color": "#b8f26a", "Seconds": 3.5 },
+    { "MiracleId": "lightning", "Style": "Bolt", "Color": "#d6ecff", "Seconds": 1.2 },
+    { "MiracleId": "mass_healing", "Style": "Wave", "Color": "#7ef0a0", "Seconds": 4.0 }
+  ]
+}

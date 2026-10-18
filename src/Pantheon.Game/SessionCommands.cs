@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Pantheon.Domain.World;
+using Pantheon.Game.Divine;
 using Pantheon.Persistence;
 
 namespace Pantheon.Game;
@@ -19,6 +21,9 @@ public static class SessionCommands
 
     /// <summary>Fewest settlers that arrive with <see cref="AddSettlers"/>, so an empty settlement can be refounded.</summary>
     public const int MinimumSettlers = 10;
+
+    /// <summary>Divine Power granted by the <see cref="GrantPower"/> debug command.</summary>
+    public const float GrantedPower = 500f;
 
     /// <summary>Time scales selected by the speed hotkeys, in order.</summary>
     public static IReadOnlyList<double> SpeedPresets { get; } = [1.0, 4.0, 16.0];
@@ -98,6 +103,62 @@ public static class SessionCommands
         session.Scheduler.TimeScale = SpeedPresets[preset];
         session.Scheduler.IsPaused = false;
         return Format("Simulation speed x{0}", SpeedPresets[preset]);
+    }
+
+    /// <summary>Selects the next faster (<paramref name="step"/> 1) or slower (-1) speed preset and resumes the simulation.</summary>
+    /// <param name="session">Session whose clock is changed.</param>
+    /// <param name="step">+1 for faster, -1 for slower.</param>
+    /// <returns>Status line.</returns>
+    public static string ChangeSpeed(GameSession session, int step)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var current = 0;
+        for (var i = 0; i < SpeedPresets.Count; i++)
+        {
+            if (Math.Abs(SpeedPresets[i] - session.Scheduler.TimeScale) < Math.Abs(SpeedPresets[current] - session.Scheduler.TimeScale))
+            {
+                current = i;
+            }
+        }
+
+        return SetSpeedPreset(session, Math.Clamp(current + Math.Sign(step), 0, SpeedPresets.Count - 1));
+    }
+
+    /// <summary>Casts a miracle for the local player's god; the session checks it first (spec §73).</summary>
+    /// <param name="session">Session to cast in.</param>
+    /// <param name="miracleId">The miracle.</param>
+    /// <param name="target">Where to cast it.</param>
+    /// <returns>Status line: the result, or why it was refused.</returns>
+    public static string CastMiracle(GameSession session, string miracleId, GroundPosition target)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var power = session.LocalGod?.DivinePower ?? 0f;
+        var check = session.CastMiracle(miracleId, target);
+        if (!check.IsAccepted || check.Miracle is not { } miracle)
+        {
+            return DivineText.DescribeCheck(check, miracleId, power, session.Scheduler.TicksPerSecond);
+        }
+
+        var cast = session.PeekLastCast();
+        var names = cast is null
+            ? string.Empty
+            : string.Join(", ", session.World.Settlements.Where(s => cast.AffectedSettlementIds.Contains(s.Id)).Select(s => s.Name));
+        return DivineText.DescribeCast(miracle, check.Cost, names, cast?.Deaths ?? 0);
+    }
+
+    /// <summary>Debug: grants the local player's god <see cref="GrantedPower"/> Divine Power.</summary>
+    /// <param name="session">Session whose world is changed.</param>
+    /// <returns>Status line.</returns>
+    public static string GrantPower(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.LocalGod is not { } god)
+        {
+            return "No god to grant power to";
+        }
+
+        god.DivinePower += GrantedPower;
+        return Format("{0} gains {1:0} Divine Power (now {2:0})", god.Name, GrantedPower, god.DivinePower);
     }
 
     /// <summary>Pauses the simulation, then runs exactly one tick, so its effect can be inspected.</summary>

@@ -1,4 +1,5 @@
 using System;
+using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Systems;
@@ -8,7 +9,8 @@ namespace Pantheon.Simulation.Settlements;
 /// <summary>
 /// One step of the statistical (Tier 1) settlement model (ADR-004, ADR-008): the harvest and
 /// meals, health, births and deaths drawn as Poisson counts from the shared random stream, and
-/// work on the house under construction. <see cref="IntervalSystem"/> runs it once every
+/// work on the house under construction. It raises <see cref="FamineStarted"/> in the step in which a
+/// settlement's stores run out. <see cref="IntervalSystem"/> runs it once every
 /// <see cref="SettlementRules.StepIntervalTicks"/> ticks.
 /// </summary>
 public sealed class SettlementSystem : ISimulationSystem
@@ -33,6 +35,11 @@ public sealed class SettlementSystem : ISimulationSystem
         foreach (var settlement in context.World.Settlements)
         {
             var outlook = SettlementEconomy.Assess(_rules, settlement, regions);
+            if (outlook.IsStarving && settlement.Food > 0f && settlement.Population > 0)
+            {
+                context.Events.Add(new FamineStarted { Tick = context.World.Tick, SettlementId = settlement.Id });
+            }
+
             settlement.Food = outlook.FoodAfter;
             settlement.Health = outlook.HealthAfter;
             UpdatePopulation(settlement, outlook, context.Random);

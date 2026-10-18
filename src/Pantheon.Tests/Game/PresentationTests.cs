@@ -143,6 +143,7 @@ public sealed class PresentationTests
             Food = 0f,
             Housing = 60,
             Health = 1f,
+            Beliefs = [],
             ConstructionProgress = 0f,
         };
 

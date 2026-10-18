@@ -45,20 +45,25 @@ public static class RegionDebugMap
         RegionDebugLayer.Temperature => RegionDebugLayer.Moisture,
         RegionDebugLayer.Moisture => RegionDebugLayer.Fertility,
         RegionDebugLayer.Fertility => RegionDebugLayer.Vegetation,
-        RegionDebugLayer.Vegetation => null,
+        RegionDebugLayer.Vegetation => RegionDebugLayer.Blessing,
+        RegionDebugLayer.Blessing => RegionDebugLayer.Influence,
+        RegionDebugLayer.Influence => null,
     };
 
     /// <summary>A region's value on a numeric layer.</summary>
     /// <param name="region">Region to read.</param>
     /// <param name="layer">Any layer except <see cref="RegionDebugLayer.Biome"/>.</param>
+    /// <param name="influence">Influence per region, for <see cref="RegionDebugLayer.Influence"/>; 0 everywhere when <c>null</c>.</param>
     /// <returns>The statistic.</returns>
     /// <exception cref="ArgumentException">The layer is <see cref="RegionDebugLayer.Biome"/>, which has no numeric value.</exception>
-    public static float GetValue(RegionState region, RegionDebugLayer layer)
+    public static float GetValue(RegionState region, RegionDebugLayer layer, IReadOnlyList<float>? influence = null)
     {
         ArgumentNullException.ThrowIfNull(region);
         return layer switch
         {
             RegionDebugLayer.Biome => throw new ArgumentException("The biome layer has no numeric value.", nameof(layer)),
+            RegionDebugLayer.Blessing => region.Blessing,
+            RegionDebugLayer.Influence => influence is not null && region.Id < influence.Count ? influence[region.Id] : 0f,
             RegionDebugLayer.Elevation => region.Elevation,
             RegionDebugLayer.Temperature => region.Temperature,
             RegionDebugLayer.Moisture => region.Moisture,
@@ -72,9 +77,10 @@ public static class RegionDebugMap
     /// <param name="layer">Statistic that colours the regions.</param>
     /// <param name="palette">Palette that colours the biome layer.</param>
     /// <param name="cursorRegionId">Region under the cursor, if any.</param>
+    /// <param name="influence">Influence per region, for <see cref="RegionDebugLayer.Influence"/>.</param>
     /// <returns>The image and its legend.</returns>
     /// <exception cref="ArgumentOutOfRangeException">The cursor region is outside the grid.</exception>
-    public static RegionDebugMapImage Build(WorldState world, RegionDebugLayer layer, BiomePalette palette, int? cursorRegionId)
+    public static RegionDebugMapImage Build(WorldState world, RegionDebugLayer layer, BiomePalette palette, int? cursorRegionId, IReadOnlyList<float>? influence = null)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(palette);
@@ -94,8 +100,8 @@ public static class RegionDebugMap
         }
         else
         {
-            var (min, max) = GetRange(cells, layer);
-            colors = ColorByValue(cells, layer, min, max);
+            var (min, max) = IsShareLayer(layer) ? (0f, 1f) : GetRange(cells, layer, influence);
+            colors = ColorByValue(cells, layer, min, max, influence);
             description = Format("{0}: {1} (dark) to {2} (bright)", layer, FormatValue(layer, min), FormatValue(layer, max));
         }
 
@@ -126,13 +132,13 @@ public static class RegionDebugMap
     }
 
     /// <summary>Colours each region by where its value lies between the layer's lowest and highest value.</summary>
-    private static RgbColor[] ColorByValue(List<RegionState> cells, RegionDebugLayer layer, float min, float max)
+    private static RgbColor[] ColorByValue(List<RegionState> cells, RegionDebugLayer layer, float min, float max, IReadOnlyList<float>? influence)
     {
         var colors = new RgbColor[cells.Count];
         for (var i = 0; i < cells.Count; i++)
         {
             // A flat layer has no range to spread, so every region gets the middle of the ramp.
-            var t = max > min ? (GetValue(cells[i], layer) - min) / (max - min) : 0.5f;
+            var t = max > min ? (GetValue(cells[i], layer, influence) - min) / (max - min) : 0.5f;
             colors[i] = SampleRamp(t);
         }
 
@@ -140,7 +146,7 @@ public static class RegionDebugMap
     }
 
     /// <summary>Lowest and highest value of a numeric layer; (0, 0) for an empty grid.</summary>
-    private static (float Min, float Max) GetRange(List<RegionState> cells, RegionDebugLayer layer)
+    private static (float Min, float Max) GetRange(List<RegionState> cells, RegionDebugLayer layer, IReadOnlyList<float>? influence)
     {
         if (cells.Count == 0)
         {
@@ -151,13 +157,16 @@ public static class RegionDebugMap
         var max = float.NegativeInfinity;
         foreach (var region in cells)
         {
-            var value = GetValue(region, layer);
+            var value = GetValue(region, layer, influence);
             min = MathF.Min(min, value);
             max = MathF.Max(max, value);
         }
 
         return (min, max);
     }
+
+    /// <summary>Layers whose values are shares, drawn on a fixed 0..1 scale so changes over time are visible.</summary>
+    private static bool IsShareLayer(RegionDebugLayer layer) => layer is RegionDebugLayer.Blessing or RegionDebugLayer.Influence;
 
     /// <summary>Colour at <paramref name="t"/> (0..1) along the ramp, blending linearly between its stops.</summary>
     private static RgbColor SampleRamp(float t)
