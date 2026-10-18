@@ -52,6 +52,9 @@ public sealed class WorldState
     /// <summary>Disasters under way (spec §19, ADR-014).</summary>
     public required DisasterState Disasters { get; init; }
 
-    /// <summary>The god that has won (spec §115), once one has. The world goes on after a victory.</summary>
-    public required int? WinnerGodId { get; set; }
+    /// <summary>
+    /// The gods that have won (spec §53, §115): one god, or an alliance that won together; empty
+    /// until someone wins. The world goes on after a victory.
+    /// </summary>
+    public required List<int> WinnerGodIds { get; init; }
 }

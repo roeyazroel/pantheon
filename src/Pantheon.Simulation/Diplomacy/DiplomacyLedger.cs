@@ -60,9 +60,43 @@ public sealed class DiplomacyLedger : IActRecorder
             case DiplomaticAct.MadePeace:
                 relation.Trust = SimMath.Clamp01(relation.Trust + _rules.HelpGratitude);
                 break;
+            case DiplomaticAct.WrongedAlly:
+                relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
+                relation.Rivalry = SimMath.Clamp01(relation.Rivalry + (_rules.HarmRivalry / 2f));
+                break;
         }
 
-        relation.Memories.Add(new DiplomaticMemory { Tick = world.Tick, Act = act, SettlementId = settlementId, Weight = DiplomacyModel.InitialWeight(act) });
+        Remember(relation, world.Tick, act, settlementId);
+        if (act is DiplomaticAct.Harmed or DiplomaticAct.CreatureAttacked or DiplomaticAct.Converted or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar)
+        {
+            TellAllies(world, observerGodId, actorGodId, settlementId);
+        }
+    }
+
+    /// <summary>
+    /// The victim's allies note the wrong too, at half strength (ADR-015): a god remembers who
+    /// attacked its friends.
+    /// </summary>
+    private void TellAllies(WorldState world, int victimGodId, int actorGodId, int? settlementId)
+    {
+        foreach (var ally in DiplomacyModel.AlliesOf(world, victimGodId))
+        {
+            if (ally == actorGodId)
+            {
+                continue;
+            }
+
+            var relation = DiplomacyModel.EnsureRelation(_rules, world, ally, actorGodId);
+            relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
+            relation.Rivalry = SimMath.Clamp01(relation.Rivalry + (_rules.HarmRivalry / 2f));
+            Remember(relation, world.Tick, DiplomaticAct.WrongedAlly, settlementId);
+        }
+    }
+
+    /// <summary>Adds a memory, forgetting the weakest beyond the capacity.</summary>
+    private void Remember(GodRelation relation, long tick, DiplomaticAct act, int? settlementId)
+    {
+        relation.Memories.Add(new DiplomaticMemory { Tick = tick, Act = act, SettlementId = settlementId, Weight = DiplomacyModel.InitialWeight(act) });
         if (relation.Memories.Count > _rules.MemoryCapacity)
         {
             var weakest = 0;

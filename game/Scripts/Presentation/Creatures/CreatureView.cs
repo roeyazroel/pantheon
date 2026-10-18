@@ -19,6 +19,11 @@ internal sealed class CreatureView
     private const float StrideLength = 3.2f;
     private const float LabelHeight = 9.5f;
 
+    // Labels fade out over LabelFadeMargin metres around LabelHideDistance from the camera: four
+    // gods' Creatures crowd the strategic view, where their bodies are too small to see anyway.
+    private const float LabelHideDistance = 900f;
+    private const float LabelFadeMargin = 200f;
+
     private readonly Node3D _root;
     private readonly Node3D _pose;
     private readonly CreatureBody _body;
@@ -57,6 +62,9 @@ internal sealed class CreatureView
             OutlineModulate = new Color(0.05f, 0.04f, 0.03f, 0.85f),
             NoDepthTest = true,
             VerticalAlignment = VerticalAlignment.Bottom,
+            VisibilityRangeEnd = LabelHideDistance,
+            VisibilityRangeEndMargin = LabelFadeMargin,
+            VisibilityRangeFadeMode = GeometryInstance3D.VisibilityRangeFadeModeEnum.Self,
         };
         _root.AddChild(_label);
     }
@@ -108,6 +116,9 @@ internal sealed class CreatureView
         _root.Position = _shown;
         _root.Rotation = new Vector3(0f, _heading, 0f);
         _root.Scale = new Vector3(scale, scale, scale);
+
+        // The label keeps its on-screen size whatever the Creature's size.
+        _label.Scale = new Vector3(1f / scale, 1f / scale, 1f / scale);
         Pose(creature.Activity, moved / Math.Max(delta, 1e-3f));
         UpdateFlash(delta);
         var title = _owner.Length > 0 ? $"{creature.Name} ({_owner})" : creature.Name;

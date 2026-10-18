@@ -87,6 +87,9 @@ internal static class SaveMigrations
             case 7:
                 UpgradeFrom7(root);
                 break;
+            case 8:
+                UpgradeFrom8(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
@@ -420,6 +423,32 @@ internal static class SaveMigrations
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Version 8 to 9 (Milestone 9): the one winner becomes the list of winners, so that an alliance
+    /// can win together. A version 8 winner becomes a list of that god; no winner, an empty list.
+    /// </summary>
+    private static void UpgradeFrom8(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        if (!world.ContainsKey("WinnerGodId"))
+        {
+            throw new SaveFormatException("A version 8 save must contain 'WinnerGodId'.");
+        }
+
+        var winners = new JsonArray();
+        if (world["WinnerGodId"] is JsonValue winner)
+        {
+            winners.Add((int)ReadNumber(winner));
+        }
+
+        world.Remove("WinnerGodId");
+        AddNode(world, "WinnerGodIds", winners, fromVersion: 8);
     }
 
     /// <summary>Adds a member that the older version could not contain; a present one means the save was edited or corrupted.</summary>

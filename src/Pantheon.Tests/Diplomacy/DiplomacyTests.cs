@@ -250,7 +250,7 @@ public sealed class DiplomacyTests
         DivineWorlds.Believe(world.Settlements[1], adherence: 0.2f, faith: 0.5f, godId: Rival);
         var authority = DiplomacyWorlds.Authority();
         authority.Execute(world, new DiplomaticCommand(Me, Rival, DiplomaticCommandKind.OfferAlliance), Me, new List<WorldEvent>());
-        var diplomat = new Pantheon.Simulation.Gods.GodDiplomat(DiplomacyWorlds.Rules, authority);
+        var diplomat = new Pantheon.Simulation.Gods.GodDiplomat(DiplomacyWorlds.Rules, DivineWorlds.Rules, authority);
         var profile = RivalWorlds.AiRules.Profiles.Single(p => p.Personality == GodPersonality.Guardian);
 
         var moves = diplomat.Evaluate(world, world.Gods[1], profile);

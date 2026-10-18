@@ -103,6 +103,11 @@ public partial class DiplomacyPanel : CanvasLayer
         header.AddChild(Text(entry.Title, 18, Ink));
         header.AddChild(Text(DiplomacyText.Status(entry.Status), 16, _statusColors[entry.Status]));
         card.AddChild(header);
+        if (entry.Ties.Length > 0)
+        {
+            card.AddChild(Text(entry.Ties + ".", 14, new Color(0.62f, 0.8f, 1f)));
+        }
+
         card.AddChild(Text(char.ToUpperInvariant(entry.Attitude[0]) + entry.Attitude[1..] + ".", 14, Muted));
         if (entry.Explanation.Length > 0)
         {
@@ -153,7 +158,7 @@ public partial class DiplomacyPanel : CanvasLayer
     {
         foreach (var entry in entries)
         {
-            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Proposal}:{string.Join(",", entry.Available)}";
+            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.Proposal}:{string.Join(",", entry.Available)}";
         }
     }
 }

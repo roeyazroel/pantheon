@@ -204,10 +204,13 @@ public static class HudReadout
         }
 
         var rules = session.Content.DivineRules;
-        if (world.WinnerGodId is { } winner)
+        if (world.WinnerGodIds.Count > 0)
         {
-            favoursPlayer = winner == local.Id;
-            return favoursPlayer ? "You have won. The world goes on." : Format("{0} has won. The world goes on.", GodStanding.Find(world, winner)?.Name);
+            favoursPlayer = world.WinnerGodIds.Contains(local.Id);
+            var winners = DivineText.Names(world, world.WinnerGodIds, local.Id);
+            return world.WinnerGodIds.Count > 1 ? Format("{0} have won together. The world goes on.", winners)
+                : favoursPlayer ? "You have won. The world goes on."
+                : Format("{0} has won. The world goes on.", winners);
         }
 
         foreach (var god in world.Gods)
@@ -215,19 +218,23 @@ public static class HudReadout
             if (god.DominantSinceTick is { } since)
             {
                 var left = (VictorySystem.TicksToWin(rules) - (world.Tick - since)) / session.Scheduler.TicksPerSecond;
-                favoursPlayer = god.Id == local.Id;
-                return favoursPlayer
-                    ? Format("You hold {0:0%} of all belief: you win in {1}", VictorySystem.ShareOf(world, god.Id), DivineText.Clock(left))
-                    : Format("{0} holds {1:0%} of all belief: it wins in {2}", god.Name, VictorySystem.ShareOf(world, god.Id), DivineText.Clock(left));
+                var (share, allies) = VictorySystem.StandingOf(rules, world, god.Id);
+                var who = new List<int>(allies) { god.Id };
+                who.Sort();
+                favoursPlayer = who.Contains(local.Id);
+                return who.Count > 1
+                    ? Format("{0} hold {1:0%} of all belief together: they win together in {2}", DivineText.Names(world, who, local.Id), share, DivineText.Clock(left))
+                    : favoursPlayer
+                        ? Format("You hold {0:0%} of all belief: you win in {1}", share, DivineText.Clock(left))
+                        : Format("{0} holds {1:0%} of all belief: it wins in {2}", god.Name, share, DivineText.Clock(left));
             }
         }
 
         favoursPlayer = true;
-        return Format(
-            "You hold {0:0%} of all belief; {1:0%} for {2} wins",
-            VictorySystem.ShareOf(world, local.Id),
-            rules.VictoryShare,
-            DivineText.Clock(rules.VictorySeconds));
+        var (mine, mates) = VictorySystem.StandingOf(rules, world, local.Id);
+        return mates.Count == 0
+            ? Format("You hold {0:0%} of all belief; {1:0%} for {2} wins", mine, rules.VictoryShare, DivineText.Clock(rules.VictorySeconds))
+            : Format("{0} hold {1:0%} of all belief together; {2:0%} for {3} wins together", DivineText.Names(world, [.. mates, local.Id], local.Id), mine, rules.VictoryShare, DivineText.Clock(rules.VictorySeconds));
     }
 
     /// <summary>The Creature's card: level, activity, needs, loyalty and what feedback would judge.</summary>

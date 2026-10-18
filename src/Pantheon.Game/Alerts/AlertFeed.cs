@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
@@ -122,13 +123,15 @@ public sealed class AlertFeed
             case MiracleCast cast when cast.GodId != localGodId:
                 return DescribeRivalCast(cast, world, localGodId);
             case DominanceChanged dominance when GodStanding.Find(world, dominance.GodId) is { } dominant:
-                return DescribeDominance(dominance, dominant, localGodId);
+                return dominance.Allies.Count > 0 ? DescribeJointDominance(dominance, world, localGodId) : DescribeDominance(dominance, dominant, localGodId);
             case DiplomacyChanged change:
                 return DescribeDiplomacy(change, world, localGodId);
-            case VictoryAchieved victory when GodStanding.Find(world, victory.GodId) is { } winner:
-                return victory.GodId == localGodId
-                    ? (Key("victory", winner.Id), "You have won: your followers held the world's belief for ten minutes.", AlertSeverity.Good, null)
-                    : (Key("victory", winner.Id), Format("{0} has won the world's belief.", winner.Name), AlertSeverity.Danger, null);
+            case VictoryAchieved victory when victory.GodIds.Count > 0:
+                return localGodId is { } me && victory.GodIds.Contains(me)
+                    ? (Key("victory", victory.GodIds[0]), victory.GodIds.Count > 1
+                        ? Format("{0} have won together: your followers held the world's belief for ten minutes.", DivineText.Names(world, victory.GodIds, localGodId))
+                        : "You have won: your followers held the world's belief for ten minutes.", AlertSeverity.Good, null)
+                    : (Key("victory", victory.GodIds[0]), Format("{0} {1} won the world's belief.", DivineText.Names(world, victory.GodIds, localGodId), victory.GodIds.Count > 1 ? "have" : "has"), AlertSeverity.Danger, null);
             case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
                 return DescribeChange(changed, creature);
             case WeatherSpellChanged spell:
@@ -153,7 +156,8 @@ public sealed class AlertFeed
     /// <summary>A diplomatic move that concerns the player (spec §59: "Vael proposes an alliance").</summary>
     private static (string, string, AlertSeverity, GroundPosition?)? DescribeDiplomacy(DiplomacyChanged change, WorldState world, int? localGodId)
     {
-        if (change.ActorGodId == localGodId || (change.OtherGodId != localGodId && change.Kind != DiplomaticCommandKind.DeclareWar && !change.Betrayal))
+        var formed = change.Kind == DiplomaticCommandKind.Accept && change.Status == DiplomaticStatus.Alliance;
+        if (change.ActorGodId == localGodId || (change.OtherGodId != localGodId && change.Kind != DiplomaticCommandKind.DeclareWar && !change.Betrayal && !formed))
         {
             return null;
         }
@@ -162,8 +166,11 @@ public sealed class AlertFeed
         var key = Key("diplomacy" + change.Kind, (change.ActorGodId * 100) + change.OtherGodId);
         if (change.OtherGodId != localGodId)
         {
-            var victim = GodStanding.Find(world, change.OtherGodId)?.Name ?? "a god";
-            return (key, change.Betrayal ? Format("{0} betrayed {1}.", actor, victim) : Format("{0} declared war on {1}.", actor, victim), AlertSeverity.Info, null);
+            var other = GodStanding.Find(world, change.OtherGodId)?.Name ?? "a god";
+            var text = change.Betrayal ? Format("{0} betrayed {1}.", actor, other)
+                : formed ? Format("{0} and {1} are now allies.", actor, other)
+                : Format("{0} declared war on {1}.", actor, other);
+            return (key, text, AlertSeverity.Info, null);
         }
 
         return change.Kind switch
@@ -257,6 +264,29 @@ public sealed class AlertFeed
             ? (Key("spell", (int)spell.Spell), "The dry spell is over: the rains return.", AlertSeverity.Good, null)
             : null,
     };
+
+    /// <summary>
+    /// An alliance began or ceased to dominate the world's belief together (ADR-015). Every member
+    /// reports it, so only the member with the lowest id raises the alert.
+    /// </summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeJointDominance(DominanceChanged dominance, WorldState world, int? localGodId)
+    {
+        var bloc = new List<int>(dominance.Allies) { dominance.GodId };
+        bloc.Sort();
+        if (bloc[0] != dominance.GodId)
+        {
+            return null;
+        }
+
+        var names = DivineText.Names(world, bloc, localGodId);
+        var key = Key(dominance.Started ? "dominant" : "contested", 1000 + bloc[0]);
+        var ours = localGodId is { } me && bloc.Contains(me);
+        return dominance.Started
+            ? (key, ours
+                ? Format("{0} hold most of the world's belief together: keep it for ten minutes to win together.", names)
+                : Format("{0} hold most of the world's belief together: they win together in ten minutes unless you stop them.", names), ours ? AlertSeverity.Good : AlertSeverity.Danger, null)
+            : (key, Format("{0} no longer hold most of the world's belief together.", names), ours ? AlertSeverity.Warning : AlertSeverity.Good, null);
+    }
 
     /// <summary>A god began or ceased to dominate the world's belief.</summary>
     private static (string, string, AlertSeverity, GroundPosition?)? DescribeDominance(DominanceChanged dominance, Domain.Gods.GodState god, int? localGodId)

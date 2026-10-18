@@ -17,12 +17,16 @@
   // doubt. Thrift: utility falls by Thrift x cost / power. SendCreature: send the Creature to court a
   // settlement. CreatureKindness: what it teaches its Creature (-1 rewards cruelty, 1 rewards kindness).
   // Diplomacy (ADR-012): Cooperation (alliances and peace), Aggression (war), Treachery (breaking an
-  // alliance when it pays) and Grudge (how heavily it weighs what others did to it).
+  // alliance when it pays, and going alone near a joint victory, ADR-015) and Grudge (how heavily it
+  // weighs what others did to it).
   "Profiles": [
-    { "Personality": "Guardian", "Protect": 1.0, "Convert": 0.6, "Intimidate": 0.0, "Bless": 0.5, "Opportunism": 0.2, "Thrift": 0.5, "SendCreature": 0.4, "CreatureKindness": 1.0, "Cooperation": 0.8, "Aggression": 0.2, "Treachery": 0.1, "Grudge": 0.5 },
+    { "Personality": "Guardian", "Protect": 1.0, "Convert": 0.35, "Intimidate": 0.0, "Bless": 0.5, "Opportunism": 0.2, "Thrift": 0.5, "SendCreature": 0.4, "CreatureKindness": 1.0, "Cooperation": 0.8, "Aggression": 0.2, "Treachery": 0.1, "Grudge": 0.5 },
     { "Personality": "Tyrant", "Protect": 0.3, "Convert": 0.3, "Intimidate": 0.8, "Bless": 0.1, "Opportunism": 0.5, "Thrift": 0.5, "SendCreature": 0.5, "CreatureKindness": -0.8, "Cooperation": 0.25, "Aggression": 0.9, "Treachery": 0.5, "Grudge": 0.9 },
     { "Personality": "Opportunist", "Protect": 0.5, "Convert": 0.8, "Intimidate": 0.4, "Bless": 0.3, "Opportunism": 1.0, "Thrift": 0.6, "SendCreature": 0.5, "CreatureKindness": 0.0, "Cooperation": 0.5, "Aggression": 0.5, "Treachery": 0.9, "Grudge": 0.3 },
     { "Personality": "Zealot", "Protect": 0.6, "Convert": 1.0, "Intimidate": 0.5, "Bless": 0.3, "Opportunism": 0.4, "Thrift": 0.3, "SendCreature": 0.7, "CreatureKindness": 0.3, "Cooperation": 0.3, "Aggression": 0.6, "Treachery": 0.3, "Grudge": 0.7 },
-    { "Personality": "NatureKeeper", "Protect": 0.7, "Convert": 0.5, "Intimidate": 0.1, "Bless": 1.0, "Opportunism": 0.2, "Thrift": 0.5, "SendCreature": 0.3, "CreatureKindness": 0.6, "Cooperation": 0.7, "Aggression": 0.2, "Treachery": 0.1, "Grudge": 0.4 }
+    { "Personality": "NatureKeeper", "Protect": 0.7, "Convert": 0.5, "Intimidate": 0.1, "Bless": 1.0, "Opportunism": 0.2, "Thrift": 0.5, "SendCreature": 0.3, "CreatureKindness": 0.6, "Cooperation": 0.7, "Aggression": 0.2, "Treachery": 0.1, "Grudge": 0.4 },
+    { "Personality": "Trickster", "Protect": 0.4, "Convert": 0.9, "Intimidate": 0.3, "Bless": 0.2, "Opportunism": 1.0, "Thrift": 0.5, "SendCreature": 0.6, "CreatureKindness": 0.0, "Cooperation": 0.8, "Aggression": 0.4, "Treachery": 1.0, "Grudge": 0.3 },
+    { "Personality": "Isolationist", "Protect": 1.0, "Convert": 0.2, "Intimidate": 0.1, "Bless": 0.8, "Opportunism": 0.1, "Thrift": 0.7, "SendCreature": 0.1, "CreatureKindness": 0.5, "Cooperation": 0.2, "Aggression": 0.1, "Treachery": 0.1, "Grudge": 0.8 },
+    { "Personality": "Warlord", "Protect": 0.4, "Convert": 0.4, "Intimidate": 1.0, "Bless": 0.1, "Opportunism": 0.6, "Thrift": 0.3, "SendCreature": 0.9, "CreatureKindness": -0.6, "Cooperation": 0.4, "Aggression": 1.0, "Treachery": 0.4, "Grudge": 0.8 }
   ]
 }

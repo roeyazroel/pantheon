@@ -119,9 +119,9 @@ rule is followed by the conventions that meet it in this repository.
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
   options, learned weights and memories, the weather's spell and cells, earthquakes and fires, the
   selected settlement's economy, tier, water, dangers and belief),
-  the P diplomacy panel (status, attitude, memories, grievances and every diplomatic move), the
-  B region grid, the F3 region debug map (including blessing, influence, soil water, fire and
-  scorch), the O map overlays (influence, religion, faith, food, weather, danger), the `.`
+  the P diplomacy panel (status, each god's alliances and wars, attitude, memories, grievances and
+  every diplomatic move), the B region grid, the F3 region debug map (including blessing,
+  influence, soil water, fire and scorch), the O map overlays (influence, religion, faith, food, weather, danger), the `.`
   single-tick step, the `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores),
   F7 (settlers arrive), F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake)
   and F12 (a fire), the launch options

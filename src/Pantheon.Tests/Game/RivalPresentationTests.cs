@@ -28,7 +28,8 @@ public sealed class RivalPresentationTests
         var hud = HudReadout.Build(_session, null, null);
         var rival = _session.World.Gods[1];
 
-        var line = Assert.Single(hud.Rivals);
+        Assert.Equal(_session.World.Gods.Count - 1, hud.Rivals.Count);
+        var line = hud.Rivals[0];
         Assert.StartsWith($"{rival.Name} the {DivineText.Personality(rival.Personality)}: ", line, StringComparison.Ordinal);
         Assert.EndsWith("; 60% for 10:00 wins", hud.Contest, StringComparison.Ordinal);
 
@@ -38,7 +39,7 @@ public sealed class RivalPresentationTests
         Assert.EndsWith("it wins in 10:00", dominated.Contest, StringComparison.Ordinal);
         Assert.False(dominated.ContestFavoursPlayer);
 
-        _session.World.WinnerGodId = _session.LocalGodId;
+        _session.World.WinnerGodIds.Add(_session.LocalGodId!.Value);
         Assert.Equal("You have won. The world goes on.", HudReadout.Build(_session, null, null).Contest);
     }
 
@@ -53,8 +54,8 @@ public sealed class RivalPresentationTests
             [
                 new MiracleCast { Tick = 1, GodId = RivalWorlds.RivalId, MiracleId = "lightning", Target = world.Settlements[0].Position, Cost = 70f, AffectedSettlementIds = [1], Deaths = 3 },
                 new MiracleCast { Tick = 1, GodId = RivalWorlds.RivalId, MiracleId = "food", Target = world.Settlements[1].Position, Cost = 40f, AffectedSettlementIds = [2], Deaths = 0 },
-                new DominanceChanged { Tick = 1, GodId = RivalWorlds.RivalId, Started = true },
-                new VictoryAchieved { Tick = 2, GodId = RivalWorlds.RivalId },
+                new DominanceChanged { Tick = 1, GodId = RivalWorlds.RivalId, Started = true, Allies = [] },
+                new VictoryAchieved { Tick = 2, GodIds = [RivalWorlds.RivalId] },
             ],
             world,
             1,

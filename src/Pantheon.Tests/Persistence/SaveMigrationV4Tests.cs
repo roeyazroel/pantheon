@@ -35,7 +35,7 @@ public sealed class SaveMigrationV4Tests
         var god = Assert.Single(world.Gods);
         Assert.Equal(GodPersonality.None, god.Personality);
         Assert.Null(god.DominantSinceTick);
-        Assert.Null(world.WinnerGodId);
+        Assert.Empty(world.WinnerGodIds);
     }
 
     [Fact]
@@ -46,6 +46,7 @@ public sealed class SaveMigrationV4Tests
         Version6Expectations.Apply(expected);
         Version7Expectations.Apply(expected);
         Version8Expectations.Apply(expected);
+        Version9Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version4SavePath)));
 
@@ -66,10 +67,10 @@ public sealed class SaveMigrationV4Tests
     public void Load_WithAMissingWinner_Throws()
     {
         var world = WorldSaveSerializer.LoadFromFile(Version4SavePath);
-        world.WinnerGodId = 9;
+        world.WinnerGodIds.Add(9);
 
         var exception = Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(WorldSaveSerializer.Serialize(world)));
-        Assert.Contains("missing god 9", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("missing or repeated god 9", exception.Message, StringComparison.Ordinal);
     }
 
     /// <summary>The fixture as an editable JSON tree.</summary>

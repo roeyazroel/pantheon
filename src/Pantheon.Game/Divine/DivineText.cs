@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
+using Pantheon.Domain.World;
+using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Miracles;
 
 namespace Pantheon.Game.Divine;
@@ -33,7 +37,36 @@ public static class DivineText
         GodPersonality.Opportunist => "Opportunist",
         GodPersonality.Zealot => "Zealot",
         GodPersonality.NatureKeeper => "Nature Keeper",
+        GodPersonality.Trickster => "Trickster",
+        GodPersonality.Isolationist => "Isolationist",
+        GodPersonality.Warlord => "Warlord",
     };
+
+    /// <summary>Gods named in a list, the local player's first as "You" (ADR-015).</summary>
+    /// <param name="world">World state, for the names.</param>
+    /// <param name="godIds">The gods.</param>
+    /// <param name="localGodId">The local player's god, if any.</param>
+    /// <returns>For example "You and Seren" or "Vael, Kaio and Seren".</returns>
+    public static string Names(WorldState world, IReadOnlyList<int> godIds, int? localGodId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(godIds);
+        var names = new List<string>();
+        if (localGodId is { } local && godIds.Contains(local))
+        {
+            names.Add("You");
+        }
+
+        foreach (var id in godIds)
+        {
+            if (id != localGodId)
+            {
+                names.Add(GodStanding.Find(world, id)?.Name ?? "?");
+            }
+        }
+
+        return names.Count <= 1 ? string.Join(string.Empty, names) : string.Join(", ", names.GetRange(0, names.Count - 1)) + " and " + names[^1];
+    }
 
     /// <summary>A duration in minutes and seconds.</summary>
     /// <param name="seconds">Seconds.</param>

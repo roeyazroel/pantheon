@@ -117,9 +117,52 @@ public static class DiplomacyText
                 .Replace("its followers", "your followers", StringComparison.Ordinal)
                 .Replace("betrayed it", "betrayed you", StringComparison.Ordinal)
                 .Replace("declared war on it", "declared war on you", StringComparison.Ordinal)
-                .Replace("let your Creature", "let its Creature", StringComparison.Ordinal))
+                .Replace("let your Creature", "let its Creature", StringComparison.Ordinal)
+                .Replace("wronged its ally", "wronged your ally", StringComparison.Ordinal))
             .ToList();
         return grievances.Count == 0 ? string.Empty : other + " " + string.Join("; ", grievances);
+    }
+
+    /// <summary>A god's alliances and wars with gods other than the player (ADR-015).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <param name="localGodId">The player's god, left out.</param>
+    /// <returns>For example "Allied with Seren; at war with Kaio and Vael"; empty when it has neither.</returns>
+    public static string Ties(WorldState world, int godId, int localGodId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var allies = new List<string>();
+        var enemies = new List<string>();
+        foreach (var other in world.Gods)
+        {
+            if (other.Id == godId || other.Id == localGodId)
+            {
+                continue;
+            }
+
+            var status = DiplomacyModel.StatusOf(world, godId, other.Id);
+            if (status == DiplomaticStatus.Alliance)
+            {
+                allies.Add(other.Name);
+            }
+            else if (status == DiplomaticStatus.War)
+            {
+                enemies.Add(other.Name);
+            }
+        }
+
+        var ties = new List<string>();
+        if (allies.Count > 0)
+        {
+            ties.Add("Allied with " + JoinNames(allies));
+        }
+
+        if (enemies.Count > 0)
+        {
+            ties.Add((ties.Count > 0 ? "at war with " : "At war with ") + JoinNames(enemies));
+        }
+
+        return string.Join("; ", ties);
     }
 
     /// <summary>Why a diplomatic command was refused.</summary>
@@ -153,6 +196,7 @@ public static class DiplomacyText
             DiplomaticAct.DeclaredWar => "declared war on it",
             DiplomaticAct.Allied => "allied with it",
             DiplomaticAct.MadePeace => "made peace with it",
+            DiplomaticAct.WrongedAlly => "wronged its ally" + (where.Length > 0 ? " in" + where : string.Empty),
         };
     }
 
@@ -165,4 +209,8 @@ public static class DiplomacyText
 
     /// <summary>Invariant-culture string formatting.</summary>
     private static string Format(string format, params object?[] args) => string.Format(CultureInfo.InvariantCulture, format, args);
+
+    /// <summary>Names joined as "A", "A and B" or "A, B and C".</summary>
+    private static string JoinNames(List<string> names) =>
+        names.Count == 1 ? names[0] : string.Join(", ", names.GetRange(0, names.Count - 1)) + " and " + names[^1];
 }

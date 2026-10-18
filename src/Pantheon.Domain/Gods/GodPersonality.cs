@@ -20,4 +20,13 @@ public enum GodPersonality
 
     /// <summary>Blesses the land and keeps its people fed.</summary>
     NatureKeeper,
+
+    /// <summary>Courts others' followers, makes friends easily and breaks its word when it pays (ADR-015).</summary>
+    Trickster,
+
+    /// <summary>Keeps to its own people and lands, and stays out of others' quarrels (ADR-015).</summary>
+    Isolationist,
+
+    /// <summary>Wages war: strikes, burns and sends its Creature against rivals (ADR-015).</summary>
+    Warlord,
 }

@@ -29,4 +29,7 @@ public enum DiplomaticAct
 
     /// <summary>It made peace with the remembering god.</summary>
     MadePeace,
+
+    /// <summary>It harmed, converted from, attacked, betrayed or declared war on the remembering god's ally (ADR-015).</summary>
+    WrongedAlly,
 }

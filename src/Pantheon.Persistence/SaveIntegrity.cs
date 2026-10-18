@@ -33,9 +33,13 @@ internal static class SaveIntegrity
 
         ValidateRegions(world, errors);
         var godIds = ValidateGods(world, errors);
-        if (world.WinnerGodId is { } winner && !godIds.Contains(winner))
+        var winners = new HashSet<int>();
+        foreach (var winner in world.WinnerGodIds)
         {
-            errors.Add($"The winner is missing god {winner}.");
+            if (!godIds.Contains(winner) || !winners.Add(winner))
+            {
+                errors.Add($"The winners name missing or repeated god {winner}.");
+            }
         }
 
         ValidateSettlements(world, godIds, errors);

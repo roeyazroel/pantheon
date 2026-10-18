@@ -87,7 +87,7 @@ public sealed class SimulationEngine
             new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules),
             new CreatureAuthority(creatureRules, Creatures.Brain),
             new DiplomacyAuthority(diplomacyRules, ledger));
-        var diplomat = new GodDiplomat(diplomacyRules, Authorities.Diplomacy);
+        var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
         Gods = new GodAiSystem(
             new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat),
             godAiRules.EvaluationIntervalTicks);

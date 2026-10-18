@@ -5,6 +5,8 @@
   "HomeBelief": { "Adherence": 0.6, "Faith": 0.5, "Love": 0.3, "Fear": 0.1, "Doubt": 0.15 },
   "Gods": [
     { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble", "Personality": "None" },
-    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "Personality": "Tyrant" }
+    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "Personality": "Tyrant" },
+    { "Name": "Seren", "Controller": "Ai", "CreatureName": "Thistle", "Personality": "Guardian" },
+    { "Name": "Kaio", "Controller": "Ai", "CreatureName": "Quill", "Personality": "Trickster" }
   ]
 }

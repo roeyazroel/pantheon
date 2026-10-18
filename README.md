@@ -56,6 +56,12 @@ your rival uses it too.
 with the wind; earthquakes bring houses down. Villages fight the fires, rebuild their ruins and
 fear their gods. Three new miracles let a god start a fire, shake the earth or shield a village.
 
+**Milestone 9 (Four Gods)** fills the island with gods. Vael the Tyrant, Seren the Guardian and
+Kaio the Trickster all compete for the same people, and deal with each other as they deal with
+you. They gang up on whoever pulls ahead, make peace to face a common threat, remember who
+wronged their allies, and betray when it pays. Allies win together: a bloc that holds 60% of all
+belief for ten minutes shares the victory.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -108,6 +114,8 @@ covers:
   belief, levels, banishment and the checks on commands;
 - rival gods: conversion between gods, contested costs, the god AI's choices for each personality,
   dominance and victory;
+- four gods: blocs of allies and their joint victory, allies' memory of wrongs, coalitions against
+  a leader, fresh peace, betrayal near a joint victory and the new personalities;
 - diplomacy: what each act does to a god's view of another and how long it is remembered,
   friendly and hostile relations, alliances, betrayal, war and peace through the authority's
   checks, what each status changes, and the AI's diplomatic choices with their reasons;
@@ -227,12 +235,16 @@ its cooldown); hover over a button to read what it does.
 A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
 followers grow hungry. Try Lightning to see how fear behaves.
 
-## Your rival
+## Your rivals
 
-Vael the Tyrant starts at the far end of the island. The line under your HUD shows its followers
-and its share of all belief. The line below that shows the race: who holds most of the world's
-belief and how long until they win. Hold 60% of all followers for ten minutes and you win; let Vael
-do it and Vael wins. The world goes on either way.
+Three gods share the island with you, each with a village far from the others and a Creature of
+its own: Vael the Tyrant (Gristle), Seren the Guardian (Thistle) and Kaio the Trickster (Quill).
+The line under your HUD shows each rival's followers, its share of all belief and where you stand
+with it. The line below that shows the race: who holds most of the world's belief and how long
+until they win. Hold 60% of all followers for ten minutes and you win; let a rival do it and it
+wins. Allies count together (see [Diplomacy](#diplomacy)). The world goes on either way.
+
+The examples below use Vael.
 
 - **Vael thinks like you.** Every few seconds it weighs every miracle it could cast on every
   village, plus sending its Creature or saving its power, and picks the best. As a Tyrant it
@@ -273,11 +285,25 @@ each move you can make now. Your status also ends the rival's line on the HUD.
 - **Betrayal.** Breaking an alliance (or declaring war on an ally) collapses the victim's trust,
   makes every god trust you less, and is remembered far longer than anything else. Vael can
   betray you too.
-- **Vael decides by its personality.** The Tyrant goes to war readily and makes peace only when a
-  war wears it down. Change Vael's `Personality` in `game/Data/gods.json` to meet the others: a
-  Guardian welcomes an alliance and keeps it, and an Opportunist refuses alliances while it is
-  winning. The F1 panel lists the moves it is weighing and why. Alerts tell you when it proposes,
-  declares war, betrays you, accepts or declines.
+- **Each god decides by its personality.** The Tyrant goes to war readily and makes peace only
+  when a war wears it down. The Guardian welcomes an alliance and keeps it. The Trickster allies
+  gladly and betrays whenever it pays. Change a god's `Personality` in `game/Data/gods.json` to meet
+  the others: Opportunist, Zealot, Nature Keeper, Isolationist (tends its own and keeps out of
+  wars) or Warlord (strikes and fights). The F1 panel lists the moves each AI god is weighing and
+  why. Alerts tell you when a god proposes, declares war, betrays you, accepts or declines.
+- **The gods deal with each other too** (ADR-015). Each rival's card in the panel shows its
+  alliances and wars with the others ("Allied with Seren; at war with Kaio"), and alerts tell you
+  when two other gods ally, one declares war on another or one betrays another.
+  - A god that pulls ahead draws wars, and the others look for allies against it ("against
+    Seren" in the F1 reasons).
+  - Two lesser gods would rather make peace than fight while a third runs away with the world.
+  - A fresh peace or a new alliance holds for a while.
+  - A god remembers who wronged its allies.
+- **Allies win together.** Allied gods (and allies of allies) count their followers together.
+  A bloc that holds 60% of all belief for ten minutes wins together, and every member wins; the
+  HUD then reads, for example, "Vael and Seren hold 76% of all belief together". Near such a
+  victory, a treacherous god that holds more than its ally may break away to win alone. So an
+  alliance with a strong god can be your road to victory, or theirs.
 
 The rules are in `game/Data/diplomacy.json`, and each personality's diplomatic weights are in
 `game/Data/god_ai.json`.
@@ -487,8 +513,9 @@ vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and thei
 [.docs/milestone-4-creature.md](.docs/milestone-4-creature.md),
 [.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md),
 [.docs/milestone-6-diplomacy.md](.docs/milestone-6-diplomacy.md),
-[.docs/milestone-7-weather.md](.docs/milestone-7-weather.md) and
-[.docs/milestone-8-disasters.md](.docs/milestone-8-disasters.md).
+[.docs/milestone-7-weather.md](.docs/milestone-7-weather.md),
+[.docs/milestone-8-disasters.md](.docs/milestone-8-disasters.md) and
+[.docs/milestone-9-four-gods.md](.docs/milestone-9-four-gods.md).
 
 ## Contributing
 
@@ -509,6 +536,8 @@ and the definition of done.
   Terrain3D's platform documentation.
 - Export presets are not set up yet. The game reads `res://Data/*.json` at startup, so every
   export must include those files.
+- Four gods crowd the island: a player who does nothing keeps only a few followers after ten
+  minutes, and Seren the Guardian is the strongest AI god (kindness converts better than fear).
 - The representative citizens are presentation only: they show what the settlement's numbers
   say, but nothing can interact with an individual citizen until a later milestone adds full
   (Tier 3) agents ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).

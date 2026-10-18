@@ -123,7 +123,7 @@ internal static class SettlementWorlds
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = WeatherWorlds.Calm(),
             Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
-            WinnerGodId = null,
+            WinnerGodIds = [],
         };
     }
 

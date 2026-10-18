@@ -146,6 +146,9 @@ public sealed record DivineRules
     /// <summary>Simulated seconds of unbroken dominance that win the game (spec §115: ten minutes).</summary>
     public required float VictorySeconds { get; init; }
 
+    /// <summary>Whether allied gods who together hold the victory share win together (spec §53 Pantheon victory, ADR-015).</summary>
+    public required bool PantheonVictory { get; init; }
+
     /// <summary>Share of a miracle's Love that people get even when they did not need it.</summary>
     public required float GratitudeFloor { get; init; }
 

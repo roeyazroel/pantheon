@@ -27,6 +27,9 @@ public sealed record DiplomacyEntry
     /// <summary>What your god holds against it; empty when nothing.</summary>
     public required string Grievances { get; init; }
 
+    /// <summary>Its alliances and wars with the other gods (ADR-015), for example "Allied with Seren; at war with Kaio"; empty when none.</summary>
+    public required string Ties { get; init; }
+
     /// <summary>What it has proposed to you, if anything.</summary>
     public ProposalKind? Proposal { get; init; }
 
@@ -86,6 +89,7 @@ public static class DiplomacyReadout
                 Attitude = DiplomacyText.Attitude(view),
                 Explanation = DiplomacyText.Explain(view, world),
                 Grievances = DiplomacyText.Grievances(DiplomacyModel.FindRelation(world, me, god.Id), world, god.Name),
+                Ties = DiplomacyText.Ties(world, god.Id, me),
                 Proposal = DiplomacyAuthority.FindProposal(world, god.Id, me)?.Kind,
                 Available = available,
             });

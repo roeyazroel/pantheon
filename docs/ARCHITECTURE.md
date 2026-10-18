@@ -116,7 +116,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
   (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures`, `Diplomacy`,
-  `Weather`, `Disasters` and `WinnerGodId` (once a god has won, spec §115).
+  `Weather`, `Disasters` and `WinnerGodIds` (the god or allied gods that have won, spec §53 and
+  §115; ADR-015).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -203,7 +204,7 @@ files and compiled assemblies and fails when either rule is broken.
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
   `GodAiSystem`; `Gods/GodDiplomat` adds its diplomatic moves. `Belief/VictorySystem` tracks
-  dominance and victory.
+  each god's standing (alone or with its bloc), dominance and victory.
 - `Diplomacy/`: `DiplomacyModel` (finding and creating relations and stances, grudge, warmth),
   `DiplomacyLedger` (the `IActRecorder` that miracles, Creature deeds and conversions report
   acts to), `DiplomacySystem` (the diplomacy step) and `DiplomacyAuthority` (diplomatic commands,
@@ -228,7 +229,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 8, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 9, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -242,7 +243,8 @@ files and compiled assemblies and fails when either rule is broken.
   Version 5 → 6 adds empty diplomacy: no relations, no stances (every pair neutral) and no
   proposals. Version 6 → 7 adds clear skies (no cells, a normal spell not yet scheduled, a west
   wind) and gives each region its climate's moisture as soil water. Version 7 → 8 adds no
-  earthquakes, no fire or scorch, and no ruins or shields. A missing, unsupported or newer version
+  earthquakes, no fire or scorch, and no ruins or shields. Version 8 → 9 turns the one winner
+  into the list of winners (that god, or none). A missing, unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
@@ -298,7 +300,8 @@ files and compiled assemblies and fails when either rule is broken.
 - `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
   target hint and the Creature card (level, activity, needs, loyalty, morality, what feedback would
-  judge), the rival gods with their status towards the player, the race for victory, and the
+  judge), the rival gods with their status towards the player, the race for victory (a bloc's
+  shared share when allied, ADR-015), and the
   weather and dangers when they matter (a dry or wet spell; droughts, storms, fires and earthquakes
   among the player's people).
   `Divine/DivineText` words ranks, personalities, clocks and cast verdicts;
@@ -308,12 +311,14 @@ files and compiled assemblies and fails when either rule is broken.
 - `Weather/WeatherText` words spells, kinds, the wind's direction and droughts;
   `Weather/WeatherCommands` drives the weather for debugging (F8 next spell, F10 a storm at the
   cursor).
-- `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (status, the rival's
-  attitude and why, the player's grievances, the proposal waiting and the moves allowed now), and
+- `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (status, the rival's ties
+  with the other gods, its attitude and why, the player's grievances, the proposal waiting and the
+  moves allowed now), and
   `DiplomacyText` words statuses, commands, memories and rejections.
 - `Alerts/AlertFeed` turns events into alerts for the local player (§59): only those about the
-  player's god or followers, never the same alert twice within 30 simulated seconds, the most
-  urgent kept when full.
+  player's god or followers, plus wars, betrayals and alliances between other gods and every
+  god's or bloc's dominance and victory; never the same alert twice within 30 simulated seconds,
+  the most urgent kept when full.
 - `Presentation/OverlayMap` builds the map overlays (§58): influence (each region in the colour of
   the strongest god, opacity by its influence), religion (each settlement's lands in its main god's
   colour), faith and food (each settlement's lands on a red-to-green ramp), weather (each land
@@ -659,8 +664,9 @@ the measured contests.
 - **Competition.** People leaving a god follow the others by their pull, or no god by
   `ApostateFreedom`. A miracle plants doubt about the other gods its witnesses follow. Casting
   under a stronger rival's influence costs more.
-- **Victory** (`VictorySystem`): 60% of all followers held for 600 s wins (`WinnerGodId`,
-  `VictoryAchieved`), and the world goes on.
+- **Victory** (`VictorySystem`): 60% of all followers held for 600 s wins (`WinnerGodIds`,
+  `VictoryAchieved`), and the world goes on. Allied gods count together (see
+  [Four gods and pantheon victory](#four-gods-and-pantheon-victory)).
 
 ## Diplomacy
 
@@ -698,6 +704,39 @@ flowchart LR
     Authority --> Stance
     Authority --> Ledger
     Stance --> Effects["Miracle doubt and costs,<br/>war resistance, AI and Creature targets"]
+```
+
+## Four gods and pantheon victory
+
+ADR-015 records the decisions, and the Milestone 9 plan
+([.docs/milestone-9-four-gods.md](../.docs/milestone-9-four-gods.md)) has the terms and the
+measured politics.
+
+- **Four gods**: the player and three AI gods (Tyrant, Guardian and Trickster in `gods.json`), each
+  with a home and a Creature. Eight personalities have profiles in `god_ai.json`.
+- **Blocs**: a god and every god allied with it, directly or through allies
+  (`DiplomacyModel.BlocOf`). With `PantheonVictory`, a god's standing is its bloc's share when that
+  is more than its own, so a bloc dominates and wins together; a god holding the share alone wins
+  alone.
+- **Allies remember**: a wrong done to a god is noted, at half strength, by each of its allies
+  (`WrongedAlly`).
+- **The AI diplomat weighs third gods**: a third god's lead draws two gods into alliance and away
+  from war with each other; a leader draws war; the goodwill of a fresh peace or alliance holds war
+  and betrayal back; near a joint victory a treacherous god that outweighs its ally may break away.
+
+```mermaid
+flowchart LR
+    Shares["Followers' shares"] --> Diplomat["GodDiplomat"]
+    Memory["Relations and memories"] --> Diplomat
+    Diplomat --> Authority["DiplomacyAuthority"]
+    Player["Diplomacy panel (P)"] --> Authority
+    Authority --> Stances["Alliances and wars"]
+    Stances --> Bloc["DiplomacyModel.BlocOf"]
+    Bloc --> Standing["VictorySystem.StandingOf"]
+    Shares --> Standing
+    Standing --> Victory["Dominance, WinnerGodIds"]
+    Stances --> Ledger["DiplomacyLedger:<br/>allies remember wrongs"]
+    Ledger --> Memory
 ```
 
 ## Weather
@@ -805,8 +844,8 @@ the client.
 - The F1 panel's god AI view (`GodAiReadout`, §106) shows each AI god's personality, its goal now
   (its best candidate) and its top three candidates with utilities and reasons, followed by its
   diplomatic candidates and the factors behind them.
-- P: the diplomacy panel shows each rival's status, attitude and memories, and drives every
-  diplomatic move. `--diplomacy-panel=on` opens it in scripted runs.
+- P: the diplomacy panel shows each rival's status, its alliances and wars with the other gods,
+  its attitude and memories, and drives every diplomatic move. `--diplomacy-panel=on` opens it in scripted runs.
 - The F1 panel's weather lines (`WeatherReadout`, §106) show the spell and its time left, the wind,
   the strongest cells with their state, the soil and weather under the cursor and the selected
   settlement's water and yield. F8 starts the next spell (normal, dry, wet), F10 calls a storm at
@@ -924,7 +963,10 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   presentation and tools, and the version 6 → 7 migration (against `save-v6.json`). Since
   Milestone 8 it covers earthquakes, wildfires, destruction, ruins, the settlements' response, the
   Fire, Earthquake and Shield miracles and the AI's use of them, the disasters' presentation and
-  tools, and the version 7 → 8 migration (against `save-v7.json`). The tests load the shipped `game/Data/*.json`; rule tests
+  tools, and the version 7 → 8 migration (against `save-v7.json`). Since Milestone 9 it covers
+  blocs and pantheon victory, allies' memory, the AI diplomat's coalition, balance, goodwill and
+  endgame terms, the new personalities, the four-god presentation, and the version 8 → 9 migration
+  (against `save-v8.json`). The tests load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
   `WeatherWorlds.Rules`, `DisasterWorlds.Rules`)
   so retuning the data does not change their meaning.
@@ -945,7 +987,8 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   `SaveMigrations` step from the previous version, tested against a save written by the
   previous build.
 - The step, the layout, the tiers and the views iterate over every settlement, and world
-  generation founds eight. More gods (Milestone 9) are more entries in `gods.json`; the AI, belief
-  and victory rules already handle any number.
+  generation founds eight. Four gods share them since Milestone 9; more gods are more entries in
+  `gods.json` (and god colours in `divine_view.json`), as the AI, belief, diplomacy and victory
+  rules handle any number.
 - Tier 3 adds agents with effects and promotion and demotion that write back to the
   aggregates; the milestone that adds it amends or supersedes ADR-008.

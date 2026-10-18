@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using Pantheon.Domain.Belief;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
@@ -22,17 +24,27 @@ public sealed class GodDiplomat
     private const float Threshold = 0.25f;
     private const float WarWearinessSeconds = 300f;
 
+    // A third god leading by this share of all followers starts to look like a common threat.
+    private const float ThreatShare = 0.3f;
+
+    // Allies this close to winning together weigh loyalty against personal ascendancy (spec §54).
+    private const float EndgameMargin = 0.15f;
+
     private readonly DiplomacyRules _rules;
+    private readonly DivineRules _divine;
     private readonly DiplomacyAuthority _authority;
 
     /// <summary>Creates the diplomat.</summary>
     /// <param name="rules">Diplomacy rules.</param>
+    /// <param name="divine">Divine rules, for the victory share.</param>
     /// <param name="authority">The diplomacy authority it acts through.</param>
-    public GodDiplomat(DiplomacyRules rules, DiplomacyAuthority authority)
+    public GodDiplomat(DiplomacyRules rules, DivineRules divine, DiplomacyAuthority authority)
     {
         ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(divine);
         ArgumentNullException.ThrowIfNull(authority);
         _rules = rules;
+        _divine = divine;
         _authority = authority;
     }
 
@@ -98,22 +110,29 @@ public sealed class GodDiplomat
         var theyDominate = other.DominantSinceTick is not null;
         var stance = DiplomacyModel.FindStance(world, god.Id, other.Id);
         var status = stance?.Status ?? DiplomaticStatus.Neutral;
+        var (threat, leader) = ThirdPartyThreat(world, god.Id, other.Id);
+        var otherLeads = Leading(world, god.Id, other.Id);
         var why = Format(
-            "trust {0:0.00}, rivalry {1:0.00}, fear {2:0.00}, grudge {3:0.00}, goodwill {4:0.00}, advantage {5:+0.00;-0.00;0.00}{6}",
+            "trust {0:0.00}, rivalry {1:0.00}, fear {2:0.00}, grudge {3:0.00}, goodwill {4:0.00}, advantage {5:+0.00;-0.00;0.00}{6}{7}{8}",
             view.Trust,
             view.Rivalry,
             view.Fear,
             grudge,
             goodwill,
             advantage,
-            theyDominate ? ", they dominate" : string.Empty);
-        // Alliance appeals to the cooperative, the grateful, the afraid and the losing.
-        var alliance = (profile.Cooperation * (view.Trust + (0.5f * view.Respect) + view.Gratitude + (0.5f * goodwill)))
+            theyDominate ? ", they dominate" : string.Empty,
+            threat > 0f ? Format(", against {0} {1:0.00}", leader, threat) : string.Empty,
+            otherLeads > 0f ? Format(", they lead {0:0.00}", otherLeads) : string.Empty);
+
+        // Alliance appeals to the cooperative, the grateful, the afraid, the losing, and to those a
+        // third god threatens (a coalition against the leader, ADR-015).
+        var alliance = (profile.Cooperation * (view.Trust + (0.5f * view.Respect) + view.Gratitude + (0.5f * goodwill) + (0.8f * threat)))
             + (0.6f * view.Fear) + (0.5f * Math.Max(0f, -advantage)) - (0.6f * view.Rivalry) - view.Suspicion - grudge - 0.3f;
 
-        // War-weariness wears on a god that is not winning.
+        // War-weariness wears on a god that is not winning, and a third god's lead makes a war between
+        // two others a gift to it (the balance of power, ADR-015).
         var weariness = WarSeconds(world, stance) / WarWearinessSeconds * (1f - Math.Max(0f, advantage));
-        var peace = (profile.Cooperation * (weariness + Math.Max(0f, -advantage))) + view.Fear - (0.5f * grudge) - 0.3f;
+        var peace = (profile.Cooperation * (weariness + Math.Max(0f, -advantage) + threat)) + view.Fear - (0.5f * grudge) - 0.3f;
         if (DiplomacyAuthority.FindProposal(world, other.Id, god.Id) is { } proposal)
         {
             var accept = proposal.Kind == ProposalKind.Alliance ? alliance + 0.2f : peace + 0.3f;
@@ -123,7 +142,9 @@ public sealed class GodDiplomat
         switch (status)
         {
             case DiplomaticStatus.Alliance:
-                var betray = (profile.Treachery * (Math.Max(0f, advantage) + view.Rivalry)) + (theyDominate ? 0.8f : 0f) - view.Trust - 0.4f;
+                // An ally dominating with this god is its path to a joint victory, not a threat.
+                var aloneDominant = theyDominate && !VictorySystem.StandingOf(_divine, world, other.Id).Allies.Contains(god.Id);
+                var betray = (profile.Treachery * (Math.Max(0f, advantage) + view.Rivalry)) + (aloneDominant ? 0.8f : 0f) + Endgame(world, god.Id, other.Id, profile) - view.Trust - goodwill - 0.4f;
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.BreakAlliance, other.Id, betray, why));
                 break;
             case DiplomaticStatus.War:
@@ -133,11 +154,64 @@ public sealed class GodDiplomat
             case DiplomaticStatus.Neutral:
             case DiplomaticStatus.Hostile:
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.OfferAlliance, other.Id, alliance, why));
-                var war = (profile.Aggression * (view.Rivalry + grudge + Math.Max(0f, advantage) + (status == DiplomaticStatus.Hostile ? 0.3f : 0f)))
-                    + (theyDominate ? 0.6f : 0f) - (0.5f * view.Trust) - view.Fear - (0.3f * profile.Cooperation) - 0.4f;
+                // A fresh peace or past help holds a god back until the memory fades.
+                var war = (profile.Aggression * (view.Rivalry + grudge + Math.Max(0f, advantage) + otherLeads + (status == DiplomaticStatus.Hostile ? 0.3f : 0f)))
+                    + (theyDominate ? 0.6f : 0f) - (0.5f * view.Trust) - view.Fear - goodwill - (0.3f * profile.Cooperation) - (0.8f * threat) - 0.4f;
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.DeclareWar, other.Id, war, why));
                 break;
         }
+    }
+
+    /// <summary>
+    /// How much a third god (neither this one nor the other, nor an ally of either) threatens both: its share of all
+    /// followers past <see cref="ThreatShare"/>, scaled to 1 at the victory share. A dominant third
+    /// god is a full threat.
+    /// </summary>
+    private (float Threat, string Leader) ThirdPartyThreat(WorldState world, int godId, int otherId)
+    {
+        var threat = 0f;
+        var leader = string.Empty;
+        foreach (var third in world.Gods)
+        {
+            if (third.Id == godId || third.Id == otherId || DiplomacyModel.AreAllied(world, godId, third.Id) || DiplomacyModel.AreAllied(world, otherId, third.Id))
+            {
+                continue;
+            }
+
+            var share = VictorySystem.ShareOf(world, third.Id);
+            var level = third.DominantSinceTick is not null ? 1f : SimMath.Clamp01((share - ThreatShare) / (_divine.VictoryShare - ThreatShare));
+            if (level > threat)
+            {
+                threat = level;
+                leader = third.Name;
+            }
+        }
+
+        return (threat, leader);
+    }
+
+    /// <summary>How far the other god leads the world: its share past <see cref="ThreatShare"/> when it holds more than this god (0..1).</summary>
+    private float Leading(WorldState world, int godId, int otherId)
+    {
+        var theirs = VictorySystem.ShareOf(world, otherId);
+        return theirs <= VictorySystem.ShareOf(world, godId) ? 0f : SimMath.Clamp01((theirs - ThreatShare) / (_divine.VictoryShare - ThreatShare));
+    }
+
+    /// <summary>
+    /// The pull of personal ascendancy near a joint victory (spec §54): when the alliance is close to
+    /// the victory share, a treacherous god that holds more than its partner is tempted to go alone,
+    /// and a loyal one to stay and win together.
+    /// </summary>
+    private float Endgame(WorldState world, int godId, int otherId, GodProfile profile)
+    {
+        var (together, _) = VictorySystem.StandingOf(_divine, world, godId);
+        if (!_divine.PantheonVictory || together < _divine.VictoryShare - EndgameMargin)
+        {
+            return 0f;
+        }
+
+        var lead = VictorySystem.ShareOf(world, godId) - VictorySystem.ShareOf(world, otherId);
+        return (profile.Treachery * 3f * Math.Max(0f, lead)) - ((1f - profile.Treachery) * 0.5f);
     }
 
     /// <summary>Simulated seconds the pair has been at war; 0 when not at war.</summary>

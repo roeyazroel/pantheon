@@ -110,7 +110,7 @@ public sealed class WorldGenerationTests
         var farthest = state.Settlements.Skip(1).MaxBy(s => Distance(s.Position, state.Settlements[0].Position))!;
         Assert.Equal(farthest.Id, rivalHome.Id);
         Assert.Equal(state.Gods.Count, state.Settlements.Count(s => s.Beliefs.Count > 0));
-        Assert.Null(state.WinnerGodId);
+        Assert.Empty(state.WinnerGodIds);
     }
 
     /// <summary>Distance between two ground positions.</summary>

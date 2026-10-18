@@ -1,15 +1,19 @@
 using System;
+using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.World;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Systems;
 
 namespace Pantheon.Simulation.Belief;
 
 /// <summary>
-/// Tracks which god dominates the world's belief (spec §53 Divine Ascendancy, §115): a god that
-/// holds <c>VictoryShare</c> of all followers for <c>VictorySeconds</c> without a break wins. The
-/// world goes on afterwards. A world with fewer than two gods has no contest and no winner.
+/// Tracks which god dominates the world's belief (spec §53 Divine Ascendancy and Pantheon victory,
+/// §115): a god that holds <c>VictoryShare</c> of all followers for <c>VictorySeconds</c> without a
+/// break wins, alone or, with pantheon victory on, together with the allies whose followers it
+/// counts with (ADR-015). The world goes on afterwards. A world with fewer than two gods has no
+/// contest and no winner.
 /// </summary>
 public sealed class VictorySystem : ISimulationSystem
 {
@@ -54,6 +58,33 @@ public sealed class VictorySystem : ISimulationSystem
         return (long)MathF.Round(rules.VictorySeconds * SimulationTime.TicksPerSecond);
     }
 
+    /// <summary>
+    /// The share of all followers a god holds towards victory, and with whom: its own, or its bloc's
+    /// when it is allied and pantheon victory is on (ADR-015).
+    /// </summary>
+    /// <param name="rules">Divine rules.</param>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns>The share and the allies it counts with (empty when it counts alone).</returns>
+    public static (float Share, IReadOnlyList<int> Allies) StandingOf(DivineRules rules, WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        var own = ShareOf(world, godId);
+        if (!rules.PantheonVictory || own >= rules.VictoryShare)
+        {
+            return (own, []);
+        }
+
+        var bloc = DiplomacyModel.BlocOf(world, godId);
+        var together = 0f;
+        foreach (var member in bloc)
+        {
+            together += ShareOf(world, member);
+        }
+
+        return bloc.Count > 1 && together > own ? (together, bloc.FindAll(member => member != godId)) : (own, []);
+    }
+
     /// <inheritdoc />
     public void Update(TickContext context)
     {
@@ -66,12 +97,13 @@ public sealed class VictorySystem : ISimulationSystem
 
         foreach (var god in world.Gods)
         {
-            if (ShareOf(world, god.Id) < _rules.VictoryShare)
+            var (share, allies) = StandingOf(_rules, world, god.Id);
+            if (share < _rules.VictoryShare)
             {
                 if (god.DominantSinceTick is not null)
                 {
                     god.DominantSinceTick = null;
-                    context.Events.Add(new DominanceChanged { Tick = world.Tick, GodId = god.Id, Started = false });
+                    context.Events.Add(new DominanceChanged { Tick = world.Tick, GodId = god.Id, Started = false, Allies = allies });
                 }
 
                 continue;
@@ -80,13 +112,15 @@ public sealed class VictorySystem : ISimulationSystem
             if (god.DominantSinceTick is null)
             {
                 god.DominantSinceTick = world.Tick;
-                context.Events.Add(new DominanceChanged { Tick = world.Tick, GodId = god.Id, Started = true });
+                context.Events.Add(new DominanceChanged { Tick = world.Tick, GodId = god.Id, Started = true, Allies = allies });
             }
 
-            if (world.WinnerGodId is null && world.Tick - god.DominantSinceTick.Value >= TicksToWin(_rules))
+            if (world.WinnerGodIds.Count == 0 && world.Tick - god.DominantSinceTick.Value >= TicksToWin(_rules))
             {
-                world.WinnerGodId = god.Id;
-                context.Events.Add(new VictoryAchieved { Tick = world.Tick, GodId = god.Id });
+                world.WinnerGodIds.Add(god.Id);
+                world.WinnerGodIds.AddRange(allies);
+                world.WinnerGodIds.Sort();
+                context.Events.Add(new VictoryAchieved { Tick = world.Tick, GodIds = [.. world.WinnerGodIds] });
             }
         }
     }

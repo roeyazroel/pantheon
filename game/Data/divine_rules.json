@@ -79,6 +79,7 @@
   // Victory (spec section 115): hold VictoryShare of all followers for VictorySeconds without a break.
   "VictoryShare": 0.6,
   "VictorySeconds": 600.0,
+  "PantheonVictory": true,
   "BlessingDecayPerStep": 0.008,
 
   // Followers needed for each rank (spec section 13). A god never loses a rank.

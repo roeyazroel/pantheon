@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.World;
 
@@ -21,6 +22,7 @@ public static class DiplomacyModel
         DiplomaticAct.MadePeace => 0.5f,
         DiplomaticAct.Helped => 0.3f,
         DiplomaticAct.Courted => 0.2f,
+        DiplomaticAct.WrongedAlly => 0.25f,
     };
 
     /// <summary>Whether an act is hostile.</summary>
@@ -28,7 +30,7 @@ public static class DiplomacyModel
     /// <returns><c>true</c> for acts that build a grudge.</returns>
     public static bool IsHostile(DiplomaticAct act) => act switch
     {
-        DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar => true,
+        DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly => true,
         DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace => false,
     };
 
@@ -159,6 +161,51 @@ public static class DiplomacyModel
         }
 
         return grudge;
+    }
+
+    /// <summary>The gods allied with a god, in id order.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns>Its allies.</returns>
+    public static List<int> AlliesOf(WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var allies = new List<int>();
+        foreach (var god in world.Gods)
+        {
+            if (AreAllied(world, godId, god.Id))
+            {
+                allies.Add(god.Id);
+            }
+        }
+
+        return allies;
+    }
+
+    /// <summary>
+    /// A god's bloc (ADR-015): the god and every god it is allied with, directly or through other
+    /// allies, in id order.
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns>The bloc, the god included.</returns>
+    public static List<int> BlocOf(WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var bloc = new List<int> { godId };
+        for (var i = 0; i < bloc.Count; i++)
+        {
+            foreach (var ally in AlliesOf(world, bloc[i]))
+            {
+                if (!bloc.Contains(ally))
+                {
+                    bloc.Add(ally);
+                }
+            }
+        }
+
+        bloc.Sort();
+        return bloc;
     }
 
     /// <summary>The goodwill a god feels for another: the weight of the friendly acts it remembers.</summary>

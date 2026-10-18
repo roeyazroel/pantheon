@@ -24,7 +24,7 @@ public static class CreatureText
         CreatureAction.Play => At("playing in", place),
         CreatureAction.Attack => At("attacking", place),
         CreatureAction.Ignore => At("walking away from", place),
-        CreatureAction.GoTo => "going where you sent it",
+        CreatureAction.GoTo => "going where it was sent",
     };
 
     /// <summary>What the Creature is doing now, in a few words.</summary>

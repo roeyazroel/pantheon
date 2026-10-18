@@ -134,7 +134,7 @@ public sealed class RivalGodTests
         world.Tick = VictorySystem.TicksToWin(DivineWorlds.Rules);
         system.Update(context);
 
-        Assert.Equal(1, world.WinnerGodId);
+        Assert.Equal([1], world.WinnerGodIds);
         Assert.Single(events.OfType<VictoryAchieved>());
         Assert.Equal(0.9f * 100 / ((0.9f * 100) + (0.2f * 100)), VictorySystem.ShareOf(world, 1), 2);
     }
@@ -158,7 +158,7 @@ public sealed class RivalGodTests
         world.Gods.RemoveAt(1);
         world.Tick = 1_000_000;
         system.Update(new TickContext(world, new SimulationRandom(1), events));
-        Assert.Null(world.WinnerGodId);
+        Assert.Empty(world.WinnerGodIds);
     }
 
     [Fact]

@@ -21,10 +21,12 @@ public sealed class DiplomacyPresentationTests
     private int Rival => _session.World.Gods[1].Id;
 
     [Fact]
-    public void Panel_ListsTheRival_WithTheMovesTheAuthorityWouldAccept()
+    public void Panel_ListsEveryRival_WithTheMovesTheAuthorityWouldAccept()
     {
-        var entry = Assert.Single(DiplomacyReadout.Build(_session));
+        var entries = DiplomacyReadout.Build(_session);
+        var entry = entries[0];
 
+        Assert.Equal(_session.World.Gods.Skip(1).Select(g => g.Id), entries.Select(e => e.GodId));
         Assert.Equal(Rival, entry.GodId);
         Assert.Equal(DiplomaticStatus.Neutral, entry.Status);
         Assert.Equal([DiplomaticCommandKind.OfferAlliance, DiplomaticCommandKind.DeclareWar], entry.Available);
@@ -52,7 +54,7 @@ public sealed class DiplomacyPresentationTests
         ledger.Record(world, Rival, 1, DiplomaticAct.Betrayed, null);
         ledger.Record(world, 1, Rival, DiplomaticAct.Harmed, village.Id);
 
-        var entry = Assert.Single(DiplomacyReadout.Build(_session));
+        var entry = DiplomacyReadout.Build(_session).Single(e => e.GodId == Rival);
 
         Assert.StartsWith("remembers that you betrayed it", entry.Explanation, StringComparison.Ordinal);
         Assert.Contains($"converted {village.Name}", entry.Explanation, StringComparison.Ordinal);
@@ -86,7 +88,9 @@ public sealed class DiplomacyPresentationTests
     {
         SessionCommands.CommandDiplomacy(_session, Rival, DiplomaticCommandKind.DeclareWar);
 
-        Assert.EndsWith(", at war", Assert.Single(Pantheon.Game.Hud.HudReadout.Build(_session, null, null).Rivals), StringComparison.Ordinal);
+        var rivals = Pantheon.Game.Hud.HudReadout.Build(_session, null, null).Rivals;
+        Assert.EndsWith(", at war", rivals[0], StringComparison.Ordinal);
+        Assert.All(rivals.Skip(1), line => Assert.EndsWith(", neutral", line, StringComparison.Ordinal));
     }
 
     [Fact]

@@ -1,6 +1,6 @@
 # ADR-011: Rival gods: utility AI, conversion between gods and victory
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-015](ADR-015-four-gods-coalitions-and-pantheon-victory.md)
 - Date: 2026-10-19
 - Builds on: [ADR-009](ADR-009-belief-influence-and-miracles.md) (belief and miracles) and
   [ADR-010](ADR-010-creature-simulation-and-learning.md) (the Creature)

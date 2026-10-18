@@ -73,6 +73,7 @@ internal static class DivineWorlds
         ContestedCostFactor = 1f,
         VictoryShare = 0.6f,
         VictorySeconds = 600f,
+        PantheonVictory = true,
         BlessingDecayPerStep = 0.008f,
         Ranks =
         [
@@ -145,7 +146,7 @@ internal static class DivineWorlds
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = WeatherWorlds.Calm(),
             Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
-            WinnerGodId = null,
+            WinnerGodIds = [],
         };
     }
 
