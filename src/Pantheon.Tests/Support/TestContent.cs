@@ -34,11 +34,11 @@ internal static class TestContent
         RegionsPerSide = 16,
     };
 
-    /// <summary>Shipped rules with high birth and death rates, so the random stream is used on most ticks.</summary>
+    /// <summary>Shipped rules with high birth and death rates, so every settlement step uses the random stream.</summary>
     public static SettlementRules BusyRules => Shipped.SettlementRules with
     {
-        BirthChancePerPersonPerTick = 0.004,
-        DeathChancePerPersonPerTick = 0.003,
+        BirthChancePerPersonPerStep = 0.04,
+        DeathChancePerPersonPerStep = 0.03,
     };
 
     /// <summary>Content with the small world and busy rules.</summary>

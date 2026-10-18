@@ -16,10 +16,13 @@ public sealed class SimulationEngine
 {
     private readonly ISimulationSystem[] _systems;
 
-    /// <summary>Creates the Milestone 1 system pipeline.</summary>
+    /// <summary>
+    /// Creates the Milestone 2 system pipeline: the statistical settlement step, run once every
+    /// <see cref="SettlementRules.StepIntervalTicks"/> ticks.
+    /// </summary>
     /// <param name="settlementRules">Tuning of the statistical settlement model.</param>
     public SimulationEngine(SettlementRules settlementRules)
-        : this([new SettlementSystem(settlementRules)])
+        : this([CreateSettlementStep(settlementRules)])
     {
     }
 
@@ -46,6 +49,13 @@ public sealed class SimulationEngine
 
         world.Random = random.GetState();
         world.Tick++;
+    }
+
+    /// <summary>Wraps a validated <see cref="SettlementSystem"/> in its step interval.</summary>
+    private static IntervalSystem CreateSettlementStep(SettlementRules rules)
+    {
+        var settlements = new SettlementSystem(rules);
+        return new IntervalSystem(settlements, rules.StepIntervalTicks);
     }
 
     /// <summary>Advances the world by several ticks.</summary>

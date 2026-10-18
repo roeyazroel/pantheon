@@ -92,18 +92,16 @@ public static class DebugReadout
     /// <summary>Population, housing and food of one settlement.</summary>
     private static void AppendSettlement(List<string> lines, WorldState world, SettlementState settlement, SettlementRules rules)
     {
-        var fertility = world.Regions.GetRegion(settlement.RegionId).Fertility;
-        var balance = SettlementSystem.ComputeFoodBalance(rules, settlement.Population, fertility);
-        var storage = SettlementSystem.ComputeFoodStorage(rules, settlement.Housing);
+        var outlook = SettlementEconomy.Assess(rules, settlement, world.Regions);
 
         lines.Add(Format("Settlement {0} (region #{1})", settlement.Name, settlement.RegionId));
         lines.Add(Format(
-            "  pop {0} / {1}   food {2:0.0} / {3:0}   {4:+0.000;-0.000;0.000} food/tick",
+            "  pop {0} / {1}   food {2:0.0} / {3:0}   {4:+0.00;-0.00;0.00} food/step",
             settlement.Population,
             settlement.Housing,
             settlement.Food,
-            storage,
-            balance));
+            outlook.Storage,
+            outlook.NetFood));
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

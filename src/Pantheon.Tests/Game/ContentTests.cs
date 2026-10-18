@@ -22,6 +22,7 @@ public sealed class ContentTests
         Assert.True(content.WorldGen.Biomes[^1].IsCatchAll());
         Assert.Equal(new[] { Biome.Sea, Biome.Highland, Biome.Forest, Biome.Grassland }, content.WorldGen.Biomes.Select(rule => rule.Biome));
         Assert.NotEmpty(content.WorldGen.StartingSettlement.Names);
+        Assert.Equal(10, content.SettlementRules.StepIntervalTicks);
     }
 
     [Fact]
@@ -45,7 +46,7 @@ public sealed class ContentTests
     [Fact]
     public void Content_WithOutOfRangeValue_FailsValidation()
     {
-        var rules = TestContent.ReadText(ContentJson.SettlementRulesFileName).Replace("\"WorkforceShare\": 0.5", "\"WorkforceShare\": 2.5", StringComparison.Ordinal);
+        var rules = TestContent.ReadText(ContentJson.SettlementRulesFileName).Replace("\"WorkforceShare\": 0.6", "\"WorkforceShare\": 2.5", StringComparison.Ordinal);
 
         var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(TestContent.ReadText(ContentJson.WorldGenFileName), rules));
         Assert.Contains("WorkforceShare", exception.Message);
