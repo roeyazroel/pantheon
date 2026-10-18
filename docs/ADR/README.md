@@ -24,3 +24,11 @@ silently:
 | [ADR-006](ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
 | [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md) | Patch Terrain3D's generated shader and report why the fallback is used | Accepted (amends ADR-005) |
 | [ADR-008](ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted (amends ADR-004) |
+
+ADR-004 and ADR-008 were written before the owner's complete specification
+([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier
+working roadmap: their Milestone 12 is that roadmap's Tiers at Scale, and ADR-008's Milestone 4
+is Influence & the Hand. Their bodies are not edited, so
+[GAME_SPEC.md](../GAME_SPEC.md#earlier-working-roadmap-superseded) keeps that roadmap and maps it
+to the specification's milestones. Everything else, including ADR-003's status line, uses the
+specification's numbers.

@@ -3,7 +3,7 @@ namespace Pantheon.Game.Population;
 /// <summary>
 /// How much detail a settlement's population is shown with (ADR-004, ADR-008). The statistical
 /// model runs for every settlement whatever its tier; higher tiers only add derived detail. The
-/// Full tier (Tier 3) arrives with Milestone 12.
+/// Full tier (Tier 3) arrives in a later milestone.
 /// </summary>
 public enum SimulationTier
 {

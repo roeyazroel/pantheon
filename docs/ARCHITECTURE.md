@@ -261,7 +261,7 @@ with the time scale.
 
 Population is simulated statistically everywhere and shown in more detail near the camera
 (ADR-004, amended by ADR-008). Tier 1 is canonical; Tier 2 is derived from it and never saved.
-Tier 3 (full agents with promotion and demotion that write back) is Milestone 12.
+Tier 3 (full agents with promotion and demotion that write back) comes in a later milestone.
 
 ### Tier 1: the statistical settlement step
 
@@ -505,5 +505,5 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   previous build.
 - More settlements need no rework: the step, the layout, the tiers and the views already
   iterate over every settlement.
-- Tier 3 (Milestone 12) adds agents with effects and promotion and demotion that write back to
-  the aggregates; that milestone amends or supersedes ADR-008.
+- Tier 3 adds agents with effects and promotion and demotion that write back to the
+  aggregates; the milestone that adds it amends or supersedes ADR-008.

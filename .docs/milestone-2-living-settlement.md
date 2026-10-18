@@ -29,12 +29,14 @@ to several hundred, builds houses one at a time, and its villagers walk between 
 the building site and the shrine. A famine (driven with the debug hotkeys) lowers health, raises
 deaths and the settlement recovers.
 
-**Scope.** The roadmap row for Milestone 2 in `docs/GAME_SPEC.md` also lists several
-settlements, founding and the gather and worship jobs. The brief for this milestone asks for one
-living settlement, so those items are listed under Tasks → Future: founding and migration need
-more than one settlement, worship needs belief (Milestone 3) and gathering needs the ecology of
-Milestone 6. The code iterates over every settlement, so a second settlement needs no rework of
-the model, the views or the saves.
+**Scope.** The earlier working roadmap in `docs/GAME_SPEC.md` also listed several settlements,
+founding and the gather and worship jobs for Milestone 2. The brief for this milestone asks for
+one living settlement, so those items are listed under Tasks → Future: founding and migration
+need more than one settlement, worship needs belief (Milestone 3) and gathering needs ecology.
+The owner's complete specification, added after this milestone as `docs/PANTHEON_SPEC.md`, lists
+exactly this milestone's deliverables in §117: aggregate population, food, housing, health and
+visible representative citizens. The code iterates over every settlement, so a second settlement
+needs no rework of the model, the views or the saves.
 
 **Plan pattern: Non-TDD (architecture first).** The architecture follows from ADR-004 and
 ADR-006 and from this milestone's brief, so design drives implementation and the tests are
@@ -44,7 +46,8 @@ assumption, as in Milestone 1.
 
 **Decision record.** [ADR-008](../docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)
 amends ADR-004: Tier numbering, the 1 Hz settlement step, and representative citizens as the
-Regional tier's derived, non-canonical presentation until Milestone 12.
+Regional tier's derived, non-canonical presentation until a later milestone gives the regional
+and full tiers effects of their own.
 
 **Status:** implemented and verified; see Test Plan → Verification results. In review in
 [#2](https://github.com/roeyazroel/pantheon/pull/2).
@@ -137,7 +140,7 @@ the stores refill.
 ### Tier 2: representative citizens (ADR-008)
 
 - Tier numbering: Tier 1 Statistical, Tier 2 Regional, Tier 3 Full (ADR-004's tiers). The
-  `SimulationTier` enum has the two tiers that exist; Full joins it in Milestone 12. Readouts
+  `SimulationTier` enum has the two tiers that exist; Full joins it with Tier 3. Readouts
   use the number and the name ("tier 2 regional").
 - `TierSelector` promotes a settlement to Tier 2 when the camera comes within
   `RegionalTierEnterDistance` (450 m) of its centre and demotes it beyond
@@ -385,7 +388,7 @@ stateDiagram-v2
     note right of Regional
         Tier 1 keeps running for every settlement.
         Tier 2 only adds derived representatives.
-        Full (Tier 3) is Milestone 12.
+        Full (Tier 3) comes in a later milestone.
     end note
 ```
 
@@ -490,7 +493,7 @@ internal static class SaveIntegrity { ... Health in 0..1, ConstructionProgress �
 
 ```csharp
 // Population/ (Tier 2, derived, never saved)
-enum SimulationTier { Statistical, Regional }                           // Tier 1, 2 (ADR-004, ADR-008); Full (Tier 3) in Milestone 12
+enum SimulationTier { Statistical, Regional }                           // Tier 1, 2 (ADR-004, ADR-008); Full (Tier 3) later
 enum CitizenRole { Builder, Farmer, Villager }
 enum CitizenActivity { AtHome, Walking, Working, Gathering }
 sealed record CitizenSettings { int MaxRepresentatives; float RegionalTierEnterDistance, RegionalTierExitDistance,
@@ -682,6 +685,12 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   `docs/PANTHEON_SPEC.md` (3,858 lines, byte-identical to the supplied file, SHA-256
   `de61dffb…5f22f`) and link it as the source of truth from the README, AGENTS.md,
   `docs/GAME_SPEC.md` and `docs/ARCHITECTURE.md`.
+- [x] After the milestone: cite milestones by the specification's numbers (§116–130). The
+  earlier working roadmap stays in `docs/GAME_SPEC.md`, marked superseded and mapped to the
+  specification, because the bodies of ADR-004 and ADR-008 cite it; `docs/ADR/README.md` says
+  so. The README, AGENTS.md, `docs/ARCHITECTURE.md`, this plan, the reserved
+  `src/Pantheon.Domain` folders, the ADR-003 status line and two code comments now use the
+  specification's numbers.
 
 ### In Progress
 
@@ -689,19 +698,23 @@ None.
 
 ### Future (later milestones)
 
-- [ ] Several settlements, founding and migration (roadmap Milestone 2 items outside this brief).
-- [ ] Gather (with ecology, Milestone 6) and worship (with belief, Milestone 3) jobs.
+- [ ] Several settlements and founding (outside this brief; the Complete Vertical Slice,
+  Milestone 14, has eight settlements), and migration (Milestone 10).
+- [ ] Worship (with belief, Milestone 3) and gather (with ecology) jobs.
 - [ ] Houses that decay when empty; abandoned settlements.
 - [ ] A farmland layer on the F3 region debug map.
-- [ ] Tier 3 (full) agents with promotion and demotion that write back (Milestone 12, amends ADR-008).
+- [ ] Tier 3 (full) agents with promotion and demotion that write back (a later milestone;
+  amends ADR-008).
 
 ## Relevant Files
 
 - `.docs/milestone-2-living-settlement.md`: this plan.
 - `docs/PANTHEON_SPEC.md` (the owner's specification, verbatim), `docs/GAME_SPEC.md`.
 - `docs/ADR/ADR-008-settlement-step-and-representative-citizens.md`, `docs/ADR/README.md`,
-  `docs/ADR/ADR-004-statistical-population-simulation-with-tiering.md` (status line only).
-- `docs/ARCHITECTURE.md`, `README.md`, `AGENTS.md`, `src/Pantheon.Domain/Population/README.md`.
+  `docs/ADR/ADR-004-statistical-population-simulation-with-tiering.md` and
+  `docs/ADR/ADR-003-host-authoritative-enet-networking.md` (status lines only).
+- `docs/ARCHITECTURE.md`, `README.md`, `AGENTS.md`, `src/Pantheon.Domain/*/README.md` (the
+  reserved folders), `src/Pantheon.Networking/Pantheon.Networking.csproj` (comment).
 - `src/Pantheon.Domain/Settlements/SettlementState.cs`, `SettlementRules.cs`.
 - `src/Pantheon.Simulation/Settlements/` (`SettlementEconomy`, `SettlementSystem`,
   `SettlementRulesValidator`, `FarmlandSurvey`, `LabourAllocation`, `SettlementOutlook`,

@@ -227,9 +227,9 @@ and the definition of done.
   Terrain3D's platform documentation.
 - Export presets are not set up yet. The game reads `res://Data/*.json` at startup, so every
   export must include those files.
-- The representative citizens are presentation only until Milestone 12: they show what the
-  settlement's numbers say, but nothing can interact with an individual citizen yet
-  ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).
+- The representative citizens are presentation only: they show what the settlement's numbers
+  say, but nothing can interact with an individual citizen until a later milestone adds full
+  (Tier 3) agents ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).
 
 ## Third-party code
 

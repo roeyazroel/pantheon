@@ -15,6 +15,8 @@ rule is followed by the conventions that meet it in this repository.
 
 ### Build incrementally; every milestone leaves the game playable
 
+- The milestones, with their deliverables and playable outcomes, are sections 116–130 of the
+  specification. Cite milestones by those numbers.
 - Each milestone has a plan in `.docs/`, for example `.docs/milestone-1-foundation.md`, with its
   architecture, diagrams, code plan, tasks and test plan. The plan is the contract for the
   milestone. Update its tasks and results in the same change as the code.
