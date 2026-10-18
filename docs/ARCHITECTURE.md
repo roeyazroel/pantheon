@@ -1,7 +1,8 @@
 # PANTHEON — Architecture
 
 This document describes how the code is organised and the rules that keep the simulation
-independent of the engine. Decisions are recorded in [ADR/](ADR/README.md).
+independent of the engine. Decisions are recorded in [ADR/](ADR/README.md), and the coding
+rules every change follows are in [AGENTS.md](../AGENTS.md).
 
 ## Guiding rules
 
@@ -25,6 +26,7 @@ independent of the engine. Decisions are recorded in [ADR/](ADR/README.md).
 ```text
 Pantheon.sln                  Root solution (Godot editor uses it via dotnet/project/solution_directory)
 Directory.Build.props         Shared C# settings (nullable, warnings as errors)
+AGENTS.md                     The owner's coding rules and the conventions that meet them
 game/                         Godot 4.7.2 project (res://)
   project.godot               Project settings, input map, .NET settings
   Pantheon.csproj             Godot.NET.Sdk/4.7.2 project: assembly "Pantheon", namespace Pantheon.Client

@@ -115,6 +115,12 @@ Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
 [docs/GAME_SPEC.md](docs/GAME_SPEC.md) and the [ADRs](docs/ADR/README.md). The Milestone 1 plan
 and its status are in [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md).
 
+## Contributing
+
+Read [AGENTS.md](AGENTS.md) before changing anything, whether you are a person or a coding
+agent. It lists the owner's binding coding rules, where code goes, the build and test commands
+and the definition of done.
+
 ## Known issues
 
 - Every start logs `WARNING: instance_reset_physics_interpolation() is deprecated`. Terrain3D
