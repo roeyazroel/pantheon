@@ -28,6 +28,9 @@ design drives implementation; tests are specified in the Test Plan and written a
 libraries. The user asked for fully autonomous execution, so the pattern could not be confirmed
 interactively. This is recorded as an explicit assumption.
 
+**Status:** implemented and verified; see Test Plan → Verification results. The remaining items
+under Tasks → Future are follow-ups outside this milestone.
+
 ## Architecture
 
 ### Projects and dependency direction
@@ -37,7 +40,7 @@ interactively. This is recorded as an explicit assumption.
 | `src/Pantheon.Domain` | .NET 8 class library | — | Pure state and content contracts (`WorldState`, `RegionState`, `SettlementState`, `WorldGenSettings`, `SettlementRules`). No behaviour beyond trivial lookups. |
 | `src/Pantheon.Simulation` | .NET 8 class library | Domain | Deterministic behaviour: `SimulationRandom`, FastNoiseLite (vendored), terrain generation, biome classification, region building, settlement founding, tick systems, `SimulationEngine`, heightfield raycast. |
 | `src/Pantheon.Persistence` | .NET 8 class library | Domain | System.Text.Json saves (`SaveGame` envelope with `SaveVersion`) and content-file parsing. |
-| `src/Pantheon.Game` | .NET 8 class library | Domain, Simulation, Persistence | Engine-agnostic application layer: `GameSession`, fixed-step `SimulationScheduler`, god-camera math (`GodCameraModel`), debug readouts, launch options. |
+| `src/Pantheon.Game` | .NET 8 class library | Domain, Simulation, Persistence | Engine-agnostic application layer: `GameSession`, `SessionCommands`, fixed-step `SimulationScheduler`, god-camera math (`GodCameraModel`, `EdgeScroll`), debug readouts, launch options, and presentation data shared by both terrain renderers (including `Terrain3DShaderPatch`). |
 | `src/Pantheon.Networking` | .NET 8 class library | — | Reserved for ADR-003 (host-authoritative ENet). Empty in M1. |
 | `src/Pantheon.Tests` | xUnit test project | Domain, Simulation, Persistence, Game | Headless tests. Loads the shipped `game/Data/*.json` content. |
 | `game/Pantheon.csproj` | Godot.NET.Sdk/4.7.2 | Domain, Simulation, Persistence, Game | Godot client (namespace `Pantheon.Client`): bootstrap, input, presentation adapters, UI. |
@@ -63,14 +66,23 @@ sets `dotnet/project/solution_directory="../"` so the editor uses the root `Pant
 
 ### Runtime data flow
 
-1. `GameRoot._Ready` loads content JSON, parses launch options (`--seed`, `--load`, `--terrain`),
-   creates a `GameSession` (new world or loaded save) and asks `WorldPresenter` to rebuild.
+1. `GameRoot._Ready` parses launch options (`--seed`, `--load`, `--terrain`,
+   `--quit-after-frames`, `--screenshot`), loads the content JSON, creates a `GameSession` (new
+   world or loaded save; a failed load falls back to a new world with a warning) and asks
+   `WorldPresenter` to rebuild. Broken content quits with exit code 1. With
+   `--quit-after-frames`, a `SmokeTestDriver` node quits after N frames and optionally saves a
+   screenshot first.
 2. Each frame `GameRoot._Process(delta)` calls `GameSession.Update(delta)`. The
    `SimulationScheduler` converts real time into whole 10 Hz ticks (with time scale, pause and a
    backlog cap). Each tick runs `SimulationEngine.Step(WorldState)`.
 3. After the update, `WorldPresenter.Sync(WorldState)` refreshes dynamic visuals (settlement
-   label, hut count). Picking uses `TerrainRaycaster` on the `TerrainField` (backend-independent).
-4. The debug overlay receives a `DebugPanelModel` built by `DebugReadout` (pure formatting).
+   label, hut count) and `SetHoveredRegion` outlines the region under the cursor. Picking uses
+   `TerrainRaycaster` on the `TerrainField`, so it does not depend on the terrain backend.
+4. While the panel is visible, the debug overlay receives a `DebugPanelModel` built by
+   `DebugReadout` (pure formatting).
+5. World and simulation hotkeys (quicksave, quickload, new world, pause, speed presets) go
+   through `SessionCommands`, which returns the status line shown in the overlay. B, F1 and F
+   act on the presenters, the overlay and the camera directly.
 
 ### Terrain pipeline
 
@@ -78,15 +90,46 @@ sets `dotnet/project/solution_directory="../"` so the editor uses the root `Pant
   (2048 m island), with heights in metres (sea level = 0 m), moisture, temperature and per-sample biome.
 - `RegionBuilder` aggregates 32×32 samples into each of the 32×32 regions (64 m regions).
 - Presentation: `TerrainPresenterFactory` returns `Terrain3DTerrainPresenter` when
-  `ClassDB.ClassExists("Terrain3D")`, otherwise `FallbackMeshTerrainPresenter` (clearly labelled
-  in the log and in the debug overlay). Terrain3D receives a height image (FORMAT_RF), a biome
-  colour map (FORMAT_RGBA8) and one procedural ground texture asset.
+  `ClassDB.ClassExists("Terrain3D")`, otherwise `FallbackMeshTerrainPresenter`. The fallback
+  carries its reason ("Terrain3D unavailable" or "forced by --terrain=fallback"), which appears in
+  the log, in the overlay's terrain line and next to a "FALLBACK TERRAIN RENDERER" badge.
+  Terrain3D receives a height image (FORMAT_RF), a biome colour map (FORMAT_RGBA8) and one
+  procedural ground texture asset.
+- Terrain3D shader patch: `Terrain3DTerrainPresenter` enables the material's shader override,
+  which copies the generated code. It then applies `Terrain3DShaderPatch.Apply` and assigns the
+  result. Unrecognised code keeps the stock shader and logs a warning. The patch fixes two
+  Terrain3D 1.0.2 defects:
+  - The shader reads `_region_map[pos.y * _region_map_size + pos.x]` before it discards
+    positions outside the region map. Mesa's software Vulkan driver (lavapipe) does not
+    bounds-check uniform arrays. A pixel with an extreme UV therefore reads about 4 GB past the
+    uniform buffer, and the llvmpipe rasterizer thread segfaults. The patch clamps the index;
+    results the shader keeps are unchanged.
+  - The colour map lookup (`get_index_uv(UV2)`) is offset by half a texel. The last half texel
+    along the east and south edges of the outermost regions therefore finds no region and gets
+    `COLOR_MAP_DEF` (white). With `world_background` NONE, and 2 m texels, that is a 1 m pale
+    strip along the world's edge, visible through the sea on any GPU. The patch makes the
+    lookup try the colour map texel under the pixel (`index[3]`, which searches inwards) before
+    the white default.
 - Terrain3D 1.0.2-stable (MIT) is vendored as a runtime-only desktop subset in
   `game/addons/terrain_3d` (reproducible with `tools/vendor-terrain3d.sh`).
+
+### Water and overlays
+
+- `WaterPresenter`: a sea-level plane and a sea floor below the lowest terrain. The water shader
+  is tinted by a baked `WaterDepthMap` texture, so it never reads the depth buffer. Between 150 m
+  and 1200 m from the camera, its waves flatten to 35 % strength and the roughness rises from
+  0.08 to 0.25, so distant sun glints do not flicker.
+- `SettlementPresenter` / `SettlementView`: shrine, MultiMesh huts placed by `SettlementLayout`,
+  and a billboard label (`SettlementLabel`).
+- `RegionBoundaryOverlay`: region grid lines and a hover outline built by `RegionBoundaryBuilder`,
+  drawn with an unlit line shader. They are hidden until B is pressed.
 
 ### Environment and configuration
 
 - Godot 4.7.2-stable .NET build; .NET SDK 8.0+ (`net8.0`, matching GodotSharp 4.7.2).
+- First run after cloning: `godot --headless --path game --import` imports assets and writes
+  `.godot/extension_list.cfg`, which registers Terrain3D. Without it the game uses the fallback
+  renderer.
 - No backend, no network at runtime. Saves are written to `user://saves/quicksave.json`.
 
 ## Mermaid Diagrams
@@ -94,7 +137,7 @@ sets `dotnet/project/solution_directory="../"` so the editor uses the root `Pant
 ```mermaid
 graph TD
     Client["game/Pantheon.csproj<br/>(Godot client: Pantheon.Client)"]
-    Game["Pantheon.Game<br/>(session, scheduler, camera math)"]
+    Game["Pantheon.Game<br/>(session, scheduler, camera math, presentation data)"]
     Sim["Pantheon.Simulation<br/>(worldgen, systems, RNG)"]
     Persist["Pantheon.Persistence<br/>(JSON saves, content)"]
     Domain["Pantheon.Domain<br/>(state + content contracts)"]
@@ -126,7 +169,8 @@ sequenceDiagram
     participant Sched as SimulationScheduler
     participant Engine as SimulationEngine
     participant State as WorldState
-    participant View as WorldPresenter / DebugOverlay
+    participant View as WorldPresenter
+    participant Overlay as DebugOverlay
 
     Godot->>Root: _Process(delta)
     Root->>Session: Update(delta)
@@ -135,27 +179,32 @@ sequenceDiagram
         Sched->>Engine: Step(world)
         Engine->>State: systems mutate state, Tick++
     end
-    Root->>View: Sync(world) + Refresh(DebugPanelModel)
+    Root->>View: Sync(world), SetHoveredRegion(region under cursor)
+    Root->>Overlay: ShowModel(DebugReadout.Build(snapshot)) while visible
 ```
 
 ```mermaid
 sequenceDiagram
     participant Player
     participant Root as GameRoot
+    participant Cmd as SessionCommands
     participant Session as GameSession
     participant Save as WorldSaveSerializer
     participant Gen as TerrainGenerator
     participant View as WorldPresenter
 
     Player->>Root: F5 (quicksave)
-    Root->>Session: SaveTo(path)
+    Root->>Cmd: QuickSave(session, path)
+    Cmd->>Session: SaveTo(path)
     Session->>Save: SaveToFile(world) — {"SaveVersion": 1, "World": {...}}
     Player->>Root: F9 (quickload)
-    Root->>Session: LoadFrom(path)
+    Root->>Cmd: QuickLoad(session, path)
+    Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path) — validates SaveVersion
     Session->>Gen: Generate(seed, generation settings)
     Session-->>Root: WorldReplaced
     Root->>View: Rebuild(world, terrain) — nodes recreated from state
+    Cmd-->>Root: status line (or the error, with the current world kept)
 ```
 
 ```mermaid
@@ -166,8 +215,9 @@ flowchart TD
     RB --> SF["SettlementFounder<br/>best fertile land region"]
     SF --> WS["WorldState"]
     TF --> TPF{"Terrain3D class available?"}
-    TPF -- yes --> T3["Terrain3DTerrainPresenter"]
-    TPF -- no / --terrain=fallback --> FB["FallbackMeshTerrainPresenter<br/>(clearly marked)"]
+    TPF -- yes --> T3["Terrain3DTerrainPresenter<br/>import_images(height, -, colour)"]
+    T3 --> SP["Terrain3DShaderPatch<br/>bounds-safe region lookups,<br/>edge-safe colour lookup"]
+    TPF -- "no / --terrain=fallback" --> FB["FallbackMeshTerrainPresenter<br/>(clearly marked, with reason)"]
 ```
 
 ## Code Plan
@@ -246,62 +296,139 @@ sealed class SimulationScheduler { SimulationScheduler(double ticksPerSecond, in
 sealed class GameSession { static CreateNew(GameContent, WorldSeed); static Load(GameContent, string path);
     WorldState World; TerrainField Terrain; SimulationScheduler Scheduler; event Action WorldReplaced;
     int Update(double delta); void StartNewWorld(WorldSeed); void SaveTo(string path); void LoadFrom(string path); }
+static class SessionCommands { IReadOnlyList<double> SpeedPresets = [1, 4, 16];       // each returns the status line
+    string QuickSave(GameSession, string path); string QuickLoad(GameSession, string path); string NewWorld(GameSession, WorldSeed);
+    string TogglePause(GameSession); string SetSpeedPreset(GameSession, int preset); }
 enum CameraZoomBand { Close, Regional, Strategic }
 sealed record GodCameraSettings { MinDistance, MaxDistance, CloseBandMaxDistance, RegionalBandMaxDistance, pitch range, speeds, smoothing }
-sealed class GodCameraModel { Pan(Vector2 axes, float dt); PanWorld(Vector2 offset); Rotate(float radians); Zoom(float steps);
+sealed class GodCameraModel { Pan(Vector2 axes, float dt); PanWorld(Vector2 offset); Rotate(float radians); Zoom(float steps); ZoomAt(...);
     FocusOn(Vector2 point, float? distance); SetBounds(...); Update(float dt, Func<float,float,float> ground); CameraPose ComputePose(ground); CameraZoomBand Band; }
-static class DebugReadout { DebugPanelModel Build(...); }
-sealed record LaunchOptions(WorldSeed? Seed, string? LoadPath, TerrainBackendPreference Terrain) { static LaunchOptions Parse(IEnumerable<string> args); }
+static class EdgeScroll { Vector2 ComputeAxes(Vector2 mouse, Vector2 viewportSize, float margin); }
+static class DebugReadout { DebugPanelModel Build(DebugSnapshot snapshot); }
+sealed record LaunchOptions { static IReadOnlySet<string> KnownOptions; static WorldSeed DefaultSeed;   // 1234
+    WorldSeed? Seed; string? LoadPath; TerrainBackendPreference Terrain; int? QuitAfterFrames; string? ScreenshotPath;
+    IReadOnlyList<string> Warnings; static LaunchOptions Parse(IEnumerable<string> args); }          // unknown name → warning first
+// Presentation data (engine-agnostic, shared by both terrain renderers)
+sealed record BiomePalette { ...colours, BeachMaxHeight, DeepWaterDepth, ColorVariation; static BiomePalette Parse(string json); }
+static class TerrainColorizer { byte[] ComputeRgba(TerrainField, BiomePalette); RgbColor ComputeColor(TerrainField, BiomePalette, int x, int z); }
+static class TerrainMeshBuilder { int ChunksPerSide(TerrainField, int cells, int stride); TerrainMeshData BuildChunk(...); }
+static class WaterDepthMap { byte[] Compute(TerrainField, int resolution, float deepWaterDepth); }
+static class RegionBoundaryBuilder { Vector3[] BuildGridLines(RegionGrid, TerrainField, float lift, float spacing); Vector3[] BuildOutline(RegionGrid, int regionId, ...); }
+static class SettlementLayout { int ComputeHutCount(SettlementState); IReadOnlyList<HutPlacement> ComputeHuts(SettlementState, TerrainField, int count); }
+static class SettlementLabel { string Format(SettlementState); }
+static class Terrain3DShaderPatch { const string RegionMapLookup, ClampedRegionMapLookup, ColorMapLookup, EdgeSafeColorMapLookup;
+    string? Apply(string code); }   // null unless both lookups are present (unrecognised code)
+```
+
+`Terrain3DShaderPatch.Apply` (string replace, all occurrences):
+
+```text
+_region_map[ pos.y * _region_map_size + pos.x ]
+→ _region_map[ clamp(pos.y * _region_map_size + pos.x, 0, _region_map.length() - 1) ]
+
+vec4 color_map = region_uv.z > -1.0 ? textureLod(_color_maps, region_uv, region_mip) : COLOR_MAP_DEF;
+→ vec4 color_map = region_uv.z > -1.0 ? textureLod(_color_maps, region_uv, region_mip)
+      : (index[3].z > -1 ? texelFetch(_color_maps, index[3], 0) : COLOR_MAP_DEF);
 ```
 
 ### Godot client (`game/Scripts`, namespace `Pantheon.Client`)
 
 ```csharp
-partial class GameRoot : Node3D            // composition root, hotkeys, cursor picking
+partial class GameRoot : Node3D            // composition root, hotkey table, cursor picking
+partial class SmokeTestDriver : Node       // static Create(int frames, string? screenshotPath, Func<string> summary)
 static class GodotContentLoader           // res://Data/*.json -> GameContent / BiomePalette
 static class InputActions                 // StringName constants matching project.godot [input]
-partial class GodCameraController : Node3D // input -> GodCameraModel -> Camera3D transform
-sealed class WorldPresenter               // owns terrain/water/settlement/region presenters; Rebuild/Sync
+static class GodotConversions             // RgbColor/System.Numerics <-> Godot types
+partial class GodCameraController : Node3D // input -> GodCameraModel -> Camera3D; SetTerrain, FocusOn, CursorGroundPoint
+sealed class WorldPresenter               // owns terrain/water/settlement/region presenters; Rebuild, Sync, SetHoveredRegion
+static class NodeExtensions               // FreeChildren, AddLayer
 interface ITerrainPresenter { string BackendName; bool IsFallback; void Build(TerrainField, BiomePalette); void Clear(); }
-sealed class Terrain3DTerrainPresenter / FallbackMeshTerrainPresenter / TerrainPresenterFactory
-sealed class SettlementPresenter / RegionBoundaryOverlay / WaterPresenter
-partial class DebugOverlay : CanvasLayer
+sealed class Terrain3DTerrainPresenter     // ClassDB/Set/Call adapter; UsePatchedShader(material)
+sealed class FallbackMeshTerrainPresenter  // (Node3D parent, string reason): 64-cell chunks, stride 2
+static class TerrainPresenterFactory       // Create(TerrainBackendPreference, Node3D parent, Camera3D camera)
+static class GroundTexture                 // seamless procedural ground texture for Terrain3D
+sealed class WaterPresenter                // sea surface + sea floor; depth map shader parameters
+sealed class SettlementPresenter / SettlementView / SettlementAssets
+sealed class RegionBoundaryOverlay         // grid + hover outline line meshes
+partial class DebugOverlay : CanvasLayer   // PanelVisible, ShowModel, SetFallbackBadgeVisible
 ```
 
 Input map (project.godot): `camera_pan_*` (WASD + arrows), `camera_rotate_left/right` (Q/E),
-`camera_zoom_in/out` (wheel, `=`/`-`), `camera_drag_pan` (RMB), `camera_drag_rotate` (MMB),
-`camera_focus_settlement` (F, Home), `toggle_region_boundaries` (B), `toggle_debug_overlay` (F1),
-`world_new` (F2), `world_quicksave` (F5), `world_quickload` (F9), `sim_toggle_pause` (Space),
-`sim_speed_1/2/3` (1/2/3 → ×1/×4/×16).
+`camera_zoom_in/out` (wheel, `=`/`-`, keypad `+`/`-`), `camera_drag_pan` (RMB),
+`camera_drag_rotate` (MMB), `camera_focus_settlement` (F, Home), `toggle_region_boundaries` (B),
+`toggle_debug_overlay` (F1), `world_new` (F2), `world_quicksave` (F5), `world_quickload` (F9),
+`sim_toggle_pause` (Space), `sim_speed_1/2/3` (1/2/3 → ×1/×4/×16).
 
 Zoom bands: Close ≤ 120 m camera distance, Regional ≤ 700 m, Strategic up to 2600 m.
 
 ## Test Plan
 
-Unit/integration tests in `src/Pantheon.Tests` (xUnit, headless, no Godot):
+Unit and integration tests in `src/Pantheon.Tests` (xUnit, headless, no Godot): 118 test
+methods, 147 test cases.
 
-| Area | Test | Verifies |
+| Area | Tests | Verifies |
 | --- | --- | --- |
-| World generation | `SameSeed_ProducesIdenticalWorld` | Two generations from the same seed are deep-equal (state, JSON text, terrain arrays). |
-| World generation | `DifferentSeeds_ProduceDifferentWorlds` | Seed actually drives generation. |
-| World generation | `GeneratedWorld_HasFullRegionGridAndOneSettlementOnLand` | 32×32 regions with sequential ids; settlement sits on a habitable region. |
-| World generation | `Classifier_*` | Data-driven biome rules map elevation/temperature/moisture to Sea/Highland/Forest/Grassland. |
-| Persistence | `RoundTrip_PreservesWorldState` | Serialize → deserialize is deep-equal and re-serializes to identical JSON. |
-| Persistence | `RoundTrip_ThroughFile_PreservesWorldState` | File save/load path (atomic write). |
-| Persistence | `Save_ContainsCurrentSaveVersion` | `SaveVersion` is present, first, and equals `CurrentSaveVersion`. |
-| Persistence | `Load_Without/Future SaveVersion_Throws` | Clear `SaveFormatException` on bad versions. |
-| Determinism | `ContinuingAfterLoad_MatchesUninterruptedRun` | Ticks → save → load → ticks equals an uninterrupted run (RNG state persisted). |
-| RNG | `SimulationRandom_*` | Same seed same sequence; state restore resumes; bounds. |
-| Scheduler | `SimulationScheduler_*` | Fixed-step accumulation, pause, time scale, backlog cap. |
-| Terrain | `TerrainRaycaster_*` | Downward ray hits sampled height; rays outside the world miss. |
-| Camera | `GodCameraModel_*` | Zoom clamping, band classification, yaw-relative panning, bounds clamping. |
-| Content | `ShippedContent_Parses` | `game/Data/*.json` parse with strict settings; last biome rule is a catch-all. |
-| Launch | `LaunchOptions_*` | `--seed`, `--load`, `--terrain` parsing. |
+| World generation | `WorldGenerationTests` (8) | Same seed (numeric or text) gives a deep-equal world: state, JSON text and terrain arrays. Different seeds differ. Full 32×32 region grid, all biomes present, island surrounded by sea, settlement on habitable land. Settings validation. |
+| Seeds | `WorldSeedTests` (4) | Decimal seeds verbatim, stable FNV-1a hashing of text, round trip through `ToString`. |
+| Biomes | `BiomeClassifierTests` (4) | Data-driven rules in order, catch-all required, no duplicates. |
+| Persistence | `SaveLoadTests` (12) | Round trips in memory and through a file. `SaveVersion` present, first and current. Readable JSON. Clear `SaveFormatException` for a missing, future or invalid version, malformed JSON, unknown members, nulls, inconsistent regions and an all-zero RNG state. |
+| Determinism | `DeterminismTests` (4) | Ticks → save → load → ticks equals an uninterrupted run. Same seed and ticks give the same state. |
+| Simulation | `SettlementSystemTests` (6) | Food balance, storage cap, starvation, births bounded by housing and food. |
+| RNG | `SimulationRandomTests` (11) | Matches the xoshiro256\*\* reference. Restored state resumes. Bounds and Poisson mean. Independent derived streams. |
+| Scheduler | `SimulationSchedulerTests` (8) | Fixed-step accumulation, frame-rate independence, pause, time scale, backlog cap, invalid input. |
+| Session | `GameSessionTests` (5), `SessionCommandsTests` (6) | Fixed tick rate. Save/load restores world and terrain. A failed or unsupported load keeps the current world. Pause and speed presets. New world. |
+| Camera | `GodCameraModelTests` (12), `EdgeScrollTests` (4) | Zoom clamping and bands, yaw-relative and distance-scaled panning, bounds, zoom-at-cursor, smoothing, pitch, ground clearance, edge-scroll ramp. |
+| Terrain | `TerrainRaycasterTests` (4) | Downward and oblique rays hit the visible surface; rays away from the world and beyond the maximum distance miss. |
+| Presentation | `PresentationTests` (10), `DebugReadoutTests` (3) | Colour map, fallback mesh chunks and winding, region lines and outline, water depth map, settlement label and hut layout, overlay readouts including the fallback marker. |
+| Terrain3D patch | `Terrain3DShaderPatchTests` (5) | In Terrain3D 1.0.2's code, every region-map lookup is clamped, the colour lookup tries the texel under the pixel before white, and nothing else changes. Code missing either lookup, unrelated code and already patched code are rejected. |
+| Content | `ContentTests` (6) | Shipped `game/Data/*.json` parse strictly. Unknown members, out-of-range values and invalid colours are rejected. |
+| Launch | `LaunchOptionsTests` (6) | `--seed`, `--load`, `--terrain`, smoke-test options, `=` and space syntax, warnings (unknown options before missing values). |
 
-Manual/automated client verification: `dotnet build Pantheon.sln`; Godot headless import and run
-of the main scene (no script errors); windowed run on the VM (Forward+ via lavapipe) with frame
-captures of the Terrain3D and fallback backends; interactive check of camera controls, boundary
-toggle, F5/F9 save/load rebuild.
+Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
+
+- `dotnet build Pantheon.sln` with warnings as errors, and `dotnet test`.
+- Headless import, then headless runs for both backends with `--quit-after-frames`, including bad
+  input (unknown options, invalid values, a missing save file).
+- Windowed smoke runs for both backends with `--screenshot` captures.
+- Interactive checks of every control, the boundary toggle, F5/F9 save and load with rebuild, F2
+  and the speed presets.
+- A stress loop (zoom in and out across all bands, cursor sweeps, boundaries on) that checks for
+  driver crashes.
+- Edge-scroll captures at the world's east and south edges on both backends, looking for seams.
+
+### Verification results
+
+- Build: 0 warnings, 0 errors. Tests: 147 of 147 passed.
+- Headless and windowed runs: both backends start, render and quit cleanly. The fallback shows
+  its badge and reason. Unknown options warn, and a bad `--load` falls back to a new world.
+- Interactive checks:
+  - Wheel zoom towards the cursor reaches Close at 88 m and Strategic at 2600 m.
+  - Q/E, WASD, edge scroll, RMB grab and MMB rotate all work, and F focuses at 220 m.
+  - B toggles the grid and the hover outline.
+  - F5 reported "Saved tick 790 to quicksave.json". F9 reported "Loaded tick 790 of seed 1234
+    from quicksave.json" and rebuilt the visuals.
+  - F2 generated seed 965765862, the settlement Larkspur. Space pauses, and 3 runs at ×16.
+- lavapipe crash:
+  - Before the fix, the game crashed with SIGSEGV once in interactive use. The stress loop then
+    crashed in both runs with boundaries on, the second in cycle 5. A 6-cycle run with
+    boundaries off happened to survive.
+  - Core dumps put the fault in llvmpipe JIT code, executing Terrain3D's
+    `get_index_coord` region-map read with a lane index of `0x3ffffe90`.
+  - After `Terrain3DShaderPatch`, 24 stress cycles ran with no crash. The live shader code
+    (`RenderingServer.shader_get_code`) contains 2 clamped lookups and no unclamped ones.
+  - Captures before and after the patch are pixel-identical except for the animated water.
+- Water: Strategic captures no longer show scattered sun-glint pixels on the far sea. Close
+  water keeps its waves and broad glints.
+- World edge line:
+  - Before the fix, Terrain3D showed a pale line about 3 px wide in the sea along x = 2048, the
+    world's east edge. The fallback renderer showed none in the same place, so it was not the
+    water or the sea floor.
+  - The line was about 1.2 (linear) brighter than the sea bed showing through 97 %-opaque water,
+    which matches the white `COLOR_MAP_DEF` strip. Replacing Terrain3D's NaN vertex discard
+    with a deep sink did not remove it, which ruled out lavapipe's NaN handling.
+  - After the fix, captures at the same camera position (cursor 1926, 992) and at the
+    south-east corner show no line, even with contrast boosted ×4. The fixed-camera smoke
+    capture is unchanged apart from one overlay digit.
 
 ## Tasks
 
@@ -310,33 +437,63 @@ toggle, F5/F9 save/load rebuild.
 - [x] Confirm pinned versions: Godot 4.7.2-stable .NET, Terrain3D 1.0.2-stable (supports Godot 4.4–4.7), .NET 8 SDK.
 - [x] Prototype Terrain3D runtime import (height + colour map + procedural texture) under Forward+ and Compatibility.
 - [x] Write this plan.
+- [x] ADR-001…ADR-006, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`.
+- [x] Solution scaffolding (`Pantheon.sln`, `Directory.Build.props`, project files, ignore/attributes files).
+- [x] Pantheon.Domain state and content contracts.
+- [x] Pantheon.Simulation: RNG, noise, terrain generation, regions, settlement founding, tick systems.
+- [x] Pantheon.Persistence: versioned saves and content parsing.
+- [x] Pantheon.Game: session, session commands, scheduler, camera model, edge scroll, readouts, launch options, presentation data.
+- [x] Pantheon.Tests: tests from the Test Plan; run them (147 passing).
+- [x] Godot project: `project.godot` (input map), scenes, data files, materials, shaders.
+- [x] Godot client scripts: bootstrap, camera, presenters (Terrain3D + fallback), overlay, smoke-test driver.
+- [x] Vendor the Terrain3D runtime subset and add `tools/vendor-terrain3d.sh`.
+- [x] Verify in Godot (headless import/run, windowed captures, interactive checks).
+- [x] Discovered: report unknown launch options before missing values (`--wat` was reported as "needs a value").
+- [x] Discovered: show why the fallback renderer is active (forced or unavailable) instead of always "Terrain3D unavailable".
+- [x] Discovered: find the cause of the lavapipe SIGSEGV and fix it with `Terrain3DShaderPatch` (unit tests, live-shader check, stress loop).
+- [x] Discovered: stop distant water sun glints from flickering (`water.gdshader` distance fade).
+- [x] Discovered: remove the pale line along the world's east and south edges (Terrain3D's half-texel colour lookup), with `Terrain3DShaderPatch` (unit tests, edge captures on both backends, smoke capture comparison).
+- [x] README: requirements, setup, tests, controls, options, saves, known issues, third-party code.
+- [x] Open the PR ([#1](https://github.com/roeyazroel/pantheon/pull/1)).
 
 ### In Progress
 
-- [ ] ADR-001…ADR-006, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`.
+- None.
 
 ### Future
 
-- [ ] Solution scaffolding (`Pantheon.sln`, `Directory.Build.props`, project files, ignore/attributes files).
-- [ ] Pantheon.Domain state and content contracts.
-- [ ] Pantheon.Simulation: RNG, noise, terrain generation, regions, settlement founding, tick systems.
-- [ ] Pantheon.Persistence: versioned saves and content parsing.
-- [ ] Pantheon.Game: session, scheduler, camera model, readouts, launch options.
-- [ ] Pantheon.Tests: tests from the Test Plan; run them.
-- [ ] Godot project: `project.godot` (input map), scenes, data files, materials, shaders.
-- [ ] Godot client scripts: bootstrap, camera, presenters (Terrain3D + fallback), overlay.
-- [ ] Vendor the Terrain3D runtime subset and add `tools/vendor-terrain3d.sh`.
-- [ ] Verify in Godot (headless import/run, windowed captures, interactive checks).
-- [ ] README (open in Godot .NET, run tests, controls).
-- [ ] Open the PR.
+- [ ] Report both shader defects to Terrain3D upstream (the `_region_map` read before the bounds
+  check, and the white half texel on the outer east and south edges), and remove
+  `Terrain3DShaderPatch` once a fixed release is vendored.
+- [ ] Export presets for Windows, macOS and Linux, including `Data/*.json` (read at startup).
+- [ ] Make the hover outline easier to see. It is a 1 px line; options are a translucent region
+  fill or ribbon geometry.
+- [ ] Tune the beach belt (`BeachMaxHeight` = 2.5 m in `biome_palette.json` reads wide at Regional zoom).
+- [ ] Dispose replaced hover-outline meshes immediately instead of leaving them to the GC.
 
 ## Relevant Files
 
-- `.docs/milestone-1-foundation.md` — this plan.
-- `docs/ADR/ADR-00[1-6]-*.md`, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`.
-- `Pantheon.sln`, `Directory.Build.props`, `src/Directory.Build.props`, `.gitignore`, `.gitattributes`, `.editorconfig`.
-- `src/Pantheon.Domain/**`, `src/Pantheon.Simulation/**`, `src/Pantheon.Persistence/**`, `src/Pantheon.Game/**`,
-  `src/Pantheon.Networking/**`, `src/Pantheon.Tests/**`.
-- `game/project.godot`, `game/Pantheon.csproj`, `game/Scenes/**`, `game/Scripts/**`, `game/Data/**`,
-  `game/Materials/**`, `game/Shaders/**`, `game/addons/terrain_3d/**` (vendored).
-- `tools/vendor-terrain3d.sh`, `README.md`.
+- `.docs/milestone-1-foundation.md`: this plan.
+- `README.md`, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`, `docs/ADR/README.md`, `docs/ADR/ADR-00[1-6]-*.md`.
+- `Pantheon.sln`, `Directory.Build.props`, `.editorconfig`, `.gitignore`, `.gitattributes`.
+- `src/Pantheon.Domain/**`: `World/` (`WorldState`, `WorldSeed`, `RegionGrid`, `RegionState`,
+  `RandomState`, `GroundPosition`, `StableHash`, `Generation/*`), `Ecology/Biome.cs`,
+  `Settlements/` (`SettlementState`, `SettlementRules`).
+- `src/Pantheon.Simulation/**`: `Randomness/`, `Noise/` (vendored `FastNoiseLite.cs`, `NoiseLayer`),
+  `Terrain/`, `WorldGen/`, `Settlements/`, `Systems/`, `SimMath.cs`.
+- `src/Pantheon.Persistence/**`: `WorldSaveSerializer`, `SaveGame`, `SaveIntegrity`, `ContentJson`,
+  `PantheonJson`, `WorldSeedJsonConverter`, exceptions.
+- `src/Pantheon.Game/**`: `GameSession`, `SessionCommands`, `SimulationScheduler`, `GameContent`,
+  `Camera/`, `Diagnostics/`, `Launch/`, `Presentation/` (including `Terrain3DShaderPatch.cs`).
+- `src/Pantheon.Networking/**` (reserved), `src/Pantheon.Tests/**` (including
+  `Game/Terrain3DShaderPatchTests.cs`).
+- `game/project.godot`, `game/Pantheon.csproj`, `game/icon.svg` (+ `.import`).
+- `game/Scenes/Main.tscn`, `game/Scenes/Camera/GodCamera.tscn`, `game/Scenes/UI/DebugOverlay.tscn`.
+- `game/Scripts/**` (+ Godot-generated `.uid` files): `Bootstrap/` (`GameRoot`, `GodotContentLoader`,
+  `SmokeTestDriver`), `Camera/GodCameraController`, `UI/DebugOverlay`, `InputActions`,
+  `GodotConversions`, `Presentation/` (`WorldPresenter`, `NodeExtensions`, `Terrain/*`, `Water/*`,
+  `Settlements/*`, `Regions/*`).
+- `game/Data/worldgen.json`, `game/Data/settlement_rules.json`, `game/Data/biome_palette.json`.
+- `game/Materials/*.tres` (including `hut_door.tres`), `game/Shaders/water.gdshader`,
+  `game/Shaders/overlay_line.gdshader`.
+- `game/addons/terrain_3d/**` (vendored), `tools/vendor-terrain3d.sh`.
