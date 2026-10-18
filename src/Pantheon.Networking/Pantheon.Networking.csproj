@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Reserved for host-authoritative ENet networking (ADR-003, Milestone 13). Intentionally empty in M1. -->
+  <!-- Reserved for host-authoritative ENet networking (ADR-003, Milestones 12 and 13). Intentionally empty until then. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>

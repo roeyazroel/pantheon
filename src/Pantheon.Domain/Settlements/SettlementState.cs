@@ -3,8 +3,8 @@ using Pantheon.Domain.World;
 namespace Pantheon.Domain.Settlements;
 
 /// <summary>
-/// Aggregate (statistical-tier) state of one settlement. Individual villagers are not stored;
-/// see ADR-004.
+/// Aggregate (statistical, Tier 1) state of one settlement. Individual villagers are not stored;
+/// see ADR-004 and ADR-008.
 /// </summary>
 public sealed class SettlementState
 {
@@ -28,4 +28,10 @@ public sealed class SettlementState
 
     /// <summary>Number of people the settlement's dwellings can house.</summary>
     public required int Housing { get; set; }
+
+    /// <summary>Health of the population, from 0 (dying) to 1 (healthy). Starvation lowers it; it changes births and deaths.</summary>
+    public required float Health { get; set; }
+
+    /// <summary>Work done on the house under construction, in builder-steps; 0 while no house is being built.</summary>
+    public required float ConstructionProgress { get; set; }
 }

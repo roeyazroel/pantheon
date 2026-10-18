@@ -2,31 +2,68 @@ namespace Pantheon.Domain.Settlements;
 
 /// <summary>
 /// Data-driven tuning of the statistical settlement model, loaded from
-/// <c>game/Data/settlement_rules.json</c>. All rates are per simulation tick.
+/// <c>game/Data/settlement_rules.json</c>. The model steps once every <see cref="StepIntervalTicks"/>
+/// ticks, and every rate is per step (ADR-008).
 /// </summary>
 public sealed record SettlementRules
 {
-    /// <summary>Share of the population working the fields (0..1).</summary>
+    /// <summary>Ticks between settlement steps; 10 ticks make one simulated second.</summary>
+    public required int StepIntervalTicks { get; init; }
+
+    /// <summary>Share of the population that works (0..1); the rest are children, elders and carers.</summary>
     public required float WorkforceShare { get; init; }
 
-    /// <summary>Food produced per worker per tick on land with fertility 1.</summary>
-    public required float FoodPerWorkerPerTick { get; init; }
+    /// <summary>Radius in regions (Chebyshev distance) of the land a settlement farms around its own region.</summary>
+    public required int FarmlandRadius { get; init; }
 
-    /// <summary>Food eaten per person per tick.</summary>
-    public required float FoodPerPersonPerTick { get; init; }
+    /// <summary>Farmers a land region can usefully employ; past this, extra farmers add less and less food.</summary>
+    public required float FarmersPerRegion { get; init; }
 
-    /// <summary>Food storage capacity per unit of housing.</summary>
+    /// <summary>Food per farmer per step on land of fertility 1 while farmland is plentiful.</summary>
+    public required float FoodPerFarmerPerStep { get; init; }
+
+    /// <summary>Food eaten per person per step.</summary>
+    public required float FoodPerPersonPerStep { get; init; }
+
+    /// <summary>Food storage per unit of housing; a harvest beyond it spoils.</summary>
     public required float FoodStoragePerHousing { get; init; }
 
     /// <summary>Stored food per person required before births occur.</summary>
     public required float SurplusFoodPerPerson { get; init; }
 
-    /// <summary>Chance per person per tick of a birth while food is in surplus and housing is free.</summary>
-    public required double BirthChancePerPersonPerTick { get; init; }
+    /// <summary>Health lost in a step in which nobody eats; a partial shortfall loses the unfed share of it.</summary>
+    public required float StarvationHealthLossPerStep { get; init; }
 
-    /// <summary>Baseline chance per person per tick of a death.</summary>
-    public required double DeathChancePerPersonPerTick { get; init; }
+    /// <summary>Health regained in a step in which everyone eats.</summary>
+    public required float HealthRecoveryPerStep { get; init; }
 
-    /// <summary>Additional chance per person per tick of a death while the food store is empty.</summary>
-    public required double StarvationDeathChancePerPersonPerTick { get; init; }
+    /// <summary>Chance per person per step of a birth at full health, while food is in surplus and housing is free.</summary>
+    public required double BirthChancePerPersonPerStep { get; init; }
+
+    /// <summary>Baseline chance per person per step of a death.</summary>
+    public required double DeathChancePerPersonPerStep { get; init; }
+
+    /// <summary>Extra chance per person per step of a death at zero health; it scales with (1 - health) squared.</summary>
+    public required double IllHealthDeathChancePerPersonPerStep { get; init; }
+
+    /// <summary>People one house shelters.</summary>
+    public required int HousingPerHouse { get; init; }
+
+    /// <summary>Population as a share of housing (0..1] at which the settlement starts building a house.</summary>
+    public required float ConstructionStartCrowding { get; init; }
+
+    /// <summary>Largest share of the workforce that leaves the fields to build (0..1).</summary>
+    public required float MaxBuilderShare { get; init; }
+
+    /// <summary>Most builders that can work on the house under construction.</summary>
+    public required float BuildersPerSite { get; init; }
+
+    /// <summary>Builder-steps of work one house needs.</summary>
+    public required float WorkPerHouse { get; init; }
+
+    /// <summary>Steps of the population's consumption the stores must hold before builders leave the fields.</summary>
+    public required float ConstructionFoodReserveSteps { get; init; }
+
+    /// <summary>Housing at which the settlement stops building.</summary>
+    public required int MaxHousing { get; init; }
 }

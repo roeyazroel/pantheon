@@ -1,11 +1,36 @@
 {
-  // Statistical settlement model. All rates are per simulation tick (10 ticks per second at x1).
-  "WorkforceShare": 0.5,
-  "FoodPerWorkerPerTick": 0.02,
-  "FoodPerPersonPerTick": 0.004,
-  "FoodStoragePerHousing": 5.0,
+  // Statistical (Tier 1) settlement model. It steps once every StepIntervalTicks ticks
+  // (10 ticks = one simulated second at x1) and every rate below is per step (ADR-008).
+  "StepIntervalTicks": 10,
+
+  // Labour and farmland. Production = FoodPerFarmerPerStep * mean fertility * capacity * (1 - e^(-farmers / capacity)),
+  // where capacity = FarmersPerRegion * land regions within FarmlandRadius of the settlement's region.
+  "WorkforceShare": 0.6,
+  "FarmlandRadius": 2,
+  "FarmersPerRegion": 12.0,
+  "FoodPerFarmerPerStep": 0.3,
+
+  // Food.
+  "FoodPerPersonPerStep": 0.05,
+  "FoodStoragePerHousing": 8.0,
   "SurplusFoodPerPerson": 2.0,
-  "BirthChancePerPersonPerTick": 0.00008,
-  "DeathChancePerPersonPerTick": 0.00003,
-  "StarvationDeathChancePerPersonPerTick": 0.0005
+
+  // Health: starvation lowers it by the unfed share of the loss; fed villagers recover.
+  "StarvationHealthLossPerStep": 0.02,
+  "HealthRecoveryPerStep": 0.005,
+
+  // Births scale with health; deaths rise with (1 - health)^2.
+  "BirthChancePerPersonPerStep": 0.004,
+  "DeathChancePerPersonPerStep": 0.0004,
+  "IllHealthDeathChancePerPersonPerStep": 0.02,
+
+  // Housing and autonomous construction: one house at a time, started when crowded and paused
+  // while the stores hold less than ConstructionFoodReserveSteps of consumption.
+  "HousingPerHouse": 5,
+  "ConstructionStartCrowding": 0.85,
+  "MaxBuilderShare": 0.2,
+  "BuildersPerSite": 10.0,
+  "WorkPerHouse": 100.0,
+  "ConstructionFoodReserveSteps": 20.0,
+  "MaxHousing": 1000
 }

@@ -51,6 +51,8 @@ internal static class WorldAssert
             Assert.Equal(e.Population, a.Population);
             Assert.Equal(e.Food, a.Food);
             Assert.Equal(e.Housing, a.Housing);
+            Assert.Equal(e.Health, a.Health);
+            Assert.Equal(e.ConstructionProgress, a.ConstructionProgress);
         }
     }
 

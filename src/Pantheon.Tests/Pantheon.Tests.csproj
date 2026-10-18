@@ -24,4 +24,9 @@
     <None Include="..\..\game\Data\*.json" Link="Data\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Saves written by earlier builds, for the migration tests. Never regenerate them with the current build. -->
+  <ItemGroup>
+    <None Update="Persistence\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

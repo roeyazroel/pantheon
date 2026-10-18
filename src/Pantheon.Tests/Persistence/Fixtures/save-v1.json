@@ -1,0 +1,719 @@
+{
+  "SaveVersion": 1,
+  "World": {
+    "Seed": 77,
+    "Generation": {
+      "HeightmapResolution": 256,
+      "VertexSpacing": 8,
+      "RegionsPerSide": 8,
+      "Shape": {
+        "IslandFalloffStart": 0.5,
+        "IslandFalloffEnd": 1,
+        "RidgeWeight": 0.6,
+        "RidgeMaskStart": 0.5,
+        "RidgeMaskEnd": 0.7,
+        "SeaLevel": 0.24,
+        "LandExponent": 1.5,
+        "MaxElevation": 180,
+        "MaxDepth": 40
+      },
+      "ElevationNoise": {
+        "Frequency": 0.0011,
+        "Octaves": 5,
+        "Lacunarity": 2,
+        "Gain": 0.5
+      },
+      "RidgeNoise": {
+        "Frequency": 0.0024,
+        "Octaves": 4,
+        "Lacunarity": 2.1,
+        "Gain": 0.5
+      },
+      "MoistureNoise": {
+        "Frequency": 0.0016,
+        "Octaves": 3,
+        "Lacunarity": 2,
+        "Gain": 0.5
+      },
+      "TemperatureNoise": {
+        "Frequency": 0.0009,
+        "Octaves": 2,
+        "Lacunarity": 2,
+        "Gain": 0.5
+      },
+      "Climate": {
+        "BaseTemperature": 0.62,
+        "TemperatureVariation": 0.12,
+        "LapseRate": 0.6,
+        "CoastalMoistureBonus": 0.15,
+        "CoastalMoistureRange": 25
+      },
+      "Biomes": [
+        {
+          "Biome": "Sea",
+          "MinElevation": null,
+          "MaxElevation": 0,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": null,
+          "MaxMoisture": null,
+          "BaseFertility": 0,
+          "BaseVegetation": 0
+        },
+        {
+          "Biome": "Highland",
+          "MinElevation": 70,
+          "MaxElevation": null,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": null,
+          "MaxMoisture": null,
+          "BaseFertility": 0.25,
+          "BaseVegetation": 0.2
+        },
+        {
+          "Biome": "Forest",
+          "MinElevation": null,
+          "MaxElevation": null,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": 0.55,
+          "MaxMoisture": null,
+          "BaseFertility": 0.6,
+          "BaseVegetation": 0.9
+        },
+        {
+          "Biome": "Grassland",
+          "MinElevation": null,
+          "MaxElevation": null,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": null,
+          "MaxMoisture": null,
+          "BaseFertility": 0.9,
+          "BaseVegetation": 0.5
+        }
+      ],
+      "StartingSettlement": {
+        "Population": 40,
+        "Food": 120,
+        "Housing": 60,
+        "CenterPreference": 0.35,
+        "Names": [
+          "Aldermere",
+          "Brightwater",
+          "Thornhollow",
+          "Kestrel Rise",
+          "Emberfield",
+          "Mossgate",
+          "Saltreach",
+          "Larkspur"
+        ]
+      }
+    },
+    "Tick": 250,
+    "Random": {
+      "S0": 3484920970226565463,
+      "S1": 16420231818694982730,
+      "S2": 11729163367656496694,
+      "S3": 14855333125652465123
+    },
+    "Regions": {
+      "Columns": 8,
+      "Rows": 8,
+      "RegionSize": 256,
+      "Cells": [
+        {
+          "Id": 0,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6394283,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 1,
+          "Biome": "Sea",
+          "Elevation": -39.885406,
+          "Temperature": 0.65544957,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 2,
+          "Biome": "Sea",
+          "Elevation": -37.69863,
+          "Temperature": 0.6932665,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 3,
+          "Biome": "Sea",
+          "Elevation": -28.392792,
+          "Temperature": 0.6442929,
+          "Moisture": 0.9927523,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 4,
+          "Biome": "Sea",
+          "Elevation": -26.904442,
+          "Temperature": 0.5947216,
+          "Moisture": 0.9967183,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 5,
+          "Biome": "Sea",
+          "Elevation": -37.206425,
+          "Temperature": 0.5402269,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 6,
+          "Biome": "Sea",
+          "Elevation": -39.91518,
+          "Temperature": 0.55810744,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 7,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.62394404,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 8,
+          "Biome": "Sea",
+          "Elevation": -39.729496,
+          "Temperature": 0.6131415,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 9,
+          "Biome": "Sea",
+          "Elevation": -25.103907,
+          "Temperature": 0.6411379,
+          "Moisture": 0.96441156,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 10,
+          "Biome": "Sea",
+          "Elevation": -22.468126,
+          "Temperature": 0.68667996,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 11,
+          "Biome": "Grassland",
+          "Elevation": 9.745416,
+          "Temperature": 0.61747473,
+          "Moisture": 0.68219787,
+          "Fertility": 0.41825804,
+          "Vegetation": 0.26397702
+        },
+        {
+          "Id": 12,
+          "Biome": "Forest",
+          "Elevation": 6.90295,
+          "Temperature": 0.56722784,
+          "Moisture": 0.8626802,
+          "Fertility": 0.2806715,
+          "Vegetation": 0.50163776
+        },
+        {
+          "Id": 13,
+          "Biome": "Sea",
+          "Elevation": -22.66047,
+          "Temperature": 0.59225214,
+          "Moisture": 0.99921906,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 14,
+          "Biome": "Sea",
+          "Elevation": -34.826233,
+          "Temperature": 0.6219757,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 15,
+          "Biome": "Sea",
+          "Elevation": -39.840694,
+          "Temperature": 0.6305833,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 16,
+          "Biome": "Sea",
+          "Elevation": -33.08231,
+          "Temperature": 0.60782665,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 17,
+          "Biome": "Forest",
+          "Elevation": 3.3169613,
+          "Temperature": 0.5825626,
+          "Moisture": 0.80058,
+          "Fertility": 0.32605863,
+          "Vegetation": 0.5741176
+        },
+        {
+          "Id": 18,
+          "Biome": "Sea",
+          "Elevation": -11.482503,
+          "Temperature": 0.6198946,
+          "Moisture": 0.9719813,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 19,
+          "Biome": "Grassland",
+          "Elevation": 10.959519,
+          "Temperature": 0.5864566,
+          "Moisture": 0.59679896,
+          "Fertility": 0.3648549,
+          "Vegetation": 0.23060717
+        },
+        {
+          "Id": 20,
+          "Biome": "Grassland",
+          "Elevation": 24.981932,
+          "Temperature": 0.5371587,
+          "Moisture": 0.5702033,
+          "Fertility": 0.48805982,
+          "Vegetation": 0.31453216
+        },
+        {
+          "Id": 21,
+          "Biome": "Sea",
+          "Elevation": 1.1513053,
+          "Temperature": 0.67617154,
+          "Moisture": 0.74367553,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 22,
+          "Biome": "Sea",
+          "Elevation": -0.6443288,
+          "Temperature": 0.6654324,
+          "Moisture": 0.8084367,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 23,
+          "Biome": "Sea",
+          "Elevation": -33.589558,
+          "Temperature": 0.6833389,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 24,
+          "Biome": "Sea",
+          "Elevation": -32.106262,
+          "Temperature": 0.56567794,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 25,
+          "Biome": "Sea",
+          "Elevation": 4.3646116,
+          "Temperature": 0.5353243,
+          "Moisture": 0.82762325,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 26,
+          "Biome": "Grassland",
+          "Elevation": 30.505676,
+          "Temperature": 0.4649827,
+          "Moisture": 0.6130896,
+          "Fertility": 0.49198344,
+          "Vegetation": 0.33106196
+        },
+        {
+          "Id": 27,
+          "Biome": "Grassland",
+          "Elevation": 62.88491,
+          "Temperature": 0.37207115,
+          "Moisture": 0.5028495,
+          "Fertility": 0.5059249,
+          "Vegetation": 0.35051224
+        },
+        {
+          "Id": 28,
+          "Biome": "Sea",
+          "Elevation": 0.90255964,
+          "Temperature": 0.56023806,
+          "Moisture": 0.8264552,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 29,
+          "Biome": "Sea",
+          "Elevation": -5.417579,
+          "Temperature": 0.66186655,
+          "Moisture": 0.8375033,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 30,
+          "Biome": "Sea",
+          "Elevation": -8.610841,
+          "Temperature": 0.67380726,
+          "Moisture": 0.8498141,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 31,
+          "Biome": "Sea",
+          "Elevation": -30.768564,
+          "Temperature": 0.70102185,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 32,
+          "Biome": "Sea",
+          "Elevation": -33.446915,
+          "Temperature": 0.5715451,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 33,
+          "Biome": "Grassland",
+          "Elevation": 2.3655913,
+          "Temperature": 0.54406005,
+          "Moisture": 0.6426977,
+          "Fertility": 0.34233543,
+          "Vegetation": 0.22248966
+        },
+        {
+          "Id": 34,
+          "Biome": "Grassland",
+          "Elevation": 57.626205,
+          "Temperature": 0.34015366,
+          "Moisture": 0.5676625,
+          "Fertility": 0.51925313,
+          "Vegetation": 0.37029874
+        },
+        {
+          "Id": 35,
+          "Biome": "Forest",
+          "Elevation": 60.877483,
+          "Temperature": 0.36093175,
+          "Moisture": 0.68274176,
+          "Fertility": 0.37577614,
+          "Vegetation": 0.72868055
+        },
+        {
+          "Id": 36,
+          "Biome": "Sea",
+          "Elevation": -4.2662497,
+          "Temperature": 0.58352536,
+          "Moisture": 0.86854047,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 37,
+          "Biome": "Sea",
+          "Elevation": -11.486956,
+          "Temperature": 0.66408485,
+          "Moisture": 0.9794491,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 38,
+          "Biome": "Sea",
+          "Elevation": -17.512463,
+          "Temperature": 0.67673856,
+          "Moisture": 0.9987757,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 39,
+          "Biome": "Sea",
+          "Elevation": -32.980034,
+          "Temperature": 0.69147336,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 40,
+          "Biome": "Sea",
+          "Elevation": -37.268646,
+          "Temperature": 0.6212981,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 41,
+          "Biome": "Sea",
+          "Elevation": 2.166349,
+          "Temperature": 0.5296012,
+          "Moisture": 0.7657313,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 42,
+          "Biome": "Forest",
+          "Elevation": 31.682587,
+          "Temperature": 0.47138235,
+          "Moisture": 0.66640663,
+          "Fertility": 0.39421496,
+          "Vegetation": 0.7198596
+        },
+        {
+          "Id": 43,
+          "Biome": "Forest",
+          "Elevation": 9.337388,
+          "Temperature": 0.51615804,
+          "Moisture": 0.6414505,
+          "Fertility": 0.36339027,
+          "Vegetation": 0.6463683
+        },
+        {
+          "Id": 44,
+          "Biome": "Sea",
+          "Elevation": -1.8359573,
+          "Temperature": 0.5630236,
+          "Moisture": 0.7640061,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 45,
+          "Biome": "Sea",
+          "Elevation": -15.350513,
+          "Temperature": 0.6366577,
+          "Moisture": 0.9917196,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 46,
+          "Biome": "Sea",
+          "Elevation": -21.115305,
+          "Temperature": 0.6727206,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 47,
+          "Biome": "Sea",
+          "Elevation": -36.322056,
+          "Temperature": 0.59994304,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 48,
+          "Biome": "Sea",
+          "Elevation": -39.828617,
+          "Temperature": 0.6830437,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 49,
+          "Biome": "Sea",
+          "Elevation": -25.87199,
+          "Temperature": 0.68532383,
+          "Moisture": 0.98933774,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 50,
+          "Biome": "Forest",
+          "Elevation": 5.4886794,
+          "Temperature": 0.6128011,
+          "Moisture": 0.8850674,
+          "Fertility": 0.31971088,
+          "Vegetation": 0.56053364
+        },
+        {
+          "Id": 51,
+          "Biome": "Sea",
+          "Elevation": -6.215971,
+          "Temperature": 0.6249588,
+          "Moisture": 0.9496022,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 52,
+          "Biome": "Sea",
+          "Elevation": -18.10416,
+          "Temperature": 0.6354296,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 53,
+          "Biome": "Sea",
+          "Elevation": -7.4604287,
+          "Temperature": 0.61536413,
+          "Moisture": 0.91852015,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 54,
+          "Biome": "Sea",
+          "Elevation": -28.479073,
+          "Temperature": 0.57412845,
+          "Moisture": 0.99370754,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 55,
+          "Biome": "Sea",
+          "Elevation": -39.738533,
+          "Temperature": 0.56613165,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 56,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.60886735,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 57,
+          "Biome": "Sea",
+          "Elevation": -39.8037,
+          "Temperature": 0.66139257,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 58,
+          "Biome": "Sea",
+          "Elevation": -35.14494,
+          "Temperature": 0.6272069,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 59,
+          "Biome": "Sea",
+          "Elevation": -32.22665,
+          "Temperature": 0.6708675,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 60,
+          "Biome": "Sea",
+          "Elevation": -34.67466,
+          "Temperature": 0.6751688,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 61,
+          "Biome": "Sea",
+          "Elevation": -37.120575,
+          "Temperature": 0.64704823,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 62,
+          "Biome": "Sea",
+          "Elevation": -39.83756,
+          "Temperature": 0.6033171,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        },
+        {
+          "Id": 63,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6164839,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0
+        }
+      ]
+    },
+    "Settlements": [
+      {
+        "Id": 1,
+        "Name": "Emberfield",
+        "RegionId": 26,
+        "Position": {
+          "X": 640,
+          "Z": 896
+        },
+        "Population": 42,
+        "Food": 129.193,
+        "Housing": 60
+      }
+    ]
+  }
+}

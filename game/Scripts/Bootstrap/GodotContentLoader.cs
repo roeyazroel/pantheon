@@ -18,11 +18,12 @@ public static class GodotContentLoader
     public static GameContent LoadGameContent() =>
         GameContent.Parse(ReadText(ContentJson.WorldGenFileName), ReadText(ContentJson.SettlementRulesFileName));
 
-    /// <summary>Loads and validates the presentation palette.</summary>
-    /// <returns>The palette.</returns>
-    /// <exception cref="ContentFormatException">The file is malformed or out of range.</exception>
-    /// <exception cref="IOException">The file cannot be read.</exception>
-    public static BiomePalette LoadBiomePalette() => BiomePalette.Parse(ReadText(BiomePalette.FileName));
+    /// <summary>Loads and validates the presentation content.</summary>
+    /// <returns>The palette and the settlement view settings.</returns>
+    /// <exception cref="ContentFormatException">A file is malformed or out of range.</exception>
+    /// <exception cref="IOException">A file cannot be read.</exception>
+    public static PresentationContent LoadPresentationContent() =>
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName));
 
     /// <summary>Reads a whole content file as text.</summary>
     private static string ReadText(string fileName)

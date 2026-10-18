@@ -22,6 +22,7 @@ public sealed class ContentTests
         Assert.True(content.WorldGen.Biomes[^1].IsCatchAll());
         Assert.Equal(new[] { Biome.Sea, Biome.Highland, Biome.Forest, Biome.Grassland }, content.WorldGen.Biomes.Select(rule => rule.Biome));
         Assert.NotEmpty(content.WorldGen.StartingSettlement.Names);
+        Assert.Equal(10, content.SettlementRules.StepIntervalTicks);
     }
 
     [Fact]
@@ -45,7 +46,7 @@ public sealed class ContentTests
     [Fact]
     public void Content_WithOutOfRangeValue_FailsValidation()
     {
-        var rules = TestContent.ReadText(ContentJson.SettlementRulesFileName).Replace("\"WorkforceShare\": 0.5", "\"WorkforceShare\": 2.5", StringComparison.Ordinal);
+        var rules = TestContent.ReadText(ContentJson.SettlementRulesFileName).Replace("\"WorkforceShare\": 0.6", "\"WorkforceShare\": 2.5", StringComparison.Ordinal);
 
         var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(TestContent.ReadText(ContentJson.WorldGenFileName), rules));
         Assert.Contains("WorkforceShare", exception.Message);
@@ -67,5 +68,68 @@ public sealed class ContentTests
         var exception = Assert.Throws<ContentFormatException>(() => BiomePalette.Parse(json));
         Assert.Contains(BiomePalette.FileName, exception.Message);
         Assert.Contains("ColorVariation", exception.Message);
+    }
+
+    [Fact]
+    public void ShippedSettlementView_Parses()
+    {
+        var layout = TestContent.SettlementView.Layout;
+
+        Assert.Equal(3, layout.HousesPerField);
+        Assert.NotEmpty(layout.CropColors);
+        // Neighbouring slots of a sunflower spiral lie at least 1.67 spacings apart, and a square
+        // field turned to any yaw reaches half its diagonal from its centre.
+        Assert.True(layout.FieldSize * MathF.Sqrt(2f) <= 1.67f * layout.FieldSpacing, "Neighbouring fields must not overlap.");
+    }
+
+    [Fact]
+    public void ShippedCitizens_Parse()
+    {
+        var citizens = TestContent.SettlementView.Citizens;
+
+        Assert.Equal(300, citizens.MaxRepresentatives);
+        Assert.True(citizens.RegionalTierExitDistance > citizens.RegionalTierEnterDistance, "The tier needs a band between its distances, or it flickers.");
+        Assert.True(citizens.CatchUpSpeed > citizens.WalkSpeed, "Rerouted citizens must be able to catch up with their routine.");
+        Assert.NotEqual(citizens.FarmerColor, citizens.BuilderColor);
+        Assert.NotEqual(citizens.FarmerColor, citizens.VillagerColor);
+        Assert.NotEqual(citizens.BuilderColor, citizens.VillagerColor);
+    }
+
+    [Fact]
+    public void SettlementView_WithUnknownMember_Throws()
+    {
+        var json = TestContent.ReadText(SettlementViewSettings.FileName).Replace("\"FieldSize\"", "\"FieldSise\"", StringComparison.Ordinal);
+
+        var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
+        Assert.Contains(SettlementViewSettings.FileName, exception.Message);
+    }
+
+    [Fact]
+    public void SettlementView_WithOutOfRangeValues_ListsEveryProblem()
+    {
+        var json = TestContent.ReadText(SettlementViewSettings.FileName)
+            .Replace("\"HousesPerField\": 3", "\"HousesPerField\": 0", StringComparison.Ordinal)
+            .Replace("\"FieldSize\": 10.0", "\"FieldSize\": -1.0", StringComparison.Ordinal);
+
+        var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
+        Assert.Contains(SettlementViewSettings.FileName, exception.Message);
+        Assert.Contains("HousesPerField", exception.Message);
+        Assert.Contains("FieldSize", exception.Message);
+    }
+
+    [Fact]
+    public void SettlementView_WithOutOfRangeCitizenValues_ListsEveryProblemOfEveryPart()
+    {
+        var json = TestContent.ReadText(SettlementViewSettings.FileName)
+            .Replace("\"FieldSize\": 10.0", "\"FieldSize\": -1.0", StringComparison.Ordinal)
+            .Replace("\"RegionalTierExitDistance\": 550.0", "\"RegionalTierExitDistance\": 300.0", StringComparison.Ordinal)
+            .Replace("\"CatchUpSpeed\": 4.0", "\"CatchUpSpeed\": 1.0", StringComparison.Ordinal);
+
+        var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
+        Assert.Contains("Layout: ", exception.Message);
+        Assert.Contains("FieldSize", exception.Message);
+        Assert.Contains("Citizens: ", exception.Message);
+        Assert.Contains("RegionalTierExitDistance", exception.Message);
+        Assert.Contains("CatchUpSpeed", exception.Message);
     }
 }

@@ -16,7 +16,32 @@ public sealed class LaunchOptionsTests
         Assert.Null(options.LoadPath);
         Assert.Equal(TerrainBackendPreference.Auto, options.Terrain);
         Assert.Null(options.QuitAfterFrames);
+        Assert.Null(options.AdvanceTicks);
+        Assert.Null(options.CameraDistance);
         Assert.Empty(options.Warnings);
+    }
+
+    [Fact]
+    public void LaunchOptions_ParsesCaptureOptions()
+    {
+        var options = LaunchOptions.Parse(["--advance-ticks=6000", "--camera-distance", "95.5"]);
+
+        Assert.Equal(6000, options.AdvanceTicks);
+        Assert.Equal(95.5f, options.CameraDistance);
+        Assert.Empty(options.Warnings);
+    }
+
+    [Fact]
+    public void LaunchOptions_WarnsAboutInvalidCaptureOptions()
+    {
+        var options = LaunchOptions.Parse(
+            ["--advance-ticks=0", "--advance-ticks=1.5", "--camera-distance=-5", "--camera-distance=NaN", "--camera-distance=Infinity", "--camera-distance=1,5"]);
+
+        Assert.Null(options.AdvanceTicks);
+        Assert.Null(options.CameraDistance);
+        Assert.Equal(6, options.Warnings.Count);
+        Assert.Contains("'--advance-ticks' needs a positive integer, got '0'.", options.Warnings);
+        Assert.Contains("'--camera-distance' needs a positive number of metres, got '-5'.", options.Warnings);
     }
 
     [Fact]
