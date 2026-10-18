@@ -515,14 +515,15 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Coding rules: stop editing accepted ADRs in place. ADR-005 is restored, the shader patch and
   fallback labelling are recorded as ADR-007 (amends ADR-005), and `docs/ADR/README.md` states
   how decisions change.
+- [x] Coding rules: enforce the checkable rules with `ArchitectureRulesTests` (layering, no Godot
+  in core, no unseeded randomness or clock in core, GDExtensions for all three desktop
+  platforms). A deliberate upward reference, clock read and missing macOS library each failed it.
 
 ### In Progress
 
 Added by the owner's coding rules (spec §134):
 
 - [ ] Write the rules down for every contributor in `AGENTS.md`, and link it from the README.
-- [ ] Enforce the checkable rules with `ArchitectureRulesTests` (layering, no Godot in core, no
-  unseeded randomness or clock in core, GDExtensions for all three desktop platforms).
 - [ ] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
 - [ ] Debug tool: F3 region debug map (`RegionDebugMap`, `DebugOverlay.ShowRegionMap`).
 - [ ] Update the README, `docs/ARCHITECTURE.md` and this plan; verify both renderers and the new hotkeys.

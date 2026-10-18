@@ -13,7 +13,8 @@ independent of the engine. Decisions are recorded in [ADR/](ADR/README.md).
 4. **Core code has no Godot dependency** and is tested headless (`dotnet test`).
 5. **Seeded randomness only.** Core systems use `SimulationRandom` (xoshiro256\*\*) derived from
    the `WorldSeed`. RNG state lives in `WorldState.Random`, so saves resume the same sequence.
-   No global or ambient randomness in core systems.
+   No global or ambient randomness in core systems: `ArchitectureRulesTests` scans the core
+   assemblies for `System.Random`, clock and tick-count reads and GUIDs.
 6. **Data-driven content** where practical (`game/Data/*.json`), parsed strictly (unknown or
    missing members are errors).
 7. **No speculative infrastructure or optimisation.** Reserved areas (gods, belief, creatures,
@@ -84,7 +85,8 @@ graph TD
 ```
 
 Allowed references point down the graph only. `Pantheon.Domain` references nothing.
-Only `game/Pantheon.csproj` references Godot.
+Only `game/Pantheon.csproj` references Godot. `ArchitectureRulesTests` reads the core project
+files and compiled assemblies and fails when either rule is broken.
 
 ## Layers
 
@@ -252,6 +254,10 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   the scheduler, the raycaster, the camera model and edge scrolling, session commands, content
   parsing, launch options, presentation helpers and the Terrain3D shader patch. The tests load
   the shipped `game/Data/*.json`.
+- `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
+  above, no Godot reference in core projects, no unseeded randomness or clock in core
+  assemblies, and Windows, macOS and Linux libraries (debug and release) in every vendored
+  GDExtension.
 - The Godot client is verified by building the solution and running the main scene, headless
   and windowed. `--quit-after-frames=<n> --screenshot=<file>` gives a scripted smoke run that
   saves a frame capture.
