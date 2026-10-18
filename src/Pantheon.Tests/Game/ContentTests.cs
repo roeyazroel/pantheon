@@ -69,4 +69,38 @@ public sealed class ContentTests
         Assert.Contains(BiomePalette.FileName, exception.Message);
         Assert.Contains("ColorVariation", exception.Message);
     }
+
+    [Fact]
+    public void ShippedSettlementView_Parses()
+    {
+        var layout = TestContent.SettlementView.Layout;
+
+        Assert.Equal(3, layout.HousesPerField);
+        Assert.NotEmpty(layout.CropColors);
+        // Neighbouring slots of a sunflower spiral lie at least 1.67 spacings apart, and a square
+        // field turned to any yaw reaches half its diagonal from its centre.
+        Assert.True(layout.FieldSize * MathF.Sqrt(2f) <= 1.67f * layout.FieldSpacing, "Neighbouring fields must not overlap.");
+    }
+
+    [Fact]
+    public void SettlementView_WithUnknownMember_Throws()
+    {
+        var json = TestContent.ReadText(SettlementViewSettings.FileName).Replace("\"FieldSize\"", "\"FieldSise\"", StringComparison.Ordinal);
+
+        var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
+        Assert.Contains(SettlementViewSettings.FileName, exception.Message);
+    }
+
+    [Fact]
+    public void SettlementView_WithOutOfRangeValues_ListsEveryProblem()
+    {
+        var json = TestContent.ReadText(SettlementViewSettings.FileName)
+            .Replace("\"HousesPerField\": 3", "\"HousesPerField\": 0", StringComparison.Ordinal)
+            .Replace("\"FieldSize\": 10.0", "\"FieldSize\": -1.0", StringComparison.Ordinal);
+
+        var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
+        Assert.Contains(SettlementViewSettings.FileName, exception.Message);
+        Assert.Contains("HousesPerField", exception.Message);
+        Assert.Contains("FieldSize", exception.Message);
+    }
 }

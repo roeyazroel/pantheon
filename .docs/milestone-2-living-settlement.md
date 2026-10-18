@@ -172,14 +172,23 @@ the stores refill.
 - Houses: `ceil(Housing / HousingPerHouse)` complete houses on the golden-angle spiral around
   the shrine (Milestone 1's spiral, now counting houses rather than people), skipping slots on
   low ground. House `k` is always the `k`-th valid slot, so growth only appends.
-- Construction: while `ConstructionProgress > 0`, the next slot shows a building site whose
-  walls rise with `ConstructionProgress / WorkPerHouse`.
+- Construction: while `ConstructionProgress > 0`, the next slot shows a building site: a ring of
+  scaffold poles, a timber pile, walls that rise during the first 70% of the work and a roof
+  that grows during the rest. When the house completes it joins the houses in the same slot.
 - Fields: plots on a second spiral, kept outside the disc of houses plus a clearance, on dry,
   gentle ground, tilted to the terrain, `ceil(houses / HousesPerField)` of them up to
-  `MaxFields`. As the village grows over its inner fields, new fields appear further out.
+  `MaxFields`. Each field shows crop rows tinted with one of the crop colours. As the village
+  grows over its inner fields, the field spiral moves outward.
+- Variation (house size and turn, field turn and crop) comes from `PresentationHash`, a
+  SplitMix64 mix of a salt, the settlement id and the slot, so it consumes no simulation random
+  stream and is the same every time the site is computed.
 - Tuning (spacing, sizes, clearances, crop and role colours, Tier 2 distances and routine
   durations) is in `game/Data/settlement_view.json`, parsed strictly by
-  `SettlementViewSettings`.
+  `SettlementViewSettings`. `PresentationContent` bundles it with the biome palette, and the
+  client loads both at start.
+- The view lays the site out again only when `Housing` or `ConstructionProgress` changes, and
+  rewrites the house and field MultiMeshes only when their placements differ from the ones
+  shown.
 
 ### Saves
 
@@ -492,17 +501,22 @@ sealed class SettlementCrowd {                                                  
     CrowdStatus GetStatus(int population, float cameraDistance); }
 
 // Presentation/
-static class PresentationHash { float Unit(ulong a, ulong b = 0, ulong c = 0, ulong d = 0); }      // SplitMix64-mixed, 0..1
+static class PresentationHash { ulong Mix(ulong a, ulong b = 0, ulong c = 0, ulong d = 0);         // chained SplitMix64
+    float Unit(ulong a, ulong b = 0, ulong c = 0, ulong d = 0); }                                    // [0, 1)
 sealed record SettlementLayoutSettings { float ShrineClearance, HouseSpacing, MinimumGroundHeight, DoorDistance,
-    HousesPerField, FieldSize, FieldSpacing, FieldClearance, FieldMaxSlope; int MaxFields; IReadOnlyList<RgbColor> CropColors; void Validate(); }
+    FieldSize, FieldSpacing, FieldClearance, FieldMaxSlope; int HousesPerField, MaxFields; IReadOnlyList<RgbColor> CropColors;
+    void Validate(); }                                                                                // lists every error
 sealed record SettlementViewSettings { SettlementLayoutSettings Layout; CitizenSettings Citizens;
     const string FileName = "settlement_view.json"; static SettlementViewSettings Parse(string json); }
-readonly record struct ConstructionPlacement(Vector3 Position, float Yaw, float Progress);       // progress 0..1
+sealed record PresentationContent(BiomePalette Palette, SettlementViewSettings SettlementView) {
+    static PresentationContent Parse(string paletteJson, string settlementViewJson); }
+readonly record struct ConstructionPlacement(HutPlacement House, float Progress);                 // progress 0..1
 readonly record struct FieldPlacement(Vector3 Position, float Yaw, Vector3 Normal, float Variant);
 sealed record SettlementSite(Vector3 Center, IReadOnlyList<HutPlacement> Houses, ConstructionPlacement? Construction,
-    IReadOnlyList<FieldPlacement> Fields, float HouseDiscRadius) { Vector2 DoorOf(int house, float doorDistance); }
+    IReadOnlyList<FieldPlacement> Fields, float HouseDiscRadius) { Vector2 DoorOf(int house, float doorDistance);
+    static Vector2 Facing(float yaw); }
 static class SettlementLayout {
-    int ComputeHouseCount(SettlementState s, SettlementRules rules);                 // ceil(Housing / HousingPerHouse)
+    int ComputeHouseCount(SettlementState s, SettlementRules rules);                 // SettlementEconomy.ComputeHouseCount
     int ComputeFieldCount(int houses, SettlementLayoutSettings settings);
     SettlementSite ComputeSite(SettlementState s, SettlementRules rules, TerrainField terrain, SettlementLayoutSettings settings); }
 
@@ -525,14 +539,19 @@ sealed record LaunchOptions { int? AdvanceTicks; float? CameraDistance; }       
 ### Godot client (`game/Scripts`)
 
 ```csharp
-sealed class SettlementPresenter { Build(world, terrain); Sync(world); UpdateCitizens(double seconds, Vector3 camera);
-    IReadOnlyList<CrowdStatus> CrowdStatuses; }
-sealed class SettlementView { Sync(SettlementState s); UpdateCitizens(double seconds, Vector3 camera); CrowdStatus Status; }
-                               // shrine, label, house MultiMeshes, building site, field MultiMesh
+sealed class WorldPresenter { WorldPresenter(Node3D root, Camera3D camera, PresentationContent content, SettlementRules rules,
+    TerrainBackendPreference terrainPreference); ... }
+sealed class SettlementPresenter { SettlementPresenter(Node3D parent, SettlementRules rules, SettlementViewSettings settings);
+    Build(world, terrain); Sync(world); UpdateCitizens(double seconds, Vector3 camera); IReadOnlyList<CrowdStatus> CrowdStatuses; }
+sealed class SettlementView { Sync(SettlementState s); SettlementSite Site; UpdateCitizens(double seconds, Vector3 camera);
+    CrowdStatus Status; }                                       // shrine and label; the site through SiteView
+sealed class SiteView { Show(SettlementSite site); }            // a MultiMesh per hut part, the fields (instance colours), the building site
+sealed class ConstructionSiteView { Show(ConstructionPlacement? construction); }   // scaffold, timber, walls to 70%, then the roof
 sealed class CitizenView { Show(IReadOnlyList<CitizenPose> poses, IReadOnlyList<RepresentativeCitizen> roster, bool recolour); Hide(); }
-sealed class SettlementAssets { ...; Mesh ScaffoldPole, FieldPlot, CitizenFigure; }   // citizen = body (instance colour) + head
+sealed class SettlementAssets { ...; Mesh ScaffoldPole, TimberPile, FieldPlot, CitizenFigure;   // fields: crop-row texture
+    static Transform3D PartialWall(float built); static Transform3D PartialRoof(float built); }  // citizen = body (instance colour) + head
 partial class GameRoot { hotkeys ',' F6 F7; --advance-ticks, --camera-distance; crowd statuses in the snapshot }
-static class GodotContentLoader { SettlementViewSettings LoadSettlementViewSettings(); }
+static class GodotContentLoader { PresentationContent LoadPresentationContent(); }   // biome palette and settlement view settings
 static class InputActions { SimStepSettlement (','), DebugSpoilFood (F6), DebugAddSettlers (F7) }
 ```
 
@@ -581,17 +600,18 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Tier 1: `SettlementRules`, `settlement_rules.json`, `SettlementEconomy`, `SettlementSystem`, `IntervalSystem`, validator, rule and cadence tests.
 - [x] Readouts and drivers: settlement readout lines, `,` F6 F7, input map, launch options, tests.
 - [x] Measure the shipped balance headless (Architecture → Tier 1).
+- [x] Open the draft pull request against `cursor/milestone-1-foundation-e33e` ([#2](https://github.com/roeyazroel/pantheon/pull/2)).
+- [x] Layout and views: houses from housing, building site, fields, `settlement_view.json`, client views and materials.
 
 ### In Progress
 
-- [ ] Layout and views: houses from housing, building site, fields, `settlement_view.json`, client views and materials.
+- [ ] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
 
 ### Future (this milestone, in order)
 
-- [ ] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
 - [ ] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md`, ADR-004 status line.
 - [ ] Verify in Godot on both renderers; record the results here.
-- [ ] Open the pull request against `cursor/milestone-1-foundation-e33e`.
+- [ ] Update the pull request description with what was built and the verification results.
 
 ### Future (later milestones)
 
@@ -609,13 +629,14 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - `docs/ARCHITECTURE.md`, `README.md`, `AGENTS.md`, `src/Pantheon.Domain/Population/README.md`.
 - `src/Pantheon.Domain/Settlements/SettlementState.cs`, `SettlementRules.cs`.
 - `src/Pantheon.Simulation/Settlements/` (`SettlementEconomy`, `SettlementSystem`,
-  `SettlementRulesValidator`, `FarmlandSurvey`, `LabourAllocation`, `SettlementOutlook`),
-  `Systems/IntervalSystem.cs`, `Systems/SimulationEngine.cs`, `WorldGen/SettlementFounder.cs`.
+  `SettlementRulesValidator`, `FarmlandSurvey`, `LabourAllocation`, `SettlementOutlook`,
+  `BirthBlocker`), `Systems/IntervalSystem.cs`, `Systems/SimulationEngine.cs`,
+  `WorldGen/SettlementFounder.cs`.
 - `src/Pantheon.Persistence/WorldSaveSerializer.cs`, `SaveMigrations.cs`, `SaveIntegrity.cs`.
 - `src/Pantheon.Game/Population/**`, `Presentation/` (`SettlementLayout`, `SettlementSite`,
-  `SettlementViewSettings`, `SettlementLayoutSettings`, `PresentationHash`, placements),
-  `Diagnostics/DebugReadout.cs`, `DebugSnapshot.cs`, `SessionCommands.cs`, `GameSession.cs`,
-  `Launch/LaunchOptions.cs`.
+  `SettlementViewSettings`, `SettlementLayoutSettings`, `PresentationContent`,
+  `PresentationHash`, placements), `Diagnostics/DebugReadout.cs`, `SettlementReadout.cs`,
+  `DebugSnapshot.cs`, `SessionCommands.cs`, `GameSession.cs`, `Launch/LaunchOptions.cs`.
 - `src/Pantheon.Tests/**` (new and updated tests, `Persistence/Fixtures/save-v1.json`).
 - `game/Data/settlement_rules.json`, `game/Data/settlement_view.json`, `game/project.godot`,
   `game/Materials/*.tres`, `game/Scripts/Bootstrap/*`, `game/Scripts/Presentation/Settlements/*`,

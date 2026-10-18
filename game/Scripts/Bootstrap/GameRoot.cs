@@ -57,10 +57,11 @@ public partial class GameRoot : Node3D
             return;
         }
 
-        (var content, _palette) = loaded.Value;
+        var (content, presentation) = loaded.Value;
+        _palette = presentation.Palette;
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
-        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, _palette, options.Terrain);
+        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain);
         _session = CreateSession(content, options);
         if (options.AdvanceTicks is { } ticks)
         {
@@ -247,12 +248,12 @@ public partial class GameRoot : Node3D
     /// <summary>A fresh seed for F2. Only the shell picks random seeds; the simulation never does.</summary>
     private static WorldSeed CreateRandomSeed() => new((ulong)Random.Shared.NextInt64(1, MaxRandomSeed));
 
-    /// <summary>Loads simulation content and palette, logging the reason on failure.</summary>
-    private static (GameContent Content, BiomePalette Palette)? TryLoadContent()
+    /// <summary>Loads the simulation and presentation content, logging the reason on failure.</summary>
+    private static (GameContent Content, PresentationContent Presentation)? TryLoadContent()
     {
         try
         {
-            return (GodotContentLoader.LoadGameContent(), GodotContentLoader.LoadBiomePalette());
+            return (GodotContentLoader.LoadGameContent(), GodotContentLoader.LoadPresentationContent());
         }
         catch (Exception exception) when (exception is ContentFormatException or IOException)
         {

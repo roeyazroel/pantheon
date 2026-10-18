@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Godot;
 using Pantheon.Domain.Settlements;
@@ -8,8 +8,8 @@ using Pantheon.Simulation.Terrain;
 namespace Pantheon.Client.Presentation.Settlements;
 
 /// <summary>
-/// Nodes of one settlement: the wayshrine, its huts (one multimesh per hut part) and a floating
-/// name label. <see cref="Sync"/> follows the population, so growth shows as new huts.
+/// Nodes of one settlement: the wayshrine, its houses, building site and fields, and a floating
+/// name label. <see cref="Sync"/> follows the state, so new houses appear as housing grows.
 /// </summary>
 internal sealed class SettlementView
 {
@@ -21,84 +21,75 @@ internal sealed class SettlementView
     // With FixedSize the label keeps its on-screen size; this gives about 30 px per line at 900 px height.
     private const float LabelPixelSize = 0.001f;
 
-    private readonly TerrainField _field;
-    private readonly MultiMesh _walls;
-    private readonly MultiMesh _roofs;
-    private readonly MultiMesh _doors;
+    private readonly TerrainField _terrain;
+    private readonly SettlementRules _rules;
+    private readonly SettlementLayoutSettings _layout;
+    private readonly SiteView _siteView;
     private readonly Label3D _label;
-    private int _hutCount = -1;
+    private (int Housing, float ConstructionProgress)? _siteInputs;
 
     /// <summary>Creates the settlement's nodes under <paramref name="parent"/> and shows its current state.</summary>
     /// <param name="parent">Node that holds all settlements.</param>
     /// <param name="assets">Shared meshes.</param>
     /// <param name="settlement">Settlement to show.</param>
-    /// <param name="field">Terrain the settlement stands on.</param>
-    public SettlementView(Node3D parent, SettlementAssets assets, SettlementState settlement, TerrainField field)
+    /// <param name="terrain">Terrain the settlement stands on.</param>
+    /// <param name="rules">Settlement rules, for the house count and the work per house.</param>
+    /// <param name="settings">Settlement presentation settings.</param>
+    public SettlementView(Node3D parent, SettlementAssets assets, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings)
     {
-        _field = field;
+        _terrain = terrain;
+        _rules = rules;
+        _layout = settings.Layout;
         var root = parent.AddLayer(string.Create(CultureInfo.InvariantCulture, $"Settlement_{settlement.Id}"));
-        var center = new Vector3(settlement.Position.X, field.SampleHeight(settlement.Position.X, settlement.Position.Z), settlement.Position.Z);
+        var center = new Vector3(settlement.Position.X, terrain.SampleHeight(settlement.Position.X, settlement.Position.Z), settlement.Position.Z);
 
         AddPart(root, "ShrineBase", assets.ShrineBase, center + SettlementAssets.ShrineBaseOffset);
         AddPart(root, "ShrinePillar", assets.ShrinePillar, center + SettlementAssets.ShrinePillarOffset);
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
-        _walls = AddMultiMesh(root, "HutWalls", assets.HutWall);
-        _roofs = AddMultiMesh(root, "HutRoofs", assets.HutRoof);
-        _doors = AddMultiMesh(root, "HutDoors", assets.HutDoor);
+        _siteView = new SiteView(root, assets, _layout);
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
         root.AddChild(_label);
 
-        Sync(settlement);
+        UpdateLabel(settlement);
+        ShowSite(settlement);
     }
 
-    /// <summary>Updates the label and, when the hut count changes, re-places the huts.</summary>
+    /// <summary>The layout currently shown.</summary>
+    public SettlementSite Site { get; private set; }
+
+    /// <summary>Updates the label and, when housing or construction changed, the houses, building site and fields.</summary>
     /// <param name="settlement">Current settlement state.</param>
     public void Sync(SettlementState settlement)
+    {
+        UpdateLabel(settlement);
+        if ((settlement.Housing, settlement.ConstructionProgress) != _siteInputs)
+        {
+            ShowSite(settlement);
+        }
+    }
+
+    /// <summary>Sets the label text when it changed.</summary>
+    private void UpdateLabel(SettlementState settlement)
     {
         var text = SettlementLabel.Format(settlement);
         if (_label.Text != text)
         {
             _label.Text = text;
         }
-
-        var hutCount = SettlementLayout.ComputeHutCount(settlement);
-        if (hutCount == _hutCount)
-        {
-            return;
-        }
-
-        _hutCount = hutCount;
-        PlaceHuts(SettlementLayout.ComputeHuts(settlement, _field, hutCount));
     }
 
-    /// <summary>Writes one transform per hut into each part's multimesh.</summary>
-    private void PlaceHuts(IReadOnlyList<HutPlacement> huts)
+    /// <summary>Lays the settlement out again and shows the result.</summary>
+    [MemberNotNull(nameof(Site))]
+    private void ShowSite(SettlementState settlement)
     {
-        _walls.InstanceCount = huts.Count;
-        _roofs.InstanceCount = huts.Count;
-        _doors.InstanceCount = huts.Count;
-        for (var i = 0; i < huts.Count; i++)
-        {
-            var hut = huts[i];
-            var basis = new Basis(Vector3.Up, hut.Yaw).Scaled(Vector3.One * hut.Scale);
-            var origin = hut.Position.ToGodot();
-            _walls.SetInstanceTransform(i, new Transform3D(basis, origin + (basis * SettlementAssets.WallOffset)));
-            _roofs.SetInstanceTransform(i, new Transform3D(basis, origin + (basis * SettlementAssets.RoofOffset)));
-            _doors.SetInstanceTransform(i, new Transform3D(basis, origin + (basis * SettlementAssets.DoorOffset)));
-        }
+        _siteInputs = (settlement.Housing, settlement.ConstructionProgress);
+        Site = SettlementLayout.ComputeSite(settlement, _rules, _terrain, _layout);
+        _siteView.Show(Site);
     }
 
     /// <summary>Adds a single static mesh.</summary>
     private static void AddPart(Node3D root, string name, Mesh mesh, Vector3 position) =>
         root.AddChild(new MeshInstance3D { Name = name, Mesh = mesh, Position = position });
-
-    /// <summary>Adds an empty multimesh for one hut part.</summary>
-    private static MultiMesh AddMultiMesh(Node3D root, string name, Mesh mesh)
-    {
-        var multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, Mesh = mesh };
-        root.AddChild(new MultiMeshInstance3D { Name = name, Multimesh = multimesh });
-        return multimesh;
-    }
 
     /// <summary>Billboard label with a constant screen size that draws over the terrain.</summary>
     private static Label3D CreateLabel(Vector3 position) => new()

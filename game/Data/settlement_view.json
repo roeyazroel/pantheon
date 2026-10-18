@@ -1,0 +1,22 @@
+{
+  // Presentation only: how settlements are drawn. The simulation never reads this file.
+  // Distances are in metres.
+  "Layout": {
+    // Houses stand on a sunflower spiral around the shrine, one house per HousingPerHouse of
+    // housing (settlement_rules.json). The house under construction takes the next slot.
+    "ShrineClearance": 9.0,
+    "HouseSpacing": 6.5,
+    "MinimumGroundHeight": 0.6,
+    "DoorDistance": 3.0,
+
+    // Fields lie on a second spiral beyond the houses: one per HousesPerField houses, up to
+    // MaxFields, on dry ground no steeper than FieldMaxSlope (rise over run).
+    "HousesPerField": 3,
+    "MaxFields": 48,
+    "FieldSize": 10.0,
+    "FieldSpacing": 9.0,
+    "FieldClearance": 4.0,
+    "FieldMaxSlope": 0.3,
+    "CropColors": ["#c9a94e", "#a2b24c", "#6f9440", "#8b6b47"]
+  }
+}

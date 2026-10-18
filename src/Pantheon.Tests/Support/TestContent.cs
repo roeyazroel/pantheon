@@ -12,7 +12,7 @@ namespace Pantheon.Tests.Support;
 internal static class TestContent
 {
     private static readonly Lazy<GameContent> ShippedContent = new(LoadShipped);
-    private static readonly Lazy<BiomePalette> ShippedPaletteContent = new(LoadPalette);
+    private static readonly Lazy<PresentationContent> ShippedPresentationContent = new(LoadPresentation);
 
     /// <summary>Directory holding the copied content files.</summary>
     public static string DataDirectory { get; } = Path.Combine(AppContext.BaseDirectory, "Data");
@@ -21,7 +21,10 @@ internal static class TestContent
     public static GameContent Shipped => ShippedContent.Value;
 
     /// <summary>The shipped palette.</summary>
-    public static BiomePalette Palette => ShippedPaletteContent.Value;
+    public static BiomePalette Palette => ShippedPresentationContent.Value.Palette;
+
+    /// <summary>The shipped settlement view settings.</summary>
+    public static SettlementViewSettings SettlementView => ShippedPresentationContent.Value.SettlementView;
 
     /// <summary>
     /// Shipped generation settings at a quarter of the resolution. The island keeps its physical
@@ -53,6 +56,7 @@ internal static class TestContent
     private static GameContent LoadShipped() =>
         GameContent.Parse(ReadText(ContentJson.WorldGenFileName), ReadText(ContentJson.SettlementRulesFileName));
 
-    /// <summary>Parses and validates the shipped palette.</summary>
-    private static BiomePalette LoadPalette() => BiomePalette.Parse(ReadText(BiomePalette.FileName));
+    /// <summary>Parses and validates the shipped presentation content.</summary>
+    private static PresentationContent LoadPresentation() =>
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName));
 }
