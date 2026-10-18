@@ -158,7 +158,8 @@ Only `game/Pantheon.csproj` references Godot.
   - `Terrain/ITerrainPresenter` with `Terrain3DTerrainPresenter` (primary) and
     `FallbackMeshTerrainPresenter` (fallback, logged and labelled), chosen by
     `TerrainPresenterFactory`. The Terrain3D adapter switches Terrain3D to a copy of its
-    generated shader with bounds-safe region lookups (ADR-005).
+    generated shader with bounds-safe region lookups and a colour lookup that also covers the
+    world's east and south edges (ADR-005).
   - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`)
     tinted by a baked depth map, so it does not read the depth buffer. Waves flatten and the
     surface gets rougher with camera distance, which avoids flickering sun glints.
@@ -231,7 +232,7 @@ flowchart TD
     SF --> WS["WorldState"]
     TF --> TPF{"ClassDB has Terrain3D?"}
     TPF -- yes --> T3["Terrain3DTerrainPresenter<br/>import_images(height, -, colour)"]
-    T3 --> SP["Terrain3DShaderPatch<br/>bounds-safe region lookups"]
+    T3 --> SP["Terrain3DShaderPatch<br/>bounds-safe region lookups,<br/>edge-safe colour lookup"]
     TPF -- "no, or --terrain=fallback" --> FB["FallbackMeshTerrainPresenter<br/>(clearly marked, with reason)"]
 ```
 
