@@ -46,7 +46,8 @@ assumption, as in Milestone 1.
 amends ADR-004: Tier numbering, the 1 Hz settlement step, and representative citizens as the
 Regional tier's derived, non-canonical presentation until Milestone 12.
 
-**Status:** in progress.
+**Status:** implemented and verified; see Test Plan → Verification results. In review in
+[#2](https://github.com/roeyazroel/pantheon/pull/2).
 
 ## Architecture
 
@@ -645,6 +646,9 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - Tier switching (wheel zoom at the shrine, Terrain3D): 753 m reads tier 1 with no citizens;
   coming back in, 461 m stays tier 1 and 392 m enters tier 2; going out again, 543 m stays
   tier 2. The overlay line shows the distance that changes the tier.
+- Pause (Space, tick 9000 at 60 m, overlay off): two captures 6 s apart differ only in the
+  animated water (9,959 pixels changed). After resuming at ×1, two captures 3 s apart differ
+  at nearly every walking or working figure (121,478 pixels changed).
 - Famine at the limit (F7 then F6, ×4): from 485 people at full health, the settlers bring the
   settlement to 730 / 490 with empty stores, 86% fed and no builders. Health falls to 87% at
   712 people, then to 67% at 593 people with 1.5 deaths per second. Once the land feeds
@@ -673,10 +677,11 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
 - [x] Verify in Godot on both renderers; record the results here (Test Plan → Verification results).
 - [x] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md` and the ADR-004 status line (both with ADR-008). Every Mermaid diagram in the repository parses with Mermaid 11.
+- [x] Update the pull request description with what was built and the verification results.
 
 ### In Progress
 
-- [ ] Update the pull request description with what was built and the verification results.
+None.
 
 ### Future (later milestones)
 
