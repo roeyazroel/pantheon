@@ -142,6 +142,8 @@ public sealed class PresentationTests
             Population = 41,
             Food = 0f,
             Housing = 60,
+            Health = 1f,
+            ConstructionProgress = 0f,
         };
 
         Assert.Equal("Mossgate\n41 people", SettlementLabel.Format(settlement));

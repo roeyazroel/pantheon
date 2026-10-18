@@ -114,6 +114,8 @@ public sealed class SettlementSystemTests
                     Population = population,
                     Food = food,
                     Housing = housing,
+                    Health = 1f,
+                    ConstructionProgress = 0f,
                 },
             },
         };

@@ -58,7 +58,7 @@ public sealed class SaveLoadTests
         var first = document.RootElement.EnumerateObject().First();
         Assert.Equal("SaveVersion", first.Name);
         Assert.Equal(WorldSaveSerializer.CurrentSaveVersion, first.Value.GetInt32());
-        Assert.Equal(1, WorldSaveSerializer.CurrentSaveVersion);
+        Assert.Equal(2, WorldSaveSerializer.CurrentSaveVersion);
     }
 
     [Fact]
@@ -111,6 +111,10 @@ public sealed class SaveLoadTests
     [InlineData("not json")]
     [InlineData("[1, 2]")]
     [InlineData("{\"SaveVersion\": 1}")]
+    [InlineData("{\"SaveVersion\": 2}")]
+    [InlineData("{\"SaveVersion\": 1, \"World\": 5}")]
+    [InlineData("{\"SaveVersion\": 1, \"World\": {\"Settlements\": [3]}}")]
+    [InlineData("{\"SaveVersion\": 1, \"World\": {}, \"World\": {}}")]
     public void Load_MalformedSave_Throws(string json)
     {
         Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(json));
@@ -145,6 +149,31 @@ public sealed class SaveLoadTests
         var exception = Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(root.ToJsonString()));
         Assert.Contains("index 3", exception.Message);
         Assert.Contains("missing region", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("Health")]
+    [InlineData("ConstructionProgress")]
+    public void Load_CurrentSaveWithoutSettlementMember_Throws(string member)
+    {
+        var root = SaveAsNode();
+        root["World"]!["Settlements"]![0]!.AsObject().Remove(member);
+
+        var exception = Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(root.ToJsonString()));
+        Assert.Contains(member, exception.Message);
+    }
+
+    [Theory]
+    [InlineData("Health", 1.5, "health")]
+    [InlineData("Health", -0.1, "health")]
+    [InlineData("ConstructionProgress", -1.0, "construction progress")]
+    public void Load_WithOutOfRangeSettlementValue_Throws(string member, double value, string expectedMessage)
+    {
+        var root = SaveAsNode();
+        root["World"]!["Settlements"]![0]![member] = value;
+
+        var exception = Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(root.ToJsonString()));
+        Assert.Contains(expectedMessage, exception.Message);
     }
 
     [Fact]

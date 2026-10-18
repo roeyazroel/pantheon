@@ -76,7 +76,7 @@ internal static class SaveIntegrity
         }
     }
 
-    /// <summary>Checks settlement ids, region references and non-negative quantities.</summary>
+    /// <summary>Checks settlement ids, region references, non-negative quantities and health in 0..1.</summary>
     private static void ValidateSettlements(WorldState world, List<string> errors)
     {
         var ids = new HashSet<int>();
@@ -103,6 +103,16 @@ internal static class SaveIntegrity
             if (settlement.Population < 0 || settlement.Housing < 0 || settlement.Food < 0f)
             {
                 errors.Add($"Settlement {settlement.Id} has negative population, housing or food.");
+            }
+
+            if (!(settlement.Health is >= 0f and <= 1f))
+            {
+                errors.Add($"Settlement {settlement.Id} has health {settlement.Health}; it must lie between 0 and 1.");
+            }
+
+            if (settlement.ConstructionProgress < 0f)
+            {
+                errors.Add($"Settlement {settlement.Id} has negative construction progress.");
             }
         }
     }
