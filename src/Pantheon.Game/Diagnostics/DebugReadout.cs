@@ -57,10 +57,10 @@ public static class DebugReadout
             ? "PAUSED"
             : Format("x{0:0.##} ({1:0.#} ticks/s)", snapshot.TimeScale, snapshot.TicksPerSecond * snapshot.TimeScale);
 
-    /// <summary>Terrain backend line, which stands out when the fallback renderer is active.</summary>
+    /// <summary>Terrain backend line, which stands out when the fallback renderer is active (the backend name says why).</summary>
     private static string FormatTerrain(DebugSnapshot snapshot) =>
         snapshot.TerrainIsFallback
-            ? Format("Terrain {0}  ** FALLBACK RENDERER (Terrain3D unavailable) **", snapshot.TerrainBackend)
+            ? Format("Terrain {0}  ** FALLBACK RENDERER **", snapshot.TerrainBackend)
             : Format("Terrain {0}", snapshot.TerrainBackend);
 
     /// <summary>Cursor position and the region under it.</summary>

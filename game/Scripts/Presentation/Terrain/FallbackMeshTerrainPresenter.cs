@@ -19,17 +19,20 @@ public sealed class FallbackMeshTerrainPresenter : ITerrainPresenter
 
     private readonly Node3D _parent;
     private readonly Material _material;
+    private readonly string _reason;
 
     /// <summary>Creates the presenter; nothing is built until <see cref="Build"/>.</summary>
     /// <param name="parent">Node that will hold the terrain chunks.</param>
-    public FallbackMeshTerrainPresenter(Node3D parent)
+    /// <param name="reason">Why the fallback is used, shown with the backend name.</param>
+    public FallbackMeshTerrainPresenter(Node3D parent, string reason)
     {
         _parent = parent;
         _material = GD.Load<Material>(MaterialPath);
+        _reason = reason;
     }
 
     /// <inheritdoc />
-    public string BackendName => "Fallback mesh";
+    public string BackendName => $"Fallback mesh ({_reason})";
 
     /// <inheritdoc />
     public bool IsFallback => true;

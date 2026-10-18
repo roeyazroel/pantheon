@@ -29,14 +29,12 @@ public static class TerrainPresenterFactory
         if (preference == TerrainBackendPreference.Fallback)
         {
             GD.Print("Terrain: using the fallback mesh renderer (--terrain=fallback).");
-        }
-        else
-        {
-            GD.PushWarning(
-                "Terrain: the Terrain3D GDExtension is not loaded, so the FALLBACK mesh renderer is used. " +
-                "Open the project in the Godot editor once, or run 'godot --headless --path game --import', to register the extension.");
+            return new FallbackMeshTerrainPresenter(parent, "forced by --terrain=fallback");
         }
 
-        return new FallbackMeshTerrainPresenter(parent);
+        GD.PushWarning(
+            "Terrain: the Terrain3D GDExtension is not loaded, so the FALLBACK mesh renderer is used. " +
+            "Open the project in the Godot editor once, or run 'godot --headless --path game --import', to register the extension.");
+        return new FallbackMeshTerrainPresenter(parent, "Terrain3D unavailable");
     }
 }
