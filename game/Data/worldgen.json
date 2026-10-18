@@ -1,0 +1,52 @@
+{
+  // PANTHEON world generation. Distances are in metres, noise frequencies in cycles per metre.
+  // The heightfield is HeightmapResolution^2 samples, VertexSpacing metres apart (2048 m island).
+  "HeightmapResolution": 1024,
+  "VertexSpacing": 2.0,
+  "RegionsPerSide": 32,
+  "Shape": {
+    "IslandFalloffStart": 0.5,
+    "IslandFalloffEnd": 1.0,
+    "RidgeWeight": 0.6,
+    "RidgeMaskStart": 0.5,
+    "RidgeMaskEnd": 0.7,
+    "SeaLevel": 0.24,
+    "LandExponent": 1.5,
+    "MaxElevation": 180.0,
+    "MaxDepth": 40.0
+  },
+  "ElevationNoise": { "Frequency": 0.0011, "Octaves": 5, "Lacunarity": 2.0, "Gain": 0.5 },
+  "RidgeNoise": { "Frequency": 0.0024, "Octaves": 4, "Lacunarity": 2.1, "Gain": 0.5 },
+  "MoistureNoise": { "Frequency": 0.0016, "Octaves": 3, "Lacunarity": 2.0, "Gain": 0.5 },
+  "TemperatureNoise": { "Frequency": 0.0009, "Octaves": 2, "Lacunarity": 2.0, "Gain": 0.5 },
+  "Climate": {
+    "BaseTemperature": 0.62,
+    "TemperatureVariation": 0.12,
+    "LapseRate": 0.6,
+    "CoastalMoistureBonus": 0.15,
+    "CoastalMoistureRange": 25.0
+  },
+  // Ordered: the first matching rule wins and the last rule must have no bounds.
+  "Biomes": [
+    { "Biome": "Sea", "MaxElevation": 0.0, "BaseFertility": 0.0, "BaseVegetation": 0.0 },
+    { "Biome": "Highland", "MinElevation": 70.0, "BaseFertility": 0.25, "BaseVegetation": 0.2 },
+    { "Biome": "Forest", "MinMoisture": 0.55, "BaseFertility": 0.6, "BaseVegetation": 0.9 },
+    { "Biome": "Grassland", "BaseFertility": 0.9, "BaseVegetation": 0.5 }
+  ],
+  "StartingSettlement": {
+    "Population": 40,
+    "Food": 120.0,
+    "Housing": 60,
+    "CenterPreference": 0.35,
+    "Names": [
+      "Aldermere",
+      "Brightwater",
+      "Thornhollow",
+      "Kestrel Rise",
+      "Emberfield",
+      "Mossgate",
+      "Saltreach",
+      "Larkspur"
+    ]
+  }
+}

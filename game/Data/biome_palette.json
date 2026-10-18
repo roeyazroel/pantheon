@@ -1,0 +1,21 @@
+{
+  // Presentation only: ground colours per biome plus blending thresholds (heights in metres).
+  "Grassland": "#7ea44a",
+  "Forest": "#3f6a32",
+  "Highland": "#8b8470",
+  "SeaFloor": "#2b4a52",
+  "Beach": "#d6c28c",
+  "Rock": "#6e6860",
+  "Snow": "#eef1f4",
+  "ShallowWater": "#3fa4b8",
+  "DeepWater": "#123f5c",
+  "RegionBoundary": "#f4ead2",
+  "RegionHighlight": "#ffd34d",
+  "BeachMaxHeight": 2.5,
+  "SnowStartHeight": 112.0,
+  "SnowBlendRange": 18.0,
+  "RockSlopeStart": 0.7,
+  "RockSlopeFull": 1.4,
+  "DeepWaterDepth": 18.0,
+  "ColorVariation": 0.05
+}
