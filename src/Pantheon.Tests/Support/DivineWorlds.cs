@@ -36,6 +36,9 @@ internal static class DivineWorlds
         ShrineInfrastructure = 1f,
         ComfortFoodPerPerson = 2f,
         DroughtWorry = 0.5f,
+        DangerWorry = 0.6f,
+        DisasterFear = 0.4f,
+        DisasterDoubt = 0.3f,
         FaithFromWorship = 0.01f,
         FaithErosionFromDoubt = 0.01f,
         FaithForgettingPerStep = 0.008f,
@@ -102,6 +105,8 @@ internal static class DivineWorlds
                 Vegetation = 0.5f,
                 Blessing = 0f,
                 SoilMoisture = 0.5f,
+                Fire = 0f,
+                Scorch = 0f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -121,6 +126,8 @@ internal static class DivineWorlds
                 Housing = 120,
                 Health = 1f,
                 ConstructionProgress = 0f,
+                Ruins = 0,
+                ShieldedUntilTick = 0,
                 Beliefs = [],
             });
         }
@@ -137,6 +144,7 @@ internal static class DivineWorlds
             Creatures = [],
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = WeatherWorlds.Calm(),
+            Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             WinnerGodId = null,
         };
     }

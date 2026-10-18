@@ -42,6 +42,7 @@ internal static class SaveIntegrity
         CreatureIntegrity.Validate(world, godIds, errors);
         DiplomacyIntegrity.Validate(world, godIds, errors);
         WeatherIntegrity.Validate(world, godIds, errors);
+        DisasterIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {
@@ -94,6 +95,10 @@ internal static class SaveIntegrity
             else if (!IsShare(cell.SoilMoisture))
             {
                 errors.Add($"Region {i} has soil moisture {cell.SoilMoisture}; it must lie between 0 and 1.");
+            }
+            else if (!IsShare(cell.Fire) || !IsShare(cell.Scorch))
+            {
+                errors.Add($"Region {i} has fire {cell.Fire} or scorch {cell.Scorch}; both must lie between 0 and 1.");
             }
         }
     }
@@ -209,9 +214,9 @@ internal static class SaveIntegrity
                 errors.Add($"Settlement {settlement.Id} has health {settlement.Health}; it must lie between 0 and 1.");
             }
 
-            if (settlement.ConstructionProgress < 0f)
+            if (settlement.ConstructionProgress < 0f || settlement.Ruins < 0 || settlement.ShieldedUntilTick < 0)
             {
-                errors.Add($"Settlement {settlement.Id} has negative construction progress.");
+                errors.Add($"Settlement {settlement.Id} has negative construction progress, ruins or shield.");
             }
 
             ValidateBeliefs(settlement, godIds, errors);

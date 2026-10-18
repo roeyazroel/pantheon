@@ -3,6 +3,7 @@ using System.Text.Json;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
+using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
@@ -44,6 +45,9 @@ public static class ContentJson
 
     /// <summary>File name of the weather rules.</summary>
     public const string WeatherFileName = "weather.json";
+
+    /// <summary>File name of the disaster rules.</summary>
+    public const string DisastersFileName = "disasters.json";
 
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
@@ -114,4 +118,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The weather rules.</returns>
     public static WeatherRules ParseWeather(string json) => Parse<WeatherRules>(json, WeatherFileName);
+
+    /// <summary>Parses <c>disasters.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The disaster rules.</returns>
+    public static DisasterRules ParseDisasters(string json) => Parse<DisasterRules>(json, DisastersFileName);
 }

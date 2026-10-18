@@ -3,6 +3,7 @@ using System.Numerics;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
@@ -35,6 +36,9 @@ public sealed record DebugSnapshot
 
     /// <summary>Weather rules, for the weather lines; none without them.</summary>
     public WeatherRules? WeatherRules { get; init; }
+
+    /// <summary>Disaster rules, for the disaster lines; none without them.</summary>
+    public DisasterRules? DisasterRules { get; init; }
 
     /// <summary>The local player's Creature, whose options are listed.</summary>
     public int? LocalCreatureId { get; init; }

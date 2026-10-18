@@ -16,7 +16,7 @@ public static class SettlementEconomy
     /// <param name="grid">Region grid.</param>
     /// <param name="regionId">The settlement's region.</param>
     /// <param name="radius">Farmland radius in regions; 0 is the settlement's own region only.</param>
-    /// <returns>The number of farmable regions and their mean fertility, blessing and soil moisture. The square is clipped at the grid edge.</returns>
+    /// <returns>The number of farmable regions and their mean fertility, blessing, soil moisture and scorch. The square is clipped at the grid edge.</returns>
     public static FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius)
     {
         ArgumentNullException.ThrowIfNull(grid);
@@ -28,6 +28,7 @@ public static class SettlementEconomy
         var fertility = 0f;
         var blessing = 0f;
         var soil = 0f;
+        var scorch = 0f;
         for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
         {
             for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
@@ -39,11 +40,12 @@ public static class SettlementEconomy
                     fertility += SimMath.Clamp01(region.Fertility);
                     blessing += SimMath.Clamp01(region.Blessing);
                     soil += SimMath.Clamp01(region.SoilMoisture);
+                    scorch += SimMath.Clamp01(region.Scorch);
                 }
             }
         }
 
-        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count) : new FarmlandSurvey(0, 0f);
+        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count) : new FarmlandSurvey(0, 0f);
     }
 
     /// <summary>Whether a region can be farmed: dry land with fertile soil.</summary>
@@ -83,6 +85,26 @@ public static class SettlementEconomy
     {
         ArgumentNullException.ThrowIfNull(rules);
         return housing <= 0 ? 0 : ((housing - 1) / rules.HousingPerHouse) + 1;
+    }
+
+    /// <summary>Work the next house takes: less when it rebuilds a ruin (ADR-014).</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="settlement">Settlement state.</param>
+    /// <returns>Builder-steps of work.</returns>
+    public static float ComputeHouseWork(SettlementRules rules, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(settlement);
+        return settlement.Ruins > 0 ? rules.WorkPerHouse * rules.RuinWorkShare : rules.WorkPerHouse;
+    }
+
+    /// <summary>Share of the people without a roof: those beyond the housing, after a disaster or an influx.</summary>
+    /// <param name="settlement">Settlement state.</param>
+    /// <returns>Homeless share (0..1).</returns>
+    public static float ComputeHomelessShare(SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(settlement);
+        return settlement.Population > 0 ? Math.Max(0f, settlement.Population - settlement.Housing) / settlement.Population : 0f;
     }
 
     /// <summary>Whether the settlement wants a house built: one is under way or it is crowded, and housing is below the cap.</summary>
@@ -148,7 +170,7 @@ public static class SettlementEconomy
         var builders = 0f;
         if (WantsConstruction(rules, settlement) && CanFundConstruction(rules, settlement))
         {
-            var remainingWork = Math.Max(0f, rules.WorkPerHouse - settlement.ConstructionProgress);
+            var remainingWork = Math.Max(0f, ComputeHouseWork(rules, settlement) - settlement.ConstructionProgress);
             builders = Math.Min(Math.Min(workers * rules.MaxBuilderShare, rules.BuildersPerSite), remainingWork);
         }
 
@@ -194,8 +216,8 @@ public static class SettlementEconomy
     /// <summary>
     /// Food harvested in one step with diminishing returns:
     /// <c>FoodPerFarmerPerStep * meanFertility * capacity * (1 - e^(-farmers / capacity))</c>, where
-    /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>
-    /// and times the water yield (<see cref="ComputeWaterYield"/>). A few farmers each harvest about
+    /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>,
+    /// the water yield (<see cref="ComputeWaterYield"/>) and <c>1 - ScorchYieldLoss * meanScorch</c>. A few farmers each harvest about
     /// <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
@@ -213,7 +235,8 @@ public static class SettlementEconomy
 
         var maximumYield = rules.FoodPerFarmerPerStep * SimMath.Clamp01(land.MeanFertility) * capacity;
         var blessing = 1f + (rules.BlessingYieldBonus * SimMath.Clamp01(land.MeanBlessing));
-        return maximumYield * blessing * ComputeWaterYield(rules, land) * (1f - MathF.Exp(-farmers / capacity));
+        var scorch = 1f - (rules.ScorchYieldLoss * SimMath.Clamp01(land.MeanScorch));
+        return maximumYield * blessing * ComputeWaterYield(rules, land) * scorch * (1f - MathF.Exp(-farmers / capacity));
     }
 
     /// <summary>Share of the population's food need that is met.</summary>
@@ -306,7 +329,8 @@ public static class SettlementEconomy
         var available = settlement.Food + production;
         var fedShare = ComputeFedShare(available, consumption);
         var foodAfter = Math.Clamp(available - consumption, 0f, storage);
-        var healthAfter = ComputeHealth(rules, settlement.Health, fedShare);
+        var exposure = rules.HomelessHealthLossPerStep * ComputeHomelessShare(settlement);
+        var healthAfter = Math.Max(0f, ComputeHealth(rules, settlement.Health, fedShare) - exposure);
         var blocker = FindBirthBlocker(rules, settlement, production, consumption, foodAfter);
         var birthChance = ComputeBirthChance(rules, healthAfter);
         var deathChance = ComputeDeathChance(rules, healthAfter);

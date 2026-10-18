@@ -38,4 +38,10 @@ public sealed class RegionState
     /// less (ADR-013).
     /// </summary>
     public required float SoilMoisture { get; set; }
+
+    /// <summary>How fiercely the region is burning now (0 = not burning, 1 = an inferno; ADR-014).</summary>
+    public required float Fire { get; set; }
+
+    /// <summary>How badly fire has scorched the land (0..1): it has no fuel left to burn and yields less until it regrows.</summary>
+    public required float Scorch { get; set; }
 }

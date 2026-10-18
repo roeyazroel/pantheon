@@ -17,4 +17,13 @@ public enum MiracleEffectKind
 
     /// <summary>Calls a rain cloud of the miracle's radius over the target, carrying <c>Amount</c> humidity (ADR-013).</summary>
     Rain,
+
+    /// <summary>Sets every region the miracle reaches alight at <c>Amount</c> intensity, where there is fuel to burn (ADR-014).</summary>
+    Ignite,
+
+    /// <summary>Starts an earthquake of magnitude <c>Amount</c> at the target (ADR-014).</summary>
+    Quake,
+
+    /// <summary>Shields every settlement it reaches from disasters for <c>Amount</c> simulated seconds (ADR-014).</summary>
+    Shield,
 }

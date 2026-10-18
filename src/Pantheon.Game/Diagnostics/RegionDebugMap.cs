@@ -48,7 +48,9 @@ public static class RegionDebugMap
         RegionDebugLayer.Vegetation => RegionDebugLayer.Blessing,
         RegionDebugLayer.Blessing => RegionDebugLayer.Influence,
         RegionDebugLayer.Influence => RegionDebugLayer.SoilMoisture,
-        RegionDebugLayer.SoilMoisture => null,
+        RegionDebugLayer.SoilMoisture => RegionDebugLayer.Fire,
+        RegionDebugLayer.Fire => RegionDebugLayer.Scorch,
+        RegionDebugLayer.Scorch => null,
     };
 
     /// <summary>A region's value on a numeric layer.</summary>
@@ -71,6 +73,8 @@ public static class RegionDebugMap
             RegionDebugLayer.Fertility => region.Fertility,
             RegionDebugLayer.Vegetation => region.Vegetation,
             RegionDebugLayer.SoilMoisture => region.SoilMoisture,
+            RegionDebugLayer.Fire => region.Fire,
+            RegionDebugLayer.Scorch => region.Scorch,
         };
     }
 
@@ -168,7 +172,7 @@ public static class RegionDebugMap
     }
 
     /// <summary>Layers whose values are shares, drawn on a fixed 0..1 scale so changes over time are visible.</summary>
-    private static bool IsShareLayer(RegionDebugLayer layer) => layer is RegionDebugLayer.Blessing or RegionDebugLayer.Influence or RegionDebugLayer.SoilMoisture;
+    private static bool IsShareLayer(RegionDebugLayer layer) => layer is RegionDebugLayer.Blessing or RegionDebugLayer.Influence or RegionDebugLayer.SoilMoisture or RegionDebugLayer.Fire or RegionDebugLayer.Scorch;
 
     /// <summary>Colour at <paramref name="t"/> (0..1) along the ramp, blending linearly between its stops.</summary>
     private static RgbColor SampleRamp(float t)

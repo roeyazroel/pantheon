@@ -125,7 +125,7 @@ internal static class SettlementReadout
     {
         if (outlook.ConstructionWanted)
         {
-            return Format("building house {0}: {1:0%}", houses + 1, settlement.ConstructionProgress / rules.WorkPerHouse);
+            return Format("building house {0}: {1:0%}", houses + 1, settlement.ConstructionProgress / SettlementEconomy.ComputeHouseWork(rules, settlement));
         }
 
         if (settlement.Housing >= rules.MaxHousing)

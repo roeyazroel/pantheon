@@ -34,6 +34,15 @@ public sealed record DivineRules
     /// <summary>How much drought counts as hardship (0..1): people fear for the harvest before the stores run out (ADR-013).</summary>
     public required float DroughtWorry { get; init; }
 
+    /// <summary>How much danger (fire on the farmland, shaking ground) counts as hardship (0..1; ADR-014).</summary>
+    public required float DangerWorry { get; init; }
+
+    /// <summary>Fear of every god a struck settlement knows, per unit of the disaster's severity: the gods are angry.</summary>
+    public required float DisasterFear { get; init; }
+
+    /// <summary>Doubt about every god a struck settlement knows, per unit of the disaster's severity: why did they not protect us?</summary>
+    public required float DisasterDoubt { get; init; }
+
     /// <summary>Faith gained per step by a settlement that wholly follows the god, closing that share of the gap to 1.</summary>
     public required float FaithFromWorship { get; init; }
 

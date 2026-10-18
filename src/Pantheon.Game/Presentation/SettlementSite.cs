@@ -6,19 +6,22 @@ namespace Pantheon.Game.Presentation;
 
 /// <summary>
 /// Where everything of one settlement stands, from <see cref="SettlementLayout.ComputeSite"/>:
-/// the shrine at the centre, the houses, the house under construction and the fields.
+/// the shrine at the centre, the houses, the house under construction, the fields and the ruins
+/// disasters left.
 /// </summary>
 /// <param name="Center">Ground position of the shrine.</param>
 /// <param name="Houses">Completed houses, in the order they were built.</param>
 /// <param name="Construction">The house under construction, or <c>null</c> when none is under way.</param>
 /// <param name="Fields">Field plots.</param>
 /// <param name="HouseDiscRadius">Distance from the centre to the farthest house or building site centre, in metres.</param>
+/// <param name="Ruins">Ruined houses, on the plots beyond the houses and the building site (ADR-014).</param>
 public sealed record SettlementSite(
     Vector3 Center,
     IReadOnlyList<HutPlacement> Houses,
     ConstructionPlacement? Construction,
     IReadOnlyList<FieldPlacement> Fields,
-    float HouseDiscRadius)
+    float HouseDiscRadius,
+    IReadOnlyList<HutPlacement> Ruins)
 {
     /// <summary>The spot just outside a house's door, where its residents come and go.</summary>
     /// <param name="house">House index.</param>

@@ -27,6 +27,13 @@ public static class SettlementRulesValidator
 
         errors.RequireShare(rules.DroughtYieldFloor, nameof(rules.DroughtYieldFloor));
         errors.RequireShare(rules.DroughtThreshold, nameof(rules.DroughtThreshold));
+        errors.RequireShare(rules.ScorchYieldLoss, nameof(rules.ScorchYieldLoss));
+        errors.RequireShare(rules.HomelessHealthLossPerStep, nameof(rules.HomelessHealthLossPerStep));
+        if (!(rules.RuinWorkShare is > 0f and <= 1f))
+        {
+            errors.Add($"{nameof(rules.RuinWorkShare)} must be above 0 and at most 1.");
+        }
+
         errors.RequireShare(rules.WorshipWorkforceShare, nameof(rules.WorshipWorkforceShare));
         errors.RequireNonNegative(rules.FoodPerFarmerPerStep, nameof(rules.FoodPerFarmerPerStep));
         errors.RequireNonNegative(rules.FoodPerPersonPerStep, nameof(rules.FoodPerPersonPerStep));

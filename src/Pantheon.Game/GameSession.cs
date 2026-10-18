@@ -34,7 +34,7 @@ public sealed class GameSession
     private GameSession(GameContent content, WorldState world, TerrainField terrain)
     {
         Content = content;
-        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather);
+        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather, content.Disasters);
         _authorities = _engine.Authorities!;
         _step = StepWorld;
         World = world;

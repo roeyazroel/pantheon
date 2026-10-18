@@ -94,6 +94,51 @@
       "Effects": [ { "Kind": "Rain", "Amount": 1.0 } ],
       "Witness": { "Faith": 0.15, "Love": 0.15, "Fear": 0.0, "Doubt": -0.12 },
       "Gratitude": "Water"
+    },
+    {
+      "Id": "fire",
+      "Name": "Fire",
+      "Description": "Sets the land at the target alight. Fire spreads where the land is dry and burns homes, people and crops.",
+      "Domain": "Fire",
+      "Scale": "Minor",
+      "PowerCost": 90.0,
+      "CooldownTicks": 400,
+      "Radius": 30.0,
+      "InfluenceRequirement": 0.2,
+      "MinimumRank": "LesserGod",
+      "Effects": [ { "Kind": "Ignite", "Amount": 0.8 } ],
+      "Witness": { "Faith": 0.15, "Love": -0.2, "Fear": 0.3, "Doubt": 0.05 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "shield",
+      "Name": "Shield",
+      "Description": "Shields the settlements beneath it from fire and earthquakes for three minutes.",
+      "Domain": "Protection",
+      "Scale": "Regional",
+      "PowerCost": 150.0,
+      "CooldownTicks": 600,
+      "Radius": 150.0,
+      "InfluenceRequirement": 0.25,
+      "MinimumRank": "LesserGod",
+      "Effects": [ { "Kind": "Shield", "Amount": 180.0 } ],
+      "Witness": { "Faith": 0.12, "Love": 0.1, "Fear": 0.0, "Doubt": -0.1 },
+      "Gratitude": "Danger"
+    },
+    {
+      "Id": "earthquake",
+      "Name": "Earthquake",
+      "Description": "Shakes the ground under the target. Houses fall, people die and fires break out; all who feel it fear you.",
+      "Domain": "Chaos",
+      "Scale": "Great",
+      "PowerCost": 600.0,
+      "CooldownTicks": 3000,
+      "Radius": 400.0,
+      "InfluenceRequirement": 0.3,
+      "MinimumRank": "God",
+      "Effects": [ { "Kind": "Quake", "Amount": 6.8 } ],
+      "Witness": { "Faith": 0.25, "Love": -0.3, "Fear": 0.5, "Doubt": 0.05 },
+      "Gratitude": "None"
     }
   ]
 }

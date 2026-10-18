@@ -52,6 +52,7 @@ public static class WorldGenerator
             Creatures = creatures,
             Diplomacy = new Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = CreateWeather(seed),
+            Disasters = new Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             WinnerGodId = null,
         };
 

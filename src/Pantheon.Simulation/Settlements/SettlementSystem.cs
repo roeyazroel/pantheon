@@ -68,12 +68,13 @@ public sealed class SettlementSystem : ISimulationSystem
 
     /// <summary>
     /// Adds this step's builder work to the house under construction. A finished house adds
-    /// <see cref="SettlementRules.HousingPerHouse"/> (up to the cap) and the next house starts from
-    /// nothing. Builders never exceed the work left, so a house finishes exactly when they cover it.
+    /// <see cref="SettlementRules.HousingPerHouse"/> (up to the cap), rebuilds a ruin if there is one,
+    /// and the next house starts from nothing. Builders never exceed the work left, so a house
+    /// finishes exactly when they cover it.
     /// </summary>
     private void UpdateConstruction(SettlementState settlement, float builders)
     {
-        var remainingWork = _rules.WorkPerHouse - settlement.ConstructionProgress;
+        var remainingWork = SettlementEconomy.ComputeHouseWork(_rules, settlement) - settlement.ConstructionProgress;
         if (builders <= 0f && remainingWork > 0f)
         {
             return;
@@ -83,6 +84,7 @@ public sealed class SettlementSystem : ISimulationSystem
         {
             settlement.Housing = Math.Min(_rules.MaxHousing, settlement.Housing + _rules.HousingPerHouse);
             settlement.ConstructionProgress = 0f;
+            settlement.Ruins = Math.Max(0, settlement.Ruins - 1);
         }
         else
         {

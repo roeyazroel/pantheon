@@ -33,7 +33,7 @@ internal sealed class SettlementView
     private readonly CitizenView _citizens;
     private readonly Label3D _label;
     private readonly DivineViewSettings _divine;
-    private (int Housing, float ConstructionProgress)? _siteInputs;
+    private (int Housing, float ConstructionProgress, int Ruins)? _siteInputs;
 
     /// <summary>Creates the settlement's nodes under <paramref name="parent"/> and shows its current state.</summary>
     /// <param name="parent">Node that holds all settlements.</param>
@@ -76,7 +76,7 @@ internal sealed class SettlementView
     public void Sync(SettlementState settlement, WorldState world)
     {
         UpdateLabel(settlement, world);
-        if ((settlement.Housing, settlement.ConstructionProgress) != _siteInputs)
+        if ((settlement.Housing, settlement.ConstructionProgress, settlement.Ruins) != _siteInputs)
         {
             ShowSite(settlement);
         }
@@ -122,7 +122,7 @@ internal sealed class SettlementView
     [MemberNotNull(nameof(Site))]
     private void ShowSite(SettlementState settlement)
     {
-        _siteInputs = (settlement.Housing, settlement.ConstructionProgress);
+        _siteInputs = (settlement.Housing, settlement.ConstructionProgress, settlement.Ruins);
         Site = SettlementLayout.ComputeSite(settlement, _rules, _terrain, _layout);
         _siteView.Show(Site);
     }

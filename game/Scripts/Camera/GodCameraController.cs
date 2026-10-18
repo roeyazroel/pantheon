@@ -32,6 +32,9 @@ public partial class GodCameraController : Node3D
     /// <summary>Engine-agnostic camera state.</summary>
     public GodCameraModel Model { get; } = new(GodCameraSettings.Default);
 
+    /// <summary>An offset the camera is drawn at, for earthquakes' shaking (presentation only).</summary>
+    public Vector3 ShakeOffset { get; set; }
+
     /// <summary>The rendering camera.</summary>
     public Camera3D ViewCamera => _camera;
 
@@ -231,7 +234,7 @@ public partial class GodCameraController : Node3D
     private void ApplyPose()
     {
         var pose = Model.ComputePose(_groundHeight);
-        _camera.LookAtFromPosition(pose.Position.ToGodot(), pose.Target.ToGodot(), Vector3.Up);
+        _camera.LookAtFromPosition(pose.Position.ToGodot() + ShakeOffset, pose.Target.ToGodot() + ShakeOffset, Vector3.Up);
     }
 
     /// <summary>Raycasts the terrain (with the sea surface as a floor) under a screen point.</summary>

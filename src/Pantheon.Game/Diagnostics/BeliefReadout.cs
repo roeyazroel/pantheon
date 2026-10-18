@@ -73,7 +73,7 @@ internal static class BeliefReadout
     {
         var rules = snapshot.DivineRules;
         var stepsPerSecond = snapshot.TicksPerSecond / rules.StepIntervalTicks;
-        var conditions = BeliefModel.AssessConditions(rules, settlement, SettlementEconomy.DroughtOf(snapshot.SettlementRules, snapshot.World.Regions, settlement));
+        var conditions = BeliefModel.AssessConditions(rules, settlement, Hazards.Of(snapshot.SettlementRules, snapshot.World, settlement));
         lines.Add(Format(
             "  belief: {0:0%} follow no god   hardship {1:0.00}   comfort {2:0.00}",
             1f - BeliefModel.TotalAdherence(settlement.Beliefs),

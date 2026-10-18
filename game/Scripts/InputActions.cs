@@ -117,13 +117,19 @@ public static class InputActions
     /// <summary>Debug weather: call a storm at the cursor (F10).</summary>
     public static readonly StringName DebugStorm = "debug_storm";
 
+    /// <summary>Debug disaster: an earthquake at the cursor (F11).</summary>
+    public static readonly StringName DebugQuake = "debug_quake";
+
+    /// <summary>Debug disaster: a fire at the cursor (F12).</summary>
+    public static readonly StringName DebugFire = "debug_fire";
+
     /// <summary>Every action, used to check the input map at start-up.</summary>
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

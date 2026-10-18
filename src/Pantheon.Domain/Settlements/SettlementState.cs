@@ -37,6 +37,12 @@ public sealed class SettlementState
     /// <summary>Work done on the house under construction, in builder-steps; 0 while no house is being built.</summary>
     public required float ConstructionProgress { get; set; }
 
+    /// <summary>Houses destroyed by disasters and not yet rebuilt (ADR-014). Rebuilding a ruin takes less work than building anew.</summary>
+    public required int Ruins { get; set; }
+
+    /// <summary>Tick until which a Shield miracle protects the settlement from disasters; 0 when it has none.</summary>
+    public required long ShieldedUntilTick { get; set; }
+
     /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
     public required List<GodBelief> Beliefs { get; init; }
 }

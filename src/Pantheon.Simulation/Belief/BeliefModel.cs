@@ -16,11 +16,11 @@ public static class BeliefModel
     public const float MajorityShare = 0.5f;
 
     /// <summary>How the settlement is faring: its hardship, comfort and needs.</summary>
-    /// <param name="rules">Divine rules, for the food the people want in store and the worry a drought brings.</param>
+    /// <param name="rules">Divine rules, for the food the people want in store and the worry drought and danger bring.</param>
     /// <param name="settlement">Settlement state.</param>
-    /// <param name="drought">How dry its farmland is (0..1, <c>SettlementEconomy.ComputeDrought</c>).</param>
+    /// <param name="hazards">Its drought and danger (<see cref="Hazards.Of"/>).</param>
     /// <returns>The conditions.</returns>
-    public static SettlementConditions AssessConditions(DivineRules rules, SettlementState settlement, float drought)
+    public static SettlementConditions AssessConditions(DivineRules rules, SettlementState settlement, Hazards hazards)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(settlement);
@@ -29,9 +29,11 @@ public static class BeliefModel
         var health = SimMath.Clamp01(settlement.Health);
         var foodNeed = 1f - security;
         var healthNeed = 1f - health;
-        var waterNeed = SimMath.Clamp01(drought);
-        var hardship = Math.Max(Math.Max(healthNeed, foodNeed), rules.DroughtWorry * waterNeed);
-        return new SettlementConditions(hardship, health * security, foodNeed, healthNeed, waterNeed);
+        var waterNeed = SimMath.Clamp01(hazards.Drought);
+        var dangerNeed = SimMath.Clamp01(hazards.Danger);
+        var worry = Math.Max(rules.DroughtWorry * waterNeed, rules.DangerWorry * dangerNeed);
+        var hardship = Math.Max(Math.Max(healthNeed, foodNeed), worry);
+        return new SettlementConditions(hardship, health * security, foodNeed, healthNeed, waterNeed, dangerNeed);
     }
 
     /// <summary>The settlement's need that a miracle answers (0..1).</summary>
@@ -44,6 +46,7 @@ public static class BeliefModel
         MiracleNeed.Food => conditions.FoodNeed,
         MiracleNeed.Health => conditions.HealthNeed,
         MiracleNeed.Water => conditions.WaterNeed,
+        MiracleNeed.Danger => conditions.DangerNeed,
     };
 
     /// <summary>

@@ -35,6 +35,9 @@ internal static class SettlementWorlds
         WellWateredSoil = 0.3f,
         DroughtYieldFloor = 0.25f,
         DroughtThreshold = 0.35f,
+        ScorchYieldLoss = 0.7f,
+        HomelessHealthLossPerStep = 0.02f,
+        RuinWorkShare = 0.5f,
         WorshipWorkforceShare = 0.15f,
         FoodPerFarmerPerStep = 0.3f,
         FoodPerPersonPerStep = 0.05f,
@@ -84,6 +87,8 @@ internal static class SettlementWorlds
                 Vegetation = 0.5f,
                 Blessing = 0f,
                 SoilMoisture = 0.5f,
+                Fire = 0f,
+                Scorch = 0f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -108,6 +113,8 @@ internal static class SettlementWorlds
                     Housing = housing,
                     Health = health,
                     ConstructionProgress = constructionProgress,
+                    Ruins = 0,
+                    ShieldedUntilTick = 0,
                     Beliefs = [],
                 },
             },
@@ -115,6 +122,7 @@ internal static class SettlementWorlds
             Creatures = [],
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = WeatherWorlds.Calm(),
+            Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             WinnerGodId = null,
         };
     }

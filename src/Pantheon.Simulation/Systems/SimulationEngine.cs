@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
+using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
@@ -11,6 +12,7 @@ using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Diplomacy;
+using Pantheon.Simulation.Disasters;
 using Pantheon.Simulation.Gods;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Randomness;
@@ -63,8 +65,8 @@ public sealed class SimulationEngine
     }
 
     /// <summary>
-    /// Creates the full game pipeline (ADR-011, ADR-012, ADR-013): the weather step, the settlement
-    /// step, the belief step, the victory check and the diplomacy step on their intervals, then every
+    /// Creates the full game pipeline (ADR-011 to ADR-014): the weather step, the disaster step, the
+    /// settlement step, the belief step, the victory check and the diplomacy step on their intervals, then every
     /// Creature every tick, then the AI gods' strategic evaluations on theirs. One ledger records
     /// every act gods notice of each other, and AI gods act through the same
     /// <see cref="Authorities"/> as a player.
@@ -76,12 +78,13 @@ public sealed class SimulationEngine
     /// <param name="miracles">The miracles.</param>
     /// <param name="diplomacyRules">Tuning of relations between gods.</param>
     /// <param name="weatherRules">Tuning of weather and soil water.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules)
+    /// <param name="disasterRules">Tuning of wildfires and earthquakes.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules)
     {
         var ledger = new DiplomacyLedger(diplomacyRules);
         Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger);
         Authorities = new Authorities(
-            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules),
+            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules),
             new CreatureAuthority(creatureRules, Creatures.Brain),
             new DiplomacyAuthority(diplomacyRules, ledger));
         var diplomat = new GodDiplomat(diplomacyRules, Authorities.Diplomacy);
@@ -91,6 +94,7 @@ public sealed class SimulationEngine
         _systems =
         [
             new IntervalSystem(new WeatherSystem(weatherRules, settlementRules), weatherRules.StepIntervalTicks),
+            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules), disasterRules.StepIntervalTicks),
             CreateSettlementStep(settlementRules),
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
             new IntervalSystem(new VictorySystem(divineRules), divineRules.StepIntervalTicks),

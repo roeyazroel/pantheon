@@ -1,0 +1,52 @@
+{
+  // Wildfires and earthquakes (ADR-014). The disaster step runs once every StepIntervalTicks ticks
+  // (10 ticks = one simulated second at x1). Rates are per simulated second; values without units
+  // are 0..1. Distances are in metres.
+
+  // Wildfires. A region's flammability is its vegetation x (1 - scorch) x dryness^2, where dryness is
+  // 1 - soil moisture / WetSoil. Thunderstorms and the hearths of dry villages light it; a fire grows
+  // towards FuelHeat x flammability, scorches the land (eating its fuel), spreads to neighbours (more
+  // downwind) and dies in the rain, under firefighting or for want of fuel. Scorched land regrows.
+  "StepIntervalTicks": 10,
+  "LightningIgnitionPerSecond": 0.004,
+  "HearthFirePerSecond": 0.001,
+  "FuelHeat": 2.0,
+  "IgnitionIntensity": 0.4,
+  "MinFlammability": 0.04,
+  "WetSoil": 0.6,
+  "FireGrowthPerSecond": 0.08,
+  "BurnPerSecond": 0.06,
+  "SpreadPerSecond": 0.12,
+  "WindSpread": 2.0,
+  "RainQuenchPerSecond": 0.03,
+  "FirefightingPerSecond": 0.01,
+  "ScorchRecoveryPerSecond": 0.004,
+
+  // Fire in a settlement's own region burns these shares per second at full intensity.
+  "FireHousingLossPerSecond": 0.02,
+  "FireDeathsPerSecond": 0.004,
+  "FireFoodLossPerSecond": 0.03,
+  "FireDreadPerSecond": 0.03,
+
+  // Earthquakes: natural ones strike EarthquakesPerHour, usually small. Shaking is
+  // (magnitude - HarmlessMagnitude) / (FullMagnitude - HarmlessMagnitude) at the epicentre, falling
+  // with the square of the distance to nothing at RadiusPerMagnitude x (magnitude - HarmlessMagnitude).
+  "EarthquakesPerHour": 2.0,
+  "MinMagnitude": 4.5,
+  "MaxMagnitude": 7.5,
+  "FullMagnitude": 7.5,
+  "HarmlessMagnitude": 4.5,
+  "RadiusPerMagnitude": 250.0,
+  "ShakingSeconds": 12.0,
+
+  // Full shaking destroys, kills and spoils these shares over the whole quake, and may start a fire.
+  "QuakeHousingLoss": 0.6,
+  "QuakeDeaths": 0.06,
+  "QuakeFoodLoss": 0.3,
+  "QuakeFireChance": 0.5,
+
+  // Buildings (spec 94): the share of the damage houses escape. A Shield leaves ShieldedDamage of it.
+  "HouseQuakeResistance": 0.3,
+  "HouseFireResistance": 0.5,
+  "ShieldedDamage": 0.1
+}

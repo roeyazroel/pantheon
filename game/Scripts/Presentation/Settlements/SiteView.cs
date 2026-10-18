@@ -16,11 +16,13 @@ internal sealed class SiteView
     private readonly MultiMesh _roofs;
     private readonly MultiMesh _doors;
     private readonly MultiMesh _fields;
+    private readonly MultiMesh _rubble;
     private readonly ConstructionSiteView _construction;
     private readonly float _fieldSize;
     private readonly Color[] _cropColors;
     private IReadOnlyList<HutPlacement> _shownHouses = [];
     private IReadOnlyList<FieldPlacement> _shownFields = [];
+    private IReadOnlyList<HutPlacement> _shownRuins = [];
 
     /// <summary>Creates the empty houses, fields and building site under <paramref name="root"/>.</summary>
     /// <param name="root">The settlement's node.</param>
@@ -32,6 +34,7 @@ internal sealed class SiteView
         _roofs = AddMultiMesh(root, "HutRoofs", assets.HutRoof, useColors: false);
         _doors = AddMultiMesh(root, "HutDoors", assets.HutDoor, useColors: false);
         _fields = AddMultiMesh(root, "Fields", assets.FieldPlot, useColors: true);
+        _rubble = AddMultiMesh(root, "Ruins", assets.Rubble, useColors: false);
         _construction = new ConstructionSiteView(root, assets);
         _fieldSize = layout.FieldSize;
         _cropColors = layout.CropColors.Select(color => color.ToGodot()).ToArray();
@@ -53,7 +56,25 @@ internal sealed class SiteView
             _shownFields = site.Fields;
         }
 
+        if (!site.Ruins.SequenceEqual(_shownRuins))
+        {
+            PlaceRuins(site.Ruins);
+            _shownRuins = site.Ruins;
+        }
+
         _construction.Show(site.Construction);
+    }
+
+    /// <summary>Writes one low, skewed heap per ruined house.</summary>
+    private void PlaceRuins(IReadOnlyList<HutPlacement> ruins)
+    {
+        _rubble.InstanceCount = ruins.Count;
+        for (var i = 0; i < ruins.Count; i++)
+        {
+            var ruin = ruins[i];
+            var basis = new Basis(Vector3.Up, ruin.Yaw).Rotated(Vector3.Right, 0.12f).Scaled(Vector3.One * ruin.Scale);
+            _rubble.SetInstanceTransform(i, new Transform3D(basis, ruin.Position.ToGodot() + (Vector3.Up * 0.3f)));
+        }
     }
 
     /// <summary>Writes one transform per house into each part's multimesh.</summary>

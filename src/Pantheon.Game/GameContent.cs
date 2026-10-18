@@ -2,6 +2,7 @@ using System;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
+using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
@@ -10,6 +11,7 @@ using Pantheon.Persistence;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Diplomacy;
+using Pantheon.Simulation.Disasters;
 using Pantheon.Simulation.Gods;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Settlements;
@@ -28,7 +30,8 @@ namespace Pantheon.Game;
 /// <param name="GodAi">Tuning of the gods' utility AI.</param>
 /// <param name="Diplomacy">Tuning of relations between gods.</param>
 /// <param name="Weather">Tuning of weather and soil water.</param>
-public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy, WeatherRules Weather)
+/// <param name="Disasters">Tuning of wildfires and earthquakes.</param>
+public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy, WeatherRules Weather, DisasterRules Disasters)
 {
     /// <summary>Parses and validates the content files.</summary>
     /// <param name="files">Text of each content file.</param>
@@ -46,6 +49,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         var godAi = ContentJson.ParseGodAi(files.GodAi);
         var diplomacy = ContentJson.ParseDiplomacy(files.Diplomacy);
         var weather = ContentJson.ParseWeather(files.Weather);
+        var disasters = ContentJson.ParseDisasters(files.Disasters);
 
         Check(ContentJson.WorldGenFileName, () =>
         {
@@ -59,9 +63,10 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         Check(ContentJson.GodAiFileName, () => GodAiRulesValidator.Validate(godAi));
         Check(ContentJson.DiplomacyFileName, () => DiplomacyRulesValidator.Validate(diplomacy));
         Check(ContentJson.WeatherFileName, () => WeatherRulesValidator.Validate(weather));
+        Check(ContentJson.DisastersFileName, () => DisasterRulesValidator.Validate(disasters));
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
-        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather);
+        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters);
     }
 
     /// <summary>Runs a validator and reports its problems as a content error of one file.</summary>
@@ -88,7 +93,8 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
 /// <param name="GodAi"><c>god_ai.json</c>.</param>
 /// <param name="Diplomacy"><c>diplomacy.json</c>.</param>
 /// <param name="Weather"><c>weather.json</c>.</param>
-public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather)
+/// <param name="Disasters"><c>disasters.json</c>.</param>
+public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather, string Disasters)
 {
     /// <summary>Reads every file through a function that returns a content file's text by name.</summary>
     /// <param name="read">Reads one file of <c>game/Data</c>.</param>
@@ -105,6 +111,7 @@ public sealed record GameContentFiles(string WorldGen, string SettlementRules, s
             read(ContentJson.CreaturesFileName),
             read(ContentJson.GodAiFileName),
             read(ContentJson.DiplomacyFileName),
-            read(ContentJson.WeatherFileName));
+            read(ContentJson.WeatherFileName),
+            read(ContentJson.DisastersFileName));
     }
 }

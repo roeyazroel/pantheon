@@ -11,6 +11,7 @@ using Pantheon.Game.Creatures;
 using Pantheon.Game.Divine;
 using Pantheon.Game.Weather;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Disasters;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Settlements;
 using Pantheon.Simulation.Weather;
@@ -100,7 +101,7 @@ public static class HudReadout
 
     /// <summary>
     /// The weather line: shown during a dry or wet spell, or when settlements that follow you are in
-    /// drought or under a storm, which it names.
+    /// drought, under a storm, threatened by fire or shaken by an earthquake, which it names.
     /// </summary>
     private static string? DescribeWeather(GameSession session, int godId, out bool warning)
     {
@@ -108,6 +109,8 @@ public static class HudReadout
         var rules = session.Content.Weather;
         var dry = new List<string>();
         var stormy = new List<string>();
+        var burning = new List<string>();
+        var shaken = new List<string>();
         foreach (var settlement in world.Settlements)
         {
             if (BeliefModel.Find(settlement, godId) is not { Adherence: > 0f })
@@ -124,9 +127,19 @@ public static class HudReadout
             {
                 stormy.Add(settlement.Name);
             }
+
+            if (DisasterModel.FireThreat(session.Content.SettlementRules, world.Regions, settlement) > 0f)
+            {
+                burning.Add(settlement.Name);
+            }
+
+            if (DisasterModel.ShakingAt(world.Disasters, settlement.Position) > 0f)
+            {
+                shaken.Add(settlement.Name);
+            }
         }
 
-        warning = world.Weather.Spell == WeatherSpell.Dry || dry.Count > 0 || stormy.Count > 0;
+        warning = world.Weather.Spell == WeatherSpell.Dry || dry.Count > 0 || stormy.Count > 0 || burning.Count > 0 || shaken.Count > 0;
         if (world.Weather.Spell == WeatherSpell.Normal && !warning)
         {
             return null;
@@ -141,6 +154,16 @@ public static class HudReadout
         if (stormy.Count > 0)
         {
             line += " Storm over " + string.Join(", ", stormy) + ".";
+        }
+
+        if (burning.Count > 0)
+        {
+            line += " Fire near " + string.Join(", ", burning) + ".";
+        }
+
+        if (shaken.Count > 0)
+        {
+            line += " The earth shakes at " + string.Join(", ", shaken) + ".";
         }
 
         return line;

@@ -59,7 +59,7 @@ public sealed class WaterTests
     {
         var settlement = DivineWorlds.Create(0f, 300f).Settlements[0];
 
-        var conditions = BeliefModel.AssessConditions(DivineWorlds.Rules, settlement, drought: 0.8f);
+        var conditions = BeliefModel.AssessConditions(DivineWorlds.Rules, settlement, new Hazards(Drought: 0.8f, Danger: 0f));
 
         Assert.Equal(0f, conditions.FoodNeed);
         Assert.Equal(0.8f, conditions.WaterNeed, 4);

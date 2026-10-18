@@ -25,6 +25,9 @@ public static class OverlayMap
     private static readonly RgbColor Parched = RgbColor.ParseHex("#8b4a1c");
     private static readonly RgbColor Enough = RgbColor.ParseHex("#e3c565");
     private static readonly RgbColor Soaked = RgbColor.ParseHex("#2f7fd8");
+    private static readonly RgbColor Flames = RgbColor.ParseHex("#ff5a1f");
+    private static readonly RgbColor Ash = RgbColor.ParseHex("#3a2e26");
+    private static readonly RgbColor Shielded = RgbColor.ParseHex("#7fc8ff");
 
     /// <summary>The overlay the overlay key shows next.</summary>
     /// <param name="kind">Current overlay, or <c>null</c> when none is shown.</param>
@@ -38,7 +41,8 @@ public static class OverlayMap
         OverlayKind.Religion => OverlayKind.Faith,
         OverlayKind.Faith => OverlayKind.Food,
         OverlayKind.Food => OverlayKind.Weather,
-        OverlayKind.Weather => null,
+        OverlayKind.Weather => OverlayKind.Danger,
+        OverlayKind.Danger => null,
     };
 
     /// <summary>Builds an overlay.</summary>
@@ -73,12 +77,16 @@ public static class OverlayMap
                 legend = "Faith in you: red (none) to green (devout)";
                 break;
             case OverlayKind.Food:
-                PaintTerritories(world, rgba, view.OverlayOpacity, s => 1f - BeliefModel.AssessConditions(rules, s, drought: 0f).FoodNeed);
+                PaintTerritories(world, rgba, view.OverlayOpacity, s => 1f - BeliefModel.AssessConditions(rules, s, Hazards.None).FoodNeed);
                 legend = "Food stores: red (empty) to green (full)";
                 break;
             case OverlayKind.Weather:
                 PaintSoil(world, settlementRules, view.OverlayOpacity, rgba);
                 legend = "Weather: the water in the soil, from brown (drought) through yellow (enough for crops) to blue (soaked)";
+                break;
+            case OverlayKind.Danger:
+                PaintDanger(world, view.OverlayOpacity, rgba);
+                legend = "Danger: fires in orange (brighter when fiercer), scorched land in ash, shielded settlements in blue";
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown overlay.");
@@ -122,6 +130,30 @@ public static class OverlayMap
                 ? RgbColor.Lerp(Parched, Enough, soil / enough)
                 : RgbColor.Lerp(Enough, Soaked, (soil - enough) / Math.Max(0.01f, 1f - enough));
             Write(rgba, region.Id, color, opacity);
+        }
+    }
+
+    /// <summary>Colours burning regions by their fire, scorched ones by their scorch, and the lands of shielded settlements blue.</summary>
+    private static void PaintDanger(WorldState world, float opacity, byte[] rgba)
+    {
+        foreach (var settlement in world.Settlements)
+        {
+            if (Simulation.Disasters.DisasterModel.IsShielded(settlement, world.Tick))
+            {
+                PaintTerritory(world.Regions, settlement.RegionId, rgba, Shielded, 0.6f * opacity);
+            }
+        }
+
+        foreach (var region in world.Regions.Cells)
+        {
+            if (region.Fire > 0f)
+            {
+                Write(rgba, region.Id, Flames, (0.4f + (0.6f * region.Fire)) * opacity);
+            }
+            else if (region.Scorch > 0.05f)
+            {
+                Write(rgba, region.Id, Ash, Math.Clamp(region.Scorch, 0f, 1f) * opacity);
+            }
         }
     }
 

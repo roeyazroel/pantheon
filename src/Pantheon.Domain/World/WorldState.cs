@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
+using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
@@ -47,6 +48,9 @@ public sealed class WorldState
 
     /// <summary>The weather (spec §16, ADR-013).</summary>
     public required WeatherState Weather { get; init; }
+
+    /// <summary>Disasters under way (spec §19, ADR-014).</summary>
+    public required DisasterState Disasters { get; init; }
 
     /// <summary>The god that has won (spec §115), once one has. The world goes on after a victory.</summary>
     public required int? WinnerGodId { get; set; }

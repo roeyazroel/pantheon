@@ -160,8 +160,8 @@ public sealed class CreatureBrain
     /// <summary>Options a settlement offers, by how it is faring.</summary>
     private void AddVillageOptions(List<CreatureOption> options, CreatureState creature, SettlementState settlement, float distance, float attack)
     {
-        // A Creature sees hunger and illness, not the soil, so the drought is left out.
-        var conditions = BeliefModel.AssessConditions(_divine, settlement, drought: 0f);
+        // A Creature sees hunger and illness, not the land's hazards.
+        var conditions = BeliefModel.AssessConditions(_divine, settlement, Hazards.None);
         var need = Math.Max(conditions.FoodNeed, conditions.HealthNeed);
         var closeness = 1f / (1f + (distance / _rules.DistanceHalfUtility));
         var hunger = creature.Needs.Hunger;

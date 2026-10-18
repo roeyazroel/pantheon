@@ -84,6 +84,9 @@ internal static class SaveMigrations
             case 6:
                 UpgradeFrom6(root);
                 break;
+            case 7:
+                UpgradeFrom7(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
@@ -376,6 +379,44 @@ internal static class SaveMigrations
                 if (node is JsonObject region)
                 {
                     AddMember(region, "SoilMoisture", (float)Math.Clamp(ReadNumber(region["Moisture"]), 0.0, 1.0), fromVersion: 6);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Version 7 to 8 (Milestone 8): the world gains disasters, every region fire and scorch, and
+    /// every settlement ruins and a shield. Version 7 had no disasters, so nothing shakes or burns,
+    /// no land is scorched, nothing lies in ruins and no settlement is shielded.
+    /// </summary>
+    private static void UpgradeFrom7(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        AddNode(world, "Disasters", new JsonObject { ["Earthquakes"] = new JsonArray(), ["NextEarthquakeId"] = 1 }, fromVersion: 7);
+        if (world["Regions"] is JsonObject grid && grid["Cells"] is JsonArray cells)
+        {
+            foreach (var node in cells)
+            {
+                if (node is JsonObject region)
+                {
+                    AddMember(region, "Fire", 0f, fromVersion: 7);
+                    AddMember(region, "Scorch", 0f, fromVersion: 7);
+                }
+            }
+        }
+
+        if (world["Settlements"] is JsonArray settlements)
+        {
+            foreach (var node in settlements)
+            {
+                if (node is JsonObject settlement)
+                {
+                    AddNode(settlement, "Ruins", 0, fromVersion: 7);
+                    AddNode(settlement, "ShieldedUntilTick", 0, fromVersion: 7);
                 }
             }
         }

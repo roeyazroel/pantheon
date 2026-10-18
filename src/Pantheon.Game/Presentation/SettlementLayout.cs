@@ -71,16 +71,19 @@ public static class SettlementLayout
         var center = new Vector2(settlement.Position.X, settlement.Position.Z);
         var houseCount = ComputeHouseCount(settlement, rules);
         var underWay = settlement.ConstructionProgress > 0f;
-        var slots = ComputeHouseSlots(settlement.Id, center, terrain, settings, houseCount + (underWay ? 1 : 0));
+        var ruinCount = Math.Max(0, settlement.Ruins);
+        var slots = ComputeHouseSlots(settlement.Id, center, terrain, settings, houseCount + (underWay ? 1 : 0) + ruinCount);
 
         var houses = slots.GetRange(0, Math.Min(houseCount, slots.Count));
         ConstructionPlacement? construction = underWay && slots.Count > houseCount
-            ? new ConstructionPlacement(slots[houseCount], Math.Clamp(settlement.ConstructionProgress / rules.WorkPerHouse, 0f, 1f))
+            ? new ConstructionPlacement(slots[houseCount], Math.Clamp(settlement.ConstructionProgress / SettlementEconomy.ComputeHouseWork(rules, settlement), 0f, 1f))
             : null;
+        var ruinsStart = Math.Min(slots.Count, houseCount + (underWay ? 1 : 0));
+        var ruins = slots.GetRange(ruinsStart, Math.Min(ruinCount, slots.Count - ruinsStart));
         var discRadius = ComputeDiscRadius(center, slots, settings.ShrineClearance);
         var fields = ComputeFields(settlement.Id, center, terrain, settings, discRadius, ComputeFieldCount(houseCount, settings));
 
-        return new SettlementSite(new Vector3(center.X, terrain.SampleHeight(center.X, center.Y), center.Y), houses, construction, fields, discRadius);
+        return new SettlementSite(new Vector3(center.X, terrain.SampleHeight(center.X, center.Y), center.Y), houses, construction, fields, discRadius, ruins);
     }
 
     /// <summary>The first <paramref name="count"/> dry slots of the house spiral, each facing the shrine with a little jitter.</summary>

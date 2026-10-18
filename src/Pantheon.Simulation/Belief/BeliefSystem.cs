@@ -78,7 +78,7 @@ public sealed class BeliefSystem : ISimulationSystem
             return;
         }
 
-        var conditions = BeliefModel.AssessConditions(_rules, settlement, SettlementEconomy.DroughtOf(_settlementRules, world.Regions, settlement));
+        var conditions = BeliefModel.AssessConditions(_rules, settlement, Hazards.Of(_settlementRules, world, settlement));
         var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs, WarResistance(world, beliefs));
         int? gainer = null;
         int? loser = null;

@@ -114,7 +114,7 @@ public sealed class DivinePresentationTests
         Assert.Equal(OverlayKind.Faith, OverlayMap.Next(OverlayKind.Religion));
         Assert.Equal(OverlayKind.Food, OverlayMap.Next(OverlayKind.Faith));
         Assert.Equal(OverlayKind.Weather, OverlayMap.Next(OverlayKind.Food));
-        Assert.Null(OverlayMap.Next(OverlayKind.Weather));
+        Assert.Equal(OverlayKind.Danger, OverlayMap.Next(OverlayKind.Weather));
     }
 
     [Fact]
@@ -187,7 +187,7 @@ public sealed class DivinePresentationTests
         Assert.Equal(0xfd, map.Rgba[4]);
         Assert.Equal(RegionDebugLayer.Influence, RegionDebugMap.Next(RegionDebugLayer.Blessing));
         Assert.Equal(RegionDebugLayer.SoilMoisture, RegionDebugMap.Next(RegionDebugLayer.Influence));
-        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.SoilMoisture));
+        Assert.Equal(RegionDebugLayer.Fire, RegionDebugMap.Next(RegionDebugLayer.SoilMoisture));
     }
 
     [Theory]

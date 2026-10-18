@@ -17,4 +17,7 @@ public enum OverlayKind
 
     /// <summary>Each land region by the water in its soil: drought, enough or soaked (ADR-013).</summary>
     Weather,
+
+    /// <summary>Fires burning, scorched land and shielded settlements (ADR-014).</summary>
+    Danger,
 }

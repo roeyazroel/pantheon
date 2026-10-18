@@ -261,10 +261,40 @@ public sealed class GodAi
                     }
 
                     break;
+                case MiracleEffectKind.Ignite:
+                case MiracleEffectKind.Quake:
+                    value += ValueDisaster(effect.Kind, reasons, world, settlement, profile, mine, rivals, free, allies, opportunity, size);
+                    break;
+                case MiracleEffectKind.Shield:
+                    value += Note(reasons, settlement, "shield", profile.Protect * mine * conditions.DangerNeed * size);
+                    break;
             }
         }
 
         return value;
+    }
+
+    /// <summary>
+    /// What setting a village alight or shaking it is worth (ADR-014): fear among rivals' followers
+    /// (a fire only where the land will burn), less the harm to its own followers, which counts
+    /// against it. It never strikes an ally's village.
+    /// </summary>
+    private float ValueDisaster(MiracleEffectKind kind, List<string> reasons, WorldState world, SettlementState settlement, GodProfile profile, float mine, float rivals, float free, float allies, float opportunity, float size)
+    {
+        if (allies > 0.05f)
+        {
+            return 0f;
+        }
+
+        var reach = kind == MiracleEffectKind.Ignite ? _caster.FlammabilityAt(world, settlement) : 1f;
+        var fear = Note(reasons, settlement, "intimidate", profile.Intimidate * (rivals + (0.3f * free)) * opportunity * (1f - mine) * reach * size);
+        var harm = profile.Protect * mine * size;
+        if (harm > 0.01f)
+        {
+            reasons.Add(Format("harms own {0} -{1:0.00}", settlement.Name, harm));
+        }
+
+        return fear - harm;
     }
 
     /// <summary>Adds sending the Creature to the settlement the god courts most, if it is far from there.</summary>

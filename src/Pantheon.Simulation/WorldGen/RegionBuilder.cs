@@ -103,6 +103,8 @@ public static class RegionBuilder
 
             // A new world starts after ordinary weather: the soil holds as much water as the climate gives it.
             SoilMoisture = SimMath.Clamp01(meanMoisture),
+            Fire = 0f,
+            Scorch = 0f,
         };
     }
 

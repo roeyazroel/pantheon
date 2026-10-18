@@ -58,6 +58,8 @@ public static class SettlementFounder
                 Housing = settings.Housing,
                 Health = InitialHealth,
                 ConstructionProgress = 0f,
+                Ruins = 0,
+                ShieldedUntilTick = 0,
                 Beliefs = [],
             });
         }

@@ -17,8 +17,8 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
 4. **Core code has no Godot dependency** and is tested headless (`dotnet test`).
 5. **Seeded randomness only.** Core systems use `SimulationRandom` (xoshiro256\*\*) derived from
    the `WorldSeed`. RNG state lives in `WorldState.Random`, so saves resume the same sequence. The
-   weather draws a fresh stream each step from the seed and the tick instead, so it never shifts
-   the shared stream (ADR-013).
+   weather and disaster steps draw a fresh stream each step from the seed and the tick instead,
+   so they never shift the shared stream (ADR-013, ADR-014).
    No global or ambient randomness in core systems: `ArchitectureRulesTests` scans the core
    assemblies for `System.Random`, clock and tick-count reads and GUIDs.
 6. **Data-driven content** where practical (`game/Data/*.json`), parsed strictly (unknown or
@@ -44,7 +44,7 @@ game/                         Godot 4.7.2 project (res://)
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
   Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                              creatures.json, god_ai.json, diplomacy.json, weather.json (simulation);
+                              creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json (simulation);
                               settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
                               (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
@@ -52,9 +52,10 @@ game/                         Godot 4.7.2 project (res://)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology, Settlements, Gods, Belief, Miracles,
-                              Creatures, Diplomacy, Weather, Events (+ reserved folders)
+                              Creatures, Diplomacy, Weather, Disasters, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Navigation, Gods (AI), Diplomacy, Weather, Systems, SimulationEngine
+                              Creatures, Navigation, Gods (AI), Diplomacy, Weather, Disasters, Systems,
+                              SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -115,15 +116,17 @@ files and compiled assemblies and fails when either rule is broken.
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
   (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures`, `Diplomacy`,
-  `Weather` and `WinnerGodId` (once a god has won, spec §115).
+  `Weather`, `Disasters` and `WinnerGodId` (once a god has won, spec §115).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
   `Moisture` (the climate), `Fertility`, `Vegetation` (0..1), `Blessing` (0..1, from miracles; it
-  fades) and `SoilMoisture` (0..1, the water in the soil now; ADR-013).
+  fades), `SoilMoisture` (0..1, the water in the soil now; ADR-013), `Fire` (how fiercely it burns
+  now) and `Scorch` (how much of its fuel fire has eaten; ADR-014).
 - `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Housing`
-  (capacity in people), `Health` (0..1) and `ConstructionProgress` (work done on the one house
-  being built; 0 when none is under way) and `Beliefs`. These aggregates are the canonical
+  (capacity in people), `Health` (0..1), `ConstructionProgress` (work done on the one house
+  being built; 0 when none is under way), `Ruins` (houses destroyed and not yet rebuilt),
+  `ShieldedUntilTick` (while a Shield miracle protects it) and `Beliefs`. These aggregates are the canonical
   population (Tier 1, ADR-004 and ADR-008).
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
   follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt` (0..1).
@@ -145,20 +148,22 @@ files and compiled assemblies and fails when either rule is broken.
   when, and the last proposal) and `Proposals` (alliance or peace, waiting for an answer).
   `DiplomaticCommand` (offer alliance, break alliance, declare war, request peace, accept,
   decline) is the intent the diplomacy authority checks.
+- `DisasterState` (ADR-014): the `Earthquakes` under way (epicentre, magnitude, peak intensity,
+  radius, end and the god who caused it) and `NextEarthquakeId`.
 - `WeatherState` (ADR-013): `Cells` (`WeatherCell`: position, velocity, radius, pressure,
   temperature, humidity, precipitation, wind, electrical activity and the god who called it),
   `NextCellId`, `Spell` (normal, dry or wet), `SpellEndsTick` and `WindDirection`.
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
-  `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged` and
-  others) raised during a tick or a command and never saved.
+  `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
+  `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged` and others) raised during a tick or a command and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
   `MiracleCatalog` and `MiracleDefinition` (`miracles.json`), `PantheonSetup` (the gods of a
   new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
   (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
-  diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`) and `WeatherRules`
-  (`weather.json`).
+  diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
+  (`weather.json`) and `DisasterRules` (`disasters.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -205,11 +210,16 @@ files and compiled assemblies and fails when either rule is broken.
   checked). See [Diplomacy](#diplomacy).
 - `Weather/`: `WeatherModel` (cells' rain, wind and lightning, coverage, the weather at a point,
   soil water, summoned rain) and `WeatherSystem` (the weather step). See [Weather](#weather).
+- `Disasters/`: `DisasterModel` (quakes, shaking, flammability, ignition, fire threat, danger,
+  shields), `Wildfires` (lighting, burning, spreading, regrowth) and `DisasterSystem` (the disaster
+  step). `Belief/Hazards` carries a settlement's drought and danger into its conditions. See
+  [Disasters](#disasters).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
   `Systems/Authorities` bundles the miracle, Creature and diplomacy authorities, which share one
   ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  settlement step, the belief step, the victory check and the diplomacy step, each in an
+  disaster step, the settlement step, the belief step, the victory check and the diplomacy step,
+  each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
@@ -218,7 +228,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 7, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 8, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -231,8 +241,9 @@ files and compiled assemblies and fails when either rule is broken.
   it. Version 4 → 5 gives every god no personality and no dominance, and the world no winner.
   Version 5 → 6 adds empty diplomacy: no relations, no stances (every pair neutral) and no
   proposals. Version 6 → 7 adds clear skies (no cells, a normal spell not yet scheduled, a west
-  wind) and gives each region its climate's moisture as soil water. A missing, unsupported or
-  newer version raises `SaveFormatException` with a clear message.
+  wind) and gives each region its climate's moisture as soil water. Version 7 → 8 adds no
+  earthquakes, no fire or scorch, and no ruins or shields. A missing, unsupported or newer version
+  raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
   and blessing in 0..1, god ids and Divine Power, and beliefs (known gods, one each, values in
@@ -240,7 +251,8 @@ files and compiled assemblies and fails when either rule is broken.
   target settlements, levels, values in range), diplomacy (`DiplomacyIntegrity`: known gods,
   one relation per observer and subject and one stance per pair, values in range), soil moisture
   in 0..1, and weather (`WeatherIntegrity`: unique cell ids below the next id, finite positions,
-  values in range, known gods).
+  values in range, known gods), fire and scorch in 0..1, ruins and shields not negative, and
+  disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -287,9 +299,12 @@ files and compiled assemblies and fails when either rule is broken.
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
   target hint and the Creature card (level, activity, needs, loyalty, morality, what feedback would
   judge), the rival gods with their status towards the player, the race for victory, and the
-  weather when it matters (a dry or wet spell, droughts and storms among the player's people).
+  weather and dangers when they matter (a dry or wet spell; droughts, storms, fires and earthquakes
+  among the player's people).
   `Divine/DivineText` words ranks, personalities, clocks and cast verdicts;
   `Creatures/CreatureText` words Creature activities and command outcomes.
+- `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
+  `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging.
 - `Weather/WeatherText` words spells, kinds, the wind's direction and droughts;
   `Weather/WeatherCommands` drives the weather for debugging (F8 next spell, F10 a storm at the
   cursor).
@@ -301,8 +316,8 @@ files and compiled assemblies and fails when either rule is broken.
   urgent kept when full.
 - `Presentation/OverlayMap` builds the map overlays (§58): influence (each region in the colour of
   the strongest god, opacity by its influence), religion (each settlement's lands in its main god's
-  colour), faith and food (each settlement's lands on a red-to-green ramp) and weather (each land
-  region's soil water, brown to yellow to blue). `Presentation/CloudLayout` lays out each weather
+  colour), faith and food (each settlement's lands on a red-to-green ramp), weather (each land
+  region's soil water, brown to yellow to blue) and danger (fires, ash and shielded settlements). `Presentation/CloudLayout` lays out each weather
   cell's puffs, colour, opacity, rain and lightning from `PresentationHash` and
   `WeatherViewSettings` (`weather_view.json`), and how much a storm dims the light.
   `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
@@ -346,6 +361,12 @@ files and compiled assemblies and fails when either rule is broken.
 - `Presentation/Weather/`: `WeatherPresenter` keeps one `CloudView` per weather cell (soft
   camera-facing puffs that fade near the camera, rain streaks seen nearby) and plays lightning
   bolts; it dims the sun under storms over the camera's focus.
+- `Presentation/Disasters/`: `DisasterPresenter` keeps a `FireView` (flames, smoke, glow) per
+  burning region, ash decals on scorched land and a dome over each shielded settlement, plays a
+  shock wave when an earthquake begins and shakes the camera while the ground under its focus
+  shakes. `SiteView` draws ruins as rubble.
+- `Bootstrap/NatureDebug` wires the weather and disaster debug hotkeys (F8, F10, F11, F12) and the
+  `--weather` and `--disaster` launch options.
 - `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
   buttons send the moves through `SessionCommands.CommandDiplomacy`.
 - `Bootstrap/DivineController`: the player's divine interface. It selects miracles (keys 1–9 or
@@ -386,6 +407,9 @@ sequenceDiagram
         Engine->>Settle: Update(tick context)
         opt last tick of each 5-tick interval (2 Hz at x1)
             Engine->>State: weather step (spell, cells, soil water, storms, droughts)
+        end
+        opt last tick of each 10-tick interval
+            Engine->>State: disaster step (earthquakes, wildfires, destruction, fear)
         end
         opt last tick of each 10-tick interval (1 Hz at x1)
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
@@ -707,6 +731,39 @@ flowchart LR
     Miracle["Rain miracle"] --> Cells
 ```
 
+## Disasters
+
+ADR-014 records the decisions, and the Milestone 8 plan
+([.docs/milestone-8-disasters.md](../.docs/milestone-8-disasters.md)) has the rules with their
+numbers and the measured fires and earthquakes.
+
+- **Wildfires** live in the regions they burn. Flammability is vegetation × unscorched share ×
+  dryness², so fire follows drought. Dry storms, villages' hearths, earthquakes and the Fire
+  miracle light it. It grows on its fuel, scorches the land, spreads (more downwind), and dies in
+  the rain, under a village's firefighting or for want of fuel. Scorched land yields less and
+  regrows.
+- **Earthquakes** are processes: a few seconds of shaking, fading with distance from the
+  epicentre, that collapse houses into ruins, kill, spill stores and start fires.
+- **Settlements respond**: they fight fires in their region and rebuild ruins at half the work;
+  the homeless fall ill. Survivors fear their gods and doubt that the gods care, and danger counts
+  as hardship.
+- **Gods intervene** with Fire, Earthquake and Shield (protection from disasters for three
+  minutes) and Rain (which quenches fire).
+
+```mermaid
+flowchart LR
+    Dry["Dry land (ADR-013)"] --> Fire["Wildfire"]
+    Sparks["Storms, hearths,<br/>quakes, miracles"] --> Fire
+    Fire --> Scorch["Scorch: smaller harvests"]
+    Fire --> Damage["Houses, people, stores"]
+    Quake["Earthquake"] --> Damage
+    Damage --> Ruins["Ruins, the homeless"]
+    Ruins --> Rebuild["Rebuilding"]
+    Damage --> Belief["Fear and doubt"]
+    Shield["Shield"] --> Damage
+    Rain["Rain, firefighting"] --> Fire
+```
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -754,6 +811,11 @@ the client.
   the strongest cells with their state, the soil and weather under the cursor and the selected
   settlement's water and yield. F8 starts the next spell (normal, dry, wet), F10 calls a storm at
   the cursor, and `--weather=normal|dry|wet|storm` sets either up at the start.
+- The F1 panel's disaster lines (`DisasterReadout`) list the earthquakes under way, the fiercest
+  fires and the selected settlement's dangers (fire threat, shaking, ruins, homeless, scorched
+  land, shield). F3 has fire and scorch layers, the Danger overlay shows fires, ash and shields,
+  F11 starts an earthquake and F12 a fire at the cursor, and `--disaster=quake|fire` starts one at
+  the focused settlement.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
 - O cycles the player map overlays (influence, religion, faith, food), which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
@@ -786,11 +848,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 7 (current)
+    alt version 8 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 6
+    else versions 1 to 7
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 7, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water)
+        Mig-->>Save: JsonObject at version 8, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water; 7→8: disasters, fire, scorch, ruins, shields)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
@@ -825,8 +887,9 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
 - World generation is a pure function of `(WorldSeed, WorldGenSettings)`.
 - Tick results are a pure function of `WorldState` (including RNG state) and the content, and a
   cast is a pure function of the world, the request and the content; the belief step and the
-  caster draw no random numbers. The weather step draws from a stream seeded by the world seed and
-  the tick, so it needs no saved state and never shifts the shared stream (ADR-013).
+  caster draw no random numbers. The weather and disaster steps draw from streams seeded by the
+  world seed and the tick, so they need no saved state and never shift the shared stream
+  (ADR-013, ADR-014).
   The settlement step's births and deaths draw from the saved `SimulationRandom` in settlement
   list order, so a run continues identically across a save and load.
 - Presentation never consumes a simulation random stream. The settlement layout and the Tier 2
@@ -858,9 +921,12 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   authority, the effects of status, the AI diplomat, the diplomacy panel and the version 5 → 6
   migration (against `save-v5.json`). Since Milestone 7 it covers the weather rules and step,
   spells, soil water, droughts and storms, the Rain miracle and the AI's use of it, the weather's
-  presentation and tools, and the version 6 → 7 migration (against `save-v6.json`). The tests load the shipped `game/Data/*.json`; rule tests
+  presentation and tools, and the version 6 → 7 migration (against `save-v6.json`). Since
+  Milestone 8 it covers earthquakes, wildfires, destruction, ruins, the settlements' response, the
+  Fire, Earthquake and Shield miracles and the AI's use of them, the disasters' presentation and
+  tools, and the version 7 → 8 migration (against `save-v7.json`). The tests load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
-  `WeatherWorlds.Rules`)
+  `WeatherWorlds.Rules`, `DisasterWorlds.Rules`)
   so retuning the data does not change their meaning.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
   above, no Godot reference in core projects, no unseeded randomness or clock in core

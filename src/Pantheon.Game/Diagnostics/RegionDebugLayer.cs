@@ -29,4 +29,10 @@ public enum RegionDebugLayer
 
     /// <summary>Water in the soil now (ADR-013).</summary>
     SoilMoisture,
+
+    /// <summary>How fiercely the region burns now (ADR-014).</summary>
+    Fire,
+
+    /// <summary>How badly fire has scorched the land (ADR-014).</summary>
+    Scorch,
 }

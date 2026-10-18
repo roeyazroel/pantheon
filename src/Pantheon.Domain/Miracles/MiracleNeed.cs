@@ -14,4 +14,7 @@ public enum MiracleNeed
 
     /// <summary>Drought: the drier the farmland, the greater the need.</summary>
     Water,
+
+    /// <summary>Danger: fire on the farmland or the ground shaking.</summary>
+    Danger,
 }

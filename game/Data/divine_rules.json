@@ -14,9 +14,16 @@
   "ShrineInfrastructure": 1.0,
 
   // Conditions: hardship is the worst of ill health, hunger (stores below ComfortFoodPerPerson per
-  // person) and DroughtWorry x the drought of the farmland.
+  // person), DroughtWorry x the drought of the farmland and DangerWorry x the danger (fire or
+  // shaking ground).
   "ComfortFoodPerPerson": 2.0,
   "DroughtWorry": 0.5,
+  "DangerWorry": 0.6,
+
+  // Disasters (ADR-014): a disaster makes its survivors fear every god they know and doubt that the
+  // gods care, by these amounts at full severity (a full earthquake).
+  "DisasterFear": 0.4,
+  "DisasterDoubt": 0.3,
 
   // Drift: Faith grows with worship, erodes with Doubt and is forgotten by non-followers; Love grows among comfortable followers,
   // fades and wears down in hardship; Fear fades in safety; Doubt drifts towards SilenceDoubt and

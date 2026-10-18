@@ -102,12 +102,15 @@ public static class WeatherReadout
         }
 
         var now = WeatherModel.At(rules, snapshot.World.Weather, point);
+        var region = snapshot.World.Regions.GetRegion(regionId);
         return Format(
-            "  soil {0:0.00}  rain {1:0.00}  wind {2:0.00}  lightning {3:0.00}",
-            snapshot.World.Regions.GetRegion(regionId).SoilMoisture,
+            "  soil {0:0.00}  rain {1:0.00}  wind {2:0.00}  lightning {3:0.00}  fire {4:0.00}  scorch {5:0.00}",
+            region.SoilMoisture,
             now.Rain,
             now.Wind,
-            now.Lightning);
+            now.Lightning,
+            region.Fire,
+            region.Scorch);
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

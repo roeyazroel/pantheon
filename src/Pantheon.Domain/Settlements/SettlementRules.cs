@@ -31,6 +31,15 @@ public sealed record SettlementRules
     /// <summary>Drought (0..1) from which a settlement counts as being in drought: alerts, the HUD and labels say so.</summary>
     public required float DroughtThreshold { get; init; }
 
+    /// <summary>Share of the yield fully scorched farmland loses until it regrows (ADR-014).</summary>
+    public required float ScorchYieldLoss { get; init; }
+
+    /// <summary>Health lost in a step in which nobody has a roof; a partly homeless settlement loses that share of it.</summary>
+    public required float HomelessHealthLossPerStep { get; init; }
+
+    /// <summary>Share of <see cref="WorkPerHouse"/> rebuilding a ruined house takes.</summary>
+    public required float RuinWorkShare { get; init; }
+
     /// <summary>Share of the workers who worship instead of farming, in a settlement whose people all follow a god with full Faith.</summary>
     public required float WorshipWorkforceShare { get; init; }
 

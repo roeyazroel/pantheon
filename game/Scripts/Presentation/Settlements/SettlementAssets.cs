@@ -47,6 +47,9 @@ internal sealed class SettlementAssets
     private const float HeadRadius = 0.2f;
     private const int FigureSegments = 8;
 
+    // A ruined hut: a low heap of charred timber and earth.
+    private static readonly Vector3 RubbleSize = new(3.4f, 0.7f, 2.8f);
+
     /// <summary>Loads the materials and builds the meshes.</summary>
     public SettlementAssets()
     {
@@ -61,6 +64,7 @@ internal sealed class SettlementAssets
         ShrineCrown = new SphereMesh { Radius = ShrineCrownRadius, Height = 2f * ShrineCrownRadius, Material = LoadMaterial("shrine_crown") };
         ScaffoldPole = new CylinderMesh { TopRadius = ScaffoldPoleRadius, BottomRadius = ScaffoldPoleRadius, Height = ScaffoldPoleHeight, RadialSegments = 6, Rings = 1, Material = timber };
         TimberPile = new BoxMesh { Size = TimberPileSize, Material = timber };
+        Rubble = new BoxMesh { Size = RubbleSize, Material = new StandardMaterial3D { AlbedoColor = new Color(0.24f, 0.2f, 0.17f), Roughness = 1f } };
         FieldPlot = new BoxMesh { Size = new Vector3(1f, FieldThickness, 1f), Material = CreateFieldMaterial() };
         CitizenFigure = CreateCitizenFigure(LoadMaterial("citizen_body"), LoadMaterial("citizen_head"));
     }
@@ -94,6 +98,9 @@ internal sealed class SettlementAssets
 
     /// <summary>Stack of timber beside a building site.</summary>
     public Mesh TimberPile { get; }
+
+    /// <summary>A ruined house's heap (ADR-014).</summary>
+    public Mesh Rubble { get; }
 
     /// <summary>Unit-sized field slab; scale it by the field size and tint it per instance with the crop colour.</summary>
     public Mesh FieldPlot { get; }

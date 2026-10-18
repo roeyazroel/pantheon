@@ -22,6 +22,12 @@
   "DroughtYieldFloor": 0.25,
   "DroughtThreshold": 0.35,
 
+  // Disasters (disasters.json, ADR-014): scorched farmland loses up to ScorchYieldLoss of its yield;
+  // people without a roof lose health; rebuilding a ruin takes RuinWorkShare of a new house's work.
+  "ScorchYieldLoss": 0.7,
+  "HomelessHealthLossPerStep": 0.02,
+  "RuinWorkShare": 0.5,
+
   // Food.
   "FoodPerPersonPerStep": 0.05,
   "FoodStoragePerHousing": 8.0,

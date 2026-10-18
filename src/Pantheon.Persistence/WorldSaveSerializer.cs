@@ -20,9 +20,10 @@ public static class WorldSaveSerializer
     /// progress; version 3 (Milestone 3) added gods, settlement beliefs, region blessings and the
     /// founding settings for several settlements; version 4 (Milestone 4) added Creatures; version 5
     /// (Milestone 5) added god personalities, dominance and the winner; version 6 (Milestone 6) added
-    /// diplomacy; version 7 (Milestone 7) added the weather and the soil's water.
+    /// diplomacy; version 7 (Milestone 7) added the weather and the soil's water; version 8
+    /// (Milestone 8) added disasters, regions' fire and scorch, and settlements' ruins and shields.
     /// </summary>
-    public const int CurrentSaveVersion = 7;
+    public const int CurrentSaveVersion = 8;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

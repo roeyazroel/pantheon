@@ -125,6 +125,25 @@ public sealed class SettlementLayoutTests
         Assert.Equal(first.HouseDiscRadius, second.HouseDiscRadius);
     }
 
+    [Fact]
+    public void Ruins_StandOnThePlotsBeyondTheHousesAndTheBuildingSite()
+    {
+        var intact = Site(Settlement(housing: 120, constructionProgress: 30f));
+        var ruined = Settlement(housing: 120, constructionProgress: 30f);
+        ruined.Ruins = 3;
+
+        var site = Site(ruined);
+
+        Assert.Equal(intact.Houses, site.Houses);
+        Assert.Equal(intact.Construction!.Value.House, site.Construction!.Value.House);
+
+        // Rebuilding a ruin takes half the work, so the same work is further along.
+        Assert.Equal(2f * intact.Construction.Value.Progress, site.Construction.Value.Progress, 4);
+        Assert.Equal(3, site.Ruins.Count);
+        Assert.Empty(intact.Ruins);
+        Assert.DoesNotContain(site.Ruins, ruin => site.Houses.Contains(ruin));
+    }
+
     /// <summary>The island's starting settlement with the given housing and construction progress; the layout ignores the population.</summary>
     private static SettlementState Settlement(int housing, float constructionProgress = 0f) =>
         IslandSettlements.Create(population: 30, housing, constructionProgress);

@@ -7,8 +7,10 @@ using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
+using Pantheon.Game.Disasters;
 using Pantheon.Game.Divine;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Disasters;
 
 namespace Pantheon.Game.Alerts;
 
@@ -135,6 +137,12 @@ public sealed class AlertFeed
                 return drought.Started
                     ? (Key("drought", settlement.Id), Format("Drought in {0}: its crops wither. Rain would help.", settlement.Name), AlertSeverity.Warning, settlement.Position)
                     : (Key("rained", settlement.Id), Format("The drought in {0} is over.", settlement.Name), AlertSeverity.Good, settlement.Position);
+            case EarthquakeStruck quake:
+                return DescribeQuake(quake, world, localGodId);
+            case WildfireStarted fire:
+                return DescribeFire(fire, world, localGodId);
+            case SettlementDamaged damage when Settlement(world, damage.SettlementId) is { } settlement && Concerns(settlement, localGodId):
+                return (Key("damage" + damage.Cause, settlement.Id), Format("{0} struck {1}: {2} destroyed, {3} dead.", Capitalize(DisasterText.Kind(damage.Cause)), settlement.Name, Count(damage.HousesLost, "house", "houses"), damage.Deaths), AlertSeverity.Danger, settlement.Position);
             case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
                 return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             default:
@@ -185,6 +193,60 @@ public sealed class AlertFeed
 
         return null;
     }
+
+    /// <summary>An earthquake that shakes the player's people: who caused it, if a god did, and the settlement it shakes hardest.</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeQuake(EarthquakeStruck quake, WorldState world, int? localGodId)
+    {
+        if (quake.GodId == localGodId || world.Disasters.Earthquakes.Find(q => q.Id == quake.QuakeId) is not { } shaking)
+        {
+            return null;
+        }
+
+        SettlementState? worst = null;
+        var strongest = 0f;
+        foreach (var settlement in world.Settlements)
+        {
+            var felt = DisasterModel.Shaking(shaking, settlement.Position);
+            if (felt > strongest && Concerns(settlement, localGodId))
+            {
+                worst = settlement;
+                strongest = felt;
+            }
+        }
+
+        if (worst is null)
+        {
+            return null;
+        }
+
+        var text = quake.GodId is { } god && GodStanding.Find(world, god) is { } cause
+            ? Format("{0} shakes the earth under {1} (magnitude {2:0.0})!", cause.Name, worst.Name, quake.Magnitude)
+            : Format("An earthquake (magnitude {0:0.0}) shakes {1}!", quake.Magnitude, worst.Name);
+        return (Key("quake", quake.QuakeId), text, AlertSeverity.Danger, quake.Epicentre);
+    }
+
+    /// <summary>A fire lit near the player's people, other than by the player.</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeFire(WildfireStarted fire, WorldState world, int? localGodId)
+    {
+        var grid = world.Regions;
+        var (column, row) = grid.GetCoordinates(fire.RegionId);
+        foreach (var settlement in world.Settlements)
+        {
+            var (c, r) = grid.GetCoordinates(settlement.RegionId);
+            if (Math.Max(Math.Abs(c - column), Math.Abs(r - row)) <= 2 && Concerns(settlement, localGodId))
+            {
+                return (Key("fire", settlement.Id), Format("Fire near {0}, lit by {1}.", settlement.Name, DisasterText.Cause(fire.Cause)), AlertSeverity.Warning, grid.GetRegionCenter(fire.RegionId));
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>A count with its noun, for example "1 house" or "3 houses".</summary>
+    private static string Count(int count, string one, string many) => Format("{0} {1}", count, count == 1 ? one : many);
+
+    /// <summary>The text with its first letter in capitals.</summary>
+    private static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 
     /// <summary>A new weather spell: a warning for a dry spell, news for a wet one, relief when a dry spell ends.</summary>
     private static (string, string, AlertSeverity, GroundPosition?)? DescribeSpell(WeatherSpellChanged spell) => spell.Spell switch

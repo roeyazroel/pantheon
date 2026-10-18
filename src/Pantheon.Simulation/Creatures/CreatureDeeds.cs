@@ -140,8 +140,8 @@ public sealed class CreatureDeeds
     /// <summary>The people see what their god's Creature did, and their belief in the god changes.</summary>
     private void Witness(CreatureState creature, CreatureActionRule rule, SettlementState settlement)
     {
-        // Only the food need matters here, so the drought is left out.
-        var conditions = BeliefModel.AssessConditions(_divine, settlement, drought: 0f);
+        // Only the food need matters here, so the land's hazards are left out.
+        var conditions = BeliefModel.AssessConditions(_divine, settlement, Hazards.None);
         var need = rule.Action == CreatureAction.Feed ? conditions.FoodNeed : 1f;
         var loveScale = _divine.GratitudeFloor + ((1f - _divine.GratitudeFloor) * need);
         var belief = BeliefModel.FindOrAdd(_divine, settlement, creature.GodId);
