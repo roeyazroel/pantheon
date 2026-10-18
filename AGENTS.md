@@ -91,11 +91,12 @@ followed by the conventions that meet it in this repository.
 
 ### Debug tools early
 
-- Every new system ships with a way to see and drive it: a debug overlay readout, a hotkey or a
-  launch option.
-- Current tools: the F1 debug panel, the B region grid, the `.` single-tick step, the launch
-  options `--seed`, `--load` and `--terrain`, and scripted smoke runs with
-  `--quit-after-frames` and `--screenshot`. The README lists them.
+- Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
+  F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
+  `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
+- Current tools: the F1 debug panel, the B region grid, the F3 region debug map, the `.`
+  single-tick step, the launch options `--seed`, `--load` and `--terrain`, and scripted smoke
+  runs with `--quit-after-frames` and `--screenshot`. The README lists them.
 
 ## Where things go
 

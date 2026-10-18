@@ -148,6 +148,7 @@ files and compiled assemblies and fails when either rule is broken.
   with exponential smoothing, pitch from zoom, bounds, terrain clearance, and the zoom bands
   Close (≤ 120 m), Regional (≤ 700 m) and Strategic (≤ 2600 m).
 - `Diagnostics/DebugReadout`: formats the debug overlay model from state (pure).
+  `Diagnostics/RegionDebugMap` builds the F3 region debug map image (pure).
 - `Launch/LaunchOptions`: parses user arguments `--seed=`, `--load=`,
   `--terrain=auto|terrain3d|fallback`, `--quit-after-frames=` and `--screenshot=`. Bad input
   becomes a warning, never an error.
@@ -174,7 +175,7 @@ files and compiled assemblies and fails when either rule is broken.
   - `Settlements/SettlementPresenter`: procedural huts (MultiMesh), shrine and name/population label.
   - `Regions/RegionBoundaryOverlay`: region grid lines draped on the terrain, plus a hover highlight.
 - `UI/DebugOverlay`: FPS, tick, seed, terrain backend, camera band, region under cursor,
-  settlement stats, boundary toggle and status messages.
+  settlement stats, boundary toggle and status messages, plus the F3 region debug map.
 
 ## Frame and tick flow
 
@@ -197,6 +198,7 @@ sequenceDiagram
         Engine->>State: systems mutate state, Tick++
     end
     Root->>View: Sync(world), SetHoveredRegion(region under cursor)
+    Root->>Overlay: ShowRegionMap(RegionDebugMap.Build(...)) when the F3 layer, cursor region, tick or world changed
     Root->>Overlay: ShowModel(DebugReadout.Build(snapshot)) while visible
 ```
 
@@ -211,6 +213,12 @@ the client.
 
 - F1: the debug panel, built by `DebugReadout` from a `DebugSnapshot`.
 - B: the region grid and the hover outline (`RegionBoundaryOverlay`).
+- F3: the region debug map. `RegionDebugMap.Build` turns one `RegionDebugLayer` (biome,
+  elevation, temperature, moisture, fertility or vegetation) into a `RegionDebugMapImage` with
+  one RGBA8 pixel per region and a legend. Numeric layers use a dark-to-bright ramp from the
+  lowest to the highest value; the region under the cursor is white and settlement regions are
+  red. `GameRoot` rebuilds it only when the layer, the cursor region, the tick or the world
+  changes, and `DebugOverlay.ShowRegionMap` displays it.
 - `.`: `SessionCommands.StepTick` pauses the scheduler and calls `GameSession.StepOneTick`, the
   same engine call a scheduled tick makes. Stepping N times therefore equals N scheduled ticks,
   which `SessionCommandsTests` checks.

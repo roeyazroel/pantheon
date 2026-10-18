@@ -60,3 +60,34 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
 theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(1, 0.95, 0.9, 1)
 text = "FALLBACK TERRAIN RENDERER"
+
+[node name="RegionMap" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = -12.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Layout" type="VBoxContainer" parent="RegionMap"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Legend" type="Label" parent="RegionMap/Layout"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.93, 0.95, 0.9, 1)
+
+[node name="Map" type="TextureRect" parent="RegionMap/Layout"]
+texture_filter = 1
+custom_minimum_size = Vector2(256, 256)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

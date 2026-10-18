@@ -18,7 +18,7 @@ public static class DebugReadout
     public const string KeyHints = "[F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [1/2/3] speed";
 
     /// <summary>Debug tool key hints shown at the bottom of the overlay.</summary>
-    public const string DebugHints = "[F1] overlay  [B] regions  [.] step one tick";
+    public const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step one tick";
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 

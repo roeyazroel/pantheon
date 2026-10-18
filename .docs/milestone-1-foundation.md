@@ -214,8 +214,8 @@ sequenceDiagram
         Engine->>State: systems mutate state, Tick++
     end
     Root->>View: Sync(world), SetHoveredRegion(region under cursor)
+    Root->>Overlay: ShowRegionMap(RegionDebugMap.Build(...)) when the F3 layer, cursor region, tick or world changed
     Root->>Overlay: ShowModel(DebugReadout.Build(snapshot)) while visible
-    Root->>Overlay: ShowRegionMap(RegionDebugMap.Build(...)) when the F3 layer, cursor region or tick changed
 ```
 
 ```mermaid
@@ -521,12 +521,12 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Coding rules: write the rules down for every contributor in `AGENTS.md`, and link it from
   the README and `docs/ARCHITECTURE.md`.
 - [x] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
+- [x] Debug tool: F3 region debug map (`RegionDebugMap`, `DebugOverlay.ShowRegionMap`).
 
 ### In Progress
 
 Added by the owner's coding rules (spec §134):
 
-- [ ] Debug tool: F3 region debug map (`RegionDebugMap`, `DebugOverlay.ShowRegionMap`).
 - [ ] Update the README, `docs/ARCHITECTURE.md` and this plan; verify both renderers and the new hotkeys.
 
 ### Future

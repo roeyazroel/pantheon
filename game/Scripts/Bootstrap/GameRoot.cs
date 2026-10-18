@@ -30,11 +30,14 @@ public partial class GameRoot : Node3D
     private const long MaxRandomSeed = 1_000_000_000;
 
     private GameSession _session = null!;
+    private BiomePalette _palette = null!;
     private WorldPresenter _presenter = null!;
     private GodCameraController _camera = null!;
     private DebugOverlay _overlay = null!;
     private IReadOnlyList<(StringName Action, Action Run)> _hotkeys = [];
     private string? _status;
+    private RegionDebugLayer? _regionMapLayer;
+    private (RegionDebugLayer Layer, int? CursorRegion, long Tick, WorldState World)? _shownRegionMap;
 
     /// <summary>Absolute path of the quicksave file.</summary>
     private static string GlobalQuickSavePath => ProjectSettings.GlobalizePath(QuickSavePath);
@@ -54,10 +57,10 @@ public partial class GameRoot : Node3D
             return;
         }
 
-        var (content, palette) = loaded.Value;
+        (var content, _palette) = loaded.Value;
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
-        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, palette, options.Terrain);
+        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, _palette, options.Terrain);
         _session = CreateSession(content, options);
         _session.WorldReplaced += ShowWorld;
         _hotkeys = CreateHotkeys();
@@ -79,7 +82,9 @@ public partial class GameRoot : Node3D
         _presenter.Sync(_session.World);
 
         var cursor = _camera.CursorGroundPoint;
-        _presenter.SetHoveredRegion(RegionAt(cursor));
+        var cursorRegion = RegionAt(cursor);
+        _presenter.SetHoveredRegion(cursorRegion);
+        UpdateRegionMap(cursorRegion);
         if (_overlay.PanelVisible)
         {
             _overlay.ShowModel(DebugReadout.Build(CreateSnapshot(cursor)));
@@ -106,6 +111,7 @@ public partial class GameRoot : Node3D
     [
         (InputActions.ToggleRegionBoundaries, () => _presenter.RegionBoundariesVisible = !_presenter.RegionBoundariesVisible),
         (InputActions.ToggleDebugOverlay, () => _overlay.PanelVisible = !_overlay.PanelVisible),
+        (InputActions.ToggleRegionMap, CycleRegionMap),
         (InputActions.CameraFocusSettlement, () => FocusSettlement(snap: false)),
         (InputActions.WorldNew, () => SetStatus(SessionCommands.NewWorld(_session, CreateRandomSeed()))),
         (InputActions.WorldQuickSave, () => SetStatus(SessionCommands.QuickSave(_session, GlobalQuickSavePath))),
@@ -165,6 +171,29 @@ public partial class GameRoot : Node3D
         {
             _camera.FocusOn(_session.World.Settlements[0].Position, snap ? null : FocusDistance, snap);
         }
+    }
+
+    /// <summary>Shows the region debug map's next layer, or hides the map after the last one.</summary>
+    private void CycleRegionMap()
+    {
+        _regionMapLayer = RegionDebugMap.Next(_regionMapLayer);
+        SetStatus(_regionMapLayer is { } layer ? $"Debug map: {layer}" : "Debug map off");
+    }
+
+    /// <summary>Redraws the region debug map when its layer, the cursor region, the tick or the world changed.</summary>
+    /// <param name="cursorRegion">Region under the cursor, if any.</param>
+    private void UpdateRegionMap(int? cursorRegion)
+    {
+        (RegionDebugLayer Layer, int? CursorRegion, long Tick, WorldState World)? wanted = _regionMapLayer is { } layer
+            ? (layer, cursorRegion, _session.World.Tick, _session.World)
+            : null;
+        if (wanted == _shownRegionMap)
+        {
+            return;
+        }
+
+        _shownRegionMap = wanted;
+        _overlay.ShowRegionMap(wanted is { } map ? RegionDebugMap.Build(map.World, map.Layer, _palette, map.CursorRegion) : null);
     }
 
     /// <summary>Region containing a world point, if any.</summary>

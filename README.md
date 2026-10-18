@@ -57,6 +57,7 @@ covers:
 | Focus the settlement | F or Home |
 | Toggle region boundaries | B |
 | Toggle the debug overlay | F1 |
+| Next region debug map layer, then off | F3 |
 | New world from a random seed | F2 |
 | Quicksave / quickload | F5 / F9 |
 | Pause / resume the simulation | Space |
@@ -74,6 +75,11 @@ simulation.
   region under the cursor with its statistics, and the settlement's population, housing, food
   and food balance per tick.
 - **B** draws the region grid and outlines the region under the cursor.
+- **F3** shows the region debug map in the bottom-left corner, one pixel per region, oriented
+  like the camera's starting view. Each press shows the next layer: biome, elevation,
+  temperature, moisture, fertility, vegetation, then off. Numeric layers run from dark (the
+  lowest value) to bright (the highest), and the legend gives the range. The region under the
+  cursor is white and settlement regions are red.
 - **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
   tick changed. Space resumes.
 - The command-line options below reproduce a world (`--seed`, `--load`), force a renderer

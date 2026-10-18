@@ -45,6 +45,9 @@ public static class InputActions
     /// <summary>Show or hide the debug panel (F1).</summary>
     public static readonly StringName ToggleDebugOverlay = "toggle_debug_overlay";
 
+    /// <summary>Show the region debug map's next layer, or hide it after the last one (F3).</summary>
+    public static readonly StringName ToggleRegionMap = "toggle_region_map";
+
     /// <summary>Generate a new world from a random seed (F2).</summary>
     public static readonly StringName WorldNew = "world_new";
 
@@ -68,7 +71,7 @@ public static class InputActions
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
-        ToggleRegionBoundaries, ToggleDebugOverlay, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
+        ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
         .. SimSpeedPresets, SimStepTick,
     ];
 }
