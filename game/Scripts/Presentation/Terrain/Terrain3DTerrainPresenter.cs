@@ -73,8 +73,8 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
     public void Clear() => _parent.FreeChildren();
 
     /// <summary>
-    /// Replaces Terrain3D's shader with a copy whose region lookups stay in bounds
-    /// (<see cref="Terrain3DShaderPatch"/>), or keeps the stock shader when its code is not recognised.
+    /// Replaces Terrain3D's shader with a copy that fixes two Terrain3D 1.0 defects
+    /// (<see cref="Terrain3DShaderPatch"/>, ADR-007), or keeps the stock shader when its code is not recognised.
     /// </summary>
     /// <param name="material">The terrain's <c>Terrain3DMaterial</c>.</param>
     private static void UsePatchedShader(GodotObject material)

@@ -1,6 +1,6 @@
 # ADR-005: Terrain3D for terrain rendering
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md)
 - Date: 2026-10-18
 
 ## Context
@@ -20,20 +20,10 @@ has no built-in terrain system.
   from `WorldState` on load (ADR-006).
 - Terrain3D is accessed only inside `Terrain3DTerrainPresenter`, using `ClassDB.Instantiate`,
   `GodotObject.Call` and `Set`, behind the `ITerrainPresenter` adapter.
-- The adapter renders with a patched copy of Terrain3D's generated shader, using
-  `Terrain3DShaderPatch`. If the generated code is not recognised, the stock shader is used and
-  a warning is logged. The patch fixes two Terrain3D 1.0.2 defects:
-  - It reads `_region_map[...]` before it discards positions outside the region map. Mesa's
-    software Vulkan driver (lavapipe) does not bounds-check uniform arrays, so that read crashes
-    it. The patch clamps the index; results the shader keeps are unchanged.
-  - Its colour map lookup is offset by half a texel, so the last half texel along the east and
-    south edges of the outermost regions gets the default white colour. With no world background
-    this draws a pale line along the world's edge on every GPU. The patch makes that strip use
-    the colour map texel under it.
 - **Fallback:** when the `Terrain3D` class is not registered (missing or incompatible binaries,
   unsupported platform) or `--terrain=fallback` is passed, `FallbackMeshTerrainPresenter` builds
-  a vertex-coloured `ArrayMesh` from the same `TerrainField`. The fallback is logged with its
-  reason, and the debug overlay shows a "FALLBACK TERRAIN RENDERER" badge and the reason.
+  a vertex-coloured `ArrayMesh` from the same `TerrainField`. The fallback is logged as a warning
+  and shown as "FALLBACK MESH" in the debug overlay.
 - Picking ("region under cursor") uses `TerrainRaycaster` on the `TerrainField`, not Terrain3D
   physics, so it behaves the same on both backends. Terrain3D collision is disabled.
 - Vendoring: only the runtime desktop subset is committed under `game/addons/terrain_3d`:
@@ -50,8 +40,6 @@ has no built-in terrain system.
 - Negative: about 21 MB of native binaries in the repository, and every Terrain3D upgrade adds
   more. Git LFS can be adopted if this grows.
 - Negative: dynamic `Call`/`Set` usage is stringly typed. It is confined to one adapter class.
-- Negative: every Terrain3D upgrade must re-check the shader patch. Unit tests pin the lookups
-  it expects, and an unrecognised shader is reported at startup.
 - Negative: on macOS, unsigned GDExtension binaries may need to be un-quarantined
   (see the Terrain3D platform documentation).
 

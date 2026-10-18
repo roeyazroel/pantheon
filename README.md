@@ -122,7 +122,7 @@ and its status are in [.docs/milestone-1-foundation.md](.docs/milestone-1-founda
 - Without a GPU driver, Godot falls back to Mesa's software Vulkan driver (lavapipe), which
   manages only a few frames per second. Terrain3D 1.0.2's shader crashes that driver. PANTHEON
   patches the shader at runtime to prevent this
-  ([ADR-005](docs/ADR/ADR-005-terrain3d-for-terrain.md)). If a different Terrain3D version
+  ([ADR-007](docs/ADR/ADR-007-terrain3d-shader-patch-and-fallback-reason.md)). If a different Terrain3D version
   cannot be patched, a warning is logged; use `--terrain=fallback` on such machines.
 - macOS may block the unsigned Terrain3D binaries until they are removed from quarantine. See
   Terrain3D's platform documentation.

@@ -156,10 +156,10 @@ Only `game/Pantheon.csproj` references Godot.
   middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`.
 - `Presentation/WorldPresenter`: rebuilds and syncs all world visuals:
   - `Terrain/ITerrainPresenter` with `Terrain3DTerrainPresenter` (primary) and
-    `FallbackMeshTerrainPresenter` (fallback, logged and labelled), chosen by
-    `TerrainPresenterFactory`. The Terrain3D adapter switches Terrain3D to a copy of its
-    generated shader with bounds-safe region lookups and a colour lookup that also covers the
-    world's east and south edges (ADR-005).
+    `FallbackMeshTerrainPresenter` (fallback, logged and labelled with its reason), chosen by
+    `TerrainPresenterFactory` (ADR-005). The Terrain3D adapter switches Terrain3D to a copy of
+    its generated shader with bounds-safe region lookups and a colour lookup that also covers the
+    world's east and south edges (ADR-007, which amends ADR-005).
   - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`)
     tinted by a baked depth map, so it does not read the depth buffer. Waves flatten and the
     surface gets rougher with camera distance, which avoids flickering sun glints.

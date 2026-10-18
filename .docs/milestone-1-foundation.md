@@ -93,13 +93,13 @@ sets `dotnet/project/solution_directory="../"` so the editor uses the root `Pant
 - Presentation: `TerrainPresenterFactory` returns `Terrain3DTerrainPresenter` when
   `ClassDB.ClassExists("Terrain3D")`, otherwise `FallbackMeshTerrainPresenter`. The fallback
   carries its reason ("Terrain3D unavailable" or "forced by --terrain=fallback"), which appears in
-  the log, in the overlay's terrain line and next to a "FALLBACK TERRAIN RENDERER" badge.
-  Terrain3D receives a height image (FORMAT_RF), a biome colour map (FORMAT_RGBA8) and one
-  procedural ground texture asset.
-- Terrain3D shader patch: `Terrain3DTerrainPresenter` enables the material's shader override,
-  which copies the generated code. It then applies `Terrain3DShaderPatch.Apply` and assigns the
-  result. Unrecognised code keeps the stock shader and logs a warning. The patch fixes two
-  Terrain3D 1.0.2 defects:
+  the log, in the overlay's terrain line and next to a "FALLBACK TERRAIN RENDERER" badge
+  (ADR-007). Terrain3D receives a height image (FORMAT_RF), a biome colour map (FORMAT_RGBA8)
+  and one procedural ground texture asset.
+- Terrain3D shader patch (ADR-007, which amends ADR-005): `Terrain3DTerrainPresenter` enables
+  the material's shader override, which copies the generated code. It then applies
+  `Terrain3DShaderPatch.Apply` and assigns the result. Unrecognised code keeps the stock shader
+  and logs a warning. The patch fixes two Terrain3D 1.0.2 defects:
   - The shader reads `_region_map[pos.y * _region_map_size + pos.x]` before it discards
     positions outside the region map. Mesa's software Vulkan driver (lavapipe) does not
     bounds-check uniform arrays. A pixel with an extreme UV therefore reads about 4 GB past the
@@ -512,14 +512,15 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Discovered: remove the pale line along the world's east and south edges (Terrain3D's half-texel colour lookup), with `Terrain3DShaderPatch` (unit tests, edge captures on both backends, smoke capture comparison).
 - [x] README: requirements, setup, tests, controls, options, saves, known issues, third-party code.
 - [x] Open the PR ([#1](https://github.com/roeyazroel/pantheon/pull/1)).
+- [x] Coding rules: stop editing accepted ADRs in place. ADR-005 is restored, the shader patch and
+  fallback labelling are recorded as ADR-007 (amends ADR-005), and `docs/ADR/README.md` states
+  how decisions change.
 
 ### In Progress
 
 Added by the owner's coding rules (spec §134):
 
 - [ ] Write the rules down for every contributor in `AGENTS.md`, and link it from the README.
-- [ ] Stop editing accepted ADRs in place. Restore ADR-005, record the shader patch and fallback
-  labelling as ADR-007 (amends ADR-005), and state in `docs/ADR/README.md` how decisions change.
 - [ ] Enforce the checkable rules with `ArchitectureRulesTests` (layering, no Godot in core, no
   unseeded randomness or clock in core, GDExtensions for all three desktop platforms).
 - [ ] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
