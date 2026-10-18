@@ -61,7 +61,9 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
         terrain.Set("vertex_spacing", field.Spacing);
         terrain.Call("set_camera", _camera);
         terrain.Set("assets", CreateAssets());
-        terrain.Get("material").AsGodotObject().Set("world_background", WorldBackgroundNone);
+        var material = terrain.Get("material").AsGodotObject();
+        material.Set("world_background", WorldBackgroundNone);
+        UsePatchedShader(material);
         ImportMaps(terrain, field, palette);
 
         BackendName = $"{TerrainClass} {terrain.Get("version").AsString()}";
@@ -69,6 +71,28 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
 
     /// <inheritdoc />
     public void Clear() => _parent.FreeChildren();
+
+    /// <summary>
+    /// Replaces Terrain3D's shader with a copy whose region lookups stay in bounds
+    /// (<see cref="Terrain3DShaderPatch"/>), or keeps the stock shader when its code is not recognised.
+    /// </summary>
+    /// <param name="material">The terrain's <c>Terrain3DMaterial</c>.</param>
+    private static void UsePatchedShader(GodotObject material)
+    {
+        // Enabling the override copies the code generated for the current material settings, so
+        // this must run after every setting that changes it.
+        material.Call("enable_shader_override", true);
+        if (material.Call("get_shader_override").As<Shader>() is not { } shader
+            || Terrain3DShaderPatch.Apply(shader.Code) is not { } patched)
+        {
+            material.Call("enable_shader_override", false);
+            GD.PushWarning("Terrain3D shader not recognised; using it unpatched, which can crash software Vulkan drivers.");
+            return;
+        }
+
+        shader.Code = patched;
+        material.Call("set_shader_override", shader);
+    }
 
     /// <summary>Imports the height map and the biome colour map; there is no control map, so texture 0 covers everything.</summary>
     private static void ImportMaps(Node3D terrain, TerrainField field, BiomePalette palette)
