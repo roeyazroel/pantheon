@@ -177,7 +177,8 @@ sequenceDiagram
     participant Sched as SimulationScheduler
     participant Engine as SimulationEngine
     participant State as WorldState
-    participant View as WorldPresenter / DebugOverlay
+    participant View as WorldPresenter
+    participant Overlay as DebugOverlay
 
     Godot->>Root: _Process(delta)
     Root->>Session: Update(delta)
@@ -186,7 +187,8 @@ sequenceDiagram
         Sched->>Engine: Step(world)
         Engine->>State: systems mutate state, Tick++
     end
-    Root->>View: Sync(world) + Refresh(DebugPanelModel)
+    Root->>View: Sync(world), SetHoveredRegion(region under cursor)
+    Root->>Overlay: ShowModel(DebugReadout.Build(snapshot)) while visible
 ```
 
 The render frame rate never changes simulation results. Only the number of real seconds
@@ -198,20 +200,24 @@ elapsed (× time scale) determines how many ticks run.
 sequenceDiagram
     participant Player
     participant Root as GameRoot
+    participant Cmd as SessionCommands
     participant Session as GameSession
     participant Save as WorldSaveSerializer
     participant Gen as TerrainGenerator
     participant View as WorldPresenter
 
     Player->>Root: F5 (quicksave)
-    Root->>Session: SaveTo(path)
+    Root->>Cmd: QuickSave(session, path)
+    Cmd->>Session: SaveTo(path)
     Session->>Save: SaveToFile(world)
     Player->>Root: F9 (quickload)
-    Root->>Session: LoadFrom(path)
+    Root->>Cmd: QuickLoad(session, path)
+    Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path) (validates SaveVersion)
     Session->>Gen: Generate(seed, generation settings)
     Session-->>Root: WorldReplaced
     Root->>View: Rebuild(world, terrain)
+    Cmd-->>Root: status line (or the error, with the current world kept)
 ```
 
 ## World generation and terrain backends
