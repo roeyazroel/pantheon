@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using Pantheon.Domain.World;
 
@@ -12,6 +13,16 @@ namespace Pantheon.Game.Launch;
 /// </summary>
 public sealed record LaunchOptions
 {
+    /// <summary>Option names (without the leading <c>--</c>) that <see cref="Parse"/> understands.</summary>
+    public static IReadOnlySet<string> KnownOptions { get; } = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "seed",
+        "load",
+        "terrain",
+        "quit-after-frames",
+        "screenshot",
+    };
+
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
     public static WorldSeed DefaultSeed { get; } = new(1234);
 
@@ -71,9 +82,15 @@ public sealed record LaunchOptions
         return separator < 0 ? (body, null) : (body[..separator], body[(separator + 1)..]);
     }
 
-    /// <summary>Applies one option, recording a warning when its value is missing or invalid.</summary>
+    /// <summary>Applies one option, recording a warning when it is unknown or its value is missing or invalid.</summary>
     private static LaunchOptions Apply(LaunchOptions options, string name, string? value, List<string> warnings)
     {
+        if (!KnownOptions.Contains(name))
+        {
+            warnings.Add($"Ignoring unknown option '--{name}'.");
+            return options;
+        }
+
         if (string.IsNullOrWhiteSpace(value))
         {
             warnings.Add($"Option '--{name}' needs a value.");
@@ -105,8 +122,7 @@ public sealed record LaunchOptions
             case "screenshot":
                 return options with { ScreenshotPath = value };
             default:
-                warnings.Add($"Ignoring unknown option '--{name}'.");
-                return options;
+                throw new UnreachableException($"Option '--{name}' is listed in {nameof(KnownOptions)} but not handled.");
         }
     }
 

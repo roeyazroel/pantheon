@@ -58,4 +58,12 @@ public sealed class LaunchOptionsTests
         Assert.Null(options.Seed);
         Assert.Equal(5, options.Warnings.Count);
     }
+
+    [Fact]
+    public void LaunchOptions_ReportsUnknownOptionsBeforeMissingValues()
+    {
+        var options = LaunchOptions.Parse(["--wat"]);
+
+        Assert.Equal("Ignoring unknown option '--wat'.", Assert.Single(options.Warnings));
+    }
 }
