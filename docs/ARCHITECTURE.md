@@ -140,19 +140,28 @@ Only `game/Pantheon.csproj` references Godot.
   with exponential smoothing, pitch from zoom, bounds, terrain clearance, and the zoom bands
   Close (≤ 120 m), Regional (≤ 700 m) and Strategic (≤ 2600 m).
 - `Diagnostics/DebugReadout`: formats the debug overlay model from state (pure).
-- `Launch/LaunchOptions`: parses user arguments `--seed=`, `--load=` and `--terrain=auto|fallback`.
+- `Launch/LaunchOptions`: parses user arguments `--seed=`, `--load=`,
+  `--terrain=auto|terrain3d|fallback`, `--quit-after-frames=` and `--screenshot=`. Bad input
+  becomes a warning, never an error.
+- `Presentation/*`: engine-agnostic presentation data shared by both terrain renderers (colour
+  map, fallback mesh chunks, water depth map, region lines, hut layout, labels) and
+  `Terrain3DShaderPatch`.
 
 ### Godot client (`game/Scripts`, namespace `Pantheon.Client`)
 
 - `Bootstrap/GameRoot`: composition root. Loads content, creates the session, wires
   presenters, camera and overlay, routes hotkeys and picks the region under the cursor.
+  `Bootstrap/SmokeTestDriver` implements `--quit-after-frames` and `--screenshot`.
 - `Camera/GodCameraController`: maps input (WASD, edge scroll, right-drag grab, wheel, Q/E,
   middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`.
 - `Presentation/WorldPresenter`: rebuilds and syncs all world visuals:
   - `Terrain/ITerrainPresenter` with `Terrain3DTerrainPresenter` (primary) and
     `FallbackMeshTerrainPresenter` (fallback, logged and labelled), chosen by
-    `TerrainPresenterFactory`.
-  - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`).
+    `TerrainPresenterFactory`. The Terrain3D adapter switches Terrain3D to a copy of its
+    generated shader with bounds-safe region lookups (ADR-005).
+  - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`)
+    tinted by a baked depth map, so it does not read the depth buffer. Waves flatten and the
+    surface gets rougher with camera distance, which avoids flickering sun glints.
   - `Settlements/SettlementPresenter`: procedural huts (MultiMesh), shrine and name/population label.
   - `Regions/RegionBoundaryOverlay`: region grid lines draped on the terrain, plus a hover highlight.
 - `UI/DebugOverlay`: FPS, tick, seed, terrain backend, camera band, region under cursor,
@@ -216,7 +225,8 @@ flowchart TD
     SF --> WS["WorldState"]
     TF --> TPF{"ClassDB has Terrain3D?"}
     TPF -- yes --> T3["Terrain3DTerrainPresenter<br/>import_images(height, -, colour)"]
-    TPF -- "no, or --terrain=fallback" --> FB["FallbackMeshTerrainPresenter<br/>(clearly marked)"]
+    T3 --> SP["Terrain3DShaderPatch<br/>bounds-safe region lookups"]
+    TPF -- "no, or --terrain=fallback" --> FB["FallbackMeshTerrainPresenter<br/>(clearly marked, with reason)"]
 ```
 
 Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 × 32 regions of
@@ -232,10 +242,12 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
 ## Testing
 
 - `src/Pantheon.Tests` (xUnit) covers determinism, save/load round trips, save versioning, RNG,
-  the scheduler, the raycaster, the camera model, content parsing and launch options. The tests
-  load the shipped `game/Data/*.json`.
-- The Godot client is verified by building the solution and running the main scene (headless
-  and windowed).
+  the scheduler, the raycaster, the camera model and edge scrolling, session commands, content
+  parsing, launch options, presentation helpers and the Terrain3D shader patch. The tests load
+  the shipped `game/Data/*.json`.
+- The Godot client is verified by building the solution and running the main scene, headless
+  and windowed. `--quit-after-frames=<n> --screenshot=<file>` gives a scripted smoke run that
+  saves a frame capture.
 
 ## Extending (later milestones)
 

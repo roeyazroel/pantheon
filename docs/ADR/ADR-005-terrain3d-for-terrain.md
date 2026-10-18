@@ -20,10 +20,15 @@ has no built-in terrain system.
   from `WorldState` on load (ADR-006).
 - Terrain3D is accessed only inside `Terrain3DTerrainPresenter`, using `ClassDB.Instantiate`,
   `GodotObject.Call` and `Set`, behind the `ITerrainPresenter` adapter.
+- The adapter renders with a patched copy of Terrain3D's generated shader. Terrain3D 1.0.2 reads
+  `_region_map[...]` before it discards positions outside the region map. Mesa's software Vulkan
+  driver (lavapipe) does not bounds-check uniform arrays, so that read crashes it.
+  `Terrain3DShaderPatch` clamps the index; results the shader keeps are unchanged. If the
+  generated code is not recognised, the stock shader is used and a warning is logged.
 - **Fallback:** when the `Terrain3D` class is not registered (missing or incompatible binaries,
   unsupported platform) or `--terrain=fallback` is passed, `FallbackMeshTerrainPresenter` builds
-  a vertex-coloured `ArrayMesh` from the same `TerrainField`. The fallback is logged as a warning
-  and shown as "FALLBACK MESH" in the debug overlay.
+  a vertex-coloured `ArrayMesh` from the same `TerrainField`. The fallback is logged with its
+  reason, and the debug overlay shows a "FALLBACK TERRAIN RENDERER" badge and the reason.
 - Picking ("region under cursor") uses `TerrainRaycaster` on the `TerrainField`, not Terrain3D
   physics, so it behaves the same on both backends. Terrain3D collision is disabled.
 - Vendoring: only the runtime desktop subset is committed under `game/addons/terrain_3d`:
@@ -40,6 +45,8 @@ has no built-in terrain system.
 - Negative: about 21 MB of native binaries in the repository, and every Terrain3D upgrade adds
   more. Git LFS can be adopted if this grows.
 - Negative: dynamic `Call`/`Set` usage is stringly typed. It is confined to one adapter class.
+- Negative: every Terrain3D upgrade must re-check the shader patch. A unit test pins the lookup
+  it expects, and an unrecognised shader is reported at startup.
 - Negative: on macOS, unsigned GDExtension binaries may need to be un-quarantined
   (see the Terrain3D platform documentation).
 
