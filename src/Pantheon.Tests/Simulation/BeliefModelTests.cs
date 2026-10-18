@@ -12,8 +12,8 @@ namespace Pantheon.Tests.Simulation;
 public sealed class BeliefModelTests
 {
     private static readonly DivineRules Rules = DivineWorlds.Rules;
-    private static readonly SettlementConditions Safe = new(Hardship: 0f, Comfort: 1f, FoodNeed: 0f, HealthNeed: 0f);
-    private static readonly SettlementConditions Famine = new(Hardship: 1f, Comfort: 0f, FoodNeed: 1f, HealthNeed: 0.5f);
+    private static readonly SettlementConditions Safe = new(Hardship: 0f, Comfort: 1f, FoodNeed: 0f, HealthNeed: 0f, WaterNeed: 0f);
+    private static readonly SettlementConditions Famine = new(Hardship: 1f, Comfort: 0f, FoodNeed: 1f, HealthNeed: 0.5f, WaterNeed: 0f);
 
     [Fact]
     public void Fear_DecreasesAfterProlongedSafety()
@@ -128,7 +128,7 @@ public sealed class BeliefModelTests
         settlement.Food = 50f;
         settlement.Health = 0.7f;
 
-        var conditions = BeliefModel.AssessConditions(Rules, settlement);
+        var conditions = BeliefModel.AssessConditions(Rules, settlement, drought: 0f);
 
         // 100 people want 200 food in store: a quarter is there.
         Assert.Equal(0.75f, conditions.FoodNeed, 4);

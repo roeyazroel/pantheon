@@ -11,4 +11,7 @@ public enum MiracleNeed
 
     /// <summary>Illness: the lower the health, the greater the need.</summary>
     Health,
+
+    /// <summary>Drought: the drier the farmland, the greater the need.</summary>
+    Water,
 }

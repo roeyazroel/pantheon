@@ -41,6 +41,12 @@ public sealed record HudModel
     /// <summary>Whether the contest line is good news for the player.</summary>
     public bool ContestFavoursPlayer { get; init; }
 
+    /// <summary>The weather when it matters (a dry or wet spell, droughts or storms among your people), or <c>null</c>.</summary>
+    public string? Weather { get; init; }
+
+    /// <summary>Whether <see cref="Weather"/> is a warning: a dry spell, a drought or a storm among your people.</summary>
+    public bool WeatherWarning { get; init; }
+
     /// <summary>The Creature's card, or <c>null</c> when the god has no Creature.</summary>
     public CreatureCard? Creature { get; init; }
 }

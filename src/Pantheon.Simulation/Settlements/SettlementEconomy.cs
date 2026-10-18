@@ -16,7 +16,7 @@ public static class SettlementEconomy
     /// <param name="grid">Region grid.</param>
     /// <param name="regionId">The settlement's region.</param>
     /// <param name="radius">Farmland radius in regions; 0 is the settlement's own region only.</param>
-    /// <returns>The number of farmable regions and their mean fertility and blessing. The square is clipped at the grid edge.</returns>
+    /// <returns>The number of farmable regions and their mean fertility, blessing and soil moisture. The square is clipped at the grid edge.</returns>
     public static FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius)
     {
         ArgumentNullException.ThrowIfNull(grid);
@@ -27,6 +27,7 @@ public static class SettlementEconomy
         var count = 0;
         var fertility = 0f;
         var blessing = 0f;
+        var soil = 0f;
         for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
         {
             for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
@@ -37,11 +38,12 @@ public static class SettlementEconomy
                     count++;
                     fertility += SimMath.Clamp01(region.Fertility);
                     blessing += SimMath.Clamp01(region.Blessing);
+                    soil += SimMath.Clamp01(region.SoilMoisture);
                 }
             }
         }
 
-        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count) : new FarmlandSurvey(0, 0f);
+        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count) : new FarmlandSurvey(0, 0f);
     }
 
     /// <summary>Whether a region can be farmed: dry land with fertile soil.</summary>
@@ -155,10 +157,46 @@ public static class SettlementEconomy
     }
 
     /// <summary>
+    /// How dry the farmland is (ADR-013): 0 while its mean soil moisture is at least
+    /// <see cref="SettlementRules.WellWateredSoil"/>, rising to 1 on parched soil.
+    /// </summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="land">The land being farmed.</param>
+    /// <returns>Drought (0..1).</returns>
+    public static float ComputeDrought(SettlementRules rules, FarmlandSurvey land)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        return 1f - Math.Min(1f, SimMath.Clamp01(land.MeanSoilMoisture) / rules.WellWateredSoil);
+    }
+
+    /// <summary>How dry a settlement's farmland is now (0..1, <see cref="ComputeDrought"/>).</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="regions">Region grid.</param>
+    /// <param name="settlement">The settlement.</param>
+    /// <returns>Drought (0..1).</returns>
+    public static float DroughtOf(SettlementRules rules, RegionGrid regions, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(settlement);
+        return ComputeDrought(rules, SurveyFarmland(regions, settlement.RegionId, rules.FarmlandRadius));
+    }
+
+    /// <summary>Share of the full yield the farmland's water allows: 1 when well watered, down to <see cref="SettlementRules.DroughtYieldFloor"/> when parched.</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="land">The land being farmed.</param>
+    /// <returns>Yield factor (0..1).</returns>
+    public static float ComputeWaterYield(SettlementRules rules, FarmlandSurvey land)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        return 1f - ((1f - rules.DroughtYieldFloor) * ComputeDrought(rules, land));
+    }
+
+    /// <summary>
     /// Food harvested in one step with diminishing returns:
     /// <c>FoodPerFarmerPerStep * meanFertility * capacity * (1 - e^(-farmers / capacity))</c>, where
-    /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>.
-    /// A few farmers each harvest about <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
+    /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>
+    /// and times the water yield (<see cref="ComputeWaterYield"/>). A few farmers each harvest about
+    /// <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="farmers">Workers in the fields.</param>
@@ -175,7 +213,7 @@ public static class SettlementEconomy
 
         var maximumYield = rules.FoodPerFarmerPerStep * SimMath.Clamp01(land.MeanFertility) * capacity;
         var blessing = 1f + (rules.BlessingYieldBonus * SimMath.Clamp01(land.MeanBlessing));
-        return maximumYield * blessing * (1f - MathF.Exp(-farmers / capacity));
+        return maximumYield * blessing * ComputeWaterYield(rules, land) * (1f - MathF.Exp(-farmers / capacity));
     }
 
     /// <summary>Share of the population's food need that is met.</summary>

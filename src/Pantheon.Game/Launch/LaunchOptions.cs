@@ -33,6 +33,7 @@ public sealed record LaunchOptions
         "select",
         "judge",
         "diplomacy-panel",
+        "weather",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -85,6 +86,9 @@ public sealed record LaunchOptions
 
     /// <summary>Whether the F1 debug panel starts visible.</summary>
     public bool? DebugPanel { get; init; }
+
+    /// <summary>Weather set up at the start: a spell, or a storm over the focused settlement.</summary>
+    public WeatherAtStart? Weather { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -173,7 +177,7 @@ public sealed record LaunchOptions
             case "overlay":
                 return Enum.TryParse<OverlayKind>(value, ignoreCase: true, out var overlay) && Enum.IsDefined(overlay)
                     ? options with { Overlay = overlay }
-                    : Warn(options, warnings, $"Unknown overlay '{value}'; expected influence, faith or food.");
+                    : Warn(options, warnings, $"Unknown overlay '{value}'; expected influence, religion, faith, food or weather.");
             case "focus":
                 if (string.Equals(value.Trim(), "creature", StringComparison.OrdinalIgnoreCase))
                 {
@@ -199,6 +203,10 @@ public sealed record LaunchOptions
                     "off" => options with { DiplomacyPanel = false },
                     _ => Warn(options, warnings, $"'--diplomacy-panel' needs on or off, got '{value}'."),
                 };
+            case "weather":
+                return Enum.TryParse<WeatherAtStart>(value.Trim(), ignoreCase: true, out var weather) && Enum.IsDefined(weather)
+                    ? options with { Weather = weather }
+                    : Warn(options, warnings, $"'--weather' needs normal, dry, wet or storm, got '{value}'.");
             case "debug-panel":
                 return value.Trim().ToLowerInvariant() switch
                 {

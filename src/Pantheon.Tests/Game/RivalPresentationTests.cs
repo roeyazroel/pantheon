@@ -78,8 +78,8 @@ public sealed class RivalPresentationTests
         DivineWorlds.Believe(world.Settlements[1], adherence: 0.8f, faith: 1f, godId: RivalWorlds.RivalId);
         var view = TestContent.DivineView;
 
-        var influence = OverlayMap.Build(world, OverlayKind.Influence, 1, DivineWorlds.Rules, view);
-        var religion = OverlayMap.Build(world, OverlayKind.Religion, 1, DivineWorlds.Rules, view);
+        var influence = OverlayMap.Build(world, OverlayKind.Influence, 1, DivineWorlds.Rules, SettlementWorlds.Rules, view);
+        var religion = OverlayMap.Build(world, OverlayKind.Religion, 1, DivineWorlds.Rules, SettlementWorlds.Rules, view);
 
         foreach (var image in new[] { influence, religion })
         {

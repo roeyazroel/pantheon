@@ -111,13 +111,19 @@ public static class InputActions
     /// <summary>Debug migration: settlers arrive in every settlement (F7).</summary>
     public static readonly StringName DebugAddSettlers = "debug_add_settlers";
 
+    /// <summary>Debug weather: start the next spell, normal, dry or wet (F8).</summary>
+    public static readonly StringName DebugWeatherSpell = "debug_weather_spell";
+
+    /// <summary>Debug weather: call a storm at the cursor (F10).</summary>
+    public static readonly StringName DebugStorm = "debug_storm";
+
     /// <summary>Every action, used to check the input map at start-up.</summary>
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

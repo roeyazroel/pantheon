@@ -31,6 +31,9 @@ public sealed record DivineRules
     /// <summary>Stored food per person at which a settlement feels secure.</summary>
     public required float ComfortFoodPerPerson { get; init; }
 
+    /// <summary>How much drought counts as hardship (0..1): people fear for the harvest before the stores run out (ADR-013).</summary>
+    public required float DroughtWorry { get; init; }
+
     /// <summary>Faith gained per step by a settlement that wholly follows the god, closing that share of the gap to 1.</summary>
     public required float FaithFromWorship { get; init; }
 

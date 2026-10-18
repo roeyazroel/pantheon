@@ -31,4 +31,11 @@ public sealed class RegionState
 
     /// <summary>Divine blessing of the land (0..1) from miracles; blessed farmland yields more, and it fades.</summary>
     public required float Blessing { get; set; }
+
+    /// <summary>
+    /// Water in the soil now (0 = parched, 1 = soaked), unlike <see cref="Moisture"/>, which is the
+    /// region's climate. Rain raises it, warmth dries it, springs refill it, and dry farmland yields
+    /// less (ADR-013).
+    /// </summary>
+    public required float SoilMoisture { get; set; }
 }

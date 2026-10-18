@@ -6,10 +6,12 @@ using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Settlements;
+using Pantheon.Simulation.Weather;
 
 namespace Pantheon.Simulation.Miracles;
 
@@ -21,22 +23,25 @@ namespace Pantheon.Simulation.Miracles;
 /// </summary>
 public sealed class MiracleCaster
 {
-    // A miracle counts as help to a rival's followers only when their food or health need is at least this.
+    // A miracle counts as help to a rival's followers only when their food, health or water need is at least this.
     private const float NeedForHelp = 0.5f;
 
     private readonly DivineRules _rules;
     private readonly SettlementRules _settlementRules;
     private readonly MiracleBook _book;
     private readonly IActRecorder? _ledger;
+    private readonly WeatherRules? _weather;
 
     /// <summary>Creates a caster over validated content.</summary>
     /// <param name="rules">Divine rules.</param>
-    /// <param name="settlementRules">Settlement rules, for food storage.</param>
+    /// <param name="settlementRules">Settlement rules, for food storage and the drought.</param>
     /// <param name="book">The miracles.</param>
     /// <param name="ledger">Where the gods whose followers a miracle reaches note it (ADR-012); <c>null</c> for none.</param>
-    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null)
+    /// <param name="weather">Weather rules, for the clouds Rain calls (ADR-013); <c>null</c> where there is no weather, and Rain then calls none.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null)
     {
         _ledger = ledger;
+        _weather = weather;
         DivineRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
         ArgumentNullException.ThrowIfNull(book);
@@ -144,11 +149,11 @@ public sealed class MiracleCaster
         foreach (var settlement in world.Settlements)
         {
             var distance = Distance(settlement.Position, request.Target);
-            var conditions = BeliefModel.AssessConditions(_rules, settlement);
+            var conditions = AssessConditions(world, settlement);
             if (distance <= reach)
             {
                 affected.Add(settlement.Id);
-                needs[settlement.Id] = Math.Max(conditions.FoodNeed, conditions.HealthNeed);
+                needs[settlement.Id] = Math.Max(Math.Max(conditions.FoodNeed, conditions.HealthNeed), conditions.WaterNeed);
                 deaths += ApplyEffects(miracle, settlement);
             }
 
@@ -162,6 +167,7 @@ public sealed class MiracleCaster
         NoteByRivals(world, miracle, god.Id, affected, needs);
 
         ApplyRegionEffects(miracle, world.Regions, request.Target);
+        CallRain(world, miracle, god.Id, request.Target);
         events.Add(new MiracleCast
         {
             Tick = world.Tick,
@@ -173,6 +179,16 @@ public sealed class MiracleCaster
             Deaths = deaths,
         });
         return check;
+    }
+
+    /// <summary>How a settlement is faring, drought included: the conditions that decide how much a miracle is needed.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="settlement">The settlement.</param>
+    /// <returns>Its conditions.</returns>
+    public SettlementConditions AssessConditions(WorldState world, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        return BeliefModel.AssessConditions(_rules, settlement, SettlementEconomy.DroughtOf(_settlementRules, world.Regions, settlement));
     }
 
     /// <summary>The settlements a miracle cast at a target would reach: those whose footprint lies within its radius.</summary>
@@ -252,6 +268,7 @@ public sealed class MiracleCaster
                     deaths += killed;
                     break;
                 case MiracleEffectKind.Bless:
+                case MiracleEffectKind.Rain:
                     break;
             }
         }
@@ -275,6 +292,23 @@ public sealed class MiracleCaster
                 {
                     region.Blessing = Math.Max(region.Blessing, SimMath.Clamp01(effect.Amount));
                 }
+            }
+        }
+    }
+
+    /// <summary>Calls the rain cloud of every Rain effect over the target (ADR-013).</summary>
+    private void CallRain(WorldState world, MiracleDefinition miracle, int godId, GroundPosition target)
+    {
+        if (_weather is null)
+        {
+            return;
+        }
+
+        foreach (var effect in miracle.Effects)
+        {
+            if (effect.Kind == MiracleEffectKind.Rain)
+            {
+                WeatherModel.Summon(_weather, world, target, miracle.Radius, effect.Amount, godId);
             }
         }
     }

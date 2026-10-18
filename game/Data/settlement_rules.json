@@ -15,6 +15,13 @@
   "BlessingYieldBonus": 0.6,
   "WorshipWorkforceShare": 0.15,
 
+  // Water (weather.json, ADR-013): farmland whose mean soil moisture is at least WellWateredSoil
+  // yields fully; drier land yields less, down to DroughtYieldFloor of it when parched. The drought
+  // is 1 - soil / WellWateredSoil, and a settlement is in drought from DroughtThreshold.
+  "WellWateredSoil": 0.35,
+  "DroughtYieldFloor": 0.25,
+  "DroughtThreshold": 0.35,
+
   // Food.
   "FoodPerPersonPerStep": 0.05,
   "FoodStoragePerHousing": 8.0,

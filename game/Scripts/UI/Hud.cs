@@ -24,6 +24,7 @@ public partial class Hud : CanvasLayer
     private static readonly Color Valid = new(0.6f, 0.95f, 0.6f);
     private static readonly Color Invalid = new(1f, 0.55f, 0.45f);
     private static readonly Color Muted = new(0.62f, 0.62f, 0.6f);
+    private static readonly Color Warning = new(1f, 0.78f, 0.45f);
 
     private readonly List<Button> _slots = [];
     private readonly List<string> _slotIds = [];
@@ -36,6 +37,7 @@ public partial class Hud : CanvasLayer
     private Label _overlayLegend = null!;
     private Label _rivals = null!;
     private Label _contest = null!;
+    private Label _weather = null!;
     private HBoxContainer _bar = null!;
     private VBoxContainer _alerts = null!;
     private StyleBoxFlat _slotStyle = null!;
@@ -94,6 +96,9 @@ public partial class Hud : CanvasLayer
         SetText(_contest, model.Contest ?? string.Empty);
         _contest.Visible = model.Contest is not null;
         _contest.Modulate = model.ContestFavoursPlayer ? Valid : Invalid;
+        SetText(_weather, model.Weather ?? string.Empty);
+        _weather.Visible = model.Weather is not null;
+        _weather.Modulate = model.WeatherWarning ? Warning : Ink;
     }
 
     /// <summary>Shows the legend of the map overlay, or hides it.</summary>
@@ -154,6 +159,8 @@ public partial class Hud : CanvasLayer
         _rivals.HorizontalAlignment = HorizontalAlignment.Center;
         _contest = AddLabel(column, 15, Ink);
         _contest.HorizontalAlignment = HorizontalAlignment.Center;
+        _weather = AddLabel(column, 14, Ink);
+        _weather.HorizontalAlignment = HorizontalAlignment.Center;
         _overlayLegend = AddLabel(column, 14, Muted);
         _overlayLegend.HorizontalAlignment = HorizontalAlignment.Center;
         _overlayLegend.Visible = false;

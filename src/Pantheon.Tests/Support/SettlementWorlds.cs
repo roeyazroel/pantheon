@@ -32,6 +32,9 @@ internal static class SettlementWorlds
         FarmlandRadius = 2,
         FarmersPerRegion = 12f,
         BlessingYieldBonus = 0.6f,
+        WellWateredSoil = 0.3f,
+        DroughtYieldFloor = 0.25f,
+        DroughtThreshold = 0.35f,
         WorshipWorkforceShare = 0.15f,
         FoodPerFarmerPerStep = 0.3f,
         FoodPerPersonPerStep = 0.05f,
@@ -80,6 +83,7 @@ internal static class SettlementWorlds
                 Fertility = fertility,
                 Vegetation = 0.5f,
                 Blessing = 0f,
+                SoilMoisture = 0.5f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -110,6 +114,7 @@ internal static class SettlementWorlds
             Gods = [],
             Creatures = [],
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
+            Weather = WeatherWorlds.Calm(),
             WinnerGodId = null,
         };
     }

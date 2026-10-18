@@ -5,6 +5,7 @@ using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game.Divine;
 using Pantheon.Simulation.Belief;
@@ -128,6 +129,14 @@ public sealed class AlertFeed
                     : (Key("victory", winner.Id), Format("{0} has won the world's belief.", winner.Name), AlertSeverity.Danger, null);
             case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
                 return DescribeChange(changed, creature);
+            case WeatherSpellChanged spell:
+                return DescribeSpell(spell);
+            case DroughtChanged drought when Settlement(world, drought.SettlementId) is { } settlement && Concerns(settlement, localGodId):
+                return drought.Started
+                    ? (Key("drought", settlement.Id), Format("Drought in {0}: its crops wither. Rain would help.", settlement.Name), AlertSeverity.Warning, settlement.Position)
+                    : (Key("rained", settlement.Id), Format("The drought in {0} is over.", settlement.Name), AlertSeverity.Good, settlement.Position);
+            case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
+                return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             default:
                 return null;
         }
@@ -176,6 +185,16 @@ public sealed class AlertFeed
 
         return null;
     }
+
+    /// <summary>A new weather spell: a warning for a dry spell, news for a wet one, relief when a dry spell ends.</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeSpell(WeatherSpellChanged spell) => spell.Spell switch
+    {
+        WeatherSpell.Dry => (Key("spell", (int)spell.Spell), "A dry spell begins: little rain will fall, and the land will dry out.", AlertSeverity.Warning, null),
+        WeatherSpell.Wet => (Key("spell", (int)spell.Spell), "A wet spell begins: rain will fall often, and storms are likely.", AlertSeverity.Info, null),
+        WeatherSpell.Normal => spell.Previous == WeatherSpell.Dry
+            ? (Key("spell", (int)spell.Spell), "The dry spell is over: the rains return.", AlertSeverity.Good, null)
+            : null,
+    };
 
     /// <summary>A god began or ceased to dominate the world's belief.</summary>
     private static (string, string, AlertSeverity, GroundPosition?)? DescribeDominance(DominanceChanged dominance, Domain.Gods.GodState god, int? localGodId)

@@ -4,6 +4,7 @@ using Pantheon.Domain.Belief;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Settlements;
 
 namespace Pantheon.Game.Presentation;
 
@@ -18,6 +19,21 @@ public static class SettlementLabel
         ArgumentNullException.ThrowIfNull(settlement);
         var people = settlement.Population == 1 ? "person" : "people";
         return string.Create(CultureInfo.InvariantCulture, $"{settlement.Name}\n{settlement.Population} {people}");
+    }
+
+    /// <summary>
+    /// Formats the settlement name, its population, the share of it that follows its main god and,
+    /// when its farmland is in drought, a third line saying so (ADR-013).
+    /// </summary>
+    /// <param name="settlement">Settlement.</param>
+    /// <param name="world">World, for god names and the soil.</param>
+    /// <param name="rules">Settlement rules, for the drought.</param>
+    /// <returns>Label text, for example "Elar\n38 people · Ilyra 42%\ndrought".</returns>
+    public static string Format(SettlementState settlement, WorldState world, SettlementRules rules)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        var text = Format(settlement, world);
+        return SettlementEconomy.DroughtOf(rules, world.Regions, settlement) >= rules.DroughtThreshold ? text + "\ndrought" : text;
     }
 
     /// <summary>Formats the settlement name, its population and the share of it that follows its main god.</summary>

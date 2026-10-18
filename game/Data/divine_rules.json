@@ -13,8 +13,10 @@
   "FearWorshipIntensity": 0.6,
   "ShrineInfrastructure": 1.0,
 
-  // Conditions: hardship is the worse of ill health and hunger (stores below ComfortFoodPerPerson per person).
+  // Conditions: hardship is the worst of ill health, hunger (stores below ComfortFoodPerPerson per
+  // person) and DroughtWorry x the drought of the farmland.
   "ComfortFoodPerPerson": 2.0,
+  "DroughtWorry": 0.5,
 
   // Drift: Faith grows with worship, erodes with Doubt and is forgotten by non-followers; Love grows among comfortable followers,
   // fades and wears down in hardship; Fear fades in safety; Doubt drifts towards SilenceDoubt and

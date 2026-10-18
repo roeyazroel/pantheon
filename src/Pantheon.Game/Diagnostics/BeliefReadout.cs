@@ -5,6 +5,7 @@ using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Divine;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Settlements;
 
 namespace Pantheon.Game.Diagnostics;
 
@@ -72,7 +73,7 @@ internal static class BeliefReadout
     {
         var rules = snapshot.DivineRules;
         var stepsPerSecond = snapshot.TicksPerSecond / rules.StepIntervalTicks;
-        var conditions = BeliefModel.AssessConditions(rules, settlement);
+        var conditions = BeliefModel.AssessConditions(rules, settlement, SettlementEconomy.DroughtOf(snapshot.SettlementRules, snapshot.World.Regions, settlement));
         lines.Add(Format(
             "  belief: {0:0%} follow no god   hardship {1:0.00}   comfort {2:0.00}",
             1f - BeliefModel.TotalAdherence(settlement.Beliefs),

@@ -38,6 +38,7 @@ internal static class WorldAssert
             Assert.Equal(e.Fertility, a.Fertility);
             Assert.Equal(e.Vegetation, a.Vegetation);
             Assert.Equal(e.Blessing, a.Blessing);
+            Assert.Equal(e.SoilMoisture, a.SoilMoisture);
         }
 
         Assert.Equal(expected.Settlements.Count, actual.Settlements.Count);

@@ -43,6 +43,7 @@ public sealed class SaveMigrationV5Tests
     {
         var expected = ReadFixture();
         Version6Expectations.Apply(expected);
+        Version7Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version5SavePath)));
 
@@ -53,7 +54,7 @@ public sealed class SaveMigrationV5Tests
     public void LoadVersion5_KeepsPlayingTheSameWay()
     {
         var content = TestContent.Shipped;
-        var engine = new Pantheon.Simulation.Systems.SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy);
+        var engine = new Pantheon.Simulation.Systems.SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather);
         var straight = WorldSaveSerializer.LoadFromFile(Version5SavePath);
         var resumed = WorldSaveSerializer.LoadFromFile(Version5SavePath);
 

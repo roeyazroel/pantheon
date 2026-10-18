@@ -112,7 +112,7 @@ public sealed class LaunchOptionsTests
     [Fact]
     public void LaunchOptions_WarnsAboutInvalidDivineOptions()
     {
-        var options = LaunchOptions.Parse(["--divine-power=-1", "--overlay=weather", "--focus=0", "--debug-panel=maybe"]);
+        var options = LaunchOptions.Parse(["--divine-power=-1", "--overlay=rainfall", "--focus=0", "--debug-panel=maybe"]);
 
         Assert.Null(options.DivinePower);
         Assert.Null(options.Overlay);

@@ -45,6 +45,7 @@ public static class DivineRulesValidator
         }
 
         errors.RequirePositive(rules.ComfortFoodPerPerson, nameof(rules.ComfortFoodPerPerson));
+        errors.RequireShare(rules.DroughtWorry, nameof(rules.DroughtWorry));
         foreach (var (value, name) in new[]
         {
             (rules.FaithFromWorship, nameof(rules.FaithFromWorship)),

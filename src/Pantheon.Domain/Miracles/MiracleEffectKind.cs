@@ -14,4 +14,7 @@ public enum MiracleEffectKind
 
     /// <summary>Kills up to <c>Amount</c> people in each settlement it reaches.</summary>
     Smite,
+
+    /// <summary>Calls a rain cloud of the miracle's radius over the target, carrying <c>Amount</c> humidity (ADR-013).</summary>
+    Rain,
 }

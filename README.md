@@ -47,6 +47,11 @@ attacks. It grows to trust, fear, respect or despise you. Offer an alliance, dec
 peace or break your word. Vael weighs the same moves by its personality, answers your proposals,
 and never forgets a betrayal.
 
+**Milestone 7 (Weather)** brings weather to the island. Clouds blow in from the sea, rain and drift
+away; storms bring wind and lightning. Dry spells parch the farmland until harvests fail, and storms
+ruin stores and building work. A new miracle, Rain, calls a rain cloud wherever you need it, and
+your rival uses it too.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -102,8 +107,11 @@ covers:
 - diplomacy: what each act does to a god's view of another and how long it is remembered,
   friendly and hostile relations, alliances, betrayal, war and peace through the authority's
   checks, what each status changes, and the AI's diplomatic choices with their reasons;
-- the HUD model, alerts, map overlays, the diplomacy panel and the migration of Milestone 1 to 5
-  saves;
+- weather: cells that rain, refill over the sea and drift on the wind, spells, soil water,
+  droughts and storms, the Rain miracle and when the AI calls it, and that the weather is the same
+  every time and across a save and load;
+- the HUD model, alerts, map overlays, the diplomacy panel, the weather's looks and tools, and
+  the migration of Milestone 1 to 6 saves;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -122,7 +130,7 @@ covers:
 | Select a miracle (again to deselect) | 1–9, or click it in the miracle bar |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, religion, faith, food), then off | O |
+| Next map overlay (influence, religion, faith, food, weather), then off | O |
 | Look at the next settlement | F or Home |
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
@@ -140,6 +148,8 @@ covers:
 | Grant your god 500 Divine Power (debug) | F4 |
 | Spoil every settlement's food stores (debug) | F6 |
 | Settlers arrive: every settlement grows by half (debug) | F7 |
+| Start the next weather spell: normal, dry, wet (debug) | F8 |
+| Call a storm at the cursor (debug) | F10 |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
 120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m). The simulation runs at a
@@ -263,6 +273,30 @@ each move you can make now. Your status also ends the rival's line on the HUD.
 The rules are in `game/Data/diplomacy.json`, and each personality's diplomatic weights are in
 `game/Data/god_ai.json`.
 
+## Weather
+
+Weather comes and goes on its own. Clouds blow in from the sea on the prevailing wind, rain on the
+island and thin away as they drift on. Storms are dark, windy and full of lightning. From afar you
+see the clouds; up close you see the rain, and the light dims under a storm.
+
+- **Spells.** The island is in normal weather, a dry spell (little rain, and the land dries out) or
+  a wet spell (frequent rain and storms). During a dry or wet spell the line under your HUD names
+  it and how long it lasts; an alert announces a dry spell and its end.
+- **Water in the soil.** Rain soaks the farmland, warmth dries it (faster in a dry spell), and
+  springs refill it slowly. Press O until the Weather overlay shows: brown land is in drought,
+  yellow has just enough water, blue is soaked.
+- **Drought.** Dry farmland yields less, down to a quarter of its harvest. A village in drought
+  eats through its stores and then goes hungry, and its people worry and doubt before that. Its
+  label says "drought", and the HUD and an alert name it if it follows you.
+- **Storms.** Where storm winds blow, a village loses part of its stored food and the work on its
+  house under construction. An alert tells you when a storm strikes your people.
+- **Rain** (key 6, available from the start). Calls a rain cloud over the target. It rains for a
+  couple of minutes as it drifts slowly with the wind, and people in drought love you for it. Rival
+  gods call rain on their own parched villages, and on yours to win them over.
+
+The rules are in `game/Data/weather.json`; how dry the soil must be for drought is in
+`game/Data/settlement_rules.json`, and how the clouds look is in `game/Data/weather_view.json`.
+
 ## Your Creature
 
 Bramble's card on the left shows its level, what it is doing, its health and needs, its loyalty
@@ -296,11 +330,12 @@ now.
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed, terrain renderer,
   camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now and its top candidate actions with their scores and reasons, its diplomatic moves
-  with the factors behind them, the Creature
+  with the factors behind them, the weather (the spell, the wind and the strongest cells), the
+  Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
   their scores, its learned preferences by situation and its latest memories), the region
-  under the cursor with its statistics and every god's influence there, one line per settlement,
-  and, for the settlement nearest the cursor:
+  under the cursor with its statistics, soil, rain and wind and every god's influence there, one
+  line per settlement, and, for the settlement nearest the cursor:
   - its belief: the share that follows no god, its hardship and comfort, and for each god the
     followers, Faith, Love, Fear, Doubt, worshippers and the power they raise;
   - population / housing, houses and health;
@@ -310,6 +345,7 @@ now.
     next settlement step;
   - the simulation tier, the camera distance that changes it and, in Tier 2, the citizens
     shown and the people each stands for;
+  - its water: its farmland's soil, the drought and the harvest it allows, and the weather over it;
   - warnings when the settlement starves, construction waits for food, or births are blocked.
 - **B** draws the region grid and outlines the region under the cursor.
 - **F3** shows the region debug map in the bottom-left corner, one pixel per region, oriented
@@ -317,8 +353,9 @@ now.
   temperature, moisture, fertility, vegetation, then off. Numeric layers run from dark (the
   lowest value) to bright (the highest), and the legend gives the range. The region under the
   cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
-  vegetation come blessing and your god's influence, both on a fixed 0 to 1 scale.
-- **O** cycles the map overlays: influence, faith and food.
+  vegetation come blessing, your god's influence and the soil's water, all on a fixed 0 to 1
+  scale.
+- **O** cycles the map overlays: influence, religion, faith, food and weather.
 - **F4** grants your god 500 Divine Power.
 - **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
   tick changed. Space resumes.
@@ -326,6 +363,8 @@ now.
   shows what one step changed.
 - **F6** spoils every settlement's food stores and **F7** brings settlers (every settlement
   grows by half, at least 10 people). Use them to drive famines and recoveries.
+- **F8** starts the next weather spell (normal, dry, wet) for its longest length, and **F10** calls
+  a storm at the cursor. Use them to drive droughts and storm damage.
 - The command-line options below reproduce a world (`--seed`, `--load`), force a renderer
   (`--terrain`), start from a grown settlement up close (`--advance-ticks`,
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
@@ -348,11 +387,12 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|religion\|faith\|food` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food\|weather` | Start with a map overlay shown. |
 | `--focus=<n>\|creature` | Start looking at settlement `n` (1 is your home; `--cast` targets it) or at your Creature. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
+| `--weather=normal\|dry\|wet\|storm` | Start in a weather spell, or with a storm over the focused settlement. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -365,7 +405,7 @@ F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a 
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 6`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 7`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -373,22 +413,23 @@ citizens are not saved either; they are derived again after a load. Saves from M
 from Milestones 1 and 2 (versions 1 and 2) get the Milestone 3 god, Ilyra, followed in their one
 settlement. Saves from Milestones 1 to 3 get a newborn Creature, Bramble, for every god. Saves from
 Milestones 1 to 4 stay single-god worlds with nobody to compete with. Saves from Milestones 1 to 5
-start with every pair of gods neutral, with no memories of each other.
+start with every pair of gods neutral, with no memories of each other. Saves from Milestones 1 to 6
+start under clear skies, with each region's soil as moist as its climate.
 
 ## Repository layout
 
 ```text
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                      creatures.json, god_ai.json, diplomacy.json, settlement_view.json, biome_palette.json,
-                      divine_view.json
+                      creatures.json, god_ai.json, diplomacy.json, weather.json, settlement_view.json,
+                      biome_palette.json, divine_view.json, weather_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
-  Pantheon.Domain/        World, region, settlement, god, belief, Creature and diplomacy state, events, and
-                          content contracts
+  Pantheon.Domain/        World, region, settlement, god, belief, Creature, diplomacy and weather state,
+                          events, and content contracts
   Pantheon.Simulation/    Seeded RNG, noise, terrain and world generation, the settlement and belief models,
                           influence, miracles, the Creature, navigation, the god AI, victory, diplomacy,
-                          tick systems
+                          weather, tick systems
   Pantheon.Persistence/   Versioned JSON saves with migrations, and content parsing
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
@@ -408,8 +449,9 @@ vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and thei
 [.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md),
 [.docs/milestone-3-first-god.md](.docs/milestone-3-first-god.md),
 [.docs/milestone-4-creature.md](.docs/milestone-4-creature.md),
-[.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md) and
-[.docs/milestone-6-diplomacy.md](.docs/milestone-6-diplomacy.md).
+[.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md),
+[.docs/milestone-6-diplomacy.md](.docs/milestone-6-diplomacy.md) and
+[.docs/milestone-7-weather.md](.docs/milestone-7-weather.md).
 
 ## Contributing
 

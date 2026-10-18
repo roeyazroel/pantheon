@@ -100,6 +100,9 @@ public static class RegionBuilder
             Fertility = ComputeFertility(rule, meanMoisture, meanTemperature, landFraction),
             Vegetation = ComputeVegetation(rule, meanMoisture, landFraction),
             Blessing = 0f,
+
+            // A new world starts after ordinary weather: the soil holds as much water as the climate gives it.
+            SoilMoisture = SimMath.Clamp01(meanMoisture),
         };
     }
 

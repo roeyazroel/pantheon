@@ -18,7 +18,7 @@ rule is followed by the conventions that meet it in this repository.
 
 - The milestones, with their deliverables and playable outcomes, are sections 116–130 of the
   specification. Cite milestones by those numbers.
-- Each milestone has a plan in `.docs/`, for example `.docs/milestone-6-diplomacy.md`, with its
+- Each milestone has a plan in `.docs/`, for example `.docs/milestone-7-weather.md`, with its
   architecture, diagrams, code plan, tasks and test plan. The plan is the contract for the
   milestone. Update its tasks and results in the same change as the code.
 - Work in small steps that each build, pass the tests and still launch into an explorable world.
@@ -76,7 +76,10 @@ rule is followed by the conventions that meet it in this repository.
 ### Seeded randomness
 
 - Simulation randomness comes from `SimulationRandom` streams derived from the `WorldSeed` with
-  `SeedMixer`, and the RNG state is saved in `WorldState.Random`.
+  `SeedMixer`, and the RNG state is saved in `WorldState.Random`. A system may instead draw a
+  fresh stream each step from the seed and the tick (`SeedMixer.Derive(seed, purpose, tick)`), as
+  the weather does, so it needs no saved state and never shifts the shared stream
+  ([ADR-013](docs/ADR/ADR-013-weather-cells-and-soil-water.md)).
 - Core code never uses `System.Random`, the clock, tick counts or GUIDs. `ArchitectureRulesTests`
   scans the compiled core assemblies for them.
 - The one exception is the Godot client picking a fresh seed for a new world (F2). The seed is
@@ -114,15 +117,17 @@ rule is followed by the conventions that meet it in this repository.
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
 - Current tools: the F1 debug panel (gods, the god AI's goal and top candidates with reasons
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
-  options, learned weights and memories, the selected settlement's economy, tier and belief),
+  options, learned weights and memories, the weather's spell and cells, the selected
+  settlement's economy, tier, water and belief),
   the P diplomacy panel (status, attitude, memories, grievances and every diplomatic move), the
-  B region grid, the F3 region debug map (including blessing and influence), the O map overlays
-  (influence, religion, faith, food), the `.` single-tick step, the `,` settlement step, F4 (+500
-  Divine Power), F6 (spoil the food stores) and F7 (settlers arrive), the launch options
+  B region grid, the F3 region debug map (including blessing, influence and soil water), the O map
+  overlays (influence, religion, faith, food, weather), the `.` single-tick step, the `,`
+  settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive), F8
+  (next weather spell) and F10 (a storm at the cursor), the launch options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement or `creature`), `--judge`,
-  `--debug-panel` and `--diplomacy-panel`, and scripted smoke runs with `--quit-after-frames`
-  and `--screenshot`. The README lists them.
+  `--debug-panel`, `--diplomacy-panel` and `--weather`, and scripted smoke runs with
+  `--quit-after-frames` and `--screenshot`. The README lists them.
 
 ## Where things go
 

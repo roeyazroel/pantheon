@@ -1,0 +1,71 @@
+{
+  // Weather and soil water (ADR-013). The weather steps once every StepIntervalTicks ticks
+  // (10 ticks = one simulated second at x1). Rates are per simulated second; values without units
+  // are 0..1. Distances are in metres and speeds in metres per second.
+  "StepIntervalTicks": 5,
+
+  // Cells blow in at the upwind edge of the map: CellsPerSecond on average in a normal spell, times
+  // the spell's factor, and a storm by the spell's share. InitialCells are scattered over the map
+  // when the weather starts.
+  "MaxCells": 10,
+  "InitialCells": 4,
+  "CellsPerSecond": 0.012,
+  "DrySpellCellFactor": 0.1,
+  "WetSpellCellFactor": 2.0,
+  "StormShare": 0.12,
+  "WetSpellStormShare": 0.35,
+
+  // Spells: after a normal spell comes a dry one (DryAfterNormalChance), another normal one
+  // (NormalAfterNormalChance) or a wet one; after a dry or wet spell comes a normal one. The
+  // prevailing wind turns by up to WindTurnDegrees either way when a spell changes.
+  "NormalSpellMinSeconds": 360.0,
+  "NormalSpellMaxSeconds": 720.0,
+  "DrySpellMinSeconds": 300.0,
+  "DrySpellMaxSeconds": 600.0,
+  "WetSpellMinSeconds": 180.0,
+  "WetSpellMaxSeconds": 360.0,
+  "DryAfterNormalChance": 0.5,
+  "NormalAfterNormalChance": 0.2,
+  "WindTurnDegrees": 50.0,
+
+  // New cells.
+  "CellSpeed": 5.0,
+  "SummonedSpeedFactor": 0.15,
+  "MinRadius": 160.0,
+  "MaxRadius": 380.0,
+  "MinHumidity": 0.55,
+  "ShowerPressure": 0.45,
+  "StormPressure": 0.75,
+  "SummonedPressure": 0.3,
+
+  // A cell's life: the sea refills its humidity, lows fill and clouds thin over land, and it takes on
+  // the ground's warmth.
+  "LandFillingPerSecond": 0.0015,
+  "SeaHumidityPerSecond": 0.01,
+  "LandDissipationPerSecond": 0.0015,
+  "TemperatureFollowPerSecond": 0.02,
+
+  // Rain = clamp((humidity - RainHumidity) / (1 - RainHumidity)) x (RainBase + RainFromPressure x pressure);
+  // wind = WindFromPressure x pressure; lightning = LightningFactor x pressure x rain x temperature.
+  "RainHumidity": 0.35,
+  "RainBase": 0.5,
+  "RainFromPressure": 0.6,
+  "RainDrainPerSecond": 0.006,
+  "WindFromPressure": 1.0,
+  "LightningFactor": 3.0,
+  "StormWind": 0.65,
+  "ThunderActivity": 0.5,
+  "VisibleRain": 0.1,
+  "EdgeShare": 0.3,
+
+  // Soil water per second: + RainSoak x rain x (1 - soil) - Evaporation x (0.5 + temperature) x soil
+  // (times DrySpellDryingFactor in a dry spell) + Groundwater x climate moisture x (1 - soil).
+  "RainSoakPerSecond": 0.03,
+  "EvaporationPerSecond": 0.0025,
+  "DrySpellDryingFactor": 1.6,
+  "GroundwaterPerSecond": 0.0009,
+
+  // Storm winds above StormWind ruin these shares per second at full strength.
+  "StormFoodLossPerSecond": 0.012,
+  "StormConstructionLossPerSecond": 0.02
+}

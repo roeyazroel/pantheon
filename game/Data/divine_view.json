@@ -9,6 +9,7 @@
     { "MiracleId": "heal", "Style": "Rise", "Color": "#7ef0a0", "Seconds": 3.0 },
     { "MiracleId": "bless_crops", "Style": "Wave", "Color": "#b8f26a", "Seconds": 3.5 },
     { "MiracleId": "lightning", "Style": "Bolt", "Color": "#d6ecff", "Seconds": 1.2 },
-    { "MiracleId": "mass_healing", "Style": "Wave", "Color": "#7ef0a0", "Seconds": 4.0 }
+    { "MiracleId": "mass_healing", "Style": "Wave", "Color": "#7ef0a0", "Seconds": 4.0 },
+    { "MiracleId": "rain", "Style": "Shower", "Color": "#8cc4ff", "Seconds": 3.0 }
   ]
 }

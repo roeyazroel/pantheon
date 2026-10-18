@@ -35,6 +35,7 @@ internal static class DivineWorlds
         FearWorshipIntensity = 0.6f,
         ShrineInfrastructure = 1f,
         ComfortFoodPerPerson = 2f,
+        DroughtWorry = 0.5f,
         FaithFromWorship = 0.01f,
         FaithErosionFromDoubt = 0.01f,
         FaithForgettingPerStep = 0.008f,
@@ -100,6 +101,7 @@ internal static class DivineWorlds
                 Fertility = 0.6f,
                 Vegetation = 0.5f,
                 Blessing = 0f,
+                SoilMoisture = 0.5f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -134,6 +136,7 @@ internal static class DivineWorlds
             Gods = [God(GodId, "Testa", GodController.Human, GodPersonality.None, power)],
             Creatures = [],
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
+            Weather = WeatherWorlds.Calm(),
             WinnerGodId = null,
         };
     }

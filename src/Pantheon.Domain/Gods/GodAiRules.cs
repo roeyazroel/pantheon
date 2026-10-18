@@ -23,6 +23,9 @@ public sealed record GodAiRules
     /// <summary>Distance in metres beyond which the AI does not send its Creature to a settlement it already stands near.</summary>
     public required float CreatureSendDistance { get; init; }
 
+    /// <summary>Drought (0..1) from which an AI god thinks rain worth calling; the value grows from there to a parched land (ADR-013).</summary>
+    public required float RainDrought { get; init; }
+
     /// <summary>How the strategy of each personality weighs its goals.</summary>
     public required IReadOnlyList<GodProfile> Profiles { get; init; }
 }

@@ -180,8 +180,8 @@ public sealed class MiracleCasterTests
     [Fact]
     public void Witnesses_FeelLessFurtherAway_AndStrangersStartToBelieve()
     {
-        // The target town follows the god; a stranger town 300 m away watches; one 1 km away does not.
-        var world = DivineWorlds.Create(1000f, 200f, 500f, 1200f);
+        // The target town follows the god; a stranger town 300 m away watches; one 800 m away does not.
+        var world = DivineWorlds.Create(1000f, 200f, 500f, 1000f);
         DivineWorlds.Believe(world.Settlements[0], adherence: 0.6f, faith: 0.5f);
         var food = DivineWorlds.Miracles.Find("food")!;
 

@@ -41,6 +41,7 @@ internal static class SaveIntegrity
         ValidateSettlements(world, godIds, errors);
         CreatureIntegrity.Validate(world, godIds, errors);
         DiplomacyIntegrity.Validate(world, godIds, errors);
+        WeatherIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {
@@ -89,6 +90,10 @@ internal static class SaveIntegrity
             else if (!IsShare(cell.Blessing))
             {
                 errors.Add($"Region {i} has blessing {cell.Blessing}; it must lie between 0 and 1.");
+            }
+            else if (!IsShare(cell.SoilMoisture))
+            {
+                errors.Add($"Region {i} has soil moisture {cell.SoilMoisture}; it must lie between 0 and 1.");
             }
         }
     }

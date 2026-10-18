@@ -3,6 +3,7 @@ using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World.Generation;
 
 namespace Pantheon.Domain.World;
@@ -43,6 +44,9 @@ public sealed class WorldState
 
     /// <summary>The relations between the gods (spec §37–41).</summary>
     public required DiplomacyState Diplomacy { get; init; }
+
+    /// <summary>The weather (spec §16, ADR-013).</summary>
+    public required WeatherState Weather { get; init; }
 
     /// <summary>The god that has won (spec §115), once one has. The world goes on after a victory.</summary>
     public required int? WinnerGodId { get; set; }

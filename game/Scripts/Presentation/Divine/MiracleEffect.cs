@@ -28,6 +28,7 @@ internal sealed partial class MiracleEffect : Node3D
     private float _age;
     private float _seconds;
     private float _radius;
+    private float _boltHeight = BoltHeight;
     private OmniLight3D? _light;
     private float _lightEnergy;
     private Decal? _ring;
@@ -38,10 +39,11 @@ internal sealed partial class MiracleEffect : Node3D
     /// <param name="view">The miracle's look.</param>
     /// <param name="ground">Ground point of the target.</param>
     /// <param name="radius">Radius of the miracle in metres.</param>
+    /// <param name="boltHeight">Height a bolt falls from, in metres above the ground; a miracle's when <c>null</c>.</param>
     /// <returns>The effect node, ready to be added to the tree.</returns>
-    public static MiracleEffect Create(MiracleEffectView view, Vector3 ground, float radius)
+    public static MiracleEffect Create(MiracleEffectView view, Vector3 ground, float radius, float? boltHeight = null)
     {
-        var effect = new MiracleEffect { Name = "Miracle_" + view.MiracleId, Position = ground, _seconds = view.Seconds, _radius = MathF.Max(radius, 6f) };
+        var effect = new MiracleEffect { Name = "Miracle_" + view.MiracleId, Position = ground, _seconds = view.Seconds, _radius = MathF.Max(radius, 6f), _boltHeight = MathF.Max(boltHeight ?? BoltHeight, 20f) };
         var color = view.Color.ToGodot();
         switch (view.Style)
         {
@@ -180,13 +182,13 @@ internal sealed partial class MiracleEffect : Node3D
         };
         _bolt = new Node3D { Name = "Bolt" };
         var random = new RandomNumberGenerator { Seed = (ulong)GetInstanceId() };
-        var from = new Vector3(0f, BoltHeight, 0f);
+        var from = new Vector3(0f, _boltHeight, 0f);
         for (var i = 1; i <= BoltSegments; i++)
         {
             var spread = (1f - ((float)i / BoltSegments)) * 9f;
             var to = i == BoltSegments
                 ? Vector3.Zero
-                : new Vector3(random.RandfRange(-spread, spread), BoltHeight * (1f - ((float)i / BoltSegments)), random.RandfRange(-spread, spread));
+                : new Vector3(random.RandfRange(-spread, spread), _boltHeight * (1f - ((float)i / BoltSegments)), random.RandfRange(-spread, spread));
             var length = from.DistanceTo(to);
             var segment = new MeshInstance3D
             {

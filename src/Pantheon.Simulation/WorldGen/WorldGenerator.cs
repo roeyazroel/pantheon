@@ -1,10 +1,12 @@
 using System;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Domain.World.Generation;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Terrain;
+using Pantheon.Simulation.Weather;
 
 namespace Pantheon.Simulation.WorldGen;
 
@@ -49,9 +51,29 @@ public static class WorldGenerator
             Gods = gods,
             Creatures = creatures,
             Diplomacy = new Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
+            Weather = CreateWeather(seed),
             WinnerGodId = null,
         };
 
         return new GeneratedWorld(state, terrain);
+    }
+
+    /// <summary>
+    /// The weather of a new world: clear skies, a normal spell whose end the first weather step
+    /// schedules, and a prevailing wind drawn from the seed (ADR-013).
+    /// </summary>
+    /// <param name="seed">World seed.</param>
+    /// <returns>The starting weather.</returns>
+    public static WeatherState CreateWeather(WorldSeed seed)
+    {
+        var random = new SimulationRandom(SeedMixer.Derive(seed, WeatherSystem.RandomStream));
+        return new WeatherState
+        {
+            Cells = [],
+            NextCellId = 1,
+            Spell = WeatherSpell.Normal,
+            SpellEndsTick = null,
+            WindDirection = random.NextFloat() * 2f * MathF.PI,
+        };
     }
 }

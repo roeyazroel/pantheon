@@ -272,7 +272,7 @@ internal sealed class DivineController
 
         _shownOverlay = wanted;
         var image = Overlay is { } shown && _session.LocalGodId is { } god
-            ? OverlayMap.Build(world, shown, god, _session.Content.DivineRules, _view)
+            ? OverlayMap.Build(world, shown, god, _session.Content.DivineRules, _session.Content.SettlementRules, _view)
             : null;
         _presenter.ShowOverlay(image);
         _hud.ShowOverlayLegend(image?.Legend);

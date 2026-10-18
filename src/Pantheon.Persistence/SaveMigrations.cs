@@ -81,6 +81,9 @@ internal static class SaveMigrations
             case 5:
                 UpgradeFrom5(root);
                 break;
+            case 6:
+                UpgradeFrom6(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
@@ -343,6 +346,40 @@ internal static class SaveMigrations
         ["Fear"] = 0.1f,
         ["Doubt"] = 0.15f,
     };
+
+    /// <summary>
+    /// Version 6 to 7 (Milestone 7): the world gains weather and every region the water in its soil.
+    /// Version 6 had no weather, so the skies are clear, the spell is normal and not yet scheduled,
+    /// the prevailing wind blows from the west, and each region's soil holds its climate's moisture,
+    /// as a new world's does.
+    /// </summary>
+    private static void UpgradeFrom6(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        AddNode(world, "Weather", new JsonObject
+        {
+            ["Cells"] = new JsonArray(),
+            ["NextCellId"] = 1,
+            ["Spell"] = "Normal",
+            ["SpellEndsTick"] = null,
+            ["WindDirection"] = 0f,
+        }, fromVersion: 6);
+
+        if (world["Regions"] is JsonObject grid && grid["Cells"] is JsonArray cells)
+        {
+            foreach (var node in cells)
+            {
+                if (node is JsonObject region)
+                {
+                    AddMember(region, "SoilMoisture", (float)Math.Clamp(ReadNumber(region["Moisture"]), 0.0, 1.0), fromVersion: 6);
+                }
+            }
+        }
+    }
 
     /// <summary>Adds a member that the older version could not contain; a present one means the save was edited or corrupted.</summary>
     private static void AddNode(JsonObject target, string name, JsonNode value, int fromVersion)

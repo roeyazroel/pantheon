@@ -59,6 +59,9 @@ internal static class TestContent
     /// <summary>The shipped content with the small world.</summary>
     public static GameContent Small => Shipped with { WorldGen = SmallWorldGen };
 
+    /// <summary>The shipped weather view settings.</summary>
+    public static WeatherViewSettings WeatherView => ShippedPresentationContent.Value.WeatherView;
+
     /// <summary>The shipped divine view settings.</summary>
     public static DivineViewSettings DivineView => ShippedPresentationContent.Value.DivineView;
 
@@ -72,5 +75,5 @@ internal static class TestContent
 
     /// <summary>Parses and validates the shipped presentation content.</summary>
     private static PresentationContent LoadPresentation() =>
-        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName));
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName), ReadText(WeatherViewSettings.FileName));
 }

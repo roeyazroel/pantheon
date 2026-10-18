@@ -8,14 +8,17 @@ using Pantheon.Client.Camera;
 using Pantheon.Client.Presentation;
 using Pantheon.Client.Presentation.Creatures;
 using Pantheon.Client.Presentation.Divine;
+using Pantheon.Client.Presentation.Weather;
 using Pantheon.Client.UI;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Game.Diagnostics;
 using Pantheon.Game.Launch;
 using Pantheon.Game.Presentation;
+using Pantheon.Game.Weather;
 using Pantheon.Persistence;
 using NVector3 = System.Numerics.Vector3;
 
@@ -47,6 +50,7 @@ public partial class GameRoot : Node3D
     private DebugOverlay _overlay = null!;
     private DivinePresenter _divinePresenter = null!;
     private CreaturePresenter _creatures = null!;
+    private WeatherPresenter _weather = null!;
     private DiplomacyPanel _diplomacy = null!;
     private DivineController _divine = null!;
     private int _focusIndex = -1;
@@ -82,6 +86,7 @@ public partial class GameRoot : Node3D
         var worldNode = GetNode<Node3D>("World");
         _divinePresenter = new DivinePresenter(worldNode.AddLayer("Divine"), presentation.DivineView);
         _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
+        _weather = new WeatherPresenter(worldNode.AddLayer("Weather"), presentation.WeatherView, content.Weather, GetNodeOrNull<DirectionalLight3D>("Sun"));
         var hand = DivineHand.Create();
         worldNode.AddChild(hand);
         _session = CreateSession(content, options);
@@ -132,6 +137,7 @@ public partial class GameRoot : Node3D
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
         _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId);
+        _weather.Sync(_session.World, _session.SimulationSeconds, (float)delta, new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y));
         if (_pendingJudge is { } judge)
         {
             _pendingJudge = null;
@@ -200,6 +206,10 @@ public partial class GameRoot : Node3D
         (InputActions.SimStepSettlement, () => SetStatus(SessionCommands.StepSettlement(_session))),
         (InputActions.DebugSpoilFood, () => SetStatus(SessionCommands.SpoilFood(_session))),
         (InputActions.DebugAddSettlers, () => SetStatus(SessionCommands.AddSettlers(_session))),
+        (InputActions.DebugWeatherSpell, () => SetStatus(WeatherCommands.NextSpell(_session))),
+        (InputActions.DebugStorm, () => SetStatus(_camera.CursorGroundPoint is { } cursor
+            ? WeatherCommands.SummonStorm(_session, new GroundPosition(cursor.X, cursor.Z))
+            : "Point at the ground to call a storm")),
     ];
 
     /// <summary>One hotkey per slot of the miracle bar.</summary>
@@ -243,6 +253,7 @@ public partial class GameRoot : Node3D
         _presenter.Rebuild(_session.World, _session.Terrain);
         _divinePresenter.Rebuild(_session.Terrain, _session.World.Regions.Columns * _session.World.Regions.RegionSize);
         _creatures.Rebuild(_session.Terrain);
+        _weather.Rebuild(_session.Terrain);
         _divine?.Reset();
         _focusIndex = -1;
         _camera.SetTerrain(_session.Terrain);
@@ -290,6 +301,30 @@ public partial class GameRoot : Node3D
         while (_divine.Overlay != options.Overlay && options.Overlay is not null)
         {
             _divine.CycleOverlay();
+        }
+
+        ApplyWeatherOption(options.Weather);
+    }
+
+    /// <summary>Sets up the weather <c>--weather</c> asks for: a spell, or a storm over the focused settlement.</summary>
+    private void ApplyWeatherOption(WeatherAtStart? option)
+    {
+        if (option is not { } weather)
+        {
+            return;
+        }
+
+        var settlements = _session.World.Settlements;
+        var status = weather switch
+        {
+            WeatherAtStart.Normal => WeatherCommands.SetSpell(_session, WeatherSpell.Normal),
+            WeatherAtStart.Dry => WeatherCommands.SetSpell(_session, WeatherSpell.Dry),
+            WeatherAtStart.Wet => WeatherCommands.SetSpell(_session, WeatherSpell.Wet),
+            WeatherAtStart.Storm => settlements.Count > 0 ? WeatherCommands.SummonStorm(_session, settlements[Math.Max(0, _focusIndex)].Position) : null,
+        };
+        if (status is not null)
+        {
+            SetStatus(status);
         }
     }
 
@@ -362,6 +397,7 @@ public partial class GameRoot : Node3D
         SettlementRules = _session.Content.SettlementRules,
         DivineRules = _session.Content.DivineRules,
         CreatureRules = _session.Content.Creatures,
+        WeatherRules = _session.Content.Weather,
         LocalGodId = _session.LocalGodId,
         LocalCreatureId = _session.LocalCreature?.Id,
         CreatureOptions = _session.PreviewCreatureOptions(),

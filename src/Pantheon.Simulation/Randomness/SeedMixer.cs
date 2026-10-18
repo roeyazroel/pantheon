@@ -16,6 +16,17 @@ public static class SeedMixer
     public static ulong Derive(WorldSeed seed, string purpose) =>
         Mix(seed.Value ^ Mix(StableHash.Fnv1a64(purpose)));
 
+    /// <summary>
+    /// Derives a sub-seed for one step of a named purpose, for systems that draw a fresh stream each
+    /// step (the weather) instead of keeping their own state in the save.
+    /// </summary>
+    /// <param name="seed">World seed.</param>
+    /// <param name="purpose">Stable purpose name.</param>
+    /// <param name="counter">The step, for example the tick.</param>
+    /// <returns>A well-mixed 64-bit seed.</returns>
+    public static ulong Derive(WorldSeed seed, string purpose, long counter) =>
+        Mix(Derive(seed, purpose) ^ Mix(unchecked((ulong)counter)));
+
     /// <summary>Derives a 32-bit seed for FastNoiseLite, which only accepts <see cref="int"/> seeds.</summary>
     /// <param name="seed">World seed.</param>
     /// <param name="purpose">Stable purpose name.</param>

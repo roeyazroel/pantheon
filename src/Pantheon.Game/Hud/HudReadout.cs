@@ -5,11 +5,15 @@ using System.Linq;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game.Creatures;
 using Pantheon.Game.Divine;
+using Pantheon.Game.Weather;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Miracles;
+using Pantheon.Simulation.Settlements;
+using Pantheon.Simulation.Weather;
 
 namespace Pantheon.Game.Hud;
 
@@ -89,7 +93,57 @@ public static class HudReadout
             Rivals = BuildRivals(session.World, god.Id),
             Contest = DescribeContest(session, god, out var favours),
             ContestFavoursPlayer = favours,
+            Weather = DescribeWeather(session, god.Id, out var warning),
+            WeatherWarning = warning,
         };
+    }
+
+    /// <summary>
+    /// The weather line: shown during a dry or wet spell, or when settlements that follow you are in
+    /// drought or under a storm, which it names.
+    /// </summary>
+    private static string? DescribeWeather(GameSession session, int godId, out bool warning)
+    {
+        var world = session.World;
+        var rules = session.Content.Weather;
+        var dry = new List<string>();
+        var stormy = new List<string>();
+        foreach (var settlement in world.Settlements)
+        {
+            if (BeliefModel.Find(settlement, godId) is not { Adherence: > 0f })
+            {
+                continue;
+            }
+
+            if (SettlementEconomy.DroughtOf(session.Content.SettlementRules, world.Regions, settlement) >= session.Content.SettlementRules.DroughtThreshold)
+            {
+                dry.Add(settlement.Name);
+            }
+
+            if (WeatherModel.At(rules, world.Weather, settlement.Position).Wind >= rules.StormWind)
+            {
+                stormy.Add(settlement.Name);
+            }
+        }
+
+        warning = world.Weather.Spell == WeatherSpell.Dry || dry.Count > 0 || stormy.Count > 0;
+        if (world.Weather.Spell == WeatherSpell.Normal && !warning)
+        {
+            return null;
+        }
+
+        var line = WeatherText.Describe(world.Weather, world.Tick);
+        if (dry.Count > 0)
+        {
+            line += " Drought in " + string.Join(", ", dry) + ".";
+        }
+
+        if (stormy.Count > 0)
+        {
+            line += " Storm over " + string.Join(", ", stormy) + ".";
+        }
+
+        return line;
     }
 
     /// <summary>One line per other god.</summary>

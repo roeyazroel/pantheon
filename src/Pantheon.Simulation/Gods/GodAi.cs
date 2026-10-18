@@ -228,7 +228,7 @@ public sealed class GodAi
         }
 
         var free = Math.Max(0f, 1f - mine - rivals - allies);
-        var conditions = BeliefModel.AssessConditions(_divine, settlement);
+        var conditions = _caster.AssessConditions(world, settlement);
         var size = Math.Min(MaxPopulationFactor, MathF.Sqrt(settlement.Population / _rules.ReferencePopulation));
         var opportunity = 1f + (profile.Opportunism * Math.Max(conditions.Hardship, rivalDoubt));
         var value = 0f;
@@ -236,6 +236,13 @@ public sealed class GodAi
         {
             switch (effect.Kind)
             {
+                case MiracleEffectKind.Rain:
+                    // Rain is worth calling only on parched land: every goal scales with how far the drought is past RainDrought.
+                    var drought = Math.Max(0f, conditions.WaterNeed - _rules.RainDrought) / (1f - _rules.RainDrought);
+                    value += Note(reasons, settlement, "protect", profile.Protect * mine * drought * size);
+                    value += Note(reasons, settlement, "defend", profile.Protect * mine * Math.Min(1f, 2f * rivals) * drought * size);
+                    value += Note(reasons, settlement, "convert", profile.Convert * (free + rivals) * drought * opportunity * size);
+                    break;
                 case MiracleEffectKind.AddFood:
                 case MiracleEffectKind.Heal:
                     var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);

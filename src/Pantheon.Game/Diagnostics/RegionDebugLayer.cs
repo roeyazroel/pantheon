@@ -26,4 +26,7 @@ public enum RegionDebugLayer
 
     /// <summary>The local player's god's influence at the region centre.</summary>
     Influence,
+
+    /// <summary>Water in the soil now (ADR-013).</summary>
+    SoilMoisture,
 }

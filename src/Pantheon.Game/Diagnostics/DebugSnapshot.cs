@@ -3,6 +3,7 @@ using System.Numerics;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
 using Pantheon.Game.Population;
@@ -31,6 +32,9 @@ public sealed record DebugSnapshot
 
     /// <summary>Creature rules, for the levels in the Creature view; <c>null</c> hides the next level's experience.</summary>
     public CreatureRules? CreatureRules { get; init; }
+
+    /// <summary>Weather rules, for the weather lines; none without them.</summary>
+    public WeatherRules? WeatherRules { get; init; }
 
     /// <summary>The local player's Creature, whose options are listed.</summary>
     public int? LocalCreatureId { get; init; }

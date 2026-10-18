@@ -20,6 +20,13 @@ public static class SettlementRulesValidator
         errors.RequireAtLeast(rules.FarmlandRadius, 0, nameof(rules.FarmlandRadius));
         errors.RequirePositive(rules.FarmersPerRegion, nameof(rules.FarmersPerRegion));
         errors.RequireNonNegative(rules.BlessingYieldBonus, nameof(rules.BlessingYieldBonus));
+        if (!(rules.WellWateredSoil is > 0f and <= 1f))
+        {
+            errors.Add($"{nameof(rules.WellWateredSoil)} must be above 0 and at most 1.");
+        }
+
+        errors.RequireShare(rules.DroughtYieldFloor, nameof(rules.DroughtYieldFloor));
+        errors.RequireShare(rules.DroughtThreshold, nameof(rules.DroughtThreshold));
         errors.RequireShare(rules.WorshipWorkforceShare, nameof(rules.WorshipWorkforceShare));
         errors.RequireNonNegative(rules.FoodPerFarmerPerStep, nameof(rules.FoodPerFarmerPerStep));
         errors.RequireNonNegative(rules.FoodPerPersonPerStep, nameof(rules.FoodPerPersonPerStep));

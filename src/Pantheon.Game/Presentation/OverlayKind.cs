@@ -14,4 +14,7 @@ public enum OverlayKind
 
     /// <summary>Each settlement's lands, by how well its stores feed it.</summary>
     Food,
+
+    /// <summary>Each land region by the water in its soil: drought, enough or soaked (ADR-013).</summary>
+    Weather,
 }

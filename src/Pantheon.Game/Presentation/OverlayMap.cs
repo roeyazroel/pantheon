@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Ecology;
+using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 
@@ -20,6 +22,9 @@ public static class OverlayMap
     private static readonly RgbColor Low = RgbColor.ParseHex("#c0392b");
     private static readonly RgbColor Middle = RgbColor.ParseHex("#f1c40f");
     private static readonly RgbColor High = RgbColor.ParseHex("#2ecc71");
+    private static readonly RgbColor Parched = RgbColor.ParseHex("#8b4a1c");
+    private static readonly RgbColor Enough = RgbColor.ParseHex("#e3c565");
+    private static readonly RgbColor Soaked = RgbColor.ParseHex("#2f7fd8");
 
     /// <summary>The overlay the overlay key shows next.</summary>
     /// <param name="kind">Current overlay, or <c>null</c> when none is shown.</param>
@@ -32,7 +37,8 @@ public static class OverlayMap
         OverlayKind.Influence => OverlayKind.Religion,
         OverlayKind.Religion => OverlayKind.Faith,
         OverlayKind.Faith => OverlayKind.Food,
-        OverlayKind.Food => null,
+        OverlayKind.Food => OverlayKind.Weather,
+        OverlayKind.Weather => null,
     };
 
     /// <summary>Builds an overlay.</summary>
@@ -40,12 +46,14 @@ public static class OverlayMap
     /// <param name="kind">Overlay.</param>
     /// <param name="godId">The local player's god.</param>
     /// <param name="rules">Divine rules, for influence and food comfort.</param>
+    /// <param name="settlementRules">Settlement rules, for the soil crops need.</param>
     /// <param name="view">God colours and overlay opacity.</param>
     /// <returns>The image and its legend.</returns>
-    public static OverlayImage Build(WorldState world, OverlayKind kind, int godId, DivineRules rules, DivineViewSettings view)
+    public static OverlayImage Build(WorldState world, OverlayKind kind, int godId, DivineRules rules, SettlementRules settlementRules, DivineViewSettings view)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(settlementRules);
         ArgumentNullException.ThrowIfNull(view);
         var grid = world.Regions;
         var rgba = new byte[grid.Cells.Count * BytesPerPixel];
@@ -65,8 +73,12 @@ public static class OverlayMap
                 legend = "Faith in you: red (none) to green (devout)";
                 break;
             case OverlayKind.Food:
-                PaintTerritories(world, rgba, view.OverlayOpacity, s => 1f - BeliefModel.AssessConditions(rules, s).FoodNeed);
+                PaintTerritories(world, rgba, view.OverlayOpacity, s => 1f - BeliefModel.AssessConditions(rules, s, drought: 0f).FoodNeed);
                 legend = "Food stores: red (empty) to green (full)";
+                break;
+            case OverlayKind.Weather:
+                PaintSoil(world, settlementRules, view.OverlayOpacity, rgba);
+                legend = "Weather: the water in the soil, from brown (drought) through yellow (enough for crops) to blue (soaked)";
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown overlay.");
@@ -91,6 +103,25 @@ public static class OverlayMap
                     Write(rgba, i, color, influence[i] * view.OverlayOpacity);
                 }
             }
+        }
+    }
+
+    /// <summary>Colours every land region by its soil moisture: brown when parched, yellow when just well watered, blue when soaked.</summary>
+    private static void PaintSoil(WorldState world, SettlementRules settlementRules, float opacity, byte[] rgba)
+    {
+        var enough = settlementRules.WellWateredSoil;
+        foreach (var region in world.Regions.Cells)
+        {
+            if (region.Biome == Biome.Sea)
+            {
+                continue;
+            }
+
+            var soil = Math.Clamp(region.SoilMoisture, 0f, 1f);
+            var color = soil < enough
+                ? RgbColor.Lerp(Parched, Enough, soil / enough)
+                : RgbColor.Lerp(Enough, Soaked, (soil - enough) / Math.Max(0.01f, 1f - enough));
+            Write(rgba, region.Id, color, opacity);
         }
     }
 
@@ -120,7 +151,7 @@ public static class OverlayMap
     }
 
     /// <summary>Colours each settlement's lands on a red-to-green ramp by a value of the settlement.</summary>
-    private static void PaintTerritories(WorldState world, byte[] rgba, float opacity, Func<Domain.Settlements.SettlementState, float> value)
+    private static void PaintTerritories(WorldState world, byte[] rgba, float opacity, Func<SettlementState, float> value)
     {
         foreach (var settlement in world.Settlements)
         {

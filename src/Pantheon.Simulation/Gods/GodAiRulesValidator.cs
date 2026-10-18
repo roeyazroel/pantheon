@@ -19,6 +19,11 @@ public static class GodAiRulesValidator
         errors.RequireNonNegative(rules.Patience, nameof(rules.Patience));
         errors.RequireNonNegative(rules.DecisionJitter, nameof(rules.DecisionJitter));
         errors.RequirePositive(rules.ReferencePopulation, nameof(rules.ReferencePopulation));
+        if (!(rules.RainDrought is >= 0f and < 1f))
+        {
+            errors.Add($"{nameof(rules.RainDrought)} must be at least 0 and below 1.");
+        }
+
         errors.RequireNonNegative(rules.CreatureSendDistance, nameof(rules.CreatureSendDistance));
         var seen = new HashSet<GodPersonality>();
         foreach (var profile in rules.Profiles)

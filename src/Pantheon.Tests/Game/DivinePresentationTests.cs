@@ -79,7 +79,7 @@ public sealed class DivinePresentationTests
         DivineWorlds.Believe(world.Settlements[0], adherence: 0.4f, faith: 1f);
         var view = TestContent.DivineView;
 
-        var image = OverlayMap.Build(world, OverlayKind.Influence, 1, DivineWorlds.Rules, view);
+        var image = OverlayMap.Build(world, OverlayKind.Influence, 1, DivineWorlds.Rules, SettlementWorlds.Rules, view);
 
         Assert.Equal(DivineWorlds.RegionsPerSide, image.Width);
         Assert.Equal(DivineWorlds.RegionsPerSide * DivineWorlds.RegionsPerSide * 4, image.Rgba.Length);
@@ -97,7 +97,7 @@ public sealed class DivinePresentationTests
         var world = DivineWorlds.Create(0f, 224f, 800f);
         DivineWorlds.Believe(world.Settlements[0], adherence: 0.4f, faith: 1f);
 
-        var image = OverlayMap.Build(world, OverlayKind.Faith, 1, DivineWorlds.Rules, TestContent.DivineView);
+        var image = OverlayMap.Build(world, OverlayKind.Faith, 1, DivineWorlds.Rules, SettlementWorlds.Rules, TestContent.DivineView);
 
         var devout = world.Settlements[0].RegionId * 4;
         var heathen = world.Settlements[1].RegionId * 4;
@@ -113,7 +113,8 @@ public sealed class DivinePresentationTests
         Assert.Equal(OverlayKind.Religion, OverlayMap.Next(OverlayKind.Influence));
         Assert.Equal(OverlayKind.Faith, OverlayMap.Next(OverlayKind.Religion));
         Assert.Equal(OverlayKind.Food, OverlayMap.Next(OverlayKind.Faith));
-        Assert.Null(OverlayMap.Next(OverlayKind.Food));
+        Assert.Equal(OverlayKind.Weather, OverlayMap.Next(OverlayKind.Food));
+        Assert.Null(OverlayMap.Next(OverlayKind.Weather));
     }
 
     [Fact]
@@ -185,7 +186,8 @@ public sealed class DivinePresentationTests
         Assert.Equal(0x44, blessing.Rgba[4]);
         Assert.Equal(0xfd, map.Rgba[4]);
         Assert.Equal(RegionDebugLayer.Influence, RegionDebugMap.Next(RegionDebugLayer.Blessing));
-        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.Influence));
+        Assert.Equal(RegionDebugLayer.SoilMoisture, RegionDebugMap.Next(RegionDebugLayer.Influence));
+        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.SoilMoisture));
     }
 
     [Theory]

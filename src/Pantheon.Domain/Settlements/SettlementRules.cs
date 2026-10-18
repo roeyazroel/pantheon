@@ -22,6 +22,15 @@ public sealed record SettlementRules
     /// <summary>Extra yield share of fully blessed farmland: production scales by <c>1 + bonus × mean blessing</c>.</summary>
     public required float BlessingYieldBonus { get; init; }
 
+    /// <summary>Soil moisture (0..1] at and above which crops have all the water they need (ADR-013).</summary>
+    public required float WellWateredSoil { get; init; }
+
+    /// <summary>Share of the yield parched farmland still gives; it rises to 1 at <see cref="WellWateredSoil"/>.</summary>
+    public required float DroughtYieldFloor { get; init; }
+
+    /// <summary>Drought (0..1) from which a settlement counts as being in drought: alerts, the HUD and labels say so.</summary>
+    public required float DroughtThreshold { get; init; }
+
     /// <summary>Share of the workers who worship instead of farming, in a settlement whose people all follow a god with full Faith.</summary>
     public required float WorshipWorkforceShare { get; init; }
 

@@ -28,6 +28,7 @@ silently:
 | [ADR-010](ADR-010-creature-simulation-and-learning.md) | The Creature: core simulation, learned utility AI and the hand | Accepted |
 | [ADR-011](ADR-011-rival-gods-utility-ai-and-victory.md) | Rival gods: utility AI, conversion between gods and victory | Accepted |
 | [ADR-012](ADR-012-diplomacy-relations-status-and-memory.md) | Diplomacy: directional relations, shared status and remembered acts | Accepted |
+| [ADR-013](ADR-013-weather-cells-and-soil-water.md) | Weather: moving cells, spells and the water in the soil | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

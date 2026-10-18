@@ -1,0 +1,24 @@
+{
+  // Presentation only: how weather cells are drawn (ADR-013). Distances are in metres.
+  // Clouds float CloudHeight above sea level, made of puffs about PuffSpacing apart; they fade out
+  // within FadeNearDistance of the camera so they never hide the ground up close.
+  "CloudHeight": 200.0,
+  "CloudThickness": 40.0,
+  "PuffSpacing": 55.0,
+  "MaxPuffs": 40,
+  "PuffSize": 130.0,
+  "ClearColor": "#e3e7ec",
+  "StormColor": "#3b404c",
+  "CloudOpacity": 0.4,
+  // Up close the sky is out of view: the light dims by up to StormGloom under the darkest storm.
+  "StormGloom": 0.55,
+  "FadeNearDistance": 300.0,
+  "FadeFarDistance": 600.0,
+  // Rain: MaxRainDrops for a cloud of FullRainRadius in the heaviest rain.
+  "RainColor": "#b6cdec",
+  "MaxRainDrops": 700,
+  "FullRainRadius": 380.0,
+  // Lightning: strikes per second of the fiercest thunderstorm.
+  "FlashesPerSecond": 0.5,
+  "LightningColor": "#dfeeff"
+}

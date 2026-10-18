@@ -104,7 +104,7 @@ internal sealed class SettlementView
     /// <summary>Sets the label text when it changed, tinted by the god most of the people follow.</summary>
     private void UpdateLabel(SettlementState settlement, WorldState world)
     {
-        var text = SettlementLabel.Format(settlement, world);
+        var text = SettlementLabel.Format(settlement, world, _rules);
         if (_label.Text != text)
         {
             _label.Text = text;

@@ -8,6 +8,10 @@
   "ReferencePopulation": 100.0,
   "CreatureSendDistance": 250.0,
 
+  // Rain (ADR-013) is worth calling only where the farmland's drought (settlement_rules.json) is past
+  // RainDrought; its value grows from there to parched land.
+  "RainDrought": 0.3,
+
   // Protect: help own followers in need. Convert: win others with kind miracles. Intimidate: frighten,
   // rivals' followers first. Bless: bless the land. Opportunism: extra appeal of targets in hardship or
   // doubt. Thrift: utility falls by Thrift x cost / power. SendCreature: send the Creature to court a

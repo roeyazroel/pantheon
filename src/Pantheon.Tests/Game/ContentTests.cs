@@ -31,7 +31,7 @@ public sealed class ContentTests
         var content = TestContent.Shipped;
 
         Assert.Equal(10, content.DivineRules.StepIntervalTicks);
-        Assert.Equal(["food", "heal", "bless_crops", "lightning", "mass_healing"], content.Miracles.Miracles.Select(m => m.Id));
+        Assert.Equal(["food", "heal", "bless_crops", "lightning", "mass_healing", "rain"], content.Miracles.Miracles.Select(m => m.Id));
         Assert.NotEmpty(content.Pantheon.Gods);
         Assert.Equal(Pantheon.Domain.Gods.GodController.Human, content.Pantheon.Gods[0].Controller);
         Assert.All(content.Miracles.Miracles, m => Assert.Equal(m.Id, TestContent.DivineView.EffectFor(m.Id).MiracleId));

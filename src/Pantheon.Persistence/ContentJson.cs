@@ -6,6 +6,7 @@ using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World.Generation;
 
 namespace Pantheon.Persistence;
@@ -40,6 +41,9 @@ public static class ContentJson
 
     /// <summary>File name of the diplomacy rules.</summary>
     public const string DiplomacyFileName = "diplomacy.json";
+
+    /// <summary>File name of the weather rules.</summary>
+    public const string WeatherFileName = "weather.json";
 
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
@@ -105,4 +109,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The diplomacy rules.</returns>
     public static DiplomacyRules ParseDiplomacy(string json) => Parse<DiplomacyRules>(json, DiplomacyFileName);
+
+    /// <summary>Parses <c>weather.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The weather rules.</returns>
+    public static WeatherRules ParseWeather(string json) => Parse<WeatherRules>(json, WeatherFileName);
 }

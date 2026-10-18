@@ -20,7 +20,7 @@ public static class DebugReadout
     public const string KeyHints = "[1-9] miracle  [LMB] cast  [Esc] cancel  [O] overlay  [F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [ [ ] ] speed";
 
     /// <summary>Debug tool key hints shown at the bottom of the overlay.</summary>
-    public const string DebugHints = "[F1] panel  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F4] +500 power  [F6] spoil food  [F7] settlers";
+    public const string DebugHints = "[F1] panel  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F4] +500 power  [F6] spoil food  [F7] settlers  [F8] weather spell  [F10] storm";
 
     /// <summary>Creature key hints shown at the bottom of the overlay.</summary>
     public const string CreatureHints = "[C] look at the Creature  [Z] reward  [X] punish  [V] send it to the cursor  [P] diplomacy";
@@ -46,9 +46,11 @@ public static class DebugReadout
         BeliefReadout.AppendGods(lines, snapshot);
         GodAiReadout.Append(lines, snapshot);
         CreatureReadout.Append(lines, snapshot);
+        WeatherReadout.Append(lines, snapshot);
         AppendCursor(lines, world, snapshot.CursorWorldPosition);
-        if (snapshot.CursorWorldPosition is { } cursor && world.Regions.TryGetRegionIdAt(cursor.X, cursor.Z, out _))
+        if (snapshot.CursorWorldPosition is { } cursor && world.Regions.TryGetRegionIdAt(cursor.X, cursor.Z, out var cursorRegion))
         {
+            AddLine(lines, WeatherReadout.DescribePoint(snapshot, new GroundPosition(cursor.X, cursor.Z), cursorRegion));
             BeliefReadout.AppendInfluence(lines, snapshot, new GroundPosition(cursor.X, cursor.Z));
         }
 
@@ -58,6 +60,7 @@ public static class DebugReadout
             if (settlement == selected)
             {
                 SettlementReadout.Append(lines, snapshot, settlement);
+                AddLine(lines, WeatherReadout.DescribeSettlement(snapshot, settlement));
                 BeliefReadout.AppendBeliefs(lines, snapshot, settlement);
             }
             else
@@ -173,6 +176,15 @@ public static class DebugReadout
             region.Moisture,
             region.Fertility,
             region.Vegetation));
+    }
+
+    /// <summary>Adds a line when there is one.</summary>
+    private static void AddLine(List<string> lines, string? line)
+    {
+        if (line is not null)
+        {
+            lines.Add(line);
+        }
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

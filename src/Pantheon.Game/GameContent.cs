@@ -4,6 +4,7 @@ using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.Weather;
 using Pantheon.Domain.World.Generation;
 using Pantheon.Persistence;
 using Pantheon.Simulation.Belief;
@@ -12,6 +13,7 @@ using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Gods;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Settlements;
+using Pantheon.Simulation.Weather;
 using Pantheon.Simulation.WorldGen;
 
 namespace Pantheon.Game;
@@ -25,7 +27,8 @@ namespace Pantheon.Game;
 /// <param name="Creatures">Creature tuning.</param>
 /// <param name="GodAi">Tuning of the gods' utility AI.</param>
 /// <param name="Diplomacy">Tuning of relations between gods.</param>
-public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy)
+/// <param name="Weather">Tuning of weather and soil water.</param>
+public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy, WeatherRules Weather)
 {
     /// <summary>Parses and validates the content files.</summary>
     /// <param name="files">Text of each content file.</param>
@@ -42,6 +45,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         var creatures = ContentJson.ParseCreatures(files.Creatures);
         var godAi = ContentJson.ParseGodAi(files.GodAi);
         var diplomacy = ContentJson.ParseDiplomacy(files.Diplomacy);
+        var weather = ContentJson.ParseWeather(files.Weather);
 
         Check(ContentJson.WorldGenFileName, () =>
         {
@@ -54,9 +58,10 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         Check(ContentJson.CreaturesFileName, () => CreatureRulesValidator.Validate(creatures));
         Check(ContentJson.GodAiFileName, () => GodAiRulesValidator.Validate(godAi));
         Check(ContentJson.DiplomacyFileName, () => DiplomacyRulesValidator.Validate(diplomacy));
+        Check(ContentJson.WeatherFileName, () => WeatherRulesValidator.Validate(weather));
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
-        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy);
+        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather);
     }
 
     /// <summary>Runs a validator and reports its problems as a content error of one file.</summary>
@@ -82,7 +87,8 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
 /// <param name="Creatures"><c>creatures.json</c>.</param>
 /// <param name="GodAi"><c>god_ai.json</c>.</param>
 /// <param name="Diplomacy"><c>diplomacy.json</c>.</param>
-public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy)
+/// <param name="Weather"><c>weather.json</c>.</param>
+public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather)
 {
     /// <summary>Reads every file through a function that returns a content file's text by name.</summary>
     /// <param name="read">Reads one file of <c>game/Data</c>.</param>
@@ -98,6 +104,7 @@ public sealed record GameContentFiles(string WorldGen, string SettlementRules, s
             read(ContentJson.GodsFileName),
             read(ContentJson.CreaturesFileName),
             read(ContentJson.GodAiFileName),
-            read(ContentJson.DiplomacyFileName));
+            read(ContentJson.DiplomacyFileName),
+            read(ContentJson.WeatherFileName));
     }
 }

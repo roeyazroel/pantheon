@@ -79,6 +79,21 @@
       "Effects": [ { "Kind": "Heal", "Amount": 0.5 } ],
       "Witness": { "Faith": 0.15, "Love": 0.15, "Fear": 0.0, "Doubt": -0.15 },
       "Gratitude": "Health"
+    },
+    {
+      "Id": "rain",
+      "Name": "Rain",
+      "Description": "Calls a rain cloud over the target. It soaks the farmland beneath it and drifts slowly with the wind.",
+      "Domain": "Storm",
+      "Scale": "Minor",
+      "PowerCost": 80.0,
+      "CooldownTicks": 450,
+      "Radius": 220.0,
+      "InfluenceRequirement": 0.2,
+      "MinimumRank": "MinorSpirit",
+      "Effects": [ { "Kind": "Rain", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.15, "Love": 0.15, "Fear": 0.0, "Doubt": -0.12 },
+      "Gratitude": "Water"
     }
   ]
 }

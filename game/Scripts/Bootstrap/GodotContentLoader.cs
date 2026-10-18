@@ -22,7 +22,7 @@ public static class GodotContentLoader
     /// <exception cref="ContentFormatException">A file is malformed or out of range.</exception>
     /// <exception cref="IOException">A file cannot be read.</exception>
     public static PresentationContent LoadPresentationContent() =>
-        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName));
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName), ReadText(WeatherViewSettings.FileName));
 
     /// <summary>Reads a whole content file as text.</summary>
     private static string ReadText(string fileName)
