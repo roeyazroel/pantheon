@@ -41,6 +41,12 @@ miracles, needs influence where it casts and pays more where yours is stronger, 
 defends and frightens villages as its personality decides. People who lose faith in one god
 turn to another. The first god to hold 60% of all followers for ten minutes wins.
 
+**Milestone 6 (Diplomacy)** lets gods deal with each other. Vael remembers what you do: help for
+its people in need, courting them, striking them, converting its villages, your Creature's
+attacks. It grows to trust, fear, respect or despise you. Offer an alliance, declare war, ask for
+peace or break your word. Vael weighs the same moves by its personality, answers your proposals,
+and never forgets a betrayal.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -93,7 +99,11 @@ covers:
   belief, levels, banishment and the checks on commands;
 - rival gods: conversion between gods, contested costs, the god AI's choices for each personality,
   dominance and victory;
-- the HUD model, alerts, map overlays and the migration of Milestone 2, 3 and 4 saves;
+- diplomacy: what each act does to a god's view of another and how long it is remembered,
+  friendly and hostile relations, alliances, betrayal, war and peace through the authority's
+  checks, what each status changes, and the AI's diplomatic choices with their reasons;
+- the HUD model, alerts, map overlays, the diplomacy panel and the migration of Milestone 1 to 5
+  saves;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -117,6 +127,7 @@ covers:
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
+| Show or hide the diplomacy panel | P |
 | Toggle region boundaries | B |
 | Toggle the debug overlay | F1 |
 | Next region debug map layer, then off | F3 |
@@ -218,6 +229,40 @@ do it and Vael wins. The world goes on either way.
   Alerts warn you when Vael works a miracle on your followers, when its Creature attacks them, and
   when anyone starts to dominate.
 
+## Diplomacy
+
+Press P for the diplomacy panel. For each rival it shows where you stand (allied, friendly,
+neutral, hostile or at war), how the rival feels about you and why ("remembers that you converted
+Elar"), what your people hold against it, any proposal waiting for your answer, and a button for
+each move you can make now. Your status also ends the rival's line on the HUD.
+
+- **Every god keeps its own view of every other**: trust, fear, respect, rivalry, gratitude and
+  suspicion. What you do shapes Vael's view of you:
+  - feeding or healing its followers when they are in need earns gratitude;
+  - working miracles on its comfortable followers is courting, and it resents it;
+  - striking its followers, letting your Creature attack them and converting its villages make
+    it a rival.
+
+  Vael remembers these acts, and the memories fade with time.
+- **Friendly and hostile** come by themselves as feelings warm or sour. **Alliance, war and
+  peace** are decisions: offer an alliance and wait for an answer, declare war, or ask for peace
+  once a war has lasted a while.
+- **Allies** do not plant doubt in each other's followers or raise each other's costs. An allied
+  AI god leaves your people alone, and Creatures seldom attack an ally's villages. **At war**, a
+  village resists the enemy wherever its own god holds most of the people, and Creatures go after
+  enemy villages.
+- **Betrayal.** Breaking an alliance (or declaring war on an ally) collapses the victim's trust,
+  makes every god trust you less, and is remembered far longer than anything else. Vael can
+  betray you too.
+- **Vael decides by its personality.** The Tyrant goes to war readily and makes peace only when a
+  war wears it down. Change Vael's `Personality` in `game/Data/gods.json` to meet the others: a
+  Guardian welcomes an alliance and keeps it, and an Opportunist refuses alliances while it is
+  winning. The F1 panel lists the moves it is weighing and why. Alerts tell you when it proposes,
+  declares war, betrays you, accepts or declines.
+
+The rules are in `game/Data/diplomacy.json`, and each personality's diplomatic weights are in
+`game/Data/god_ai.json`.
+
 ## Your Creature
 
 Bramble's card on the left shows its level, what it is doing, its health and needs, its loyalty
@@ -250,7 +295,8 @@ now.
 
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed, terrain renderer,
   camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
-  goal now and its top candidate actions with their scores and reasons, the Creature
+  goal now and its top candidate actions with their scores and reasons, its diplomatic moves
+  with the factors behind them, the Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
   their scores, its learned preferences by situation and its latest memories), the region
   under the cursor with its statistics and every god's influence there, one line per settlement,
@@ -306,6 +352,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--focus=<n>\|creature` | Start looking at settlement `n` (1 is your home; `--cast` targets it) or at your Creature. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
+| `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -318,26 +365,30 @@ F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a 
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 5`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 6`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
 (version 1) still load: each settlement starts healthy with no house under construction. Saves
 from Milestones 1 and 2 (versions 1 and 2) get the Milestone 3 god, Ilyra, followed in their one
 settlement. Saves from Milestones 1 to 3 get a newborn Creature, Bramble, for every god. Saves from
-Milestones 1 to 4 stay single-god worlds with nobody to compete with.
+Milestones 1 to 4 stay single-god worlds with nobody to compete with. Saves from Milestones 1 to 5
+start with every pair of gods neutral, with no memories of each other.
 
 ## Repository layout
 
 ```text
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                      creatures.json, god_ai.json, settlement_view.json, biome_palette.json, divine_view.json
+                      creatures.json, god_ai.json, diplomacy.json, settlement_view.json, biome_palette.json,
+                      divine_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
-  Pantheon.Domain/        World, region, settlement, god, belief and Creature state, events, and content contracts
+  Pantheon.Domain/        World, region, settlement, god, belief, Creature and diplomacy state, events, and
+                          content contracts
   Pantheon.Simulation/    Seeded RNG, noise, terrain and world generation, the settlement and belief models,
-                          influence, miracles, the Creature, navigation, the god AI, victory, tick systems
+                          influence, miracles, the Creature, navigation, the god AI, victory, diplomacy,
+                          tick systems
   Pantheon.Persistence/   Versioned JSON saves with migrations, and content parsing
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
@@ -356,8 +407,9 @@ vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and thei
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md),
 [.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md),
 [.docs/milestone-3-first-god.md](.docs/milestone-3-first-god.md),
-[.docs/milestone-4-creature.md](.docs/milestone-4-creature.md) and
-[.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md).
+[.docs/milestone-4-creature.md](.docs/milestone-4-creature.md),
+[.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md) and
+[.docs/milestone-6-diplomacy.md](.docs/milestone-6-diplomacy.md).
 
 ## Contributing
 

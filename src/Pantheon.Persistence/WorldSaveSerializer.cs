@@ -19,9 +19,10 @@ public static class WorldSaveSerializer
     /// when the save shape changes. Version 2 (Milestone 2) added settlement health and construction
     /// progress; version 3 (Milestone 3) added gods, settlement beliefs, region blessings and the
     /// founding settings for several settlements; version 4 (Milestone 4) added Creatures; version 5
-    /// (Milestone 5) added god personalities, dominance and the winner.
+    /// (Milestone 5) added god personalities, dominance and the winner; version 6 (Milestone 6) added
+    /// diplomacy.
     /// </summary>
-    public const int CurrentSaveVersion = 5;
+    public const int CurrentSaveVersion = 6;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

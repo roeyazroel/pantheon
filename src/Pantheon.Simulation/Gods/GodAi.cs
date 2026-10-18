@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
@@ -10,6 +11,7 @@ using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Randomness;
 
@@ -32,6 +34,7 @@ public sealed class GodAi
     private readonly MiracleCaster _caster;
     private readonly CreatureAuthority? _creatures;
     private readonly CreatureRules? _creatureRules;
+    private readonly GodDiplomat? _diplomat;
 
     /// <summary>Creates the AI over validated rules and the authorities it acts through.</summary>
     /// <param name="rules">AI rules.</param>
@@ -40,8 +43,10 @@ public sealed class GodAi
     /// <param name="caster">The miracle authority.</param>
     /// <param name="creatures">The Creature authority, or <c>null</c> when there are no Creatures.</param>
     /// <param name="creatureRules">Creature rules, for what an action's kindness is.</param>
-    public GodAi(GodAiRules rules, DivineRules divine, MiracleBook book, MiracleCaster caster, CreatureAuthority? creatures, CreatureRules? creatureRules)
+    /// <param name="diplomat">The diplomatic half of the AI, or <c>null</c> for no diplomacy.</param>
+    public GodAi(GodAiRules rules, DivineRules divine, MiracleBook book, MiracleCaster caster, CreatureAuthority? creatures, CreatureRules? creatureRules, GodDiplomat? diplomat = null)
     {
+        _diplomat = diplomat;
         GodAiRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(divine);
         ArgumentNullException.ThrowIfNull(book);
@@ -110,8 +115,20 @@ public sealed class GodAi
 
         Execute(world, god, best, events);
         TeachCreature(world, god, events);
+        if (_diplomat is not null && ProfileOf(god.Personality) is { } profile)
+        {
+            _diplomat.Act(world, god, profile, events);
+        }
+
         return best;
     }
+
+    /// <summary>The diplomatic moves the god is weighing now, best first, for the debug view.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="god">The god.</param>
+    /// <returns>The candidates; none without diplomacy or a profile.</returns>
+    public List<DiplomacyCandidate> EvaluateDiplomacy(WorldState world, GodState god) =>
+        _diplomat is not null && ProfileOf(god.Personality) is { } profile ? _diplomat.Evaluate(world, god, profile) : [];
 
     /// <summary>Carries out an action through the authorities, as the god itself (the host may act for any god).</summary>
     private void Execute(WorldState world, GodState god, AiCandidate candidate, List<WorldEvent> events)
@@ -170,7 +187,7 @@ public sealed class GodAi
         var reasons = new List<string>();
         foreach (var reached in _caster.FindReached(world, miracle, settlement.Position))
         {
-            value += Value(god, profile, miracle, reached, reasons);
+            value += Value(world, god, profile, miracle, reached, reasons);
         }
 
         if (value <= 0f)
@@ -184,22 +201,33 @@ public sealed class GodAi
     }
 
     /// <summary>What a miracle is worth to the god in one settlement it reaches, by the god's goals.</summary>
-    private float Value(GodState god, GodProfile profile, MiracleDefinition miracle, SettlementState settlement, List<string> reasons)
+    private float Value(WorldState world, GodState god, GodProfile profile, MiracleDefinition miracle, SettlementState settlement, List<string> reasons)
     {
         var own = BeliefModel.Find(settlement, god.Id);
         var mine = own?.Adherence ?? 0f;
         var rivals = 0f;
+        var allies = 0f;
         var rivalDoubt = 0f;
         foreach (var belief in settlement.Beliefs)
         {
-            if (belief.GodId != god.Id)
+            if (belief.GodId == god.Id)
             {
-                rivals += belief.Adherence;
-                rivalDoubt = Math.Max(rivalDoubt, belief.Adherence > 0f ? belief.Doubt : 0f);
+                continue;
             }
+
+            if (DiplomacyModel.AreAllied(world, god.Id, belief.GodId))
+            {
+                // An ally's followers are not to be courted or frightened.
+                allies += belief.Adherence;
+                continue;
+            }
+
+            var enmity = DiplomacyModel.AreAtWar(world, god.Id, belief.GodId) ? 1.5f : 1f;
+            rivals += belief.Adherence * enmity;
+            rivalDoubt = Math.Max(rivalDoubt, belief.Adherence > 0f ? belief.Doubt : 0f);
         }
 
-        var free = Math.Max(0f, 1f - mine - rivals);
+        var free = Math.Max(0f, 1f - mine - rivals - allies);
         var conditions = BeliefModel.AssessConditions(_divine, settlement);
         var size = Math.Min(MaxPopulationFactor, MathF.Sqrt(settlement.Population / _rules.ReferencePopulation));
         var opportunity = 1f + (profile.Opportunism * Math.Max(conditions.Hardship, rivalDoubt));
@@ -219,7 +247,12 @@ public sealed class GodAi
                     value += Note(reasons, settlement, "bless", profile.Bless * (mine + (0.5f * (1f - mine))) * (0.4f + (0.6f * conditions.FoodNeed)) * size);
                     break;
                 case MiracleEffectKind.Smite:
-                    value += Note(reasons, settlement, "intimidate", profile.Intimidate * (rivals + (0.3f * free)) * opportunity * (1f - mine) * size);
+                    // Striking a village also strikes its own followers there; it never strikes an ally's.
+                    if (allies <= 0.05f)
+                    {
+                        value += Note(reasons, settlement, "intimidate", profile.Intimidate * (rivals + (0.3f * free)) * opportunity * (1f - mine) * size);
+                    }
+
                     break;
             }
         }

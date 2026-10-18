@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Gods;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Randomness;
@@ -59,31 +61,42 @@ public sealed class SimulationEngine
     }
 
     /// <summary>
-    /// Creates the full game pipeline (ADR-011): the settlement step, the belief step and the victory
-    /// check on their intervals, then every Creature every tick, then the AI gods' strategic
-    /// evaluations on theirs. AI gods act through the same miracle and Creature authorities as a
-    /// player.
+    /// Creates the full game pipeline (ADR-011, ADR-012): the settlement step, the belief step, the
+    /// victory check and the diplomacy step on their intervals, then every Creature every tick,
+    /// then the AI gods' strategic evaluations on theirs. One ledger records every act gods notice
+    /// of each other, and AI gods act through the same <see cref="Authorities"/> as a player.
     /// </summary>
     /// <param name="settlementRules">Tuning of the statistical settlement model.</param>
     /// <param name="divineRules">Tuning of belief, worship and Divine Power.</param>
     /// <param name="creatureRules">Tuning of Creatures.</param>
     /// <param name="godAiRules">Tuning of the gods' utility AI.</param>
-    /// <param name="miracles">The miracles the AI may cast.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles)
+    /// <param name="miracles">The miracles.</param>
+    /// <param name="diplomacyRules">Tuning of relations between gods.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules)
     {
-        Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules);
-        var caster = new MiracleCaster(divineRules, settlementRules, miracles);
-        var authority = new CreatureAuthority(creatureRules, Creatures.Brain);
-        Gods = new GodAiSystem(new GodAi(godAiRules, divineRules, miracles, caster, authority, creatureRules), godAiRules.EvaluationIntervalTicks);
+        var ledger = new DiplomacyLedger(diplomacyRules);
+        Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger);
+        Authorities = new Authorities(
+            new MiracleCaster(divineRules, settlementRules, miracles, ledger),
+            new CreatureAuthority(creatureRules, Creatures.Brain),
+            new DiplomacyAuthority(diplomacyRules, ledger));
+        var diplomat = new GodDiplomat(diplomacyRules, Authorities.Diplomacy);
+        Gods = new GodAiSystem(
+            new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat),
+            godAiRules.EvaluationIntervalTicks);
         _systems =
         [
             CreateSettlementStep(settlementRules),
-            CreateBeliefStep(divineRules, settlementRules),
+            new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
             new IntervalSystem(new VictorySystem(divineRules), divineRules.StepIntervalTicks),
+            new IntervalSystem(new DiplomacySystem(diplomacyRules), diplomacyRules.StepIntervalTicks),
             Creatures,
             Gods,
         ];
     }
+
+    /// <summary>The authorities of the full pipeline, or <c>null</c> when the engine has none.</summary>
+    public Authorities? Authorities { get; }
 
     /// <summary>The Creature system of the game's pipeline, or <c>null</c> when the engine has none.</summary>
     public CreatureSystem? Creatures { get; }

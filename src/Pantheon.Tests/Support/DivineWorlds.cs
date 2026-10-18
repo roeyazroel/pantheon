@@ -133,6 +133,7 @@ internal static class DivineWorlds
             Settlements = settlements,
             Gods = [God(GodId, "Testa", GodController.Human, GodPersonality.None, power)],
             Creatures = [],
+            Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             WinnerGodId = null,
         };
     }

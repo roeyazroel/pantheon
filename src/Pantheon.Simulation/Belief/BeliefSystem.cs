@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Systems;
 
 namespace Pantheon.Simulation.Belief;
@@ -24,16 +26,22 @@ public sealed class BeliefSystem : ISimulationSystem
 
     private readonly DivineRules _rules;
     private readonly SettlementRules _settlementRules;
+    private readonly DiplomacyRules? _diplomacy;
+    private readonly IActRecorder? _ledger;
 
     /// <summary>Creates the system with validated rules.</summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="settlementRules">Settlement rules, for the workforce that worships.</param>
-    public BeliefSystem(DivineRules rules, SettlementRules settlementRules)
+    /// <param name="diplomacy">Diplomacy rules, for peoples at war resisting the enemy; <c>null</c> to ignore diplomacy.</param>
+    /// <param name="ledger">Where conversions of a rival's settlement are recorded; <c>null</c> for none.</param>
+    public BeliefSystem(DivineRules rules, SettlementRules settlementRules, DiplomacyRules? diplomacy = null, IActRecorder? ledger = null)
     {
         DivineRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
         _rules = rules;
         _settlementRules = settlementRules;
+        _diplomacy = diplomacy;
+        _ledger = ledger;
     }
 
     /// <inheritdoc />
@@ -43,7 +51,7 @@ public sealed class BeliefSystem : ISimulationSystem
         var world = context.World;
         foreach (var settlement in world.Settlements)
         {
-            StepSettlement(settlement, world.Tick, context.Events);
+            StepSettlement(world, settlement, context.Events);
         }
 
         foreach (var god in world.Gods)
@@ -61,7 +69,7 @@ public sealed class BeliefSystem : ISimulationSystem
     }
 
     /// <summary>Drifts every belief of a settlement from its values before the step, then converts and forgets.</summary>
-    private void StepSettlement(SettlementState settlement, long tick, List<WorldEvent> events)
+    private void StepSettlement(WorldState world, SettlementState settlement, List<WorldEvent> events)
     {
         var beliefs = settlement.Beliefs;
         if (beliefs.Count == 0)
@@ -70,7 +78,9 @@ public sealed class BeliefSystem : ISimulationSystem
         }
 
         var conditions = BeliefModel.AssessConditions(_rules, settlement);
-        var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs);
+        var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs, WarResistance(world, beliefs));
+        int? gainer = null;
+        int? loser = null;
         for (var i = 0; i < beliefs.Count; i++)
         {
             var belief = beliefs[i];
@@ -80,11 +90,58 @@ public sealed class BeliefSystem : ISimulationSystem
             var hasMajority = belief.Adherence >= BeliefModel.MajorityShare;
             if (hasMajority != hadMajority)
             {
-                events.Add(new FollowingChanged { Tick = tick, SettlementId = settlement.Id, GodId = belief.GodId, Gained = hasMajority });
+                events.Add(new FollowingChanged { Tick = world.Tick, SettlementId = settlement.Id, GodId = belief.GodId, Gained = hasMajority });
+                if (hasMajority)
+                {
+                    gainer = belief.GodId;
+                }
+                else
+                {
+                    loser = belief.GodId;
+                }
             }
         }
 
+        if (gainer is { } won && loser is { } lost)
+        {
+            _ledger?.Record(world, lost, won, DiplomaticAct.Converted, settlement.Id);
+        }
+
         beliefs.RemoveAll(b => b.Adherence * Math.Max(0, settlement.Population) < ForgottenFollowers && b.Faith < _rules.ForgottenFaith);
+    }
+
+    /// <summary>
+    /// Pull factors for a settlement's gods: where the god most people follow is at war with
+    /// another god, the people resist that enemy's pull by <c>WarResistance</c>.
+    /// </summary>
+    private float[]? WarResistance(WorldState world, List<GodBelief> beliefs)
+    {
+        if (_diplomacy is null || beliefs.Count < 2 || world.Diplomacy.Stances.Count == 0)
+        {
+            return null;
+        }
+
+        GodBelief? main = null;
+        foreach (var belief in beliefs)
+        {
+            if (belief.Adherence >= BeliefModel.MajorityShare)
+            {
+                main = belief;
+            }
+        }
+
+        if (main is null)
+        {
+            return null;
+        }
+
+        var factors = new float[beliefs.Count];
+        for (var i = 0; i < beliefs.Count; i++)
+        {
+            factors[i] = DiplomacyModel.AreAtWar(world, main.GodId, beliefs[i].GodId) ? 1f - _diplomacy.WarResistance : 1f;
+        }
+
+        return factors;
     }
 
     /// <summary>Lets every region's blessing fade by its decay share.</summary>

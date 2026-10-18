@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Settlements;
 
 namespace Pantheon.Simulation.Creatures;
@@ -23,16 +25,19 @@ public sealed class CreatureDeeds
     private readonly CreatureRules _rules;
     private readonly DivineRules _divine;
     private readonly SettlementRules _settlementRules;
+    private readonly IActRecorder? _ledger;
 
     /// <summary>Creates the deeds over validated rules.</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="divine">Divine rules, for belief.</param>
     /// <param name="settlementRules">Settlement rules, for storage and houses.</param>
-    public CreatureDeeds(CreatureRules rules, DivineRules divine, SettlementRules settlementRules)
+    /// <param name="ledger">Where attacks on other gods' followers are recorded; <c>null</c> for none.</param>
+    public CreatureDeeds(CreatureRules rules, DivineRules divine, SettlementRules settlementRules, IActRecorder? ledger = null)
     {
         _rules = rules;
         _divine = divine;
         _settlementRules = settlementRules;
+        _ledger = ledger;
     }
 
     /// <summary>Applies a finished action and records it.</summary>
@@ -54,6 +59,10 @@ public sealed class CreatureDeeds
             if (settlement is not null && settlement.Population > 0)
             {
                 Witness(creature, rule, settlement);
+                if (rule.Action == CreatureAction.Attack)
+                {
+                    NoteAttack(world, creature, settlement);
+                }
             }
 
             creature.Morality = Math.Clamp(creature.Morality + (rule.Kindness * MoralityStep), -1f, 1f);
@@ -136,6 +145,23 @@ public sealed class CreatureDeeds
         var loveScale = _divine.GratitudeFloor + ((1f - _divine.GratitudeFloor) * need);
         var belief = BeliefModel.FindOrAdd(_divine, settlement, creature.GodId);
         BeliefModel.ApplyImpulse(belief, rule.Witness, 1f, loveScale);
+    }
+
+    /// <summary>Every other god whose followers the Creature attacked remembers it.</summary>
+    private void NoteAttack(WorldState world, CreatureState creature, SettlementState settlement)
+    {
+        if (_ledger is null)
+        {
+            return;
+        }
+
+        foreach (var belief in settlement.Beliefs)
+        {
+            if (belief.GodId != creature.GodId && belief.Adherence > 0.05f)
+            {
+                _ledger.Record(world, belief.GodId, creature.GodId, DiplomaticAct.CreatureAttacked, settlement.Id);
+            }
+        }
     }
 
     /// <summary>Adds experience and raises the level it earns.</summary>

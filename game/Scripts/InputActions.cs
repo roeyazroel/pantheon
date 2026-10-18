@@ -93,6 +93,9 @@ public static class InputActions
     /// <summary>Send the Creature to the ground under the cursor (V).</summary>
     public static readonly StringName CreatureSend = "creature_send";
 
+    /// <summary>Show or hide the diplomacy panel (P).</summary>
+    public static readonly StringName ToggleDiplomacy = "toggle_diplomacy";
+
     /// <summary>Debug: grant the player's god 500 Divine Power (F4).</summary>
     public static readonly StringName DebugGrantPower = "debug_grant_power";
 
@@ -116,6 +119,6 @@ public static class InputActions
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
         SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
-        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend,
+        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];
 }

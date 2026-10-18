@@ -6,6 +6,7 @@ using System.Linq;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
 using Pantheon.Game.Creatures;
+using Pantheon.Game.Diplomacy;
 using Pantheon.Game.Divine;
 using Pantheon.Persistence;
 
@@ -159,6 +160,21 @@ public static class SessionCommands
         var name = session.LocalCreature?.Name ?? "Your Creature";
         var result = session.CommandCreature(kind, target);
         return CreatureText.DescribeCommand(result, kind, name);
+    }
+
+    /// <summary>Sends a diplomatic command to another god; the session checks it first.</summary>
+    /// <param name="session">Session to command in.</param>
+    /// <param name="otherGodId">The other god.</param>
+    /// <param name="kind">What to do.</param>
+    /// <returns>Status line.</returns>
+    public static string CommandDiplomacy(GameSession session, int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var other = session.World.Gods.Find(g => g.Id == otherGodId)?.Name ?? "that god";
+        var rejection = session.CommandDiplomacy(otherGodId, kind);
+        return rejection == Simulation.Diplomacy.DiplomacyRejection.None
+            ? Format("{0}: {1}", DiplomacyText.Command(kind), other)
+            : DiplomacyText.DescribeRejection(rejection, kind, other);
     }
 
     /// <summary>Debug: grants the local player's god <see cref="GrantedPower"/> Divine Power.</summary>

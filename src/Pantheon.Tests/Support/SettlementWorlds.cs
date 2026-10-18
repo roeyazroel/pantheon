@@ -109,6 +109,7 @@ internal static class SettlementWorlds
             },
             Gods = [],
             Creatures = [],
+            Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             WinnerGodId = null,
         };
     }

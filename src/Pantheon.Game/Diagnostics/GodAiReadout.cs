@@ -32,6 +32,21 @@ internal static class GodAiReadout
                 var candidate = candidates[i];
                 lines.Add(Format("  {0:0.00}  {1}  [{2}]", candidate.Utility, Describe(candidate, snapshot.World), candidate.Reason));
             }
+
+            foreach (var (diplomatId, moves) in snapshot.GodDiplomacyCandidates)
+            {
+                if (diplomatId != godId)
+                {
+                    continue;
+                }
+
+                for (var i = 0; i < moves.Count && i < CandidatesShown - 1; i++)
+                {
+                    var move = moves[i];
+                    var other = snapshot.World.Gods.Find(g => g.Id == move.OtherGodId)?.Name ?? "?";
+                    lines.Add(Format("  {0:+0.00;-0.00;0.00}  {1} {2} (acts above +0.25)  [{3}]", move.Utility, move.Kind, other, move.Reason));
+                }
+            }
         }
     }
 

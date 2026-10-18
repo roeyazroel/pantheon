@@ -78,6 +78,9 @@ internal static class SaveMigrations
             case 4:
                 UpgradeFrom4(root);
                 break;
+            case 5:
+                UpgradeFrom5(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
@@ -218,6 +221,18 @@ internal static class SaveMigrations
         }
 
         AddNullMember(world, "WinnerGodId", fromVersion: 4);
+    }
+
+    /// <summary>
+    /// Version 5 to 6 (Milestone 6): the world gains diplomacy. Version 5 gods had no relations, so
+    /// they start with none: no relations, every pair neutral, no proposals.
+    /// </summary>
+    private static void UpgradeFrom5(JsonObject root)
+    {
+        if (root["World"] is JsonObject world)
+        {
+            AddNode(world, "Diplomacy", new JsonObject { ["Relations"] = new JsonArray(), ["Stances"] = new JsonArray(), ["Proposals"] = new JsonArray() }, fromVersion: 5);
+        }
     }
 
     /// <summary>Adds a member, set to null, that the older version could not contain.</summary>

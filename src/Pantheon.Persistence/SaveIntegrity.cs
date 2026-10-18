@@ -40,6 +40,7 @@ internal static class SaveIntegrity
 
         ValidateSettlements(world, godIds, errors);
         CreatureIntegrity.Validate(world, godIds, errors);
+        DiplomacyIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {

@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Settlements;
 
 namespace Pantheon.Simulation.Miracles;
@@ -19,16 +21,22 @@ namespace Pantheon.Simulation.Miracles;
 /// </summary>
 public sealed class MiracleCaster
 {
+    // A miracle counts as help to a rival's followers only when their food or health need is at least this.
+    private const float NeedForHelp = 0.5f;
+
     private readonly DivineRules _rules;
     private readonly SettlementRules _settlementRules;
     private readonly MiracleBook _book;
+    private readonly IActRecorder? _ledger;
 
     /// <summary>Creates a caster over validated content.</summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="settlementRules">Settlement rules, for food storage.</param>
     /// <param name="book">The miracles.</param>
-    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book)
+    /// <param name="ledger">Where the gods whose followers a miracle reaches note it (ADR-012); <c>null</c> for none.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null)
     {
+        _ledger = ledger;
         DivineRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
         ArgumentNullException.ThrowIfNull(book);
@@ -55,7 +63,7 @@ public sealed class MiracleCaster
         return miracle.PowerCost * (1f + (rules.WeakInfluenceCostFactor * (1f - own))) * (1f + (rules.ContestedCostFactor * contest));
     }
 
-    /// <summary>The strongest influence at a point of any god other than the given one.</summary>
+    /// <summary>The strongest influence at a point of any god other than the given one and its allies.</summary>
     /// <param name="world">World state.</param>
     /// <param name="godId">The god whose rivals count.</param>
     /// <param name="target">The point.</param>
@@ -66,7 +74,7 @@ public sealed class MiracleCaster
         var strongest = 0f;
         foreach (var rival in world.Gods)
         {
-            if (rival.Id != godId)
+            if (rival.Id != godId && !DiplomacyModel.AreAllied(world, godId, rival.Id))
             {
                 strongest = Math.Max(strongest, InfluenceField.Build(_rules, world, rival.Id).At(target));
             }
@@ -131,6 +139,7 @@ public sealed class MiracleCaster
 
         var reach = Reach(miracle);
         var affected = new List<int>();
+        var needs = new Dictionary<int, float>();
         var deaths = 0;
         foreach (var settlement in world.Settlements)
         {
@@ -139,15 +148,18 @@ public sealed class MiracleCaster
             if (distance <= reach)
             {
                 affected.Add(settlement.Id);
+                needs[settlement.Id] = Math.Max(conditions.FoodNeed, conditions.HealthNeed);
                 deaths += ApplyEffects(miracle, settlement);
             }
 
             var closeness = distance <= reach ? 1f : SimMath.Clamp01(1f - ((distance - reach) / Math.Max(1f, _rules.WitnessRadius)));
             if (closeness > 0f && settlement.Population > 0)
             {
-                Witness(miracle, settlement, god.Id, closeness, conditions);
+                Witness(world, miracle, settlement, god.Id, closeness, conditions);
             }
         }
+
+        NoteByRivals(world, miracle, god.Id, affected, needs);
 
         ApplyRegionEffects(miracle, world.Regions, request.Target);
         events.Add(new MiracleCast
@@ -271,13 +283,13 @@ public sealed class MiracleCaster
     /// Lets the people of a settlement who saw the miracle change their belief in the god, and plants
     /// doubt about every other god they follow: another god can work wonders here.
     /// </summary>
-    private void Witness(MiracleDefinition miracle, SettlementState settlement, int godId, float closeness, SettlementConditions conditions)
+    private void Witness(WorldState world, MiracleDefinition miracle, SettlementState settlement, int godId, float closeness, SettlementConditions conditions)
     {
         var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
         var loveScale = _rules.GratitudeFloor + ((1f - _rules.GratitudeFloor) * need);
         foreach (var other in settlement.Beliefs)
         {
-            if (other.GodId != godId && other.Adherence > 0f)
+            if (other.GodId != godId && other.Adherence > 0f && !DiplomacyModel.AreAllied(world, godId, other.GodId))
             {
                 other.Doubt = BeliefModel.ApplyChange(other.Doubt, _rules.RivalMiracleDoubt * closeness);
             }
@@ -285,6 +297,44 @@ public sealed class MiracleCaster
 
         var belief = BeliefModel.FindOrAdd(_rules, settlement, godId);
         BeliefModel.ApplyImpulse(belief, miracle.Witness, closeness, loveScale);
+    }
+
+    /// <summary>
+    /// Every other god whose followers the miracle reached notes it once: harm when it struck them,
+    /// help when they were in real need (spec §41), and courting otherwise (ADR-012).
+    /// </summary>
+    private void NoteByRivals(WorldState world, MiracleDefinition miracle, int godId, List<int> affected, Dictionary<int, float> needs)
+    {
+        if (_ledger is null || affected.Count == 0)
+        {
+            return;
+        }
+
+        var harms = false;
+        foreach (var effect in miracle.Effects)
+        {
+            harms |= effect.Kind == MiracleEffectKind.Smite;
+        }
+
+        foreach (var rival in world.Gods)
+        {
+            if (rival.Id == godId)
+            {
+                continue;
+            }
+
+            foreach (var id in affected)
+            {
+                if (world.Settlements.Find(s => s.Id == id) is not { } settlement || BeliefModel.Find(settlement, rival.Id) is not { Adherence: > 0.05f })
+                {
+                    continue;
+                }
+
+                var act = harms ? DiplomaticAct.Harmed : needs.GetValueOrDefault(id) >= NeedForHelp ? DiplomaticAct.Helped : DiplomaticAct.Courted;
+                _ledger.Record(world, rival.Id, godId, act, id);
+                break;
+            }
+        }
     }
 
     /// <summary>Distance between two ground positions in metres.</summary>

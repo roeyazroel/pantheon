@@ -1,0 +1,149 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using Pantheon.Domain.Diplomacy;
+using Pantheon.Domain.Events;
+using Pantheon.Domain.Gods;
+using Pantheon.Domain.World;
+using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Diplomacy;
+
+namespace Pantheon.Simulation.Gods;
+
+/// <summary>
+/// The diplomatic half of a god's AI (spec §47–49, §113, ADR-012). It weighs offering an alliance,
+/// declaring war, breaking an alliance and asking for peace with every other god, and answers the
+/// proposals waiting for it. Every weight comes from how the god sees the other (trust, rivalry,
+/// fear, respect, gratitude, suspicion and the grudge of what it remembers), the balance of their
+/// followings and the god's personality. It acts through the diplomacy authority.
+/// </summary>
+public sealed class GodDiplomat
+{
+    private const float Threshold = 0.25f;
+    private const float WarWearinessSeconds = 300f;
+
+    private readonly DiplomacyRules _rules;
+    private readonly DiplomacyAuthority _authority;
+
+    /// <summary>Creates the diplomat.</summary>
+    /// <param name="rules">Diplomacy rules.</param>
+    /// <param name="authority">The diplomacy authority it acts through.</param>
+    public GodDiplomat(DiplomacyRules rules, DiplomacyAuthority authority)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(authority);
+        _rules = rules;
+        _authority = authority;
+    }
+
+    /// <summary>Every move the god could make now, best first; including answers to proposals waiting for it.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="god">The AI god.</param>
+    /// <param name="profile">Its personality's profile.</param>
+    /// <returns>The candidates.</returns>
+    public List<DiplomacyCandidate> Evaluate(WorldState world, GodState god, GodProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(god);
+        ArgumentNullException.ThrowIfNull(profile);
+        var candidates = new List<DiplomacyCandidate>();
+        foreach (var other in world.Gods)
+        {
+            if (other.Id != god.Id)
+            {
+                AddMoves(candidates, world, god, other, profile);
+            }
+        }
+
+        candidates.Sort(static (a, b) => b.Utility.CompareTo(a.Utility));
+        return candidates;
+    }
+
+    /// <summary>Answers every proposal waiting for the god, then makes its best move if it is worth making.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="god">The AI god.</param>
+    /// <param name="profile">Its personality's profile.</param>
+    /// <param name="events">Receives the events of what it does.</param>
+    public void Act(WorldState world, GodState god, GodProfile profile, List<WorldEvent> events)
+    {
+        var candidates = Evaluate(world, god, profile);
+        foreach (var answer in candidates.FindAll(c => c.Kind is DiplomaticCommandKind.Accept or DiplomaticCommandKind.Decline))
+        {
+            _authority.Execute(world, new DiplomaticCommand(god.Id, answer.OtherGodId, answer.Kind), god.Id, events);
+        }
+
+        foreach (var move in candidates)
+        {
+            if (move.Kind is DiplomaticCommandKind.Accept or DiplomaticCommandKind.Decline || move.Utility < Threshold)
+            {
+                continue;
+            }
+
+            if (_authority.Execute(world, new DiplomaticCommand(god.Id, move.OtherGodId, move.Kind), god.Id, events) == DiplomacyRejection.None)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>The moves towards one other god that fit their status.</summary>
+    private void AddMoves(List<DiplomacyCandidate> candidates, WorldState world, GodState god, GodState other, GodProfile profile)
+    {
+        var view = DiplomacyModel.FindRelation(world, god.Id, other.Id) ?? DiplomacyModel.NewRelation(_rules, god.Id, other.Id);
+        var mine = GodStanding.CountFollowers(world, god.Id);
+        var theirs = GodStanding.CountFollowers(world, other.Id);
+        var advantage = (mine - theirs) / (float)Math.Max(1, mine + theirs);
+        var grudge = DiplomacyModel.Grudge(view) * profile.Grudge;
+        var goodwill = DiplomacyModel.Goodwill(view);
+        var theyDominate = other.DominantSinceTick is not null;
+        var stance = DiplomacyModel.FindStance(world, god.Id, other.Id);
+        var status = stance?.Status ?? DiplomaticStatus.Neutral;
+        var why = Format(
+            "trust {0:0.00}, rivalry {1:0.00}, fear {2:0.00}, grudge {3:0.00}, goodwill {4:0.00}, advantage {5:+0.00;-0.00;0.00}{6}",
+            view.Trust,
+            view.Rivalry,
+            view.Fear,
+            grudge,
+            goodwill,
+            advantage,
+            theyDominate ? ", they dominate" : string.Empty);
+        // Alliance appeals to the cooperative, the grateful, the afraid and the losing.
+        var alliance = (profile.Cooperation * (view.Trust + (0.5f * view.Respect) + view.Gratitude + (0.5f * goodwill)))
+            + (0.6f * view.Fear) + (0.5f * Math.Max(0f, -advantage)) - (0.6f * view.Rivalry) - view.Suspicion - grudge - 0.3f;
+
+        // War-weariness wears on a god that is not winning.
+        var weariness = WarSeconds(world, stance) / WarWearinessSeconds * (1f - Math.Max(0f, advantage));
+        var peace = (profile.Cooperation * (weariness + Math.Max(0f, -advantage))) + view.Fear - (0.5f * grudge) - 0.3f;
+        if (DiplomacyAuthority.FindProposal(world, other.Id, god.Id) is { } proposal)
+        {
+            var accept = proposal.Kind == ProposalKind.Alliance ? alliance + 0.2f : peace + 0.3f;
+            candidates.Add(new DiplomacyCandidate(accept > 0f ? DiplomaticCommandKind.Accept : DiplomaticCommandKind.Decline, other.Id, Math.Abs(accept), why));
+        }
+
+        switch (status)
+        {
+            case DiplomaticStatus.Alliance:
+                var betray = (profile.Treachery * (Math.Max(0f, advantage) + view.Rivalry)) + (theyDominate ? 0.8f : 0f) - view.Trust - 0.4f;
+                candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.BreakAlliance, other.Id, betray, why));
+                break;
+            case DiplomaticStatus.War:
+                candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.RequestPeace, other.Id, peace, why));
+                break;
+            case DiplomaticStatus.Friendly:
+            case DiplomaticStatus.Neutral:
+            case DiplomaticStatus.Hostile:
+                candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.OfferAlliance, other.Id, alliance, why));
+                var war = (profile.Aggression * (view.Rivalry + grudge + Math.Max(0f, advantage) + (status == DiplomaticStatus.Hostile ? 0.3f : 0f)))
+                    + (theyDominate ? 0.6f : 0f) - (0.5f * view.Trust) - view.Fear - (0.3f * profile.Cooperation) - 0.4f;
+                candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.DeclareWar, other.Id, war, why));
+                break;
+        }
+    }
+
+    /// <summary>Simulated seconds the pair has been at war; 0 when not at war.</summary>
+    private static float WarSeconds(WorldState world, GodStance? stance) =>
+        stance is { Status: DiplomaticStatus.War } ? (world.Tick - stance.SinceTick) / (float)SimulationTime.TicksPerSecond : 0f;
+
+    /// <summary>Invariant-culture string formatting.</summary>
+    private static string Format(string format, params object?[] args) => string.Format(CultureInfo.InvariantCulture, format, args);
+}

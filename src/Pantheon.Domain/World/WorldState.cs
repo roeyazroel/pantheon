@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World.Generation;
@@ -39,6 +40,9 @@ public sealed class WorldState
 
     /// <summary>All Creatures in the world, ordered by id: at most one per god (spec §22).</summary>
     public required List<CreatureState> Creatures { get; init; }
+
+    /// <summary>The relations between the gods (spec §37–41).</summary>
+    public required DiplomacyState Diplomacy { get; init; }
 
     /// <summary>The god that has won (spec §115), once one has. The world goes on after a victory.</summary>
     public required int? WinnerGodId { get; set; }

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Systems;
 
 namespace Pantheon.Simulation.Creatures;
@@ -34,14 +36,16 @@ public sealed class CreatureSystem : ISimulationSystem
     /// <param name="rules">Creature rules.</param>
     /// <param name="divine">Divine rules.</param>
     /// <param name="settlementRules">Settlement rules.</param>
-    public CreatureSystem(CreatureRules rules, DivineRules divine, SettlementRules settlementRules)
+    /// <param name="diplomacy">Diplomacy rules, so Creatures turn on their god's enemies and spare its allies; <c>null</c> to ignore diplomacy.</param>
+    /// <param name="ledger">Where attacks on other gods' followers are recorded; <c>null</c> for none.</param>
+    public CreatureSystem(CreatureRules rules, DivineRules divine, SettlementRules settlementRules, DiplomacyRules? diplomacy = null, IActRecorder? ledger = null)
     {
         CreatureRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(divine);
         ArgumentNullException.ThrowIfNull(settlementRules);
         _rules = rules;
-        _brain = new CreatureBrain(rules, divine, settlementRules);
-        _deeds = new CreatureDeeds(rules, divine, settlementRules);
+        _brain = new CreatureBrain(rules, divine, settlementRules, diplomacy);
+        _deeds = new CreatureDeeds(rules, divine, settlementRules, ledger);
     }
 
     /// <summary>The brain, for previews and commands.</summary>

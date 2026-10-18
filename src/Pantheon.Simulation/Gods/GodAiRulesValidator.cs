@@ -38,6 +38,10 @@ public static class GodAiRulesValidator
             errors.RequireShare(profile.Thrift, prefix + nameof(profile.Thrift));
             errors.RequireShare(profile.SendCreature, prefix + nameof(profile.SendCreature));
             errors.RequireSignedShare(profile.CreatureKindness, prefix + nameof(profile.CreatureKindness));
+            errors.RequireShare(profile.Cooperation, prefix + nameof(profile.Cooperation));
+            errors.RequireShare(profile.Aggression, prefix + nameof(profile.Aggression));
+            errors.RequireShare(profile.Treachery, prefix + nameof(profile.Treachery));
+            errors.RequireShare(profile.Grudge, prefix + nameof(profile.Grudge));
         }
 
         foreach (var personality in Enum.GetValues<GodPersonality>())

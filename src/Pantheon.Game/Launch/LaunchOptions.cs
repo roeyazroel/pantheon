@@ -32,6 +32,7 @@ public sealed record LaunchOptions
         "debug-panel",
         "select",
         "judge",
+        "diplomacy-panel",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -78,6 +79,9 @@ public sealed record LaunchOptions
 
     /// <summary>Reward or punishment given to the player's Creature on the first frame, so a capture shows the hand's gesture.</summary>
     public CreatureCommandKind? Judge { get; init; }
+
+    /// <summary>Whether the diplomacy panel starts visible.</summary>
+    public bool DiplomacyPanel { get; init; }
 
     /// <summary>Whether the F1 debug panel starts visible.</summary>
     public bool? DebugPanel { get; init; }
@@ -188,6 +192,13 @@ public sealed record LaunchOptions
                 };
             case "select":
                 return options with { SelectMiracle = value.Trim() };
+            case "diplomacy-panel":
+                return value.Trim().ToLowerInvariant() switch
+                {
+                    "on" => options with { DiplomacyPanel = true },
+                    "off" => options with { DiplomacyPanel = false },
+                    _ => Warn(options, warnings, $"'--diplomacy-panel' needs on or off, got '{value}'."),
+                };
             case "debug-panel":
                 return value.Trim().ToLowerInvariant() switch
                 {

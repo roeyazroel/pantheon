@@ -113,28 +113,30 @@ public static class BeliefModel
     /// </summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="beliefs">The settlement's beliefs.</param>
+    /// <param name="pullFactors">A factor on each god's pull, in the same order (for example a people at war resisting the enemy); 1 for all when <c>null</c>.</param>
     /// <returns>The change for each belief, in the same order.</returns>
-    public static float[] ComputeAdherenceChanges(DivineRules rules, IReadOnlyList<GodBelief> beliefs)
+    public static float[] ComputeAdherenceChanges(DivineRules rules, IReadOnlyList<GodBelief> beliefs, IReadOnlyList<float>? pullFactors = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(beliefs);
         var free = 1f - TotalAdherence(beliefs);
-        var gains = new float[beliefs.Count];
-        var totalGain = 0f;
-        for (var i = 0; i < beliefs.Count; i++)
-        {
-            gains[i] = rules.ConversionPerStep * ComputePull(rules, beliefs[i]) * Math.Max(0f, free);
-            totalGain += gains[i];
-        }
-
-        var scale = totalGain > free && totalGain > 0f ? Math.Max(0f, free) / totalGain : 1f;
         var pulls = new float[beliefs.Count];
         var totalPull = 0f;
         for (var i = 0; i < beliefs.Count; i++)
         {
-            pulls[i] = ComputePull(rules, beliefs[i]);
+            pulls[i] = ComputePull(rules, beliefs[i]) * (pullFactors is null ? 1f : Math.Max(0f, pullFactors[i]));
             totalPull += pulls[i];
         }
+
+        var gains = new float[beliefs.Count];
+        var totalGain = 0f;
+        for (var i = 0; i < beliefs.Count; i++)
+        {
+            gains[i] = rules.ConversionPerStep * pulls[i] * Math.Max(0f, free);
+            totalGain += gains[i];
+        }
+
+        var scale = totalGain > free && totalGain > 0f ? Math.Max(0f, free) / totalGain : 1f;
 
         var changes = new float[beliefs.Count];
         for (var i = 0; i < beliefs.Count; i++)

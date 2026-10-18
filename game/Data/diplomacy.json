@@ -1,0 +1,35 @@
+{
+  // Relations between gods (spec sections 37-41 and 113, ADR-012). The diplomacy step runs every
+  // StepIntervalTicks ticks; rates below are per step, act effects once per act. Values are shares (0..1).
+  "StepIntervalTicks": 10,
+  "StartingTrust": 0.5,
+  "StartingRivalry": 0.2,
+  "StartingSuspicion": 0.2,
+  "DriftPerStep": 0.004,
+  "MemoryFadePerStep": 0.004,
+  "BetrayalFadePerStep": 0.0005,
+  "MemoryCapacity": 16,
+
+  // Proposals wait ProposalSeconds for an answer and are at least ProposalCooldownSeconds apart; a pair
+  // keeps a status at least StatusCooldownSeconds.
+  "ProposalSeconds": 60.0,
+  "ProposalCooldownSeconds": 180.0,
+  "StatusCooldownSeconds": 60.0,
+
+  // What acts do to the observing god's view of the actor.
+  "HelpGratitude": 0.08,
+  "CourtingRivalry": 0.03,
+  "HarmTrustLoss": 0.08,
+  "HarmRivalry": 0.1,
+  "BetrayalTrustLoss": 0.5,
+  "BetrayalReputationLoss": 0.2,
+
+  // War: a people resists the pull of its god's enemy by WarResistance where its god holds the majority,
+  // and a Creature's urge to attack an enemy's settlement rises by WarCreatureAggression.
+  "WarResistance": 0.6,
+  "WarCreatureAggression": 0.6,
+
+  // Pairs neither allied nor at war turn Friendly when both feel warmer than this, Hostile when either
+  // feels colder than minus this.
+  "HostilityThreshold": 0.35
+}

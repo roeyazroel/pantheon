@@ -38,6 +38,9 @@ public sealed record DebugSnapshot
     /// <summary>Each AI god's candidate actions now, best first, by god id.</summary>
     public IReadOnlyList<(int GodId, IReadOnlyList<AiCandidate> Candidates)> GodAiCandidates { get; init; } = [];
 
+    /// <summary>Each AI god's diplomatic moves now, best first, by god id.</summary>
+    public IReadOnlyList<(int GodId, IReadOnlyList<DiplomacyCandidate> Candidates)> GodDiplomacyCandidates { get; init; } = [];
+
     /// <summary>The local Creature's options now, best first.</summary>
     public IReadOnlyList<CreatureOption> CreatureOptions { get; init; } = [];
 

@@ -48,6 +48,7 @@ public static class WorldGenerator
             Settlements = settlements,
             Gods = gods,
             Creatures = creatures,
+            Diplomacy = new Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             WinnerGodId = null,
         };
 

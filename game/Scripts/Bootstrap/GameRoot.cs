@@ -47,6 +47,7 @@ public partial class GameRoot : Node3D
     private DebugOverlay _overlay = null!;
     private DivinePresenter _divinePresenter = null!;
     private CreaturePresenter _creatures = null!;
+    private DiplomacyPanel _diplomacy = null!;
     private DivineController _divine = null!;
     private int _focusIndex = -1;
     private CreatureCommandKind? _pendingJudge;
@@ -89,6 +90,10 @@ public partial class GameRoot : Node3D
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
         hud.CreatureLookClicked += FocusCreature;
         _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
+        _diplomacy = new DiplomacyPanel { Name = "Diplomacy" };
+        AddChild(_diplomacy);
+        _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
+        CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         if (options.AdvanceTicks is { } ticks)
         {
@@ -134,6 +139,11 @@ public partial class GameRoot : Node3D
         }
         var cursor = _camera.CursorGroundPoint;
         _divine.Process(delta, cursor, _camera.Model.Distance);
+        if (_diplomacy.PanelVisible)
+        {
+            _diplomacy.ShowEntries(Pantheon.Game.Diplomacy.DiplomacyReadout.Build(_session));
+        }
+
         var cursorRegion = RegionAt(cursor);
         _presenter.SetHoveredRegion(cursorRegion);
         UpdateRegionMap(cursorRegion);
@@ -180,6 +190,7 @@ public partial class GameRoot : Node3D
         .. CreateMiracleHotkeys(),
         (InputActions.MiracleCancel, () => _divine.Select(null)),
         (InputActions.CreatureFocus, FocusCreature),
+        (InputActions.ToggleDiplomacy, () => _diplomacy.PanelVisible = !_diplomacy.PanelVisible),
         (InputActions.CreatureReward, () => _divine.JudgeCreature(CreatureCommandKind.Reward)),
         (InputActions.CreaturePunish, () => _divine.JudgeCreature(CreatureCommandKind.Punish)),
         (InputActions.CreatureSend, () => _divine.SendCreature(_camera.CursorGroundPoint)),
@@ -282,6 +293,10 @@ public partial class GameRoot : Node3D
         }
     }
 
+    /// <summary>Shows the diplomacy panel once it is ready, when the launch options ask for it.</summary>
+    /// <param name="visible">Whether to show it.</param>
+    private void ShowDiplomacyAtStart(bool visible) => _diplomacy.PanelVisible = visible;
+
     /// <summary>Glides to the player's Creature (spec §56: focus Creature).</summary>
     private void FocusCreature()
     {
@@ -350,6 +365,10 @@ public partial class GameRoot : Node3D
         LocalGodId = _session.LocalGodId,
         LocalCreatureId = _session.LocalCreature?.Id,
         CreatureOptions = _session.PreviewCreatureOptions(),
+        GodDiplomacyCandidates = _session.World.Gods
+            .Where(god => god.Controller == GodController.Ai)
+            .Select(god => (god.Id, _session.PreviewGodDiplomacy(god)))
+            .ToList(),
         GodAiCandidates = _session.World.Gods
             .Where(god => god.Controller == GodController.Ai)
             .Select(god => (god.Id, _session.PreviewGodAi(god)))

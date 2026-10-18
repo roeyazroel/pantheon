@@ -105,11 +105,12 @@ public static class HudReadout
 
             var personality = DivineText.Personality(rival.Personality);
             lines.Add(Format(
-                "{0}{1}: {2} followers ({3:0%})",
+                "{0}{1}: {2} followers ({3:0%}), {4}",
                 rival.Name,
                 personality.Length > 0 ? " the " + personality : string.Empty,
                 GodStanding.CountFollowers(world, rival.Id),
-                VictorySystem.ShareOf(world, rival.Id)));
+                VictorySystem.ShareOf(world, rival.Id),
+                Diplomacy.DiplomacyText.Status(Simulation.Diplomacy.DiplomacyModel.StatusOf(world, localGodId, rival.Id))));
         }
 
         return lines;

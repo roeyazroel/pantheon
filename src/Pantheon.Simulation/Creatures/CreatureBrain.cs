@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Navigation;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Settlements;
@@ -27,16 +29,19 @@ public sealed class CreatureBrain
     private readonly CreatureRules _rules;
     private readonly DivineRules _divine;
     private readonly SettlementRules _settlementRules;
+    private readonly DiplomacyRules? _diplomacy;
 
     /// <summary>Creates a brain over validated rules.</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="divine">Divine rules, for how settlements are faring.</param>
     /// <param name="settlementRules">Settlement rules, for construction.</param>
-    public CreatureBrain(CreatureRules rules, DivineRules divine, SettlementRules settlementRules)
+    /// <param name="diplomacy">Diplomacy rules, so the Creature turns on its god's enemies and spares its allies; <c>null</c> to ignore diplomacy.</param>
+    public CreatureBrain(CreatureRules rules, DivineRules divine, SettlementRules settlementRules, DiplomacyRules? diplomacy = null)
     {
         _rules = rules;
         _divine = divine;
         _settlementRules = settlementRules;
+        _diplomacy = diplomacy;
     }
 
     /// <summary>Every option the Creature has now, best first, without jitter (for decisions and the debug view).</summary>
@@ -72,7 +77,7 @@ public sealed class CreatureBrain
             var distance = Distance(here, settlement.Position);
             if (distance <= _rules.PerceptionRadius && settlement.Population > 0)
             {
-                AddVillageOptions(options, creature, settlement, distance);
+                AddVillageOptions(options, creature, settlement, distance, AttackDrive(world, creature, settlement));
             }
         }
 
@@ -127,8 +132,33 @@ public sealed class CreatureBrain
         return true;
     }
 
+    /// <summary>
+    /// The urge to attack a settlement: a base, more when most of its people follow a god at war with
+    /// the Creature's own, far less when they follow an ally.
+    /// </summary>
+    private float AttackDrive(WorldState world, CreatureState creature, SettlementState settlement)
+    {
+        const float baseDrive = 0.35f;
+        if (_diplomacy is null)
+        {
+            return baseDrive;
+        }
+
+        foreach (var belief in settlement.Beliefs)
+        {
+            if (belief.Adherence >= BeliefModel.MajorityShare && belief.GodId != creature.GodId)
+            {
+                return DiplomacyModel.AreAtWar(world, creature.GodId, belief.GodId) ? baseDrive + _diplomacy.WarCreatureAggression
+                    : DiplomacyModel.AreAllied(world, creature.GodId, belief.GodId) ? baseDrive * 0.2f
+                    : baseDrive;
+            }
+        }
+
+        return baseDrive;
+    }
+
     /// <summary>Options a settlement offers, by how it is faring.</summary>
-    private void AddVillageOptions(List<CreatureOption> options, CreatureState creature, SettlementState settlement, float distance)
+    private void AddVillageOptions(List<CreatureOption> options, CreatureState creature, SettlementState settlement, float distance, float attack)
     {
         var conditions = BeliefModel.AssessConditions(_divine, settlement);
         var need = Math.Max(conditions.FoodNeed, conditions.HealthNeed);
@@ -146,21 +176,21 @@ public sealed class CreatureBrain
             const CreatureSituation inNeed = CreatureSituation.VillageInNeed;
             Add(options, creature, inNeed, CreatureAction.Feed, id, spot, need * closeness);
             Add(options, creature, inNeed, CreatureAction.EatFromStores, id, spot, (0.3f + (0.7f * hunger)) * closeness * (settlement.Food > 0f ? 1f : 0f));
-            Add(options, creature, inNeed, CreatureAction.Attack, id, spot, 0.35f * closeness);
+            Add(options, creature, inNeed, CreatureAction.Attack, id, spot, attack * closeness);
             Add(options, creature, inNeed, CreatureAction.Ignore, id, spot, 0.3f * closeness);
         }
         else if (SettlementEconomy.WantsConstruction(_settlementRules, settlement))
         {
             const CreatureSituation building = CreatureSituation.VillageBuilding;
             Add(options, creature, building, CreatureAction.HelpBuild, id, spot, 0.5f * closeness);
-            Add(options, creature, building, CreatureAction.Attack, id, spot, 0.35f * closeness);
+            Add(options, creature, building, CreatureAction.Attack, id, spot, attack * closeness);
             Add(options, creature, building, CreatureAction.Ignore, id, spot, 0.3f * closeness);
         }
         else
         {
             const CreatureSituation thriving = CreatureSituation.VillageThriving;
             Add(options, creature, thriving, CreatureAction.Play, id, spot, (0.3f + (0.7f * creature.Needs.Boredom)) * closeness);
-            Add(options, creature, thriving, CreatureAction.Attack, id, spot, 0.35f * closeness);
+            Add(options, creature, thriving, CreatureAction.Attack, id, spot, attack * closeness);
             Add(options, creature, thriving, CreatureAction.Ignore, id, spot, 0.3f * closeness);
         }
     }

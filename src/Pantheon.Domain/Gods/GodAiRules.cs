@@ -56,4 +56,16 @@ public sealed record GodProfile
 
     /// <summary>What it teaches its Creature, from -1 (rewards cruelty) to 1 (rewards kindness).</summary>
     public required float CreatureKindness { get; init; }
+
+    /// <summary>Appetite for alliances and peace.</summary>
+    public required float Cooperation { get; init; }
+
+    /// <summary>Appetite for war.</summary>
+    public required float Aggression { get; init; }
+
+    /// <summary>Willingness to break an alliance when it pays.</summary>
+    public required float Treachery { get; init; }
+
+    /// <summary>How heavily it weighs what others did to it.</summary>
+    public required float Grudge { get; init; }
 }

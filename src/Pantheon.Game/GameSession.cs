@@ -6,6 +6,7 @@ using Pantheon.Domain.Gods;
 using Pantheon.Domain.World;
 using Pantheon.Persistence;
 using Pantheon.Simulation.Creatures;
+using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Systems;
 using Pantheon.Simulation.Terrain;
@@ -25,8 +26,7 @@ public sealed class GameSession
     private const int MaxPendingEvents = 512;
 
     private readonly SimulationEngine _engine;
-    private readonly MiracleCaster _caster;
-    private readonly CreatureAuthority _creatures;
+    private readonly Authorities _authorities;
     private readonly Action _step;
     private readonly List<WorldEvent> _events = [];
 
@@ -34,9 +34,8 @@ public sealed class GameSession
     private GameSession(GameContent content, WorldState world, TerrainField terrain)
     {
         Content = content;
-        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles);
-        _creatures = new CreatureAuthority(content.Creatures, _engine.Creatures!.Brain);
-        _caster = new MiracleCaster(content.DivineRules, content.SettlementRules, content.Miracles);
+        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy);
+        _authorities = _engine.Authorities!;
         _step = StepWorld;
         World = world;
         Terrain = terrain;
@@ -142,14 +141,14 @@ public sealed class GameSession
     /// <param name="target">Where it would be cast.</param>
     /// <returns>The verdict, with the influence and cost at the target.</returns>
     public CastCheck CheckCast(string miracleId, GroundPosition target) =>
-        _caster.Check(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0);
+        _authorities.Miracles.Check(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0);
 
     /// <summary>The settlements a miracle cast at a target would reach.</summary>
     /// <param name="miracleId">The miracle.</param>
     /// <param name="target">Where it would be cast.</param>
     /// <returns>The settlements; none for an unknown miracle.</returns>
     public IReadOnlyList<Domain.Settlements.SettlementState> FindReached(string miracleId, GroundPosition target) =>
-        Content.Miracles.Find(miracleId) is { } miracle ? _caster.FindReached(World, miracle, target) : [];
+        Content.Miracles.Find(miracleId) is { } miracle ? _authorities.Miracles.FindReached(World, miracle, target) : [];
 
     /// <summary>
     /// Casts a miracle for the local player's god (spec §73): the request is checked like any other
@@ -159,7 +158,7 @@ public sealed class GameSession
     /// <param name="target">Where to cast it.</param>
     /// <returns>The verdict.</returns>
     public CastCheck CastMiracle(string miracleId, GroundPosition target) =>
-        _caster.Cast(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0, _events);
+        _authorities.Miracles.Cast(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0, _events);
 
     /// <summary>
     /// Sends a command to the local player's Creature (spec §73, ADR-010): reward or punish what it is
@@ -172,14 +171,14 @@ public sealed class GameSession
     {
         var god = LocalGodId ?? 0;
         var creature = LocalGod?.CreatureId ?? 0;
-        return _creatures.Execute(World, new CreatureCommand(god, creature, kind, target), god, _events);
+        return _authorities.Creatures.Execute(World, new CreatureCommand(god, creature, kind, target), god, _events);
     }
 
     /// <summary>What a reward or punishment of the local Creature would judge now, if anything.</summary>
     /// <returns>The situation, the action and the settlement it concerned, or <c>null</c>.</returns>
     public (CreatureSituation Situation, CreatureAction Action, int? SettlementId)? FindJudgedAction()
     {
-        if (LocalCreature is not { } creature || _creatures.FindJudged(World, creature) is not { } judged)
+        if (LocalCreature is not { } creature || _authorities.Creatures.FindJudged(World, creature) is not { } judged)
         {
             return null;
         }
@@ -191,6 +190,29 @@ public sealed class GameSession
     /// <returns>The options; none without a Creature.</returns>
     public IReadOnlyList<CreatureOption> PreviewCreatureOptions() =>
         LocalCreature is { } creature ? _engine.Creatures!.Brain.ListOptions(World, creature) : [];
+
+    /// <summary>
+    /// Sends a diplomatic command from the local player's god to another god (spec §113, ADR-012); the
+    /// authority checks it first.
+    /// </summary>
+    /// <param name="otherGodId">The other god.</param>
+    /// <param name="kind">What to do.</param>
+    /// <returns>Why it was refused, or <see cref="DiplomacyRejection.None"/>.</returns>
+    public DiplomacyRejection CommandDiplomacy(int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) =>
+        _authorities.Diplomacy.Execute(World, new Domain.Diplomacy.DiplomaticCommand(LocalGodId ?? 0, otherGodId, kind), LocalGodId ?? 0, _events);
+
+    /// <summary>Whether a diplomatic command from the local player's god would be accepted now.</summary>
+    /// <param name="otherGodId">The other god.</param>
+    /// <param name="kind">What to do.</param>
+    /// <returns>Why it would be refused, or <see cref="DiplomacyRejection.None"/>.</returns>
+    public DiplomacyRejection CheckDiplomacy(int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) =>
+        _authorities.Diplomacy.Check(World, new Domain.Diplomacy.DiplomaticCommand(LocalGodId ?? 0, otherGodId, kind), LocalGodId ?? 0);
+
+    /// <summary>The diplomatic moves an AI god is weighing now, best first, for the debug view.</summary>
+    /// <param name="god">The god.</param>
+    /// <returns>Its candidates; none for a player's god.</returns>
+    public IReadOnlyList<Simulation.Gods.DiplomacyCandidate> PreviewGodDiplomacy(GodState god) =>
+        god.Controller == GodController.Ai ? _engine.Gods!.Ai.EvaluateDiplomacy(World, god) : [];
 
     /// <summary>What an AI god is weighing now, best first, for the debug view (spec §106).</summary>
     /// <param name="god">The god.</param>

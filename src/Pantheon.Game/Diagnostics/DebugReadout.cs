@@ -23,7 +23,7 @@ public static class DebugReadout
     public const string DebugHints = "[F1] panel  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F4] +500 power  [F6] spoil food  [F7] settlers";
 
     /// <summary>Creature key hints shown at the bottom of the overlay.</summary>
-    public const string CreatureHints = "[C] look at the Creature  [Z] reward  [X] punish  [V] send it to the cursor";
+    public const string CreatureHints = "[C] look at the Creature  [Z] reward  [X] punish  [V] send it to the cursor  [P] diplomacy";
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 

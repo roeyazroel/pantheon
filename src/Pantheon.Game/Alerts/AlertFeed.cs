@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
@@ -119,6 +120,8 @@ public sealed class AlertFeed
                 return DescribeRivalCast(cast, world, localGodId);
             case DominanceChanged dominance when GodStanding.Find(world, dominance.GodId) is { } dominant:
                 return DescribeDominance(dominance, dominant, localGodId);
+            case DiplomacyChanged change:
+                return DescribeDiplomacy(change, world, localGodId);
             case VictoryAchieved victory when GodStanding.Find(world, victory.GodId) is { } winner:
                 return victory.GodId == localGodId
                     ? (Key("victory", winner.Id), "You have won: your followers held the world's belief for ten minutes.", AlertSeverity.Good, null)
@@ -128,6 +131,33 @@ public sealed class AlertFeed
             default:
                 return null;
         }
+    }
+
+    /// <summary>A diplomatic move that concerns the player (spec §59: "Vael proposes an alliance").</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeDiplomacy(DiplomacyChanged change, WorldState world, int? localGodId)
+    {
+        if (change.ActorGodId == localGodId || (change.OtherGodId != localGodId && change.Kind != DiplomaticCommandKind.DeclareWar && !change.Betrayal))
+        {
+            return null;
+        }
+
+        var actor = GodStanding.Find(world, change.ActorGodId)?.Name ?? "A god";
+        var key = Key("diplomacy" + change.Kind, (change.ActorGodId * 100) + change.OtherGodId);
+        if (change.OtherGodId != localGodId)
+        {
+            var victim = GodStanding.Find(world, change.OtherGodId)?.Name ?? "a god";
+            return (key, change.Betrayal ? Format("{0} betrayed {1}.", actor, victim) : Format("{0} declared war on {1}.", actor, victim), AlertSeverity.Info, null);
+        }
+
+        return change.Kind switch
+        {
+            DiplomaticCommandKind.OfferAlliance => (key, Format("{0} proposes an alliance (P to answer).", actor), AlertSeverity.Warning, null),
+            DiplomaticCommandKind.RequestPeace => (key, Format("{0} asks for peace (P to answer).", actor), AlertSeverity.Warning, null),
+            DiplomaticCommandKind.BreakAlliance => (key, Format("{0} has broken your alliance!", actor), AlertSeverity.Danger, null),
+            DiplomaticCommandKind.DeclareWar => (key, change.Betrayal ? Format("{0} betrayed your alliance and declared war!", actor) : Format("{0} has declared war on you!", actor), AlertSeverity.Danger, null),
+            DiplomaticCommandKind.Accept => (key, change.Status == DiplomaticStatus.Alliance ? Format("{0} accepted your alliance.", actor) : Format("{0} accepted peace.", actor), AlertSeverity.Good, null),
+            DiplomaticCommandKind.Decline => (key, Format("{0} declined your proposal.", actor), AlertSeverity.Info, null),
+        };
     }
 
     /// <summary>A rival's miracle on a settlement where the player has followers.</summary>

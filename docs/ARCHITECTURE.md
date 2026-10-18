@@ -21,13 +21,14 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
    assemblies for `System.Random`, clock and tick-count reads and GUIDs.
 6. **Data-driven content** where practical (`game/Data/*.json`), parsed strictly (unknown or
    missing members are errors).
-7. **No speculative infrastructure or optimisation.** Reserved areas (diplomacy, weather,
-   networking) contain only a README until their milestone.
+7. **No speculative infrastructure or optimisation.** Reserved areas (weather, networking)
+   contain only a README until their milestone.
 8. **Commands go through an authority.** A player's intent (casting a miracle, rewarding,
-   punishing or sending the Creature) is a request that `MiracleCaster` or `CreatureAuthority`
-   checks against the world before anything changes (spec §73, ADR-009, ADR-010). `GameSession` is
-   the local authority; a multiplayer host will run the same checks. AI gods send the same
-   requests through the same authorities (ADR-011).
+   punishing or sending the Creature, a diplomatic move) is a request that `MiracleCaster`,
+   `CreatureAuthority` or `DiplomacyAuthority` checks against the world before anything changes
+   (spec §73, ADR-009, ADR-010, ADR-012). The engine owns them as one `Authorities` bundle.
+   `GameSession` is the local authority; a multiplayer host will run the same checks. AI gods
+   send the same requests through the same authorities (ADR-011).
 
 ## Repository layout
 
@@ -41,16 +42,16 @@ game/                         Godot 4.7.2 project (res://)
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
   Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                              creatures.json, god_ai.json (simulation); settlement_view.json, biome_palette.json,
-                              divine_view.json (presentation)
+                              creatures.json, god_ai.json, diplomacy.json (simulation); settlement_view.json,
+                              biome_palette.json, divine_view.json (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology, Settlements, Gods, Belief, Miracles,
-                              Creatures, Events (+ reserved folders)
+                              Creatures, Diplomacy, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Navigation, Gods (AI), Systems, SimulationEngine
+                              Creatures, Navigation, Gods (AI), Diplomacy, Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -110,8 +111,8 @@ files and compiled assemblies and fails when either rule is broken.
 ### Domain (`Pantheon.Domain`)
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
-  (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures` and `WinnerGodId`
-  (once a god has won, spec §115).
+  (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures`, `Diplomacy` and
+  `WinnerGodId` (once a god has won, spec §115).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -134,14 +135,22 @@ files and compiled assemblies and fails when either rule is broken.
   the god's feedback). `CreatureCommand` (reward, punish, go to) is the intent the authority
   checks. `World/SimulationTime` fixes 10 ticks per simulated second.
 - `CastMiracleRequest` (god, miracle id, target): the intent that the authority checks (§73).
+- `DiplomacyState` (ADR-012): `Relations` (one `GodRelation` per observer and subject: trust,
+  fear, respect, rivalry, gratitude, suspicion and the `DiplomaticMemory` of acts), `Stances`
+  (one `GodStance` per pair: `DiplomaticStatus` Alliance, Friendly, Neutral, Hostile or War, since
+  when, and the last proposal) and `Proposals` (alliance or peace, waiting for an answer).
+  `DiplomaticCommand` (offer alliance, break alliance, declare war, request peace, accept,
+  decline) is the intent the diplomacy authority checks.
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
-  `FamineStarted`) raised during a tick or a command and never saved.
+  `FamineStarted`, `DiplomacyChanged` and others) raised during a tick or a command and never
+  saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
   `MiracleCatalog` and `MiracleDefinition` (`miracles.json`), `PantheonSetup` (the gods of a
   new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
-  (`creatures.json`) and `GodAiRules` with one `GodProfile` per personality (`god_ai.json`).
+  (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
+  diplomacy weights (`god_ai.json`), and `DiplomacyRules` (`diplomacy.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -180,18 +189,25 @@ files and compiled assemblies and fails when either rule is broken.
   punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
-  `GodAiSystem`. `Belief/VictorySystem` tracks dominance and victory.
+  `GodAiSystem`; `Gods/GodDiplomat` adds its diplomatic moves. `Belief/VictorySystem` tracks
+  dominance and victory.
+- `Diplomacy/`: `DiplomacyModel` (finding and creating relations and stances, grudge, warmth),
+  `DiplomacyLedger` (the `IActRecorder` that miracles, Creature deeds and conversions report
+  acts to), `DiplomacySystem` (the diplomacy step) and `DiplomacyAuthority` (diplomatic commands,
+  checked). See [Diplomacy](#diplomacy).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
+  `Systems/Authorities` bundles the miracle, Creature and diplomacy authorities, which share one
+  ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the settlement step, the
-  belief step and the victory check, each in an `IntervalSystem`, then the Creature system every
-  tick, then the AI gods every `EvaluationIntervalTicks`) with a
+  belief step, the victory check and the diplomacy step, each in an `IntervalSystem`, then the
+  Creature system every tick, then the AI gods every `EvaluationIntervalTicks`) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
   the RNG state back and increments `Tick`.
 - `Terrain/TerrainRaycaster`: ray against the heightfield (used for cursor picking).
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 5, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 6, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -201,13 +217,16 @@ files and compiled assemblies and fails when either rule is broken.
   (Ilyra, 100 Divine Power) followed by 60% of the first settlement, empty beliefs elsewhere, no
   blessing on any region and founding settings for one settlement. Version 3 → 4 gives every god
   the Milestone 4 newborn Creature, Bramble, at the settlement where most of the people follow
-  it. Version 4 → 5 gives every god no personality and no dominance, and the world no winner. A
-  missing, unsupported or newer version raises `SaveFormatException` with a clear message.
+  it. Version 4 → 5 gives every god no personality and no dominance, and the world no winner.
+  Version 5 → 6 adds empty diplomacy: no relations, no stances (every pair neutral) and no
+  proposals. A missing, unsupported or newer version raises `SaveFormatException` with a clear
+  message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
   and blessing in 0..1, god ids and Divine Power, and beliefs (known gods, one each, values in
-  0..1, shares adding up to at most 1), and Creatures (`CreatureIntegrity`: owners, home and
-  target settlements, levels, values in range).
+  0..1, shares adding up to at most 1), Creatures (`CreatureIntegrity`: owners, home and
+  target settlements, levels, values in range) and diplomacy (`DiplomacyIntegrity`: known gods,
+  one relation per observer and subject and one stance per pair, values in range).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -221,7 +240,9 @@ files and compiled assemblies and fails when either rule is broken.
   `DrainEvents` hands the tick and command events to the client. `CommandCreature` sends the
   local Creature's commands through `CreatureAuthority`; `FindJudgedAction` and
   `PreviewCreatureOptions` feed the HUD card and the debug view, and `PreviewGodAi` the god AI
-  view.
+  view. `CommandDiplomacy` and `CheckDiplomacy` send and preview the local god's diplomatic moves
+  through `DiplomacyAuthority`, and `PreviewGodDiplomacy` lists an AI god's diplomatic
+  candidates.
   `StepOneTick` runs one tick through the same engine call as the scheduler; `RunTicks` and
   `StepToNextSettlementStep` run several. `SimulationSeconds` is the simulation time including
   the scheduler's progress towards the next tick, which drives the citizens' routines.
@@ -251,9 +272,12 @@ files and compiled assemblies and fails when either rule is broken.
 - `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
   target hint and the Creature card (level, activity, needs, loyalty, morality, what feedback would
-  judge), the rival gods and the race for victory. `Divine/DivineText` words ranks, personalities,
-  clocks and cast verdicts; `Creatures/CreatureText` words
-  Creature activities and command outcomes.
+  judge), the rival gods with their status towards the player, and the race for victory.
+  `Divine/DivineText` words ranks, personalities, clocks and cast verdicts;
+  `Creatures/CreatureText` words Creature activities and command outcomes.
+- `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (status, the rival's
+  attitude and why, the player's grievances, the proposal waiting and the moves allowed now), and
+  `DiplomacyText` words statuses, commands, memories and rejections.
 - `Alerts/AlertFeed` turns events into alerts for the local player (§59): only those about the
   player's god or followers, never the same alert twice within 30 simulated seconds, the most
   urgent kept when full.
@@ -298,6 +322,8 @@ files and compiled assemblies and fails when either rule is broken.
   at the start; F1 shows it.
 - `UI/Hud`: the player HUD, built in code: the top bar, the miracle bar with the target hint and
   the clickable alerts. It shows `HudModel`s and reports clicks.
+- `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
+  buttons send the moves through `SessionCommands.CommandDiplomacy`.
 - `Bootstrap/DivineController`: the player's divine interface. It selects miracles (keys 1–9 or
   the bar), casts at the cursor on a left click, rewards, punishes and sends the Creature (Z, X, V
   or the card), drives the hand's gestures, drains the session's events into effects and alerts,
@@ -337,8 +363,12 @@ sequenceDiagram
         opt last tick of each 10-tick interval (1 Hz at x1)
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
             Engine->>State: belief step (drift, conversion, power, ranks, blessings)
+            Engine->>State: victory check, diplomacy step (drift, fading, status, lapsed proposals)
         end
         Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds)
+        opt every 30 ticks
+            Engine->>State: AI gods (miracles, Creature, diplomacy) through the authorities
+        end
         Engine->>State: RNG state, Tick++
     end
     Root->>Session: DrainEvents() (via DivineController)
@@ -581,6 +611,44 @@ the measured contests.
 - **Victory** (`VictorySystem`): 60% of all followers held for 600 s wins (`WinnerGodId`,
   `VictoryAchieved`), and the world goes on.
 
+## Diplomacy
+
+ADR-012 records the decisions, and the Milestone 6 plan
+([.docs/milestone-6-diplomacy.md](../.docs/milestone-6-diplomacy.md)) has the tables of acts and
+the AI diplomat's utilities.
+
+- **Relations are directional**: what one god thinks of another (trust, fear, respect, rivalry,
+  gratitude, suspicion) and the acts it remembers of it. **Status is shared** by the pair.
+- **Acts are recorded where they happen.** `MiracleCaster` (help, courting, harm), `CreatureDeeds`
+  (attacks), `BeliefSystem` (conversions) and `DiplomacyAuthority` (alliance, peace, war,
+  betrayal) report to one `DiplomacyLedger`, which updates the observer's view at once and
+  remembers the act.
+- **The diplomacy step** (1 Hz) lets relations drift back to rest and memories fade (betrayal
+  slowest), sets fear and respect from the balance of followers and ranks, lets proposals lapse,
+  and turns pairs that are neither allied nor at war Friendly or Hostile by their warmth.
+- **Decisions go through the authority**: alliance, betrayal, war and peace are commands, checked
+  against status, waiting proposals and cooldowns. Breaking an alliance costs the betrayer every
+  god's trust.
+- **Status matters**: allies plant no doubt in each other's followers and do not raise each
+  other's costs, and their AI and Creatures spare each other's people. At war, peoples resist the
+  enemy where their own god leads, and AI gods and Creatures target the enemy more.
+- **The AI diplomat** (`GodDiplomat`) answers proposals and weighs alliance, war, betrayal and
+  peace by its view, the balance of followers, war-weariness and its personality.
+
+```mermaid
+flowchart LR
+    Acts["Miracles, Creature deeds,<br/>conversions, decisions"] --> Ledger["DiplomacyLedger"]
+    Ledger --> Relations["GodRelation<br/>(observer to subject)"]
+    Step["DiplomacySystem (1 Hz)"] --> Relations
+    Relations --> Stance["GodStance (pair)"]
+    Relations --> Diplomat["GodDiplomat (AI)"]
+    Player["Diplomacy panel (P)"] --> Authority["DiplomacyAuthority"]
+    Diplomat --> Authority
+    Authority --> Stance
+    Authority --> Ledger
+    Stance --> Effects["Miracle doubt and costs,<br/>war resistance, AI and Creature targets"]
+```
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -619,7 +687,10 @@ the client.
   morality and position, its activity, needs and personality, its best options with their
   utilities, its learned preferences and its latest memories.
 - The F1 panel's god AI view (`GodAiReadout`, §106) shows each AI god's personality, its goal now
-  (its best candidate) and its top three candidates with utilities and reasons.
+  (its best candidate) and its top three candidates with utilities and reasons, followed by its
+  diplomatic candidates and the factors behind them.
+- P: the diplomacy panel shows each rival's status, attitude and memories, and drives every
+  diplomatic move. `--diplomacy-panel=on` opens it in scripted runs.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
 - O cycles the player map overlays (influence, religion, faith, food), which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
@@ -652,11 +723,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 3 (current)
+    alt version 6 (current)
         Save->>Save: deserialize (strict)
-    else version 1 or 2
+    else versions 1 to 5
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 3 (1→2: health, construction; 2→3: player god, beliefs, blessings)
+        Mig-->>Save: JsonObject at version 6, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
@@ -718,9 +789,12 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   learning, brain, deeds, banishment, commands and navigation, and the version 3 → 4 migration
   (against `save-v3.json`, written by the Milestone 3 build). Since Milestone 5 it covers conversion
   between gods, contested costs, rival doubt, the god AI's choices for each personality, dominance
-  and victory, and the version 4 → 5 migration (against `save-v4.json`). The tests load the shipped `game/Data/*.json`;
-  rule tests pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`) so retuning
-  the data does not change their meaning.
+  and victory, and the version 4 → 5 migration (against `save-v4.json`). Since Milestone 6 it
+  covers relations, acts and memory, status changes, betrayal, war and peace through the
+  authority, the effects of status, the AI diplomat, the diplomacy panel and the version 5 → 6
+  migration (against `save-v5.json`). The tests load the shipped `game/Data/*.json`; rule tests
+  pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`)
+  so retuning the data does not change their meaning.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
   above, no Godot reference in core projects, no unseeded randomness or clock in core
   assemblies, and Windows, macOS and Linux libraries (debug and release) in every vendored

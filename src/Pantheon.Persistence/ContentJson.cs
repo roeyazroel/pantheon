@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
@@ -36,6 +37,9 @@ public static class ContentJson
 
     /// <summary>File name of the god AI rules.</summary>
     public const string GodAiFileName = "god_ai.json";
+
+    /// <summary>File name of the diplomacy rules.</summary>
+    public const string DiplomacyFileName = "diplomacy.json";
 
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
@@ -96,4 +100,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The god AI rules.</returns>
     public static GodAiRules ParseGodAi(string json) => Parse<GodAiRules>(json, GodAiFileName);
+
+    /// <summary>Parses <c>diplomacy.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The diplomacy rules.</returns>
+    public static DiplomacyRules ParseDiplomacy(string json) => Parse<DiplomacyRules>(json, DiplomacyFileName);
 }
