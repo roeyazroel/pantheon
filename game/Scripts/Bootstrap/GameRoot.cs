@@ -112,6 +112,7 @@ public partial class GameRoot : Node3D
         (InputActions.WorldQuickLoad, () => SetStatus(SessionCommands.QuickLoad(_session, GlobalQuickSavePath))),
         (InputActions.SimTogglePause, () => SetStatus(SessionCommands.TogglePause(_session))),
         .. CreateSpeedHotkeys(),
+        (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
     ];
 
     /// <summary>One hotkey per <see cref="SessionCommands.SpeedPresets"/> entry.</summary>

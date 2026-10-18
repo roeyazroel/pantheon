@@ -81,9 +81,9 @@ sets `dotnet/project/solution_directory="../"` so the editor uses the root `Pant
    `TerrainRaycaster` on the `TerrainField`, so it does not depend on the terrain backend.
 4. While the panel is visible, the debug overlay receives a `DebugPanelModel` built by
    `DebugReadout` (pure formatting).
-5. World and simulation hotkeys (quicksave, quickload, new world, pause, speed presets) go
-   through `SessionCommands`, which returns the status line shown in the overlay. B, F1 and F
-   act on the presenters, the overlay and the camera directly.
+5. World and simulation hotkeys (quicksave, quickload, new world, pause, speed presets,
+   single-tick step) go through `SessionCommands`, which returns the status line shown in the
+   overlay. B, F1 and F act on the presenters, the overlay and the camera directly.
 
 ### Terrain pipeline
 
@@ -520,12 +520,12 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   platforms). A deliberate upward reference, clock read and missing macOS library each failed it.
 - [x] Coding rules: write the rules down for every contributor in `AGENTS.md`, and link it from
   the README and `docs/ARCHITECTURE.md`.
+- [x] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
 
 ### In Progress
 
 Added by the owner's coding rules (spec §134):
 
-- [ ] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
 - [ ] Debug tool: F3 region debug map (`RegionDebugMap`, `DebugOverlay.ShowRegionMap`).
 - [ ] Update the README, `docs/ARCHITECTURE.md` and this plan; verify both renderers and the new hotkeys.
 

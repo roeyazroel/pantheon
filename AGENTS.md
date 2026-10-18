@@ -93,8 +93,9 @@ followed by the conventions that meet it in this repository.
 
 - Every new system ships with a way to see and drive it: a debug overlay readout, a hotkey or a
   launch option.
-- Current tools: the F1 debug panel, the B region grid, the launch options `--seed`, `--load`
-  and `--terrain`, and scripted smoke runs with `--quit-after-frames` and `--screenshot`.
+- Current tools: the F1 debug panel, the B region grid, the `.` single-tick step, the launch
+  options `--seed`, `--load` and `--terrain`, and scripted smoke runs with
+  `--quit-after-frames` and `--screenshot`. The README lists them.
 
 ## Where things go
 

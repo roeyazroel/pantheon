@@ -138,6 +138,10 @@ files and compiled assemblies and fails when either rule is broken.
 
 - `GameSession`: creates or loads worlds, owns `WorldState` + `TerrainField`, runs the
   scheduler, saves and loads, and raises `WorldReplaced` so presentation rebuilds.
+  `StepOneTick` runs one tick through the same engine call as the scheduler.
+- `SessionCommands`: the player commands behind the world and simulation hotkeys (quicksave,
+  quickload, new world, pause, speed presets, single-tick step). Each returns the status line
+  shown in the overlay.
 - `SimulationScheduler`: fixed-step accumulator (10 ticks/s × time scale, pause, a cap on
   ticks per frame so a long frame cannot cause a spiral of death).
 - `Camera/GodCameraModel`: engine-agnostic god-camera math: focus, yaw and distance targets
@@ -198,6 +202,19 @@ sequenceDiagram
 
 The render frame rate never changes simulation results. Only the number of real seconds
 elapsed (× time scale) determines how many ticks run.
+
+## Debug tools
+
+Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
+The readouts are built by pure functions in `Pantheon.Game.Diagnostics` and only displayed by
+the client.
+
+- F1: the debug panel, built by `DebugReadout` from a `DebugSnapshot`.
+- B: the region grid and the hover outline (`RegionBoundaryOverlay`).
+- `.`: `SessionCommands.StepTick` pauses the scheduler and calls `GameSession.StepOneTick`, the
+  same engine call a scheduled tick makes. Stepping N times therefore equals N scheduled ticks,
+  which `SessionCommandsTests` checks.
+- Launch options and `SmokeTestDriver` for reproducible and scripted runs.
 
 ## Save and load flow
 

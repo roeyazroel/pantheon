@@ -71,6 +71,13 @@ public sealed class GameSession
     /// <returns>Number of ticks run.</returns>
     public int Update(double realDeltaSeconds) => Scheduler.Advance(realDeltaSeconds, _step);
 
+    /// <summary>
+    /// Runs exactly one tick now, through the same engine call as <see cref="Update"/>. The
+    /// clock's accumulated time is left alone, so N steps change the world exactly as N
+    /// scheduled ticks do.
+    /// </summary>
+    public void StepOneTick() => _step();
+
     /// <summary>Replaces the current world with a newly generated one.</summary>
     /// <param name="seed">Seed of the new world.</param>
     public void StartNewWorld(WorldSeed seed)

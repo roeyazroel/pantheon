@@ -86,6 +86,34 @@ public sealed class SessionCommandsTests : IDisposable
     }
 
     [Fact]
+    public void StepTick_PausesAndRunsExactlyOneTick()
+    {
+        var tick = _session.World.Tick;
+
+        var status = SessionCommands.StepTick(_session);
+
+        Assert.Equal($"Stepped to tick {tick + 1} (paused)", status);
+        Assert.True(_session.Scheduler.IsPaused);
+        Assert.Equal(tick + 1, _session.World.Tick);
+        Assert.Equal(0, _session.Update(1.0));
+        Assert.Equal(tick + 1, _session.World.Tick);
+    }
+
+    [Fact]
+    public void StepTick_RepeatedMatchesScheduledTicks()
+    {
+        var scheduled = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(5));
+        Assert.Equal(20, scheduled.Update(2.0));
+
+        for (var i = 0; i < 20; i++)
+        {
+            SessionCommands.StepTick(_session);
+        }
+
+        WorldAssert.Equal(scheduled.World, _session.World);
+    }
+
+    [Fact]
     public void NewWorld_ReplacesTheWorld()
     {
         var status = SessionCommands.NewWorld(_session, new WorldSeed(77));

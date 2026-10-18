@@ -29,6 +29,7 @@ public sealed class DebugReadoutTests
         Assert.Contains("Region boundaries OFF", text);
         Assert.Contains(DebugReadout.CameraHints, text);
         Assert.Contains(DebugReadout.KeyHints, text);
+        Assert.Contains(DebugReadout.DebugHints, text);
         Assert.DoesNotContain("FALLBACK", text);
     }
 

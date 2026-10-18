@@ -14,8 +14,11 @@ public static class DebugReadout
     /// <summary>Camera control hints shown at the bottom of the overlay.</summary>
     public const string CameraHints = "[WASD/arrows/screen edge] pan  [RMB drag] grab  [wheel, +/-] zoom  [Q/E, MMB drag] rotate";
 
-    /// <summary>Key hints shown at the bottom of the overlay.</summary>
-    public const string KeyHints = "[F1] overlay  [B] regions  [F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [1/2/3] speed";
+    /// <summary>World and simulation key hints shown at the bottom of the overlay.</summary>
+    public const string KeyHints = "[F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [1/2/3] speed";
+
+    /// <summary>Debug tool key hints shown at the bottom of the overlay.</summary>
+    public const string DebugHints = "[F1] overlay  [B] regions  [.] step one tick";
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
@@ -48,6 +51,7 @@ public static class DebugReadout
 
         lines.Add(CameraHints);
         lines.Add(KeyHints);
+        lines.Add(DebugHints);
         return new DebugPanelModel(lines);
     }
 

@@ -94,6 +94,17 @@ public static class SessionCommands
         return Format("Simulation speed x{0}", SpeedPresets[preset]);
     }
 
+    /// <summary>Pauses the simulation, then runs exactly one tick, so its effect can be inspected.</summary>
+    /// <param name="session">Session to step.</param>
+    /// <returns>Status line.</returns>
+    public static string StepTick(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        session.Scheduler.IsPaused = true;
+        session.StepOneTick();
+        return Format("Stepped to tick {0} (paused)", session.World.Tick);
+    }
+
     /// <summary>Invariant-culture string formatting.</summary>
     private static string Format(string format, params object?[] args) => string.Format(CultureInfo.InvariantCulture, format, args);
 }

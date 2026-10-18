@@ -61,11 +61,23 @@ covers:
 | Quicksave / quickload | F5 / F9 |
 | Pause / resume the simulation | Space |
 | Simulation speed ×1 / ×4 / ×16 | 1 / 2 / 3 |
+| Pause and step the simulation by one tick | `.` |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
 120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m). The simulation runs at a
 fixed 10 ticks per second, independent of the frame rate. Choosing a speed also resumes a paused
 simulation.
+
+## Debug tools
+
+- **F1** shows the debug panel: frame rate, tick, seed, terrain renderer, camera band, the
+  region under the cursor with its statistics, and the settlement's population, housing, food
+  and food balance per tick.
+- **B** draws the region grid and outlines the region under the cursor.
+- **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
+  tick changed. Space resumes.
+- The command-line options below reproduce a world (`--seed`, `--load`), force a renderer
+  (`--terrain`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
 
 ## Command-line options
 
