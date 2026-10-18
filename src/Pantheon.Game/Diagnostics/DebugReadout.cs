@@ -5,6 +5,7 @@ using System.Numerics;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Settlements;
+using Pantheon.Simulation.Systems;
 
 namespace Pantheon.Game.Diagnostics;
 
@@ -18,7 +19,7 @@ public static class DebugReadout
     public const string KeyHints = "[F] focus  [F2] new world  [F5] save  [F9] load  [Space] pause  [1/2/3] speed";
 
     /// <summary>Debug tool key hints shown at the bottom of the overlay.</summary>
-    public const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step one tick";
+    public const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F6] spoil food  [F7] settlers";
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
@@ -35,12 +36,13 @@ public static class DebugReadout
             Format("Seed {0}", world.Seed),
             FormatTerrain(snapshot),
             Format("Camera {0}  {1:0} m", snapshot.ZoomBand, snapshot.CameraDistance),
+            FormatSettlementStep(snapshot),
         };
 
         AppendCursor(lines, world, snapshot.CursorWorldPosition);
         foreach (var settlement in world.Settlements)
         {
-            AppendSettlement(lines, world, settlement, snapshot.SettlementRules);
+            SettlementReadout.Append(lines, snapshot, settlement);
         }
 
         lines.Add(Format("Region boundaries {0}", snapshot.RegionBoundariesVisible ? "ON" : "OFF"));
@@ -55,6 +57,30 @@ public static class DebugReadout
         return new DebugPanelModel(lines);
     }
 
+    /// <summary>One-line summary of a world, printed at the end of unattended runs.</summary>
+    /// <param name="world">World to describe.</param>
+    /// <param name="rules">Settlement rules, for the house count.</param>
+    /// <returns>Seed, tick, region count and each settlement's population, housing, health and food.</returns>
+    public static string Summarize(WorldState world, SettlementRules rules)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(rules);
+        var parts = new List<string> { Format("seed {0}, tick {1}, {2} regions", world.Seed, world.Tick, world.Regions.Cells.Count) };
+        foreach (var settlement in world.Settlements)
+        {
+            parts.Add(Format(
+                "{0}: population {1} / {2}, {3} houses, health {4:0%}, food {5:0}",
+                settlement.Name,
+                settlement.Population,
+                settlement.Housing,
+                SettlementEconomy.ComputeHouseCount(rules, settlement.Housing),
+                settlement.Health,
+                settlement.Food));
+        }
+
+        return string.Join("; ", parts);
+    }
+
     /// <summary>Simulation rate, or the paused marker.</summary>
     private static string FormatClock(DebugSnapshot snapshot) =>
         snapshot.IsPaused
@@ -66,6 +92,16 @@ public static class DebugReadout
         snapshot.TerrainIsFallback
             ? Format("Terrain {0}  ** FALLBACK RENDERER **", snapshot.TerrainBackend)
             : Format("Terrain {0}", snapshot.TerrainBackend);
+
+    /// <summary>Cadence of the settlement step and the ticks left until the next one.</summary>
+    private static string FormatSettlementStep(DebugSnapshot snapshot)
+    {
+        var interval = snapshot.SettlementRules.StepIntervalTicks;
+        return Format(
+            "Settlement step every {0} ticks, next in {1}",
+            interval,
+            IntervalSystem.TicksUntilDue(snapshot.World.Tick, interval));
+    }
 
     /// <summary>Cursor position and the region under it.</summary>
     private static void AppendCursor(List<string> lines, WorldState world, Vector3? cursor)
@@ -87,21 +123,6 @@ public static class DebugReadout
             region.Moisture,
             region.Fertility,
             region.Vegetation));
-    }
-
-    /// <summary>Population, housing and food of one settlement.</summary>
-    private static void AppendSettlement(List<string> lines, WorldState world, SettlementState settlement, SettlementRules rules)
-    {
-        var outlook = SettlementEconomy.Assess(rules, settlement, world.Regions);
-
-        lines.Add(Format("Settlement {0} (region #{1})", settlement.Name, settlement.RegionId));
-        lines.Add(Format(
-            "  pop {0} / {1}   food {2:0.0} / {3:0}   {4:+0.00;-0.00;0.00} food/step",
-            settlement.Population,
-            settlement.Housing,
-            settlement.Food,
-            outlook.Storage,
-            outlook.NetFood));
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

@@ -114,6 +114,71 @@ public sealed class SessionCommandsTests : IDisposable
     }
 
     [Fact]
+    public void StepSettlement_PausesAndRunsToTheNextSettlementStep()
+    {
+        Assert.Equal("Settlement step: ran 10 tick(s) to tick 10 (paused)", SessionCommands.StepSettlement(_session));
+        Assert.True(_session.Scheduler.IsPaused);
+
+        SessionCommands.StepTick(_session);
+        SessionCommands.StepTick(_session);
+
+        Assert.Equal("Settlement step: ran 8 tick(s) to tick 20 (paused)", SessionCommands.StepSettlement(_session));
+        Assert.Equal(0, _session.Update(1.0));
+    }
+
+    [Fact]
+    public void StepSettlement_MatchesScheduledTicks()
+    {
+        var scheduled = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(5));
+        Assert.Equal(30, scheduled.Update(3.0));
+
+        for (var i = 0; i < 3; i++)
+        {
+            SessionCommands.StepSettlement(_session);
+        }
+
+        WorldAssert.Equal(scheduled.World, _session.World);
+    }
+
+    [Fact]
+    public void AdvanceTicks_RunsTheTicksNow()
+    {
+        Assert.Equal("Advanced 25 ticks to tick 25", SessionCommands.AdvanceTicks(_session, 25));
+        Assert.Equal(25, _session.World.Tick);
+    }
+
+    [Fact]
+    public void SpoilFood_EmptiesEveryStore()
+    {
+        var settlement = _session.World.Settlements[0];
+
+        var status = SessionCommands.SpoilFood(_session);
+
+        Assert.Equal($"Food stores spoiled: {settlement.Name} lost 120 food", status);
+        Assert.Equal(0f, settlement.Food);
+    }
+
+    [Fact]
+    public void AddSettlers_AddsHalfThePopulation_AtLeastTheMinimum()
+    {
+        var settlement = _session.World.Settlements[0];
+
+        Assert.Equal($"Settlers arrived: {settlement.Name} +20 (now 60)", SessionCommands.AddSettlers(_session));
+
+        settlement.Population = 4;
+        Assert.Equal($"Settlers arrived: {settlement.Name} +{SessionCommands.MinimumSettlers} (now 14)", SessionCommands.AddSettlers(_session));
+    }
+
+    [Fact]
+    public void DebugCommands_WithoutSettlements_ReportIt()
+    {
+        _session.World.Settlements.Clear();
+
+        Assert.Equal("No settlement to spoil", SessionCommands.SpoilFood(_session));
+        Assert.Equal("No settlement for settlers", SessionCommands.AddSettlers(_session));
+    }
+
+    [Fact]
     public void NewWorld_ReplacesTheWorld()
     {
         var status = SessionCommands.NewWorld(_session, new WorldSeed(77));

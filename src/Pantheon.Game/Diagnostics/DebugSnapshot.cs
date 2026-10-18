@@ -14,7 +14,7 @@ public sealed record DebugSnapshot
     /// <summary>Current world.</summary>
     public required WorldState World { get; init; }
 
-    /// <summary>Settlement rules, used for the food balance readout.</summary>
+    /// <summary>Settlement rules, for the settlement readouts and the step cadence.</summary>
     public required SettlementRules SettlementRules { get; init; }
 
     /// <summary>Whether the simulation clock is paused.</summary>

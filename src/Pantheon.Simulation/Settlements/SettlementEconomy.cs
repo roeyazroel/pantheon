@@ -71,6 +71,16 @@ public static class SettlementEconomy
         return Math.Max(0, housing) * rules.FoodStoragePerHousing;
     }
 
+    /// <summary>Number of houses that provide a housing capacity; a part-filled last house still counts.</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="housing">Housing capacity in people.</param>
+    /// <returns><c>ceil(housing / HousingPerHouse)</c>, at least 0.</returns>
+    public static int ComputeHouseCount(SettlementRules rules, int housing)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        return housing <= 0 ? 0 : ((housing - 1) / rules.HousingPerHouse) + 1;
+    }
+
     /// <summary>Whether the settlement wants a house built: one is under way or it is crowded, and housing is below the cap.</summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="settlement">Settlement state.</param>

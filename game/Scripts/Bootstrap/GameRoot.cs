@@ -62,10 +62,20 @@ public partial class GameRoot : Node3D
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
         _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, _palette, options.Terrain);
         _session = CreateSession(content, options);
+        if (options.AdvanceTicks is { } ticks)
+        {
+            SetStatus(SessionCommands.AdvanceTicks(_session, ticks));
+        }
+
         _session.WorldReplaced += ShowWorld;
         _hotkeys = CreateHotkeys();
 
         ShowWorld();
+        if (options.CameraDistance is { } distance)
+        {
+            FocusSettlement(distance, snap: true);
+        }
+
         _overlay.SetFallbackBadgeVisible(_presenter.TerrainIsFallback);
         if (options.QuitAfterFrames is { } frames)
         {
@@ -112,13 +122,16 @@ public partial class GameRoot : Node3D
         (InputActions.ToggleRegionBoundaries, () => _presenter.RegionBoundariesVisible = !_presenter.RegionBoundariesVisible),
         (InputActions.ToggleDebugOverlay, () => _overlay.PanelVisible = !_overlay.PanelVisible),
         (InputActions.ToggleRegionMap, CycleRegionMap),
-        (InputActions.CameraFocusSettlement, () => FocusSettlement(snap: false)),
+        (InputActions.CameraFocusSettlement, () => FocusSettlement(FocusDistance, snap: false)),
         (InputActions.WorldNew, () => SetStatus(SessionCommands.NewWorld(_session, CreateRandomSeed()))),
         (InputActions.WorldQuickSave, () => SetStatus(SessionCommands.QuickSave(_session, GlobalQuickSavePath))),
         (InputActions.WorldQuickLoad, () => SetStatus(SessionCommands.QuickLoad(_session, GlobalQuickSavePath))),
         (InputActions.SimTogglePause, () => SetStatus(SessionCommands.TogglePause(_session))),
         .. CreateSpeedHotkeys(),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
+        (InputActions.SimStepSettlement, () => SetStatus(SessionCommands.StepSettlement(_session))),
+        (InputActions.DebugSpoilFood, () => SetStatus(SessionCommands.SpoilFood(_session))),
+        (InputActions.DebugAddSettlers, () => SetStatus(SessionCommands.AddSettlers(_session))),
     ];
 
     /// <summary>One hotkey per <see cref="SessionCommands.SpeedPresets"/> entry.</summary>
@@ -161,15 +174,17 @@ public partial class GameRoot : Node3D
     {
         _presenter.Rebuild(_session.World, _session.Terrain);
         _camera.SetTerrain(_session.Terrain);
-        FocusSettlement(snap: true);
+        FocusSettlement(distance: null, snap: true);
     }
 
-    /// <summary>Moves the camera to the first settlement; a snap keeps the zoom, a glide zooms to a regional view.</summary>
-    private void FocusSettlement(bool snap)
+    /// <summary>Moves the camera to the first settlement.</summary>
+    /// <param name="distance">New camera distance, or <c>null</c> to keep the zoom.</param>
+    /// <param name="snap">Jump there immediately instead of gliding.</param>
+    private void FocusSettlement(float? distance, bool snap)
     {
         if (_session.World.Settlements.Count > 0)
         {
-            _camera.FocusOn(_session.World.Settlements[0].Position, snap ? null : FocusDistance, snap);
+            _camera.FocusOn(_session.World.Settlements[0].Position, distance, snap);
         }
     }
 
@@ -219,19 +234,8 @@ public partial class GameRoot : Node3D
     };
 
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
-    private string DescribeWorld()
-    {
-        var world = _session.World;
-        var population = 0;
-        foreach (var settlement in world.Settlements)
-        {
-            population += settlement.Population;
-        }
-
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"seed {world.Seed}, tick {world.Tick}, {world.Regions.Cells.Count} regions, {world.Settlements.Count} settlement(s), population {population}, terrain {_presenter.TerrainBackend}");
-    }
+    private string DescribeWorld() =>
+        $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules)}; terrain {_presenter.TerrainBackend}";
 
     /// <summary>Remembers a status line for the overlay and echoes it to the log.</summary>
     private void SetStatus(string message)

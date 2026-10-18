@@ -8,12 +8,18 @@ using Pantheon.Persistence;
 namespace Pantheon.Game;
 
 /// <summary>
-/// Player commands on a <see cref="GameSession"/>. Each returns a one-line status for the debug
-/// overlay. Save and load problems are reported in the status rather than thrown, so a bad file
-/// never ends the game.
+/// Player and debug commands on a <see cref="GameSession"/>. Each returns a one-line status for
+/// the debug overlay. Save and load problems are reported in the status rather than thrown, so a
+/// bad file never ends the game.
 /// </summary>
 public static class SessionCommands
 {
+    /// <summary>Share of a settlement's population that arrives with <see cref="AddSettlers"/>.</summary>
+    public const float SettlerShare = 0.5f;
+
+    /// <summary>Fewest settlers that arrive with <see cref="AddSettlers"/>, so an empty settlement can be refounded.</summary>
+    public const int MinimumSettlers = 10;
+
     /// <summary>Time scales selected by the speed hotkeys, in order.</summary>
     public static IReadOnlyList<double> SpeedPresets { get; } = [1.0, 4.0, 16.0];
 
@@ -103,6 +109,64 @@ public static class SessionCommands
         session.Scheduler.IsPaused = true;
         session.StepOneTick();
         return Format("Stepped to tick {0} (paused)", session.World.Tick);
+    }
+
+    /// <summary>Pauses the simulation, then runs ticks up to and including the next settlement step.</summary>
+    /// <param name="session">Session to step.</param>
+    /// <returns>Status line.</returns>
+    public static string StepSettlement(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        session.Scheduler.IsPaused = true;
+        var ticks = session.StepToNextSettlementStep();
+        return Format("Settlement step: ran {0} tick(s) to tick {1} (paused)", ticks, session.World.Tick);
+    }
+
+    /// <summary>Runs several ticks at once, for example before the first frame of a capture.</summary>
+    /// <param name="session">Session to advance.</param>
+    /// <param name="ticks">Number of ticks; must not be negative.</param>
+    /// <returns>Status line.</returns>
+    public static string AdvanceTicks(GameSession session, int ticks)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        session.RunTicks(ticks);
+        return Format("Advanced {0} ticks to tick {1}", ticks, session.World.Tick);
+    }
+
+    /// <summary>Debug famine: every settlement loses its stored food.</summary>
+    /// <param name="session">Session whose world is changed.</param>
+    /// <returns>Status line.</returns>
+    public static string SpoilFood(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var changes = new List<string>();
+        foreach (var settlement in session.World.Settlements)
+        {
+            changes.Add(Format("{0} lost {1:0} food", settlement.Name, settlement.Food));
+            settlement.Food = 0f;
+        }
+
+        return changes.Count > 0 ? "Food stores spoiled: " + string.Join(", ", changes) : "No settlement to spoil";
+    }
+
+    /// <summary>
+    /// Debug migration: settlers arrive in every settlement, adding <see cref="SettlerShare"/> of
+    /// its population (at least <see cref="MinimumSettlers"/>), even beyond its housing.
+    /// </summary>
+    /// <param name="session">Session whose world is changed.</param>
+    /// <returns>Status line.</returns>
+    public static string AddSettlers(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var changes = new List<string>();
+        foreach (var settlement in session.World.Settlements)
+        {
+            var settlers = Math.Max(MinimumSettlers, (int)(settlement.Population * SettlerShare));
+            settlement.Population += settlers;
+            changes.Add(Format("{0} +{1} (now {2})", settlement.Name, settlers, settlement.Population));
+        }
+
+        return changes.Count > 0 ? "Settlers arrived: " + string.Join(", ", changes) : "No settlement for settlers";
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

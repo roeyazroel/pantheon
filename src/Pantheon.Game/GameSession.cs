@@ -43,6 +43,12 @@ public sealed class GameSession
     /// <summary>Fixed-step simulation clock.</summary>
     public SimulationScheduler Scheduler { get; }
 
+    /// <summary>
+    /// Simulated time in seconds, including the progress towards the next tick, for smooth
+    /// presentation such as walking citizens. It stands still while the clock is paused.
+    /// </summary>
+    public double SimulationSeconds => (World.Tick + Scheduler.Alpha) * Scheduler.TickDuration;
+
     /// <summary>Generates a new world.</summary>
     /// <param name="content">Validated content.</param>
     /// <param name="seed">World seed.</param>
@@ -77,6 +83,26 @@ public sealed class GameSession
     /// scheduled ticks do.
     /// </summary>
     public void StepOneTick() => _step();
+
+    /// <summary>Runs several ticks now, as <see cref="StepOneTick"/> does, for example to start a capture from a grown settlement.</summary>
+    /// <param name="ticks">Number of ticks; must not be negative.</param>
+    public void RunTicks(int ticks)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(ticks);
+        for (var i = 0; i < ticks; i++)
+        {
+            _step();
+        }
+    }
+
+    /// <summary>Runs ticks up to and including the next settlement step.</summary>
+    /// <returns>Number of ticks run, from 1 to <see cref="Pantheon.Domain.Settlements.SettlementRules.StepIntervalTicks"/>.</returns>
+    public int StepToNextSettlementStep()
+    {
+        var ticks = IntervalSystem.TicksUntilDue(World.Tick, Content.SettlementRules.StepIntervalTicks);
+        RunTicks(ticks);
+        return ticks;
+    }
 
     /// <summary>Replaces the current world with a newly generated one.</summary>
     /// <param name="seed">Seed of the new world.</param>
