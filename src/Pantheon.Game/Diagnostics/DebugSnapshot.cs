@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
+using Pantheon.Game.Population;
 
 namespace Pantheon.Game.Diagnostics;
 
@@ -46,4 +48,7 @@ public sealed record DebugSnapshot
 
     /// <summary>Latest one-line status, for example the result of a quicksave.</summary>
     public string? StatusMessage { get; init; }
+
+    /// <summary>Simulation tier and representative citizens of each settlement; settlements without a status read as Tier 1.</summary>
+    public IReadOnlyList<CrowdStatus> Crowds { get; init; } = [];
 }

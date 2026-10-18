@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
 using Pantheon.Client.Presentation.Regions;
@@ -7,6 +8,7 @@ using Pantheon.Client.Presentation.Water;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Launch;
+using Pantheon.Game.Population;
 using Pantheon.Game.Presentation;
 using Pantheon.Simulation.Terrain;
 
@@ -65,9 +67,19 @@ public sealed class WorldPresenter
         GD.Print($"World visuals for seed {world.Seed} built in {stopwatch.ElapsedMilliseconds} ms ({TerrainBackend}).");
     }
 
+    /// <summary>Tier and representatives of every settlement after the latest <see cref="UpdateCitizens"/>.</summary>
+    public IReadOnlyList<CrowdStatus> CrowdStatuses => _settlements.CrowdStatuses;
+
     /// <summary>Refreshes visuals that follow the simulation, such as settlement labels, houses and fields.</summary>
     /// <param name="world">Current world.</param>
     public void Sync(WorldState world) => _settlements.Sync(world);
+
+    /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens near it.</summary>
+    /// <param name="world">Current world.</param>
+    /// <param name="simulationSeconds">Simulation time, which drives the citizens' routines.</param>
+    /// <param name="camera">Camera position in the world.</param>
+    public void UpdateCitizens(WorldState world, double simulationSeconds, Vector3 camera) =>
+        _settlements.UpdateCitizens(world, simulationSeconds, camera);
 
     /// <summary>Outlines the region under the cursor (only visible while boundaries are shown).</summary>
     /// <param name="regionId">Region id, or <c>null</c> when the cursor is not over the world.</param>

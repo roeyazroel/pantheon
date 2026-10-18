@@ -2,14 +2,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Godot;
 using Pantheon.Domain.Settlements;
+using Pantheon.Domain.World;
+using Pantheon.Game.Population;
 using Pantheon.Game.Presentation;
+using Pantheon.Simulation.Settlements;
 using Pantheon.Simulation.Terrain;
 
 namespace Pantheon.Client.Presentation.Settlements;
 
 /// <summary>
-/// Nodes of one settlement: the wayshrine, its houses, building site and fields, and a floating
-/// name label. <see cref="Sync"/> follows the state, so new houses appear as housing grows.
+/// Nodes of one settlement: the wayshrine, its houses, building site and fields, a floating name
+/// label and, near the camera, its representative citizens. <see cref="Sync"/> follows the state,
+/// so new houses appear as housing grows.
 /// </summary>
 internal sealed class SettlementView
 {
@@ -25,17 +29,20 @@ internal sealed class SettlementView
     private readonly SettlementRules _rules;
     private readonly SettlementLayoutSettings _layout;
     private readonly SiteView _siteView;
+    private readonly SettlementCrowd _crowd;
+    private readonly CitizenView _citizens;
     private readonly Label3D _label;
     private (int Housing, float ConstructionProgress)? _siteInputs;
 
     /// <summary>Creates the settlement's nodes under <paramref name="parent"/> and shows its current state.</summary>
     /// <param name="parent">Node that holds all settlements.</param>
     /// <param name="assets">Shared meshes.</param>
+    /// <param name="seed">World seed, for the representative citizens.</param>
     /// <param name="settlement">Settlement to show.</param>
     /// <param name="terrain">Terrain the settlement stands on.</param>
-    /// <param name="rules">Settlement rules, for the house count and the work per house.</param>
+    /// <param name="rules">Settlement rules, for the house count, the work per house and the labour split.</param>
     /// <param name="settings">Settlement presentation settings.</param>
-    public SettlementView(Node3D parent, SettlementAssets assets, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings)
+    public SettlementView(Node3D parent, SettlementAssets assets, WorldSeed seed, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings)
     {
         _terrain = terrain;
         _rules = rules;
@@ -47,6 +54,8 @@ internal sealed class SettlementView
         AddPart(root, "ShrinePillar", assets.ShrinePillar, center + SettlementAssets.ShrinePillarOffset);
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
         _siteView = new SiteView(root, assets, _layout);
+        _crowd = new SettlementCrowd(seed, settlement.Id, settings);
+        _citizens = new CitizenView(root, assets, settings.Citizens);
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
         root.AddChild(_label);
 
@@ -66,6 +75,25 @@ internal sealed class SettlementView
         {
             ShowSite(settlement);
         }
+    }
+
+    /// <summary>Chooses the tier for the camera distance and, in Tier 2, rebuilds and moves the representative citizens.</summary>
+    /// <param name="settlement">Current settlement state.</param>
+    /// <param name="simulationSeconds">Simulation time, which drives the citizens' routines.</param>
+    /// <param name="camera">Camera position in the world.</param>
+    /// <returns>The settlement's tier and representatives.</returns>
+    public CrowdStatus UpdateCitizens(SettlementState settlement, double simulationSeconds, Vector3 camera)
+    {
+        var distance = camera.DistanceTo(Site.Center.ToGodot());
+        _crowd.SelectTier(distance);
+        if (_crowd.Tier == SimulationTier.Regional)
+        {
+            _crowd.Refresh(settlement, SettlementEconomy.AllocateLabour(_rules, settlement), Site);
+        }
+
+        _crowd.Advance(simulationSeconds, _terrain);
+        _citizens.Show(_crowd);
+        return _crowd.GetStatus(settlement.Population, distance);
     }
 
     /// <summary>Sets the label text when it changed.</summary>

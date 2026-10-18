@@ -135,7 +135,9 @@ the stores refill.
 
 ### Tier 2: representative citizens (ADR-008)
 
-- Tier numbering: Tier 1 Statistical, Tier 2 Regional, Tier 3 Full (ADR-004's tiers).
+- Tier numbering: Tier 1 Statistical, Tier 2 Regional, Tier 3 Full (ADR-004's tiers). The
+  `SimulationTier` enum has the two tiers that exist; Full joins it in Milestone 12. Readouts
+  use the number and the name ("tier 2 regional").
 - `TierSelector` promotes a settlement to Tier 2 when the camera comes within
   `RegionalTierEnterDistance` (450 m) of its centre and demotes it beyond
   `RegionalTierExitDistance` (550 m). The gap stops the tier from flickering at the boundary.
@@ -143,24 +145,37 @@ the stores refill.
 - In Tier 2, `RepresentativeRoster` derives `N = min(Population, MaxRepresentatives)`
   representatives (300 at most). Each stands for `Population / N` people. Their roles follow the
   aggregate labour split of `SettlementEconomy.AllocateLabour`: builders, farmers and villagers
-  (the inhabitants who do not work), with counts by largest remainder.
+  (the inhabitants who do not work). The two role boundaries are rounded:
+  `builders = round(Builders × N / Population)` and
+  `builders + farmers = round(Workers × N / Population)`, so every count is within one of its
+  share and the counts add up to `N`.
 - Identities are stable: representative `i` keeps a hash rank, and the lowest ranks become
-  builders, the next farmers and the rest villagers. When a count changes by one, one
-  representative changes role. Homes and fields are chosen by rendezvous hashing, so a new house
-  takes residents from the others without reshuffling everyone. Hashes mix the world seed, the
-  settlement id and the representative index (no random stream is consumed).
-- `CitizenRoutine` gives each representative a simple schedule: rest at home, walk to work (a
-  spot in a field, around the building site, or chores near home for villagers), work, walk to a
-  spot around the shrine, gather, walk home. The pose is a closed-form function of simulation
-  time (`(Tick + Alpha) × 0.1 s`), so citizens freeze when paused and speed up with the time
-  scale.
-- `SettlementCrowd` keeps the roster in step with the aggregates and eases rerouted citizens
-  (a new home, a new role) towards their new route at `CatchUpSpeed` instead of teleporting.
-  Representatives born while the settlement is in Tier 2 step out of their front door; on
-  promotion everyone appears in place.
-- The client draws all of a settlement's representatives with one `MultiMeshInstance3D`
-  (a body tinted per role through instance colours and a head), so a few hundred figures cost
-  one draw call per mesh surface.
+  builders, the next farmers and the rest villagers. Moving one person between neighbouring
+  roles (builder and farmer, or farmer and villager) changes exactly one representative's role;
+  one more inhabitant changes at most two existing roles (each boundary moves by at most one
+  rank). Homes and fields are chosen by rendezvous hashing over house indices (houses are a
+  stable prefix) and field spiral slots, so a new house or field draws a share of the
+  representatives and leaves everyone else in place. Hashes mix the world seed, the settlement
+  id and the representative index (no random stream is consumed).
+- Spots: residents rest just outside their door (`DoorSpread`); farmers work inside their field
+  (`WorkSpread` of its side), facing along its rows; builders on a ring around the house under
+  construction, facing it; villagers, and builders or farmers without a site or fields, do
+  chores within `WanderRadius` of home. Everyone gathers on a ring around the shrine, facing it.
+  Without houses, homes lie on a ring just outside the gathering ring.
+- `CitizenRoutine` gives each representative a simple schedule: rest at home, walk to work, work,
+  walk to the shrine, gather, walk home. The pose (ground point, facing, a forward lean per work
+  stroke, a bob per stride) is a closed-form function of simulation time
+  (`(Tick + Alpha) × 0.1 s`) and the representative's phase, so citizens freeze when paused,
+  speed up with the time scale and do not move in step.
+- `SettlementCrowd` keeps the roster in step with the aggregates: it rebuilds the roster only
+  when the role counts (whose total is `N`) or the layout change, and bumps `RosterVersion` so
+  the view recolours. Rerouted citizens (a new home, a new role) walk to their new route at
+  `CatchUpSpeed` instead of jumping. Representatives added while the settlement is in Tier 2
+  step out of their front door; on promotion everyone appears in place on their routine.
+- The client draws all of a settlement's representatives with one `MultiMeshInstance3D`: a
+  two-surface figure (a body tinted per role through instance colours and a skin-coloured
+  head), scaled by `FigureScale` so it reads from the god's-eye view. A few hundred figures cost
+  one draw call per surface.
 - Never canonical: Tier 2 reads `WorldState` and writes nothing. Its data is not saved; a load
   or new world rebuilds it. Because representatives have no effects of their own, demotion has
   nothing to fold back and totals are trivially conserved (ADR-004).
@@ -225,7 +240,7 @@ the stores refill.
 | --- | --- | --- |
 | Build incrementally; every milestone leaves the game playable | Each commit builds, passes the tests and launches; the settlement grows on its own. | Windowed runs on both renderers |
 | Simulation and presentation separate; core testable without rendering | The rules, Tier 2 derivation and layout are engine-agnostic C#; the client only builds nodes. | `ArchitectureRulesTests`, headless tests |
-| `WorldState` authoritative | The settlement step, the session commands (including the `,` F6 F7 debug commands) and the save migration are the only writers. Tier 2 reads state and is never saved. | `RepresentativeRosterTests` (world unchanged), save tests |
+| `WorldState` authoritative | The settlement step, the session commands (including the `,` F6 F7 debug commands) and the save migration are the only writers. Tier 2 reads state and is never saved. | `SettlementCrowdTests` (world unchanged), save tests |
 | Data-driven content | Balance in `settlement_rules.json`; layout, colours, Tier 2 distances and routines in `settlement_view.json`. | `ContentTests` |
 | Don't optimise before profiling | Simple per-frame pose evaluation and per-instance MultiMesh writes; the frame cost is measured and recorded. | Verification results |
 | No infrastructure without need | No new tools, services or packages. | Review |
@@ -474,30 +489,38 @@ internal static class SaveIntegrity { ... Health in 0..1, ConstructionProgress �
 
 ```csharp
 // Population/ (Tier 2, derived, never saved)
-enum SimulationTier { Statistical, Regional, Full }                     // Tier 1, 2, 3 (ADR-004, ADR-008)
-enum CitizenRole { Farmer, Builder, Villager }
+enum SimulationTier { Statistical, Regional }                           // Tier 1, 2 (ADR-004, ADR-008); Full (Tier 3) in Milestone 12
+enum CitizenRole { Builder, Farmer, Villager }
 enum CitizenActivity { AtHome, Walking, Working, Gathering }
 sealed record CitizenSettings { int MaxRepresentatives; float RegionalTierEnterDistance, RegionalTierExitDistance,
-    WalkSpeed, CatchUpSpeed, RestSeconds, WorkSeconds, GatherSeconds, GatherRadiusMin, GatherRadiusMax, WanderRadius,
-    WorkSpread, BuilderRingRadius; RgbColor FarmerColor, BuilderColor, VillagerColor; void Validate(); }
-readonly record struct RepresentativeCitizen(int Index, CitizenRole Role, Vector2 Home, Vector2 Work, Vector2 Gathering, float Phase);
-readonly record struct CitizenPose(Vector3 Position, float Yaw, CitizenActivity Activity);
+    WalkSpeed, CatchUpSpeed, RestSeconds, WorkSeconds, GatherSeconds, DoorSpread, WanderRadius, WorkSpread,
+    BuilderRingRadius, GatherRadiusMin, GatherRadiusMax, StrideLength, StepBounce, WorkLean, WorkStrokesPerSecond,
+    FigureScale; RgbColor FarmerColor, BuilderColor, VillagerColor;
+    RgbColor ColorOf(CitizenRole role); void Validate(); }                               // exhaustive switch; lists every error
+readonly record struct RoleCounts(int Builders, int Farmers, int Villagers) { int Total; }
+readonly record struct RepresentativeCitizen(int Index, CitizenRole Role, int House, Vector2 Home, Vector2 Work,
+    float WorkYaw, Vector2 Gathering, float GatherYaw, float Phase);                  // House −1 without houses; Phase in [0, 1)
+readonly record struct RoutinePose(Vector2 Ground, float Yaw, float Lean, float Bounce, CitizenActivity Activity);
+readonly record struct CitizenPose(Vector3 Position, float Yaw, float Lean, CitizenActivity Activity);   // on the terrain
 sealed record CrowdStatus(int SettlementId, SimulationTier Tier, int Representatives, float PeoplePerRepresentative,
-    float CameraDistance, float RegionalTierEnterDistance);
+    float CameraDistance, float RegionalTierEnterDistance, float RegionalTierExitDistance);
 static class TierSelector { SimulationTier Select(SimulationTier current, float cameraDistance, CitizenSettings settings); }
 static class RepresentativeRoster {
-    int ComputeCount(int population, int maxRepresentatives);
-    (int Builders, int Farmers, int Villagers) SplitRoles(int count, int population, LabourAllocation labour);  // largest remainder
+    int ComputeCount(int population, int maxRepresentatives);                         // clamp(population, 0, max)
+    RoleCounts SplitRoles(int count, int population, LabourAllocation labour);       // both role boundaries rounded
     IReadOnlyList<RepresentativeCitizen> Build(WorldSeed seed, SettlementState settlement, LabourAllocation labour,
-        SettlementSite site, CitizenSettings settings); }
+        SettlementSite site, SettlementViewSettings settings); }                     // ordered by index
+internal static class GroundMath { Vector2 Polar(float angle, float radius); float YawAlong(Vector2 direction);
+    float YawTowards(Vector2 from, Vector2 to); }                                    // yaw 0 faces +Z, as for houses
 static class CitizenRoutine { float CycleSeconds(in RepresentativeCitizen c, CitizenSettings s);
-    (Vector2 Ground, float Yaw, CitizenActivity Activity) Evaluate(in RepresentativeCitizen c, double seconds, CitizenSettings s); }
+    RoutinePose Evaluate(in RepresentativeCitizen c, double seconds, CitizenSettings s);
+    float Bounce(float walked, CitizenSettings s); }
 sealed class SettlementCrowd {                                                       // one per settlement view
-    SettlementCrowd(WorldSeed seed, int settlementId, CitizenSettings settings);
-    SimulationTier Tier; IReadOnlyList<RepresentativeCitizen> Roster; IReadOnlyList<CitizenPose> Poses; bool RosterChanged;
-    void SelectTier(float cameraDistance);
-    void Refresh(SettlementState settlement, LabourAllocation labour, SettlementSite site);
-    void Advance(double simulationSeconds, TerrainField terrain);
+    SettlementCrowd(WorldSeed seed, int settlementId, SettlementViewSettings settings);
+    SimulationTier Tier; IReadOnlyList<RepresentativeCitizen> Roster; IReadOnlyList<CitizenPose> Poses; int RosterVersion;
+    void SelectTier(float cameraDistance);                                           // demotion clears the roster
+    void Refresh(SettlementState settlement, LabourAllocation labour, SettlementSite site);   // rebuild when role counts or layout change
+    void Advance(double simulationSeconds, TerrainField terrain);                    // routine poses, catch-up, terrain heights
     CrowdStatus GetStatus(int population, float cameraDistance); }
 
 // Presentation/
@@ -511,7 +534,7 @@ sealed record SettlementViewSettings { SettlementLayoutSettings Layout; CitizenS
 sealed record PresentationContent(BiomePalette Palette, SettlementViewSettings SettlementView) {
     static PresentationContent Parse(string paletteJson, string settlementViewJson); }
 readonly record struct ConstructionPlacement(HutPlacement House, float Progress);                 // progress 0..1
-readonly record struct FieldPlacement(Vector3 Position, float Yaw, Vector3 Normal, float Variant);
+readonly record struct FieldPlacement(int Slot, Vector3 Position, float Yaw, Vector3 Normal, float Variant);  // Slot on the field spiral
 sealed record SettlementSite(Vector3 Center, IReadOnlyList<HutPlacement> Houses, ConstructionPlacement? Construction,
     IReadOnlyList<FieldPlacement> Fields, float HouseDiscRadius) { Vector2 DoorOf(int house, float doorDistance);
     static Vector2 Facing(float yaw); }
@@ -524,9 +547,11 @@ static class SettlementLayout {
 sealed record DebugSnapshot { ...; IReadOnlyList<CrowdStatus> Crowds { get; init; } = []; }
 static class DebugReadout { ... the step cadence line ...;
     const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F6] spoil food  [F7] settlers";
-    string Summarize(WorldState world, SettlementRules rules); }                 // one line for the log after a capture
-internal static class SettlementReadout { void Append(List<string> lines, DebugSnapshot snapshot, SettlementState s); }
+    string Summarize(WorldState world, SettlementRules rules, IReadOnlyList<CrowdStatus> crowds); }   // one line for the log after a capture
+internal static class SettlementReadout { void Append(List<string> lines, DebugSnapshot snapshot, SettlementState s);
                                                                                   // the settlement lines of Architecture → Debug tools
+    string DescribeTier(SimulationTier tier);                                     // "tier 1 statistical", "tier 2 regional"
+    CrowdStatus? FindCrowd(IReadOnlyList<CrowdStatus> crowds, int settlementId); }
 
 // Session and launch
 sealed class GameSession { double SimulationSeconds { get; }  // (Tick + Alpha) × TickDuration
@@ -542,12 +567,16 @@ sealed record LaunchOptions { int? AdvanceTicks; float? CameraDistance; }       
 sealed class WorldPresenter { WorldPresenter(Node3D root, Camera3D camera, PresentationContent content, SettlementRules rules,
     TerrainBackendPreference terrainPreference); ... }
 sealed class SettlementPresenter { SettlementPresenter(Node3D parent, SettlementRules rules, SettlementViewSettings settings);
-    Build(world, terrain); Sync(world); UpdateCitizens(double seconds, Vector3 camera); IReadOnlyList<CrowdStatus> CrowdStatuses; }
-sealed class SettlementView { Sync(SettlementState s); SettlementSite Site; UpdateCitizens(double seconds, Vector3 camera);
-    CrowdStatus Status; }                                       // shrine and label; the site through SiteView
+    Build(world, terrain); Sync(world); UpdateCitizens(WorldState world, double seconds, Vector3 camera);
+    IReadOnlyList<CrowdStatus> CrowdStatuses; }                  // WorldPresenter forwards UpdateCitizens and CrowdStatuses
+sealed class SettlementView { SettlementView(Node3D parent, SettlementAssets assets, WorldSeed seed, SettlementState s,
+    TerrainField terrain, SettlementRules rules, SettlementViewSettings settings);
+    Sync(SettlementState s); SettlementSite Site;
+    CrowdStatus UpdateCitizens(SettlementState s, double seconds, Vector3 camera); }   // shrine and label; the site through SiteView
 sealed class SiteView { Show(SettlementSite site); }            // a MultiMesh per hut part, the fields (instance colours), the building site
 sealed class ConstructionSiteView { Show(ConstructionPlacement? construction); }   // scaffold, timber, walls to 70%, then the roof
-sealed class CitizenView { Show(IReadOnlyList<CitizenPose> poses, IReadOnlyList<RepresentativeCitizen> roster, bool recolour); Hide(); }
+sealed class CitizenView { CitizenView(Node3D parent, SettlementAssets assets, CitizenSettings settings);
+    Show(SettlementCrowd crowd); }                              // count and colours on a new RosterVersion, transforms every frame
 sealed class SettlementAssets { ...; Mesh ScaffoldPole, TimberPile, FieldPlot, CitizenFigure;   // fields: crop-row texture
     static Transform3D PartialWall(float built); static Transform3D PartialRoof(float built); }  // citizen = body (instance colour) + head
 partial class GameRoot { hotkeys ',' F6 F7; --advance-ticks, --camera-distance; crowd statuses in the snapshot }
@@ -569,10 +598,13 @@ Unit and integration tests in `src/Pantheon.Tests` (headless, no Godot).
 | Cadence | `IntervalSystemTests` | The settlement step runs on the last tick of each interval: nothing for 9 ticks, one step on the 10th; `TicksUntilDue` matches. |
 | Determinism | `DeterminismTests` (updated) | Same seed and ticks give the same state, also across a save and load, with the per-step rules. |
 | Saves | `SaveLoadTests` (updated), `SaveMigrationTests` | `CurrentSaveVersion` is 2. The Milestone 1 fixture (version 1) loads with health 1, no construction and all other values intact, re-saves as version 2 and keeps simulating deterministically. A version 2 save without `Health` is rejected. Out-of-range health or negative progress is rejected. |
-| Tier 2 | `RepresentativeRosterTests`, `CitizenRoutineTests`, `TierSelectorTests`, `SettlementCrowdTests` | Count is the population up to the cap. Role counts follow the labour split by largest remainder. Same inputs give the same roster. One more person changes at most one role and keeps every other home. Building rosters and poses never changes the world (JSON before and after). Homes are house doors, farmers work in fields, builders at the building site. The routine visits home, work and the shrine, walks at walking speed and stays on the ground. Tier hysteresis. Crowd: Tier 1 has no poses, promotion places everyone in place, a newcomer starts at its door, a rerouted citizen moves no faster than the catch-up speed. |
+| Tier 2 roster | `RepresentativeRosterTests` | One representative per inhabitant up to the cap. Both role boundaries are rounded and every role stays within one of its share; a built roster gives each role its count (1, 58, 300 and 541 people). Same seed, same roster; another seed, another roster. One more inhabitant changes at most two roles and nobody's home; one more builder or farmer changes exactly one role. A new house only draws residents into itself. Everyone rests by their door and gathers around the shrine; builders work around the building site facing it; farmers work inside a field along its rows; villagers do chores near home. Without houses, fields or a building site, everyone lives around the shrine and does chores. |
+| Tier 2 routine | `CitizenRoutineTests` | The cycle is the stays plus the walks. Rest, walk, work, walk, gather, walk home, repeating every cycle; never faster than walking, even where the cycle wraps; the phase shifts the routine. Leans only while working, bobs only while walking, one hop per stride. Faces the way it walks, its work and the shrine. With every spot in one place it stays put. |
+| Tier selection | `TierSelectorTests` | Enters Tier 2 within 450 m, leaves beyond 550 m and keeps its tier while the camera hovers between them. |
+| Tier 2 crowd | `SettlementCrowdTests` | Far from the camera nobody is shown; near it everyone appears on their routine, standing on the ground. The status tells how many people each representative stands for (540 people, 300 shown, 1 per 1.8). Leaving Tier 2 removes everyone and coming back places them afresh. A newcomer steps out of its door. Roster changes never make anyone jump; rerouted citizens hurry to their new routine no faster than the catch-up speed and stay on the ground. Paused, the crowd stands still. `RosterVersion` changes only on a rebuild or a clear. The crowd never changes the world (the save JSON before and after). |
 | Layout | `SettlementLayoutTests` | House count from housing; houses are a stable prefix as housing grows; the building site uses the next slot with its progress; fields lie outside the house disc on dry, gentle land; deterministic. |
-| Content | `ContentTests` (updated) | Shipped `settlement_rules.json` and `settlement_view.json` parse strictly; unknown members and out-of-range values are rejected. |
-| Readouts | `DebugReadoutTests` (updated) | Population / housing, houses, health, food and storage, jobs, construction, tier lines; starving and blocked-construction warnings. |
+| Content | `ContentTests` (updated) | Shipped `settlement_rules.json` and `settlement_view.json` parse strictly, including the citizen settings (at most 300 representatives, the exit distance beyond the enter distance, catch-up faster than walking, three distinct role colours). Unknown members are rejected; out-of-range values list every problem of every part (layout and citizens). |
+| Readouts | `DebugReadoutTests` (updated) | Population / housing, houses, health, food and storage, jobs, construction; starving and blocked-construction warnings. The tier line: tier 1 without a crowd status; the camera distance that changes the tier; in Tier 2 the citizens shown and the people each stands for. The capture summary includes the client's tier and citizens shown. |
 | Commands | `SessionCommandsTests` (updated) | `,` runs to the next step boundary and pauses; F6 empties the stores; F7 adds half the population (at least 10). |
 | Session and launch | `GameSessionTests`, `LaunchOptionsTests` (updated) | `SimulationSeconds`, `RunTicks`; `--advance-ticks` and `--camera-distance` parse, bad values warn. |
 | Architecture | `ArchitectureRulesTests` (unchanged) | Layering, no Godot, no unseeded randomness or clock in core assemblies. |
@@ -586,6 +618,42 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   famine driven with F7 and F6 showing health falling in the overlay.
 - Tier switching by zooming out past 550 m and back within 450 m.
 - The frame cost of the citizen update, measured and recorded here.
+
+### Verification results
+
+- Build: 0 warnings, 0 errors. Tests: 331 of 331 passed.
+- Smoke runs, seed 1234 (the summary line each run prints after its capture):
+  - Start, tick 40, camera at 90 m, on both renderers: 41 / 60 people in 12 houses, health
+    100%, tier 2 regional, 41 citizens shown (one per person).
+  - Houses appear as housing grows: 12 houses at tick 80, 22 houses (93 / 110 people) at tick
+    2453, 85 houses (425 / 425 people, food 2020) at tick 9040.
+  - Tick 9040 at 45 m, 110 m and 300 m: tier 2 regional, 300 citizens shown, 1 per 1.4
+    people. At 700 m: tier 1 statistical, no citizens. The fallback renderer shows the same
+    figures in the same poses at 45 m and none at 700 m.
+  - Headless (`--headless --advance-ticks=9000 --camera-distance=100`): tier 2 regional,
+    300 citizens shown.
+  - The Milestone 1 save fixture (`--load=…/save-v1.json`) loads at tick 250 through the
+    migration: seed 77, Emberfield 42 / 60 people, health 100%, 42 citizens shown.
+  - The only warning is Terrain3D's known `instance_reset_physics_interpolation()` deprecation
+    (README → Known issues).
+- Up close with the overlay off (Terrain3D, 439 people): blue villagers by their doors and at
+  chores, red farmers in the fields, amber builders, a crowd gathered around the shrine and
+  figures walking between homes, fields and the shrine.
+- Building site (`--advance-ticks=640`, paused before zooming in): the 13th house's scaffold
+  poles, timber pile and rising walls, with amber builders on the ring around it, facing it.
+  The house was complete at tick 740 (54 / 65 people, 13 houses).
+- Tier switching (wheel zoom at the shrine, Terrain3D): 753 m reads tier 1 with no citizens;
+  coming back in, 461 m stays tier 1 and 392 m enters tier 2; going out again, 543 m stays
+  tier 2. The overlay line shows the distance that changes the tier.
+- Famine at the limit (F7 then F6, ×4): from 485 people at full health, the settlers bring the
+  settlement to 730 / 490 with empty stores, 86% fed and no builders. Health falls to 87% at
+  712 people, then to 67% at 593 people with 1.5 deaths per second. Once the land feeds
+  everyone, health is back to 100% at 492 / 490 and the stores refill.
+- Frame cost (300 citizens, 129 houses and 43 fields at 544 people): `Advance` with an
+  unchanged roster costs 28.2 µs per frame headless (Release); a roster rebuild costs 0.662 ms
+  and happens at most once per settlement step; the site layout costs 0.024 ms. In Godot
+  (Debug C#, Terrain3D on lavapipe) the client's citizen update, including the MultiMesh
+  writes, averaged 0.42 ms per frame over 60 frames.
 
 ## Tasks
 
@@ -602,15 +670,15 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Measure the shipped balance headless (Architecture → Tier 1).
 - [x] Open the draft pull request against `cursor/milestone-1-foundation-e33e` ([#2](https://github.com/roeyazroel/pantheon/pull/2)).
 - [x] Layout and views: houses from housing, building site, fields, `settlement_view.json`, client views and materials.
+- [x] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
+- [x] Verify in Godot on both renderers; record the results here (Test Plan → Verification results).
 
 ### In Progress
 
-- [ ] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
+- [ ] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md`, ADR-004 status line.
 
 ### Future (this milestone, in order)
 
-- [ ] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md`, ADR-004 status line.
-- [ ] Verify in Godot on both renderers; record the results here.
 - [ ] Update the pull request description with what was built and the verification results.
 
 ### Future (later milestones)

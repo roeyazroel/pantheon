@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Pantheon.Domain.Settlements;
+using Pantheon.Game.Population;
 using Pantheon.Simulation.Settlements;
 
 namespace Pantheon.Game.Diagnostics;
 
 /// <summary>
 /// Formats the debug overlay lines of one settlement: population, housing, health, food, jobs,
-/// births and deaths, construction and warnings. Rates are per simulated second.
+/// births and deaths, construction, the simulation tier and warnings. Rates are per simulated
+/// second.
 /// </summary>
 internal static class SettlementReadout
 {
@@ -38,10 +40,62 @@ internal static class SettlementReadout
             outlook.ExpectedBirths * stepsPerSecond,
             outlook.ExpectedDeaths * stepsPerSecond,
             FormatConstruction(rules, settlement, outlook, houses)));
+        lines.Add(FormatTier(FindCrowd(snapshot.Crowds, settlement.Id)));
         if (FormatWarnings(outlook, houses) is { } warnings)
         {
             lines.Add(warnings);
         }
+    }
+
+    /// <summary>Number and name of a tier, as the overlay and the logs show it.</summary>
+    /// <param name="tier">Tier.</param>
+    /// <returns>For example "tier 2 regional".</returns>
+    public static string DescribeTier(SimulationTier tier) => tier switch
+    {
+        SimulationTier.Statistical => "tier 1 statistical",
+        SimulationTier.Regional => "tier 2 regional",
+    };
+
+    /// <summary>The status of a settlement's crowd, or <c>null</c> when the client reported none.</summary>
+    /// <param name="crowds">Statuses of every settlement.</param>
+    /// <param name="settlementId">Settlement.</param>
+    /// <returns>Its status, if any.</returns>
+    public static CrowdStatus? FindCrowd(IReadOnlyList<CrowdStatus> crowds, int settlementId)
+    {
+        foreach (var crowd in crowds)
+        {
+            if (crowd.SettlementId == settlementId)
+            {
+                return crowd;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The simulation tier, the camera distance that changes it and, in Tier 2, the representatives.</summary>
+    private static string FormatTier(CrowdStatus? crowd)
+    {
+        if (crowd is null)
+        {
+            return "  sim " + DescribeTier(SimulationTier.Statistical);
+        }
+
+        return crowd.Tier switch
+        {
+            SimulationTier.Statistical => Format(
+                "  sim {0}: camera {1:0} m, citizens shown within {2:0} m",
+                DescribeTier(crowd.Tier),
+                crowd.CameraDistance,
+                crowd.RegionalTierEnterDistance),
+            SimulationTier.Regional => Format(
+                "  sim {0}: {1} citizens shown, 1 per {2:0.0} people, camera {3:0} m, statistical beyond {4:0} m",
+                DescribeTier(crowd.Tier),
+                crowd.Representatives,
+                crowd.PeoplePerRepresentative,
+                crowd.CameraDistance,
+                crowd.RegionalTierExitDistance),
+        };
     }
 
     /// <summary>Stored food against storage, and the step's harvest, meals and net change.</summary>

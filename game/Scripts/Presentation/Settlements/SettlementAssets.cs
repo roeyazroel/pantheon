@@ -4,8 +4,8 @@ namespace Pantheon.Client.Presentation.Settlements;
 
 /// <summary>
 /// Procedural meshes shared by every settlement: a round hut (wall, thatched cone roof, door), the
-/// central wayshrine, the scaffolding of a building site and a field plot. Offsets place each part
-/// relative to a point on the ground.
+/// central wayshrine, the scaffolding of a building site, a field plot and a citizen figure.
+/// Offsets place each part relative to a point on the ground.
 /// </summary>
 internal sealed class SettlementAssets
 {
@@ -40,6 +40,13 @@ internal sealed class SettlementAssets
     private const int RowWidthPixels = 4;
     private const float FurrowShade = 0.7f;
 
+    // Citizen figure at life size (CitizenSettings.FigureScale enlarges it): a robed body and a head.
+    private const float BodyHeight = 1.15f;
+    private const float BodyTopRadius = 0.17f;
+    private const float BodyBottomRadius = 0.3f;
+    private const float HeadRadius = 0.2f;
+    private const int FigureSegments = 8;
+
     /// <summary>Loads the materials and builds the meshes.</summary>
     public SettlementAssets()
     {
@@ -55,6 +62,7 @@ internal sealed class SettlementAssets
         ScaffoldPole = new CylinderMesh { TopRadius = ScaffoldPoleRadius, BottomRadius = ScaffoldPoleRadius, Height = ScaffoldPoleHeight, RadialSegments = 6, Rings = 1, Material = timber };
         TimberPile = new BoxMesh { Size = TimberPileSize, Material = timber };
         FieldPlot = new BoxMesh { Size = new Vector3(1f, FieldThickness, 1f), Material = CreateFieldMaterial() };
+        CitizenFigure = CreateCitizenFigure(LoadMaterial("citizen_body"), LoadMaterial("citizen_head"));
     }
 
     /// <summary>Height of a scaffold pole in metres; it rises above a finished hut's walls.</summary>
@@ -89,6 +97,9 @@ internal sealed class SettlementAssets
 
     /// <summary>Unit-sized field slab; scale it by the field size and tint it per instance with the crop colour.</summary>
     public Mesh FieldPlot { get; }
+
+    /// <summary>Citizen figure with its feet at the origin, facing +Z: the body surface takes the instance colour, the head surface does not.</summary>
+    public Mesh CitizenFigure { get; }
 
     /// <summary>Centre of the wall mesh relative to the hut's ground point.</summary>
     public static Vector3 WallOffset => new(0f, (WallHeight * 0.5f) - WallSink, 0f);
@@ -170,5 +181,31 @@ internal sealed class SettlementAssets
 
         image.GenerateMipmaps();
         return ImageTexture.CreateFromImage(image);
+    }
+
+    /// <summary>A tapered body and a head merged into one mesh with a surface (and material) each.</summary>
+    private static ArrayMesh CreateCitizenFigure(Material body, Material head)
+    {
+        var figure = new ArrayMesh();
+        var bodyMesh = new CylinderMesh { TopRadius = BodyTopRadius, BottomRadius = BodyBottomRadius, Height = BodyHeight, RadialSegments = FigureSegments, Rings = 1 };
+        var headMesh = new SphereMesh { Radius = HeadRadius, Height = 2f * HeadRadius, RadialSegments = FigureSegments, Rings = FigureSegments / 2 };
+        AddSurface(figure, bodyMesh, new Vector3(0f, BodyHeight * 0.5f, 0f), body);
+        AddSurface(figure, headMesh, new Vector3(0f, BodyHeight + (HeadRadius * 0.8f), 0f), head);
+        return figure;
+    }
+
+    /// <summary>Appends a primitive mesh, moved by <paramref name="offset"/>, to <paramref name="target"/> as a new surface.</summary>
+    private static void AddSurface(ArrayMesh target, PrimitiveMesh part, Vector3 offset, Material material)
+    {
+        var arrays = part.GetMeshArrays();
+        var vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+        for (var i = 0; i < vertices.Length; i++)
+        {
+            vertices[i] += offset;
+        }
+
+        arrays[(int)Mesh.ArrayType.Vertex] = vertices;
+        target.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+        target.SurfaceSetMaterial(target.GetSurfaceCount() - 1, material);
     }
 }

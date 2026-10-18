@@ -85,12 +85,13 @@ public partial class GameRoot : Node3D
         }
     }
 
-    /// <summary>Advances the fixed-step simulation, then refreshes the visuals and the overlay.</summary>
+    /// <summary>Advances the fixed-step simulation, then refreshes the visuals, the citizens and the overlay.</summary>
     /// <param name="delta">Frame time in seconds.</param>
     public override void _Process(double delta)
     {
         _session.Update(delta);
         _presenter.Sync(_session.World);
+        _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
         var cursor = _camera.CursorGroundPoint;
         var cursorRegion = RegionAt(cursor);
@@ -232,11 +233,12 @@ public partial class GameRoot : Node3D
         CursorWorldPosition = cursor,
         RegionBoundariesVisible = _presenter.RegionBoundariesVisible,
         StatusMessage = _status,
+        Crowds = _presenter.CrowdStatuses,
     };
 
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
     private string DescribeWorld() =>
-        $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules)}; terrain {_presenter.TerrainBackend}";
+        $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}";
 
     /// <summary>Remembers a status line for the overlay and echoes it to the log.</summary>
     private void SetStatus(string message)

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Numerics;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
+using Pantheon.Game.Population;
 using Pantheon.Simulation.Settlements;
 using Pantheon.Simulation.Systems;
 
@@ -60,22 +61,27 @@ public static class DebugReadout
     /// <summary>One-line summary of a world, printed at the end of unattended runs.</summary>
     /// <param name="world">World to describe.</param>
     /// <param name="rules">Settlement rules, for the house count.</param>
-    /// <returns>Seed, tick, region count and each settlement's population, housing, health and food.</returns>
-    public static string Summarize(WorldState world, SettlementRules rules)
+    /// <param name="crowds">Simulation tier and citizens of each settlement, as the client shows them.</param>
+    /// <returns>Seed, tick, region count and each settlement's population, housing, health, food and tier.</returns>
+    public static string Summarize(WorldState world, SettlementRules rules, IReadOnlyList<CrowdStatus> crowds)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(crowds);
         var parts = new List<string> { Format("seed {0}, tick {1}, {2} regions", world.Seed, world.Tick, world.Regions.Cells.Count) };
         foreach (var settlement in world.Settlements)
         {
+            var crowd = SettlementReadout.FindCrowd(crowds, settlement.Id);
             parts.Add(Format(
-                "{0}: population {1} / {2}, {3} houses, health {4:0%}, food {5:0}",
+                "{0}: population {1} / {2}, {3} houses, health {4:0%}, food {5:0}, {6}, {7} citizens shown",
                 settlement.Name,
                 settlement.Population,
                 settlement.Housing,
                 SettlementEconomy.ComputeHouseCount(rules, settlement.Housing),
                 settlement.Health,
-                settlement.Food));
+                settlement.Food,
+                SettlementReadout.DescribeTier(crowd?.Tier ?? SimulationTier.Statistical),
+                crowd?.Representatives ?? 0));
         }
 
         return string.Join("; ", parts);

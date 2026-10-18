@@ -4,6 +4,7 @@ using System.Numerics;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
 using Pantheon.Game.Diagnostics;
+using Pantheon.Game.Population;
 using Pantheon.Simulation.WorldGen;
 using Pantheon.Tests.Support;
 using Xunit;
@@ -130,11 +131,54 @@ public sealed class DebugReadoutTests
     }
 
     [Fact]
+    public void DebugReadout_ReadsAsTier1WithoutACrowdStatus()
+    {
+        var lines = DebugReadout.Build(Snapshot()).Lines;
+
+        Assert.Contains("  sim tier 1 statistical", lines);
+    }
+
+    [Fact]
+    public void DebugReadout_ShowsTheTierAndTheDistanceThatChangesIt()
+    {
+        var id = World.Settlements[0].Id;
+        var statistical = new CrowdStatus(id, SimulationTier.Statistical, 0, 0f, 812.4f, 450f, 550f);
+        var regional = new CrowdStatus(id, SimulationTier.Regional, 40, 1f, 212.6f, 450f, 550f);
+
+        var far = DebugReadout.Build(Snapshot() with { Crowds = [statistical] }).Lines;
+        var near = DebugReadout.Build(Snapshot() with { Crowds = [regional] }).Lines;
+
+        Assert.Contains("  sim tier 1 statistical: camera 812 m, citizens shown within 450 m", far);
+        Assert.Contains("  sim tier 2 regional: 40 citizens shown, 1 per 1.0 people, camera 213 m, statistical beyond 550 m", near);
+    }
+
+    [Fact]
+    public void DebugReadout_ShowsHowManyPeopleEachRepresentativeStandsFor()
+    {
+        var world = SettlementWorlds.Create(population: 540, housing: 645, food: 2000f, fertility: 0.5f);
+        var crowd = new CrowdStatus(SettlementWorlds.Settlement(world).Id, SimulationTier.Regional, 300, 1.8f, 90f, 450f, 550f);
+
+        var lines = DebugReadout.Build(SettlementSnapshot(world) with { Crowds = [crowd] }).Lines;
+
+        Assert.Contains("  sim tier 2 regional: 300 citizens shown, 1 per 1.8 people, camera 90 m, statistical beyond 550 m", lines);
+    }
+
+    [Fact]
     public void Summarize_DescribesEachSettlement()
     {
-        var summary = DebugReadout.Summarize(World, TestContent.Shipped.SettlementRules);
+        var summary = DebugReadout.Summarize(World, TestContent.Shipped.SettlementRules, []);
 
-        Assert.Equal($"seed 1234, tick 0, 256 regions; {World.Settlements[0].Name}: population 40 / 60, 12 houses, health 100%, food 120", summary);
+        Assert.Equal($"seed 1234, tick 0, 256 regions; {World.Settlements[0].Name}: population 40 / 60, 12 houses, health 100%, food 120, tier 1 statistical, 0 citizens shown", summary);
+    }
+
+    [Fact]
+    public void Summarize_IncludesTheClientsTier()
+    {
+        var crowd = new CrowdStatus(World.Settlements[0].Id, SimulationTier.Regional, 40, 1f, 200f, 450f, 550f);
+
+        var summary = DebugReadout.Summarize(World, TestContent.Shipped.SettlementRules, [crowd]);
+
+        Assert.EndsWith("food 120, tier 2 regional, 40 citizens shown", summary, StringComparison.Ordinal);
     }
 
     /// <summary>A typical frame snapshot of the generated world, without a cursor position.</summary>

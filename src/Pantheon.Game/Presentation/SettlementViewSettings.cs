@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Pantheon.Game.Population;
 using Pantheon.Persistence;
 
 namespace Pantheon.Game.Presentation;
@@ -14,6 +16,9 @@ public sealed record SettlementViewSettings
 
     /// <summary>Layout of houses, the building site and fields.</summary>
     public required SettlementLayoutSettings Layout { get; init; }
+
+    /// <summary>Representative citizens (Tier 2).</summary>
+    public required CitizenSettings Citizens { get; init; }
 
     /// <summary>Parses and validates the settlement view content file.</summary>
     /// <param name="json">Text of <c>settlement_view.json</c>.</param>
@@ -34,7 +39,29 @@ public sealed record SettlementViewSettings
         return settings;
     }
 
-    /// <summary>Throws when a value is out of range.</summary>
-    /// <exception cref="ArgumentException">A value is invalid.</exception>
-    public void Validate() => Layout.Validate();
+    /// <summary>Throws when a value is out of range, listing the problems of every part.</summary>
+    /// <exception cref="ArgumentException">At least one value is invalid.</exception>
+    public void Validate()
+    {
+        var errors = new List<string>();
+        Collect(errors, nameof(Layout), Layout.Validate);
+        Collect(errors, nameof(Citizens), Citizens.Validate);
+        if (errors.Count > 0)
+        {
+            throw new ArgumentException(string.Join(" ", errors));
+        }
+    }
+
+    /// <summary>Runs one part's validation and records its message, prefixed with the part's name.</summary>
+    private static void Collect(List<string> errors, string part, Action validate)
+    {
+        try
+        {
+            validate();
+        }
+        catch (ArgumentException exception)
+        {
+            errors.Add($"{part}: {exception.Message}");
+        }
+    }
 }

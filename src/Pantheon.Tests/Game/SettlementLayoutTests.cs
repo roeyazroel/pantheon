@@ -2,9 +2,7 @@ using System;
 using System.Linq;
 using System.Numerics;
 using Pantheon.Domain.Settlements;
-using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
-using Pantheon.Simulation.WorldGen;
 using Pantheon.Tests.Support;
 using Xunit;
 
@@ -13,8 +11,7 @@ namespace Pantheon.Tests.Game;
 /// <summary>Houses, the building site and fields follow the settlement's state and stand on sensible ground.</summary>
 public sealed class SettlementLayoutTests
 {
-    private static readonly GeneratedWorld Island = WorldGenerator.Generate(new WorldSeed(1234), TestContent.SmallWorldGen);
-    private static readonly SettlementRules Rules = SettlementWorlds.Rules;
+    private static readonly SettlementRules Rules = IslandSettlements.Rules;
     private static readonly SettlementLayoutSettings Layout = TestContent.SettlementView.Layout;
 
     [Theory]
@@ -128,26 +125,12 @@ public sealed class SettlementLayoutTests
         Assert.Equal(first.HouseDiscRadius, second.HouseDiscRadius);
     }
 
-    /// <summary>The island's starting settlement with the given housing and construction progress.</summary>
-    private static SettlementState Settlement(int housing, float constructionProgress = 0f)
-    {
-        var founded = Island.State.Settlements[0];
-        return new SettlementState
-        {
-            Id = founded.Id,
-            Name = founded.Name,
-            RegionId = founded.RegionId,
-            Position = founded.Position,
-            Population = founded.Population,
-            Food = founded.Food,
-            Housing = housing,
-            Health = 1f,
-            ConstructionProgress = constructionProgress,
-        };
-    }
+    /// <summary>The island's starting settlement with the given housing and construction progress; the layout ignores the population.</summary>
+    private static SettlementState Settlement(int housing, float constructionProgress = 0f) =>
+        IslandSettlements.Create(population: 30, housing, constructionProgress);
 
     /// <summary>Lays out a settlement on the island with the pinned rules and the shipped layout.</summary>
-    private static SettlementSite Site(SettlementState settlement) => SettlementLayout.ComputeSite(settlement, Rules, Island.Terrain, Layout);
+    private static SettlementSite Site(SettlementState settlement) => IslandSettlements.Site(settlement);
 
     /// <summary>Distance from the shrine to the nearest field centre.</summary>
     private static float NearestField(SettlementSite site) =>

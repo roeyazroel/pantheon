@@ -123,7 +123,7 @@ public static class SettlementLayout
             if (radius >= innerRadius && TryPlaceField(terrain, settings, ground, out var position, out var normal))
             {
                 var yaw = FacingYaw(ground, center) + ((PresentationHash.Unit(FieldYawSalt, (ulong)settlementId, (ulong)slot) - 0.5f) * FieldYawJitter);
-                fields.Add(new FieldPlacement(position, yaw, normal, PresentationHash.Unit(FieldVariantSalt, (ulong)settlementId, (ulong)slot)));
+                fields.Add(new FieldPlacement(slot, position, yaw, normal, PresentationHash.Unit(FieldVariantSalt, (ulong)settlementId, (ulong)slot)));
             }
         }
 
