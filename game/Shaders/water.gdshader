@@ -16,6 +16,12 @@ uniform float foam_width : hint_range(0.0, 0.5) = 0.06;
 uniform float wave_scale = 0.045;
 uniform float wave_speed = 0.7;
 uniform float wave_strength : hint_range(0.0, 1.0) = 0.22;
+// Camera distances over which the waves flatten to far_wave_fraction and the surface turns rougher.
+uniform float wave_fade_start = 150.0;
+uniform float wave_fade_end = 1200.0;
+uniform float far_wave_fraction : hint_range(0.0, 1.0) = 0.35;
+uniform float near_roughness : hint_range(0.0, 1.0) = 0.08;
+uniform float far_roughness : hint_range(0.0, 1.0) = 0.25;
 
 varying vec3 world_position;
 
@@ -35,7 +41,9 @@ void fragment() {
 	float depth = texture(depth_map, world_position.xz / map_size).r;
 	float t = TIME * wave_speed;
 
-	vec2 slope = wave_slope(world_position.xz * wave_scale, t) * wave_strength;
+	// Far from the camera a wave spans only a few pixels, and sharp sun glints on it flicker.
+	float far = smoothstep(wave_fade_start, wave_fade_end, distance(world_position, CAMERA_POSITION_WORLD));
+	vec2 slope = wave_slope(world_position.xz * wave_scale, t) * wave_strength * mix(1.0, far_wave_fraction, far);
 	vec3 world_normal = normalize(vec3(-slope.x, 1.0, -slope.y));
 	NORMAL = normalize((VIEW_MATRIX * vec4(world_normal, 0.0)).xyz);
 
@@ -47,6 +55,6 @@ void fragment() {
 	// Water looks more opaque at grazing angles.
 	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
 	ALPHA = clamp(mix(shallow_alpha, deep_alpha, smoothstep(0.0, 0.6, depth)) + fresnel * 0.3, 0.0, 1.0);
-	ROUGHNESS = 0.06;
-	SPECULAR = 0.55;
+	ROUGHNESS = mix(near_roughness, far_roughness, far);
+	SPECULAR = 0.4;
 }
