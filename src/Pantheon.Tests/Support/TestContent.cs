@@ -54,10 +54,5 @@ internal static class TestContent
         GameContent.Parse(ReadText(ContentJson.WorldGenFileName), ReadText(ContentJson.SettlementRulesFileName));
 
     /// <summary>Parses and validates the shipped palette.</summary>
-    private static BiomePalette LoadPalette()
-    {
-        var palette = ContentJson.Parse<BiomePalette>(ReadText(BiomePalette.FileName), BiomePalette.FileName);
-        palette.Validate();
-        return palette;
-    }
+    private static BiomePalette LoadPalette() => BiomePalette.Parse(ReadText(BiomePalette.FileName));
 }

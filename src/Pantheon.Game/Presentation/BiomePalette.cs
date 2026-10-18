@@ -1,5 +1,6 @@
 using System;
 using Pantheon.Domain.Ecology;
+using Pantheon.Persistence;
 
 namespace Pantheon.Game.Presentation;
 
@@ -65,6 +66,25 @@ public sealed record BiomePalette
 
     /// <summary>Strength of the per-sample brightness variation (0 = flat colour).</summary>
     public required float ColorVariation { get; init; }
+
+    /// <summary>Parses and validates the palette content file.</summary>
+    /// <param name="json">Text of <c>biome_palette.json</c>.</param>
+    /// <returns>The validated palette.</returns>
+    /// <exception cref="ContentFormatException">The file is malformed or holds out-of-range values.</exception>
+    public static BiomePalette Parse(string json)
+    {
+        var palette = ContentJson.Parse<BiomePalette>(json, FileName);
+        try
+        {
+            palette.Validate();
+        }
+        catch (ArgumentException exception)
+        {
+            throw new ContentFormatException($"{FileName}: {exception.Message}", exception);
+        }
+
+        return palette;
+    }
 
     /// <summary>Base ground colour of a biome.</summary>
     /// <param name="biome">Biome.</param>

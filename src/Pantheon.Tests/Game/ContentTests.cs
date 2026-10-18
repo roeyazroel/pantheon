@@ -56,6 +56,16 @@ public sealed class ContentTests
     {
         var json = TestContent.ReadText(BiomePalette.FileName).Replace("\"#7ea44a\"", "\"green\"", StringComparison.Ordinal);
 
-        Assert.Throws<ContentFormatException>(() => ContentJson.Parse<BiomePalette>(json, BiomePalette.FileName));
+        Assert.Throws<ContentFormatException>(() => BiomePalette.Parse(json));
+    }
+
+    [Fact]
+    public void Palette_WithOutOfRangeThreshold_FailsValidation()
+    {
+        var json = TestContent.ReadText(BiomePalette.FileName).Replace("\"ColorVariation\": 0.05", "\"ColorVariation\": 0.9", StringComparison.Ordinal);
+
+        var exception = Assert.Throws<ContentFormatException>(() => BiomePalette.Parse(json));
+        Assert.Contains(BiomePalette.FileName, exception.Message);
+        Assert.Contains("ColorVariation", exception.Message);
     }
 }

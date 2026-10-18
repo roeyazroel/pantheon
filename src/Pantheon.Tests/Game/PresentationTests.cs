@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
 using Pantheon.Simulation.Terrain;
@@ -108,6 +109,44 @@ public sealed class PresentationTests
         Assert.Equal(outline[0].X, outline[^1].X, 3);
         Assert.Equal(outline[0].Z, outline[^1].Z, 3);
         Assert.All(outline, point => Assert.InRange(point.X, column * grid.RegionSize, (column + 1) * grid.RegionSize));
+    }
+
+    [Fact]
+    public void WaterDepthMap_IsZeroOnLandAndFullInDeepWater()
+    {
+        const int Resolution = 64;
+        const float DeepWater = 18f;
+        var texel = Terrain.WorldSize / Resolution;
+
+        var depths = WaterDepthMap.Compute(Terrain, Resolution, DeepWater);
+
+        Assert.Equal(Resolution * Resolution, depths.Length);
+        Assert.Contains(depths, depth => depth == 0);
+        Assert.Contains(depths, depth => depth == 255);
+        Assert.All(Enumerable.Range(0, depths.Length), i =>
+        {
+            var height = Terrain.SampleHeight(((i % Resolution) + 0.5f) * texel, ((i / Resolution) + 0.5f) * texel);
+            Assert.Equal(RgbColor.ToByte(-height / DeepWater), depths[i]);
+        });
+    }
+
+    [Fact]
+    public void SettlementLabel_ShowsNameAndPopulation()
+    {
+        var settlement = new SettlementState
+        {
+            Id = 1,
+            Name = "Mossgate",
+            RegionId = 0,
+            Position = new GroundPosition(0f, 0f),
+            Population = 41,
+            Food = 0f,
+            Housing = 60,
+        };
+
+        Assert.Equal("Mossgate\n41 people", SettlementLabel.Format(settlement));
+        settlement.Population = 1;
+        Assert.Equal("Mossgate\n1 person", SettlementLabel.Format(settlement));
     }
 
     [Fact]

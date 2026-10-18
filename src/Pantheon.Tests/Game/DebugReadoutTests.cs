@@ -27,6 +27,8 @@ public sealed class DebugReadoutTests
         Assert.Contains($"Settlement {World.Settlements[0].Name}", text);
         Assert.Contains("pop 40 / 60", text);
         Assert.Contains("Region boundaries OFF", text);
+        Assert.Contains(DebugReadout.CameraHints, text);
+        Assert.Contains(DebugReadout.KeyHints, text);
         Assert.DoesNotContain("FALLBACK", text);
     }
 

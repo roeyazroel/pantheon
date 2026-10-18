@@ -12,7 +12,10 @@ namespace Pantheon.Game.Launch;
 /// </summary>
 public sealed record LaunchOptions
 {
-    /// <summary>Seed of the world to generate, or <c>null</c> to use the default seed.</summary>
+    /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
+    public static WorldSeed DefaultSeed { get; } = new(1234);
+
+    /// <summary>Seed of the world to generate, or <c>null</c> to use <see cref="DefaultSeed"/>.</summary>
     public WorldSeed? Seed { get; init; }
 
     /// <summary>Save file to load at startup instead of generating a world.</summary>
