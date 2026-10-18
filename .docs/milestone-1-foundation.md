@@ -28,8 +28,9 @@ design drives implementation; tests are specified in the Test Plan and written a
 libraries. The user asked for fully autonomous execution, so the pattern could not be confirmed
 interactively. This is recorded as an explicit assumption.
 
-**Status:** implemented and verified; see Test Plan → Verification results. The remaining items
-under Tasks → Future are follow-ups outside this milestone.
+**Status:** implemented and verified; see Test Plan → Verification results. The owner's coding
+rules (spec §134, see Architecture → Coding rules) added the tasks under Tasks → In Progress. The
+items under Tasks → Future are follow-ups outside this milestone.
 
 ## Architecture
 
@@ -132,6 +133,39 @@ sets `dotnet/project/solution_directory="../"` so the editor uses the root `Pant
   renderer.
 - No backend, no network at runtime. Saves are written to `user://saves/quicksave.json`.
 
+### Coding rules (owner's spec §134)
+
+The owner's coding-agent rules are binding for every change, and `AGENTS.md` states them for
+every contributor. Milestone 1 meets them as follows.
+
+| Rule | How Milestone 1 meets it | Checked by |
+| --- | --- | --- |
+| Build incrementally; every milestone leaves the game playable | The island can be explored after a fresh clone, using the README steps. | Windowed smoke runs |
+| Simulation and presentation separate; core sim testable without rendering | The core assemblies have no Godot reference; Godot code lives only in `game/Scripts`. | `ArchitectureRulesTests`, headless `dotnet test` |
+| `WorldState` authoritative; no SceneTree nodes as canonical domain objects | Presenters only read state. Simulation systems and `SessionCommands` are the only writers, and saves never contain nodes (ADR-006). | Save/load and determinism tests |
+| Prefer data-driven content | World generation, settlement rules, settlement names and colours live in `game/Data/*.json`, parsed strictly. | `ContentTests` |
+| Don't optimize before profiling | No speculative optimisation. ADR-006 defers incremental visual sync until profiling shows a need. | Review |
+| No infrastructure without need; no cloud dependency | No services, backend, accounts or CI. The only tool script reproduces the vendored addon. The game runs offline. | Review |
+| macOS, Windows and Linux; native dependencies support all three | Godot .NET and .NET 8 are cross-platform. Terrain3D ships Windows x86_64, Linux x86_64 and universal macOS (x86_64 and arm64) builds; the fallback renderer covers anything else. | `ArchitectureRulesTests` (GDExtension platforms) |
+| Seeded randomness | Simulation randomness comes from `SimulationRandom` streams derived from the seed, with their state saved. Only F2 picks a fresh seed, which is then shown and saved. | `ArchitectureRulesTests` (no `System.Random`, clock or GUIDs in core), determinism tests |
+| Automated tests for important sim rules | Settlement food, storage, births, deaths and starvation; world generation; determinism; saves. | xUnit suite |
+| Document architecture changes; never silently replace a decision | `docs/ARCHITECTURE.md` and this plan change in the same PR as the code. ADR changes need a new ADR (ADR-007 amends ADR-005), as `docs/ADR/README.md` requires. | Review |
+| Gameplay systems over graphical polish; emergent interactions over scripted content | Simulation rules and debug tools come before visual effects. There are no scripted events: food, population and fertility interact through rules. | Review |
+| Debug tools early | F1 overlay, B region grid, F3 region debug map, `.` single-tick step, launch options and scripted smoke runs. | `RegionDebugMapTests`, `SessionCommandsTests` |
+
+### Debug tools
+
+- F1: the debug panel (see Overview).
+- B: the region grid and the outline of the region under the cursor.
+- F3: the region debug map, a corner map with one pixel per region. F3 cycles through Biome,
+  Elevation, Temperature, Moisture, Fertility, Vegetation and off. Numeric layers use a dark-to-bright
+  ramp from the lowest to the highest value, and the legend names the range. The region under the
+  cursor is white and settlement regions are red. The map is rebuilt only when the layer, the
+  cursor region, the tick or the world changes.
+- `.`: pauses the simulation and runs exactly one tick, through the same engine call as the
+  scheduler, so stepping N times equals running N scheduled ticks.
+- Launch options and `SmokeTestDriver` for scripted runs (see Runtime data flow).
+
 ## Mermaid Diagrams
 
 ```mermaid
@@ -181,6 +215,7 @@ sequenceDiagram
     end
     Root->>View: Sync(world), SetHoveredRegion(region under cursor)
     Root->>Overlay: ShowModel(DebugReadout.Build(snapshot)) while visible
+    Root->>Overlay: ShowRegionMap(RegionDebugMap.Build(...)) when the F3 layer, cursor region or tick changed
 ```
 
 ```mermaid
@@ -295,16 +330,22 @@ sealed class SimulationScheduler { SimulationScheduler(double ticksPerSecond, in
     bool IsPaused; double TimeScale; int Advance(double realDeltaSeconds, Action step); void Reset(); }
 sealed class GameSession { static CreateNew(GameContent, WorldSeed); static Load(GameContent, string path);
     WorldState World; TerrainField Terrain; SimulationScheduler Scheduler; event Action WorldReplaced;
-    int Update(double delta); void StartNewWorld(WorldSeed); void SaveTo(string path); void LoadFrom(string path); }
+    int Update(double delta); void StepOneTick(); void StartNewWorld(WorldSeed); void SaveTo(string path); void LoadFrom(string path); }
 static class SessionCommands { IReadOnlyList<double> SpeedPresets = [1, 4, 16];       // each returns the status line
     string QuickSave(GameSession, string path); string QuickLoad(GameSession, string path); string NewWorld(GameSession, WorldSeed);
-    string TogglePause(GameSession); string SetSpeedPreset(GameSession, int preset); }
+    string TogglePause(GameSession); string SetSpeedPreset(GameSession, int preset);
+    string StepTick(GameSession); }                                                     // pauses, then runs exactly one tick
 enum CameraZoomBand { Close, Regional, Strategic }
 sealed record GodCameraSettings { MinDistance, MaxDistance, CloseBandMaxDistance, RegionalBandMaxDistance, pitch range, speeds, smoothing }
 sealed class GodCameraModel { Pan(Vector2 axes, float dt); PanWorld(Vector2 offset); Rotate(float radians); Zoom(float steps); ZoomAt(...);
     FocusOn(Vector2 point, float? distance); SetBounds(...); Update(float dt, Func<float,float,float> ground); CameraPose ComputePose(ground); CameraZoomBand Band; }
 static class EdgeScroll { Vector2 ComputeAxes(Vector2 mouse, Vector2 viewportSize, float margin); }
-static class DebugReadout { DebugPanelModel Build(DebugSnapshot snapshot); }
+static class DebugReadout { const string CameraHints, KeyHints, DebugHints; DebugPanelModel Build(DebugSnapshot snapshot); }
+enum RegionDebugLayer { Biome, Elevation, Temperature, Moisture, Fertility, Vegetation }
+sealed record RegionDebugMapImage(int Width, int Height, byte[] Rgba, string Legend);              // one RGBA8 pixel per region, row-major
+static class RegionDebugMap { RegionDebugLayer? Next(RegionDebugLayer? layer);                   // F3 cycle; null = map off
+    float GetValue(RegionState region, RegionDebugLayer layer);                                     // numeric layers only
+    RegionDebugMapImage Build(WorldState world, RegionDebugLayer layer, BiomePalette palette, int? cursorRegionId); }
 sealed record LaunchOptions { static IReadOnlySet<string> KnownOptions; static WorldSeed DefaultSeed;   // 1234
     WorldSeed? Seed; string? LoadPath; TerrainBackendPreference Terrain; int? QuitAfterFrames; string? ScreenshotPath;
     IReadOnlyList<string> Warnings; static LaunchOptions Parse(IEnumerable<string> args); }          // unknown name → warning first
@@ -331,10 +372,21 @@ vec4 color_map = region_uv.z > -1.0 ? textureLod(_color_maps, region_uv, region_
       : (index[3].z > -1 ? texelFetch(_color_maps, index[3], 0) : COLOR_MAP_DEF);
 ```
 
+`RegionDebugMap.Build`:
+
+```text
+numeric layer: (min, max) = range of GetValue over all regions
+               t = max > min ? (value - min) / (max - min) : 0.5
+               colour = piecewise-linear ramp #440154 → #3b528b → #21918c → #5ec962 → #fde725
+biome layer:   Sea → palette.DeepWater, land biomes → palette.GetBiomeColor(biome)
+markers:       settlement regions red, then the cursor region white (the cursor wins)
+legend:        "<layer>  <min> – <max>" (elevation in metres) + marker key
+```
+
 ### Godot client (`game/Scripts`, namespace `Pantheon.Client`)
 
 ```csharp
-partial class GameRoot : Node3D            // composition root, hotkey table, cursor picking
+partial class GameRoot : Node3D            // composition root, hotkey table, cursor picking, F3 map layer state
 partial class SmokeTestDriver : Node       // static Create(int frames, string? screenshotPath, Func<string> summary)
 static class GodotContentLoader           // res://Data/*.json -> GameContent / BiomePalette
 static class InputActions                 // StringName constants matching project.godot [input]
@@ -350,14 +402,15 @@ static class GroundTexture                 // seamless procedural ground texture
 sealed class WaterPresenter                // sea surface + sea floor; depth map shader parameters
 sealed class SettlementPresenter / SettlementView / SettlementAssets
 sealed class RegionBoundaryOverlay         // grid + hover outline line meshes
-partial class DebugOverlay : CanvasLayer   // PanelVisible, ShowModel, SetFallbackBadgeVisible
+partial class DebugOverlay : CanvasLayer   // PanelVisible, ShowModel, SetFallbackBadgeVisible, ShowRegionMap(RegionDebugMapImage?)
 ```
 
 Input map (project.godot): `camera_pan_*` (WASD + arrows), `camera_rotate_left/right` (Q/E),
 `camera_zoom_in/out` (wheel, `=`/`-`, keypad `+`/`-`), `camera_drag_pan` (RMB),
 `camera_drag_rotate` (MMB), `camera_focus_settlement` (F, Home), `toggle_region_boundaries` (B),
 `toggle_debug_overlay` (F1), `world_new` (F2), `world_quicksave` (F5), `world_quickload` (F9),
-`sim_toggle_pause` (Space), `sim_speed_1/2/3` (1/2/3 → ×1/×4/×16).
+`sim_toggle_pause` (Space), `sim_speed_1/2/3` (1/2/3 → ×1/×4/×16), `sim_step_tick` (`.`),
+`toggle_region_map` (F3).
 
 Zoom bands: Close ≤ 120 m camera distance, Regional ≤ 700 m, Strategic up to 2600 m.
 
@@ -376,7 +429,9 @@ methods, 147 test cases.
 | Simulation | `SettlementSystemTests` (6) | Food balance, storage cap, starvation, births bounded by housing and food. |
 | RNG | `SimulationRandomTests` (11) | Matches the xoshiro256\*\* reference. Restored state resumes. Bounds and Poisson mean. Independent derived streams. |
 | Scheduler | `SimulationSchedulerTests` (8) | Fixed-step accumulation, frame-rate independence, pause, time scale, backlog cap, invalid input. |
-| Session | `GameSessionTests` (5), `SessionCommandsTests` (6) | Fixed tick rate. Save/load restores world and terrain. A failed or unsupported load keeps the current world. Pause and speed presets. New world. |
+| Session | `GameSessionTests` (5), `SessionCommandsTests` (8) | Fixed tick rate. Save/load restores world and terrain. A failed or unsupported load keeps the current world. Pause and speed presets. New world. The single-tick step pauses, runs exactly one tick, and N steps equal N scheduled ticks. |
+| Architecture rules | `ArchitectureRulesTests` (4) | Core assemblies reference only lower layers and never Godot. Core code references no `System.Random`, wall clock, tick count or GUIDs (read from assembly metadata; a sanity case proves the scan finds such references). Every vendored GDExtension lists existing Windows, macOS and Linux libraries for debug and release builds. |
+| Debug map | `RegionDebugMapTests` (5) | F3 cycle, one pixel per region, ramp ends at the lowest and highest values, flat layers, biome colours, cursor and settlement markers, legend text. |
 | Camera | `GodCameraModelTests` (12), `EdgeScrollTests` (4) | Zoom clamping and bands, yaw-relative and distance-scaled panning, bounds, zoom-at-cursor, smoothing, pitch, ground clearance, edge-scroll ramp. |
 | Terrain | `TerrainRaycasterTests` (4) | Downward and oblique rays hit the visible surface; rays away from the world and beyond the maximum distance miss. |
 | Presentation | `PresentationTests` (10), `DebugReadoutTests` (3) | Colour map, fallback mesh chunks and winding, region lines and outline, water depth map, settlement label and hut layout, overlay readouts including the fallback marker. |
@@ -395,6 +450,8 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - A stress loop (zoom in and out across all bands, cursor sweeps, boundaries on) that checks for
   driver crashes.
 - Edge-scroll captures at the world's east and south edges on both backends, looking for seams.
+- Debug tools: F3 cycles every map layer and turns the map off, and `.` advances exactly one tick
+  while paused.
 
 ### Verification results
 
@@ -458,7 +515,16 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 
 ### In Progress
 
-- None.
+Added by the owner's coding rules (spec §134):
+
+- [ ] Write the rules down for every contributor in `AGENTS.md`, and link it from the README.
+- [ ] Stop editing accepted ADRs in place. Restore ADR-005, record the shader patch and fallback
+  labelling as ADR-007 (amends ADR-005), and state in `docs/ADR/README.md` how decisions change.
+- [ ] Enforce the checkable rules with `ArchitectureRulesTests` (layering, no Godot in core, no
+  unseeded randomness or clock in core, GDExtensions for all three desktop platforms).
+- [ ] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
+- [ ] Debug tool: F3 region debug map (`RegionDebugMap`, `DebugOverlay.ShowRegionMap`).
+- [ ] Update the README, `docs/ARCHITECTURE.md` and this plan; verify both renderers and the new hotkeys.
 
 ### Future
 
@@ -466,15 +532,19 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   check, and the white half texel on the outer east and south edges), and remove
   `Terrain3DShaderPatch` once a fixed release is vendored.
 - [ ] Export presets for Windows, macOS and Linux, including `Data/*.json` (read at startup).
-- [ ] Make the hover outline easier to see. It is a 1 px line; options are a translucent region
-  fill or ribbon geometry.
-- [ ] Tune the beach belt (`BeachMaxHeight` = 2.5 m in `biome_palette.json` reads wide at Regional zoom).
-- [ ] Dispose replaced hover-outline meshes immediately instead of leaving them to the GC.
+- [ ] Polish, after gameplay work: make the hover outline easier to see. It is a 1 px line;
+  options are a translucent region fill or ribbon geometry.
+- [ ] Polish, after gameplay work: tune the beach belt (`BeachMaxHeight` = 2.5 m in
+  `biome_palette.json` reads wide at Regional zoom).
+- [ ] Only if profiling shows a cost: dispose replaced hover-outline meshes immediately instead of
+  leaving them to the GC.
 
 ## Relevant Files
 
 - `.docs/milestone-1-foundation.md`: this plan.
-- `README.md`, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`, `docs/ADR/README.md`, `docs/ADR/ADR-00[1-6]-*.md`.
+- `AGENTS.md`: the owner's coding rules and the repository conventions that meet them.
+- `README.md`, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`, `docs/ADR/README.md`, `docs/ADR/ADR-00[1-7]-*.md`
+  (ADR-007 amends ADR-005).
 - `Pantheon.sln`, `Directory.Build.props`, `.editorconfig`, `.gitignore`, `.gitattributes`.
 - `src/Pantheon.Domain/**`: `World/` (`WorldState`, `WorldSeed`, `RegionGrid`, `RegionState`,
   `RandomState`, `GroundPosition`, `StableHash`, `Generation/*`), `Ecology/Biome.cs`,
@@ -484,9 +554,11 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - `src/Pantheon.Persistence/**`: `WorldSaveSerializer`, `SaveGame`, `SaveIntegrity`, `ContentJson`,
   `PantheonJson`, `WorldSeedJsonConverter`, exceptions.
 - `src/Pantheon.Game/**`: `GameSession`, `SessionCommands`, `SimulationScheduler`, `GameContent`,
-  `Camera/`, `Diagnostics/`, `Launch/`, `Presentation/` (including `Terrain3DShaderPatch.cs`).
+  `Camera/`, `Diagnostics/` (including `RegionDebugLayer.cs`, `RegionDebugMapImage.cs`,
+  `RegionDebugMap.cs`), `Launch/`, `Presentation/` (including `Terrain3DShaderPatch.cs`).
 - `src/Pantheon.Networking/**` (reserved), `src/Pantheon.Tests/**` (including
-  `Game/Terrain3DShaderPatchTests.cs`).
+  `Architecture/ArchitectureRulesTests.cs`, `Support/RepositoryRoot.cs`,
+  `Game/RegionDebugMapTests.cs` and `Game/Terrain3DShaderPatchTests.cs`).
 - `game/project.godot`, `game/Pantheon.csproj`, `game/icon.svg` (+ `.import`).
 - `game/Scenes/Main.tscn`, `game/Scenes/Camera/GodCamera.tscn`, `game/Scenes/UI/DebugOverlay.tscn`.
 - `game/Scripts/**` (+ Godot-generated `.uid` files): `Bootstrap/` (`GameRoot`, `GodotContentLoader`,
