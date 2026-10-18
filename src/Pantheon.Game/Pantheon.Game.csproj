@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pantheon.Domain\Pantheon.Domain.csproj" />
+    <ProjectReference Include="..\Pantheon.Simulation\Pantheon.Simulation.csproj" />
+    <ProjectReference Include="..\Pantheon.Persistence\Pantheon.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

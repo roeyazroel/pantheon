@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.dll binary
+*.so binary
+*.dylib binary
+*.png binary
+*.jpg binary
+*.exr binary
+*.wasm binary
+game/addons/terrain_3d/bin/** binary

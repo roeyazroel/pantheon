@@ -1,0 +1,18 @@
+# Godot
+.godot/
+*.translation
+mono_crash.*.json
+
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+*.DotSettings.user
+.vs/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
