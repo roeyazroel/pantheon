@@ -278,9 +278,10 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
 ## Testing
 
 - `src/Pantheon.Tests` (xUnit) covers determinism, save/load round trips, save versioning, RNG,
-  the scheduler, the raycaster, the camera model and edge scrolling, session commands, content
-  parsing, launch options, presentation helpers and the Terrain3D shader patch. The tests load
-  the shipped `game/Data/*.json`.
+  the scheduler, the raycaster, the camera model and edge scrolling, session commands (including
+  the single-tick step), content parsing, launch options, presentation helpers, the debug
+  readouts and region debug map, and the Terrain3D shader patch. The tests load the shipped
+  `game/Data/*.json`.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
   above, no Godot reference in core projects, no unseeded randomness or clock in core
   assemblies, and Windows, macOS and Linux libraries (debug and release) in every vendored

@@ -43,8 +43,12 @@ covers:
 
 - deterministic world generation;
 - save/load round trips and save versioning;
-- the seeded RNG and the fixed-step tick scheduler;
-- camera maths, picking, content parsing, launch options and presentation helpers.
+- the seeded RNG, the fixed-step tick scheduler and the single-tick step;
+- camera maths, picking, content parsing, launch options and presentation helpers;
+- the debug panel readouts and the F3 region debug map;
+- the architecture rules: each core library references only the layers below it and never
+  Godot, core code uses no unseeded randomness or clock, and every vendored GDExtension ships
+  Windows, macOS and Linux libraries.
 
 ## Controls
 
@@ -79,7 +83,7 @@ simulation.
   like the camera's starting view. Each press shows the next layer: biome, elevation,
   temperature, moisture, fertility, vegetation, then off. Numeric layers run from dark (the
   lowest value) to bright (the highest), and the legend gives the range. The region under the
-  cursor is white and settlement regions are red.
+  cursor is white and settlement regions are red. The map stays up when F1 hides the panel.
 - **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
   tick changed. Space resumes.
 - The command-line options below reproduce a world (`--seed`, `--load`), force a renderer
