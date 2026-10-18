@@ -678,6 +678,10 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Verify in Godot on both renderers; record the results here (Test Plan → Verification results).
 - [x] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md` and the ADR-004 status line (both with ADR-008). Every Mermaid diagram in the repository parses with Mermaid 11.
 - [x] Update the pull request description with what was built and the verification results.
+- [x] After the milestone: add the owner's complete specification verbatim as
+  `docs/PANTHEON_SPEC.md` (3,858 lines, byte-identical to the supplied file, SHA-256
+  `de61dffb…5f22f`) and link it as the source of truth from the README, AGENTS.md,
+  `docs/GAME_SPEC.md` and `docs/ARCHITECTURE.md`.
 
 ### In Progress
 
@@ -694,6 +698,7 @@ None.
 ## Relevant Files
 
 - `.docs/milestone-2-living-settlement.md`: this plan.
+- `docs/PANTHEON_SPEC.md` (the owner's specification, verbatim), `docs/GAME_SPEC.md`.
 - `docs/ADR/ADR-008-settlement-step-and-representative-citizens.md`, `docs/ADR/README.md`,
   `docs/ADR/ADR-004-statistical-population-simulation-with-tiering.md` (status line only).
 - `docs/ARCHITECTURE.md`, `README.md`, `AGENTS.md`, `src/Pantheon.Domain/Population/README.md`.

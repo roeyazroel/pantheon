@@ -1,8 +1,10 @@
 # PANTHEON — Architecture
 
 This document describes how the code is organised and the rules that keep the simulation
-independent of the engine. Decisions are recorded in [ADR/](ADR/README.md), and the coding
-rules every change follows are in [AGENTS.md](../AGENTS.md).
+independent of the engine. The owner's complete specification,
+[PANTHEON_SPEC.md](PANTHEON_SPEC.md), is the source of truth for the architecture it describes.
+Decisions are recorded in [ADR/](ADR/README.md), and the coding rules every change follows are
+in [AGENTS.md](../AGENTS.md).
 
 ## Guiding rules
 
@@ -45,7 +47,7 @@ src/
   Pantheon.Networking/        Reserved for host-authoritative ENet (ADR-003)
   Pantheon.Tests/             xUnit tests (headless)
 tools/                        Maintenance scripts (vendor-terrain3d.sh)
-docs/                         GAME_SPEC.md, ARCHITECTURE.md, ADR/
+docs/                         PANTHEON_SPEC.md (the owner's specification), GAME_SPEC.md, ARCHITECTURE.md, ADR/
 .docs/                        Milestone task files (plan / progress contracts)
 ```
 

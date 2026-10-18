@@ -1,8 +1,15 @@
 # Working on PANTHEON
 
-Read this before changing the repository, whether you are a person or a coding agent. The rules
-are the owner's coding rules (game specification, section 134) and are binding. Each rule is
-followed by the conventions that meet it in this repository.
+Read this before changing the repository, whether you are a person or a coding agent.
+
+The owner's complete specification, [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), is the source
+of truth for what to build and how. Where this file, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`,
+a milestone plan or the code disagrees with it, the specification wins. An accepted ADR still
+changes only through a new ADR, as below. The specification is the owner's document: keep it
+verbatim and do not edit it.
+
+The rules below are the specification's coding agent rules (section 134) and are binding. Each
+rule is followed by the conventions that meet it in this repository.
 
 ## Rules
 

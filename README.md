@@ -3,6 +3,10 @@
 An original 3D god game for Windows, macOS and Linux, built with Godot 4.7.2 (.NET) and C#. It
 runs fully offline.
 
+The owner's complete game design and technical architecture specification,
+[docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), is the source of truth for what PANTHEON is and
+how it is built. Where any other document disagrees with it, the specification wins.
+
 **Milestone 1 (Foundation)** generates a seeded island with Grassland, Forest and Highland
 biomes and the surrounding sea. A grid of 32 × 32 regions covers it, with one settlement.
 You can explore it with a free god camera and save or load the world. A debug overlay shows
@@ -193,13 +197,15 @@ src/
                           layout and representative citizens
   Pantheon.Networking/    Reserved for host-authoritative ENet networking (ADR-003)
   Pantheon.Tests/         xUnit tests
-docs/                 Game spec, architecture and ADRs
+docs/                 The owner's specification (PANTHEON_SPEC.md, the source of truth), the vision
+                      summary (GAME_SPEC.md), architecture and ADRs
 .docs/                Milestone plans
 ```
 
-Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
-[docs/GAME_SPEC.md](docs/GAME_SPEC.md) and the [ADRs](docs/ADR/README.md). The milestone plans
-and their status are in [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) and
+Start with the specification, [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), then
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
+vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in
+[.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) and
 [.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md).
 
 ## Contributing

@@ -1,5 +1,10 @@
 # PANTHEON — Game Specification (Vision Summary)
 
+**Source of truth.** The owner's complete game design and technical architecture specification is
+[PANTHEON_SPEC.md](PANTHEON_SPEC.md). This file is the shorter vision summary written during
+Milestone 1, before the complete specification was added to the repository. Where the two differ,
+PANTHEON_SPEC.md wins.
+
 PANTHEON is an original single-player and (later) multiplayer 3D god game for Windows, macOS and
 Linux. It is a spiritual successor to the classic "be a god, shape mortals and raise a creature"
 genre. All names, lore, art and UI are original. It runs fully offline with no backend.
