@@ -6,8 +6,10 @@ using Pantheon.Simulation.Systems;
 namespace Pantheon.Simulation.Settlements;
 
 /// <summary>
-/// Statistical-tier settlement model (ADR-004): food production and consumption, then births and
-/// deaths drawn as Poisson counts from the shared random stream.
+/// One step of the statistical (Tier 1) settlement model (ADR-004, ADR-008): the harvest and
+/// meals, health, births and deaths drawn as Poisson counts from the shared random stream, and
+/// work on the house under construction. <see cref="IntervalSystem"/> runs it once every
+/// <see cref="SettlementRules.StepIntervalTicks"/> ticks.
 /// </summary>
 public sealed class SettlementSystem : ISimulationSystem
 {
@@ -30,48 +32,19 @@ public sealed class SettlementSystem : ISimulationSystem
         // List order is stable, so the random draws happen in the same order on every run.
         foreach (var settlement in context.World.Settlements)
         {
-            var fertility = regions.GetRegion(settlement.RegionId).Fertility;
-            UpdateFood(settlement, fertility);
-            UpdatePopulation(settlement, context.Random);
+            var outlook = SettlementEconomy.Assess(_rules, settlement, regions);
+            settlement.Food = outlook.FoodAfter;
+            settlement.Health = outlook.HealthAfter;
+            UpdatePopulation(settlement, outlook, context.Random);
+            UpdateConstruction(settlement, outlook.Labour.Builders);
         }
     }
 
-    /// <summary>Net food change of one tick: field production minus consumption.</summary>
-    /// <param name="rules">Settlement rules.</param>
-    /// <param name="population">Current population.</param>
-    /// <param name="fertility">Fertility of the settlement's region (0..1).</param>
-    /// <returns>Food units gained (positive) or lost (negative) this tick.</returns>
-    public static float ComputeFoodBalance(SettlementRules rules, int population, float fertility)
-    {
-        ArgumentNullException.ThrowIfNull(rules);
-        var production = population * rules.WorkforceShare * rules.FoodPerWorkerPerTick * SimMath.Clamp01(fertility);
-        var consumption = population * rules.FoodPerPersonPerTick;
-        return production - consumption;
-    }
-
-    /// <summary>Maximum food a settlement can store.</summary>
-    /// <param name="rules">Settlement rules.</param>
-    /// <param name="housing">Housing capacity in people.</param>
-    /// <returns>Storage capacity in food units.</returns>
-    public static float ComputeFoodStorage(SettlementRules rules, int housing)
-    {
-        ArgumentNullException.ThrowIfNull(rules);
-        return Math.Max(0, housing) * rules.FoodStoragePerHousing;
-    }
-
-    /// <summary>Applies the food balance, clamped between empty and full storage.</summary>
-    private void UpdateFood(SettlementState settlement, float fertility)
-    {
-        var balance = ComputeFoodBalance(_rules, settlement.Population, fertility);
-        settlement.Food = Math.Clamp(settlement.Food + balance, 0f, ComputeFoodStorage(_rules, settlement.Housing));
-    }
-
     /// <summary>
-    /// Draws births (only with a food surplus and free housing) and deaths (higher while the store
-    /// is empty). The sum of two Poisson draws is Poisson, so the starvation risk is folded into a
-    /// single death draw.
+    /// Draws births (none while a <see cref="BirthBlocker"/> applies, and never more than the free
+    /// housing) and then deaths. Both chances use the health after this step's meals.
     /// </summary>
-    private void UpdatePopulation(SettlementState settlement, SimulationRandom random)
+    private static void UpdatePopulation(SettlementState settlement, SettlementOutlook outlook, SimulationRandom random)
     {
         var population = settlement.Population;
         if (population <= 0)
@@ -79,16 +52,34 @@ public sealed class SettlementSystem : ISimulationSystem
             return;
         }
 
-        var freeHousing = Math.Max(0, settlement.Housing - population);
-        var hasSurplus = settlement.Food >= population * _rules.SurplusFoodPerPerson;
-        var births = hasSurplus && freeHousing > 0
-            ? Math.Min(freeHousing, random.NextPoisson(population * _rules.BirthChancePerPersonPerTick))
+        var births = outlook.BirthBlocker == BirthBlocker.None
+            ? Math.Min(settlement.Housing - population, random.NextPoisson(population * outlook.BirthChance))
             : 0;
-
-        var deathChance = _rules.DeathChancePerPersonPerTick +
-            (settlement.Food <= 0f ? _rules.StarvationDeathChancePerPersonPerTick : 0.0);
-        var deaths = Math.Min(population, random.NextPoisson(population * deathChance));
-
+        var deaths = Math.Min(population, random.NextPoisson(population * outlook.DeathChance));
         settlement.Population = population + births - deaths;
+    }
+
+    /// <summary>
+    /// Adds this step's builder work to the house under construction. A finished house adds
+    /// <see cref="SettlementRules.HousingPerHouse"/> (up to the cap) and the next house starts from
+    /// nothing. Builders never exceed the work left, so a house finishes exactly when they cover it.
+    /// </summary>
+    private void UpdateConstruction(SettlementState settlement, float builders)
+    {
+        var remainingWork = _rules.WorkPerHouse - settlement.ConstructionProgress;
+        if (builders <= 0f && remainingWork > 0f)
+        {
+            return;
+        }
+
+        if (builders >= remainingWork)
+        {
+            settlement.Housing = Math.Min(_rules.MaxHousing, settlement.Housing + _rules.HousingPerHouse);
+            settlement.ConstructionProgress = 0f;
+        }
+        else
+        {
+            settlement.ConstructionProgress += builders;
+        }
     }
 }

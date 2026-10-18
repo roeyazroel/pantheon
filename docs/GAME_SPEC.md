@@ -1,5 +1,12 @@
 # PANTHEON — Game Specification (Vision Summary)
 
+**Source of truth.** The owner's complete game design and technical architecture specification is
+[PANTHEON_SPEC.md](PANTHEON_SPEC.md). This file is the shorter vision summary written during
+Milestone 1, before the complete specification was added to the repository. Where the two differ,
+PANTHEON_SPEC.md wins. [PROGRESS_SUMMARY.md](PROGRESS_SUMMARY.md) maps what is built so far
+against the specification and
+[lists where this file differs from it](PROGRESS_SUMMARY.md#documents-written-before-the-specification).
+
 PANTHEON is an original single-player and (later) multiplayer 3D god game for Windows, macOS and
 Linux. It is a spiritual successor to the classic "be a god, shape mortals and raise a creature"
 genre. All names, lore, art and UI are original. It runs fully offline with no backend.
@@ -108,22 +115,40 @@ Godot 4.7.2 .NET, C#, Terrain3D. The simulation state is separate from scenes an
 versioned JSON. Multiplayer (later) is host-authoritative over ENet. See
 [ARCHITECTURE.md](ARCHITECTURE.md) and [ADR/](ADR/README.md).
 
-## Roadmap (15 milestones)
+## Milestones
 
-| # | Milestone | Outcome |
-| --- | --- | --- |
-| 1 | **Foundation** | Seeded world and terrain, god camera, region grid, one settlement, JSON save/load, debug UI, fixed-tick loop. |
-| 2 | Living Settlements | Statistical economy (jobs, food, housing, construction), several settlements, growth and founding, visual villages. |
-| 3 | Belief & Divine Power | Six-component belief per god per settlement, worship, Divine Power generation, belief readouts. |
-| 4 | Influence & the Hand | Influence fields, the divine hand (pick up, throw, place), interaction limited by influence. |
-| 5 | Miracles I | Miracle casting, core miracles wired into world systems, observer memory. |
-| 6 | Weather & Ecology | Weather fronts, rainfall, seasons, vegetation growth and spread, statistical fauna. |
-| 7 | Disasters & Consequences | Wildfire, flood, drought, plague, storms. Miracle side effects feed back into belief. |
-| 8 | The Creature I | Creature body, needs, locomotion, reinforcement learning from praise and punishment. |
-| 9 | The Creature II | Observation learning, alignment, leashes, creature miracles, growth. |
-| 10 | Rival Gods | Utility-AI gods with personalities, competing for belief under the same rules. |
-| 11 | Diplomacy & Betrayal | Pacts, tribute, alliances, betrayal, reputation memory. |
-| 12 | Tiers at Scale | Regional and full tiers, promotion and demotion, large worlds, performance budgets. |
-| 13 | Multiplayer | Host-authoritative ENet sessions (LAN/direct IP), snapshots and deltas, command validation. |
-| 14 | Campaign & Content | Original islands, scenarios, events, tutorial, lore. |
-| 15 | Polish & Release | Art and audio pass, accessibility, settings, localization, packaging for Windows, macOS and Linux. |
+The development milestones are sections 116–130 of [PANTHEON_SPEC.md](PANTHEON_SPEC.md):
+1 Foundation, 2 Living Settlement, 3 First God, 4 Creature, 5 Rival God, 6 Diplomacy, 7 Weather,
+8 Disaster Simulation, 9 Four Gods, 10 Population Movement, 11 Creature Relationships,
+12 Multiplayer Foundation, 13 Multiplayer Simulation, 14 Complete Vertical Slice and 15 Polish and
+Expansion. Documents cite milestones by these numbers.
+
+## Earlier working roadmap (superseded)
+
+Before the complete specification was added, the project planned against the roadmap below.
+ADR-004 and ADR-008 cite milestones by its numbers, and accepted ADRs are not edited, so it is kept
+here. The last column gives the specification's milestones for the same work.
+
+| # | Milestone | Outcome | Specification |
+| --- | --- | --- | --- |
+| 1 | **Foundation** | Seeded world and terrain, god camera, region grid, one settlement, JSON save/load, debug UI, fixed-tick loop. | 1 Foundation |
+| 2 | Living Settlements | Statistical economy (jobs, food, housing, construction), several settlements, growth and founding, visual villages. | 2 Living Settlement |
+| 3 | Belief & Divine Power | Six-component belief per god per settlement, worship, Divine Power generation, belief readouts. | 3 First God |
+| 4 | Influence & the Hand | Influence fields, the divine hand (pick up, throw, place), interaction limited by influence. | 3 First God (influence) |
+| 5 | Miracles I | Miracle casting, core miracles wired into world systems, observer memory. | 3 First God (basic miracles) |
+| 6 | Weather & Ecology | Weather fronts, rainfall, seasons, vegetation growth and spread, statistical fauna. | 7 Weather |
+| 7 | Disasters & Consequences | Wildfire, flood, drought, plague, storms. Miracle side effects feed back into belief. | 8 Disaster Simulation; drought in 7 |
+| 8 | The Creature I | Creature body, needs, locomotion, reinforcement learning from praise and punishment. | 4 Creature |
+| 9 | The Creature II | Observation learning, alignment, leashes, creature miracles, growth. | 4 Creature, 11 Creature Relationships |
+| 10 | Rival Gods | Utility-AI gods with personalities, competing for belief under the same rules. | 5 Rival God, 9 Four Gods |
+| 11 | Diplomacy & Betrayal | Pacts, tribute, alliances, betrayal, reputation memory. | 6 Diplomacy, 9 Four Gods |
+| 12 | Tiers at Scale | Regional and full tiers, promotion and demotion, large worlds, performance budgets. | None; larger worlds in 15 |
+| 13 | Multiplayer | Host-authoritative ENet sessions (LAN/direct IP), snapshots and deltas, command validation. | 12 Multiplayer Foundation, 13 Multiplayer Simulation |
+| 14 | Campaign & Content | Original islands, scenarios, events, tutorial, lore. | None |
+| 15 | Polish & Release | Art and audio pass, accessibility, settings, localization, packaging for Windows, macOS and Linux. | 15 Polish and Expansion |
+
+Some earlier items are in no milestone of the specification: several settlements and founding
+(the Complete Vertical Slice has eight settlements), the Divine Hand (§55), seasons (§17) and
+ecology (§18), full (Tier 3) villagers and world streaming (§80, §84; the Creature, a Tier 3
+entity, comes with Milestone 4), and a scripted campaign, which §131 rules out for initial
+development.

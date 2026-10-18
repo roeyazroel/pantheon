@@ -66,12 +66,21 @@ public static class InputActions
     /// <summary>Pause and run exactly one simulation tick (.).</summary>
     public static readonly StringName SimStepTick = "sim_step_tick";
 
+    /// <summary>Pause and run ticks up to and including the next settlement step (,).</summary>
+    public static readonly StringName SimStepSettlement = "sim_step_settlement";
+
+    /// <summary>Debug famine: spoil every settlement's food stores (F6).</summary>
+    public static readonly StringName DebugSpoilFood = "debug_spoil_food";
+
+    /// <summary>Debug migration: settlers arrive in every settlement (F7).</summary>
+    public static readonly StringName DebugAddSettlers = "debug_add_settlers";
+
     /// <summary>Every action, used to check the input map at start-up.</summary>
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        .. SimSpeedPresets, SimStepTick,
+        .. SimSpeedPresets, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers,
     ];
 }

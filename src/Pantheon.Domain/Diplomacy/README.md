@@ -1,4 +1,4 @@
 # Diplomacy
 
-Reserved for pacts, alliances, tribute and reputation memory between gods — Milestone 11.
-Nothing lives here in Milestone 1; see `docs/GAME_SPEC.md`.
+Reserved for pacts, alliances, tribute and reputation memory between gods — Milestones 6 (Diplomacy) and 9 (Four Gods).
+Nothing lives here yet; see `docs/PANTHEON_SPEC.md` §37–42.

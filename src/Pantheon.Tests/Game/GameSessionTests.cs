@@ -74,6 +74,46 @@ public sealed class GameSessionTests : IDisposable
     }
 
     [Fact]
+    public void GameSession_SimulationSecondsCountTicksAndProgress_AndStandStillWhenPaused()
+    {
+        var session = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(3));
+
+        Assert.Equal(2, session.Update(0.25));
+        Assert.Equal(0.25, session.SimulationSeconds, precision: 9);
+
+        session.Scheduler.IsPaused = true;
+        session.Update(1.0);
+        Assert.Equal(0.25, session.SimulationSeconds, precision: 9);
+    }
+
+    [Fact]
+    public void GameSession_RunTicksMatchesScheduledTicks()
+    {
+        var scheduled = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(3));
+        var run = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(3));
+        for (var i = 0; i < 3; i++)
+        {
+            scheduled.Update(1.0);
+        }
+
+        run.RunTicks(30);
+
+        WorldAssert.Equal(scheduled.World, run.World);
+        Assert.Throws<ArgumentOutOfRangeException>(() => run.RunTicks(-1));
+    }
+
+    [Fact]
+    public void GameSession_StepToNextSettlementStepStopsAtTheStepBoundary()
+    {
+        var session = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(3));
+
+        Assert.Equal(10, session.StepToNextSettlementStep());
+        session.RunTicks(3);
+        Assert.Equal(7, session.StepToNextSettlementStep());
+        Assert.Equal(20, session.World.Tick);
+    }
+
+    [Fact]
     public void GameSession_StartNewWorldReplacesWorldAndResetsClock()
     {
         var session = GameSession.CreateNew(TestContent.SmallBusy, new WorldSeed(3));

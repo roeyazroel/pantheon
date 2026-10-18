@@ -14,6 +14,9 @@ public static class SettlementFounder
     /// <summary>Id given to the first settlement of a world.</summary>
     public const int StartingSettlementId = 1;
 
+    /// <summary>Health of a newly founded settlement: its founders are healthy.</summary>
+    public const float InitialHealth = 1f;
+
     /// <summary>Minimum terrain height at the site centre, so villages never stand in the surf.</summary>
     private const float MinimumSiteHeight = 1.5f;
 
@@ -41,6 +44,8 @@ public static class SettlementFounder
             Population = settings.Population,
             Food = settings.Food,
             Housing = settings.Housing,
+            Health = InitialHealth,
+            ConstructionProgress = 0f,
         };
     }
 

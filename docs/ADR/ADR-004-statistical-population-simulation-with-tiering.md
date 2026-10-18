@@ -1,6 +1,6 @@
 # ADR-004: Statistical population simulation with tiering
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-008](ADR-008-settlement-step-and-representative-citizens.md)
 - Date: 2026-10-18
 
 ## Context

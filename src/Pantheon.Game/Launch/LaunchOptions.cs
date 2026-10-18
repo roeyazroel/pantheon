@@ -19,6 +19,8 @@ public sealed record LaunchOptions
         "seed",
         "load",
         "terrain",
+        "advance-ticks",
+        "camera-distance",
         "quit-after-frames",
         "screenshot",
     };
@@ -34,6 +36,12 @@ public sealed record LaunchOptions
 
     /// <summary>Terrain renderer preference.</summary>
     public TerrainBackendPreference Terrain { get; init; } = TerrainBackendPreference.Auto;
+
+    /// <summary>Simulation ticks to run before the first frame, for example to capture a grown settlement.</summary>
+    public int? AdvanceTicks { get; init; }
+
+    /// <summary>Starting camera distance in metres; the camera clamps it to its zoom range.</summary>
+    public float? CameraDistance { get; init; }
 
     /// <summary>Quit automatically after this many frames (smoke tests and captures).</summary>
     public int? QuitAfterFrames { get; init; }
@@ -87,14 +95,12 @@ public sealed record LaunchOptions
     {
         if (!KnownOptions.Contains(name))
         {
-            warnings.Add($"Ignoring unknown option '--{name}'.");
-            return options;
+            return Warn(options, warnings, $"Ignoring unknown option '--{name}'.");
         }
 
         if (string.IsNullOrWhiteSpace(value))
         {
-            warnings.Add($"Option '--{name}' needs a value.");
-            return options;
+            return Warn(options, warnings, $"Option '--{name}' needs a value.");
         }
 
         switch (name)
@@ -104,27 +110,42 @@ public sealed record LaunchOptions
             case "load":
                 return options with { LoadPath = value };
             case "terrain":
-                if (TryParseTerrain(value, out var terrain))
-                {
-                    return options with { Terrain = terrain };
-                }
-
-                warnings.Add($"Unknown terrain backend '{value}'; expected auto, terrain3d or fallback.");
-                return options;
+                return TryParseTerrain(value, out var terrain)
+                    ? options with { Terrain = terrain }
+                    : Warn(options, warnings, $"Unknown terrain backend '{value}'; expected auto, terrain3d or fallback.");
+            case "advance-ticks":
+                return TryParsePositiveInt(value, out var ticks)
+                    ? options with { AdvanceTicks = ticks }
+                    : Warn(options, warnings, $"'--advance-ticks' needs a positive integer, got '{value}'.");
+            case "camera-distance":
+                return TryParsePositiveFloat(value, out var distance)
+                    ? options with { CameraDistance = distance }
+                    : Warn(options, warnings, $"'--camera-distance' needs a positive number of metres, got '{value}'.");
             case "quit-after-frames":
-                if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var frames) && frames > 0)
-                {
-                    return options with { QuitAfterFrames = frames };
-                }
-
-                warnings.Add($"'--quit-after-frames' needs a positive integer, got '{value}'.");
-                return options;
+                return TryParsePositiveInt(value, out var frames)
+                    ? options with { QuitAfterFrames = frames }
+                    : Warn(options, warnings, $"'--quit-after-frames' needs a positive integer, got '{value}'.");
             case "screenshot":
                 return options with { ScreenshotPath = value };
             default:
                 throw new UnreachableException($"Option '--{name}' is listed in {nameof(KnownOptions)} but not handled.");
         }
     }
+
+    /// <summary>Records a warning and returns the options unchanged.</summary>
+    private static LaunchOptions Warn(LaunchOptions options, List<string> warnings, string warning)
+    {
+        warnings.Add(warning);
+        return options;
+    }
+
+    /// <summary>Parses a positive whole number written with digits only.</summary>
+    private static bool TryParsePositiveInt(string value, out int result) =>
+        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out result) && result > 0;
+
+    /// <summary>Parses a positive, finite number in the invariant culture (a dot as the decimal separator).</summary>
+    private static bool TryParsePositiveFloat(string value, out float result) =>
+        float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result) && result > 0f && float.IsFinite(result);
 
     /// <summary>Parses a terrain backend name, case-insensitively.</summary>
     private static bool TryParseTerrain(string value, out TerrainBackendPreference terrain)

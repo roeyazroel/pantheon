@@ -57,15 +57,26 @@ public partial class GameRoot : Node3D
             return;
         }
 
-        (var content, _palette) = loaded.Value;
+        var (content, presentation) = loaded.Value;
+        _palette = presentation.Palette;
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
-        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, _palette, options.Terrain);
+        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain);
         _session = CreateSession(content, options);
+        if (options.AdvanceTicks is { } ticks)
+        {
+            SetStatus(SessionCommands.AdvanceTicks(_session, ticks));
+        }
+
         _session.WorldReplaced += ShowWorld;
         _hotkeys = CreateHotkeys();
 
         ShowWorld();
+        if (options.CameraDistance is { } distance)
+        {
+            FocusSettlement(distance, snap: true);
+        }
+
         _overlay.SetFallbackBadgeVisible(_presenter.TerrainIsFallback);
         if (options.QuitAfterFrames is { } frames)
         {
@@ -74,12 +85,13 @@ public partial class GameRoot : Node3D
         }
     }
 
-    /// <summary>Advances the fixed-step simulation, then refreshes the visuals and the overlay.</summary>
+    /// <summary>Advances the fixed-step simulation, then refreshes the visuals, the citizens and the overlay.</summary>
     /// <param name="delta">Frame time in seconds.</param>
     public override void _Process(double delta)
     {
         _session.Update(delta);
         _presenter.Sync(_session.World);
+        _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
         var cursor = _camera.CursorGroundPoint;
         var cursorRegion = RegionAt(cursor);
@@ -112,13 +124,16 @@ public partial class GameRoot : Node3D
         (InputActions.ToggleRegionBoundaries, () => _presenter.RegionBoundariesVisible = !_presenter.RegionBoundariesVisible),
         (InputActions.ToggleDebugOverlay, () => _overlay.PanelVisible = !_overlay.PanelVisible),
         (InputActions.ToggleRegionMap, CycleRegionMap),
-        (InputActions.CameraFocusSettlement, () => FocusSettlement(snap: false)),
+        (InputActions.CameraFocusSettlement, () => FocusSettlement(FocusDistance, snap: false)),
         (InputActions.WorldNew, () => SetStatus(SessionCommands.NewWorld(_session, CreateRandomSeed()))),
         (InputActions.WorldQuickSave, () => SetStatus(SessionCommands.QuickSave(_session, GlobalQuickSavePath))),
         (InputActions.WorldQuickLoad, () => SetStatus(SessionCommands.QuickLoad(_session, GlobalQuickSavePath))),
         (InputActions.SimTogglePause, () => SetStatus(SessionCommands.TogglePause(_session))),
         .. CreateSpeedHotkeys(),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
+        (InputActions.SimStepSettlement, () => SetStatus(SessionCommands.StepSettlement(_session))),
+        (InputActions.DebugSpoilFood, () => SetStatus(SessionCommands.SpoilFood(_session))),
+        (InputActions.DebugAddSettlers, () => SetStatus(SessionCommands.AddSettlers(_session))),
     ];
 
     /// <summary>One hotkey per <see cref="SessionCommands.SpeedPresets"/> entry.</summary>
@@ -161,15 +176,17 @@ public partial class GameRoot : Node3D
     {
         _presenter.Rebuild(_session.World, _session.Terrain);
         _camera.SetTerrain(_session.Terrain);
-        FocusSettlement(snap: true);
+        FocusSettlement(distance: null, snap: true);
     }
 
-    /// <summary>Moves the camera to the first settlement; a snap keeps the zoom, a glide zooms to a regional view.</summary>
-    private void FocusSettlement(bool snap)
+    /// <summary>Moves the camera to the first settlement.</summary>
+    /// <param name="distance">New camera distance, or <c>null</c> to keep the zoom.</param>
+    /// <param name="snap">Jump there immediately instead of gliding.</param>
+    private void FocusSettlement(float? distance, bool snap)
     {
         if (_session.World.Settlements.Count > 0)
         {
-            _camera.FocusOn(_session.World.Settlements[0].Position, snap ? null : FocusDistance, snap);
+            _camera.FocusOn(_session.World.Settlements[0].Position, distance, snap);
         }
     }
 
@@ -216,22 +233,12 @@ public partial class GameRoot : Node3D
         CursorWorldPosition = cursor,
         RegionBoundariesVisible = _presenter.RegionBoundariesVisible,
         StatusMessage = _status,
+        Crowds = _presenter.CrowdStatuses,
     };
 
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
-    private string DescribeWorld()
-    {
-        var world = _session.World;
-        var population = 0;
-        foreach (var settlement in world.Settlements)
-        {
-            population += settlement.Population;
-        }
-
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"seed {world.Seed}, tick {world.Tick}, {world.Regions.Cells.Count} regions, {world.Settlements.Count} settlement(s), population {population}, terrain {_presenter.TerrainBackend}");
-    }
+    private string DescribeWorld() =>
+        $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}";
 
     /// <summary>Remembers a status line for the overlay and echoes it to the log.</summary>
     private void SetStatus(string message)
@@ -243,12 +250,12 @@ public partial class GameRoot : Node3D
     /// <summary>A fresh seed for F2. Only the shell picks random seeds; the simulation never does.</summary>
     private static WorldSeed CreateRandomSeed() => new((ulong)Random.Shared.NextInt64(1, MaxRandomSeed));
 
-    /// <summary>Loads simulation content and palette, logging the reason on failure.</summary>
-    private static (GameContent Content, BiomePalette Palette)? TryLoadContent()
+    /// <summary>Loads the simulation and presentation content, logging the reason on failure.</summary>
+    private static (GameContent Content, PresentationContent Presentation)? TryLoadContent()
     {
         try
         {
-            return (GodotContentLoader.LoadGameContent(), GodotContentLoader.LoadBiomePalette());
+            return (GodotContentLoader.LoadGameContent(), GodotContentLoader.LoadPresentationContent());
         }
         catch (Exception exception) when (exception is ContentFormatException or IOException)
         {

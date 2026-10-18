@@ -1,6 +1,6 @@
 # ADR-003: Host-authoritative networking over ENet (later milestone), no lockstep
 
-- Status: Accepted (implementation deferred to Milestone 13)
+- Status: Accepted (implementation deferred to Milestones 12 and 13)
 - Date: 2026-10-18
 
 ## Context

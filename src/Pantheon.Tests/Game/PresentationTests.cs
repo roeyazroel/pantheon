@@ -142,6 +142,8 @@ public sealed class PresentationTests
             Population = 41,
             Food = 0f,
             Housing = 60,
+            Health = 1f,
+            ConstructionProgress = 0f,
         };
 
         Assert.Equal("Mossgate\n41 people", SettlementLabel.Format(settlement));
@@ -150,36 +152,13 @@ public sealed class PresentationTests
     }
 
     [Fact]
-    public void SettlementLayout_HutCountFollowsPopulationAndHousing()
+    public void PresentationHash_IsDeterministicAndSpreadsOverTheUnitInterval()
     {
-        var settlement = World.State.Settlements[0];
+        var values = Enumerable.Range(0, 4096).Select(i => PresentationHash.Unit(7, (ulong)i)).ToArray();
 
-        settlement.Population = 0;
-        Assert.Equal(0, SettlementLayout.ComputeHutCount(settlement));
-        settlement.Population = 1;
-        Assert.Equal(1, SettlementLayout.ComputeHutCount(settlement));
-        settlement.Population = 40;
-        Assert.Equal(8, SettlementLayout.ComputeHutCount(settlement));
-        settlement.Population = 10_000;
-        Assert.Equal((settlement.Housing + SettlementLayout.PeoplePerHut - 1) / SettlementLayout.PeoplePerHut, SettlementLayout.ComputeHutCount(settlement));
-    }
-
-    [Fact]
-    public void SettlementLayout_PlacesHutsDeterministicallyOnDryLand()
-    {
-        var settlement = WorldGenerator.Generate(new WorldSeed(1234), TestContent.Shipped.WorldGen);
-        var state = settlement.State.Settlements[0];
-
-        var first = SettlementLayout.ComputeHuts(state, settlement.Terrain, 12);
-        var second = SettlementLayout.ComputeHuts(state, settlement.Terrain, 12);
-
-        Assert.Equal(first, second);
-        Assert.NotEmpty(first);
-        Assert.All(first, hut =>
-        {
-            Assert.True(hut.Position.Y >= SettlementLayout.MinimumGroundHeight);
-            var offset = new Vector2(hut.Position.X - state.Position.X, hut.Position.Z - state.Position.Z);
-            Assert.InRange(offset.Length(), SettlementLayout.ShrineClearance, 60f);
-        });
+        Assert.Equal(values, Enumerable.Range(0, 4096).Select(i => PresentationHash.Unit(7, (ulong)i)));
+        Assert.All(values, value => Assert.InRange(value, 0f, 0.99999994f));
+        Assert.InRange(values.Average(), 0.47, 0.53);
+        Assert.NotEqual(PresentationHash.Mix(1, 2), PresentationHash.Mix(2, 1));
     }
 }

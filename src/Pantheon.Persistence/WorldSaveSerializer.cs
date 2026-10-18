@@ -9,12 +9,16 @@ namespace Pantheon.Persistence;
 /// <summary>
 /// Reads and writes versioned, human-readable JSON saves of <see cref="WorldState"/>.
 /// The version is checked before the rest of the file is read, so newer or malformed saves fail
-/// with a clear <see cref="SaveFormatException"/>.
+/// with a clear <see cref="SaveFormatException"/>. Older saves are upgraded by
+/// <see cref="SaveMigrations"/> first and then read with the same strict options as current ones.
 /// </summary>
 public static class WorldSaveSerializer
 {
-    /// <summary>Format version written by this build. Bump it, and add a migration, when the save shape changes.</summary>
-    public const int CurrentSaveVersion = 1;
+    /// <summary>
+    /// Format version written by this build. Bump it, and add a step to <see cref="SaveMigrations"/>,
+    /// when the save shape changes. Version 2 (Milestone 2) added settlement health and construction progress.
+    /// </summary>
+    public const int CurrentSaveVersion = 2;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;
@@ -40,12 +44,14 @@ public static class WorldSaveSerializer
     public static WorldState Deserialize(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
-        EnsureSupportedVersion(ReadSaveVersion(json));
+        var version = ReadSaveVersion(json);
+        EnsureSupportedVersion(version);
+        var currentJson = version == CurrentSaveVersion ? json : SaveMigrations.Upgrade(json, version).ToJsonString();
 
         SaveGame? save;
         try
         {
-            save = JsonSerializer.Deserialize<SaveGame>(json, PantheonJson.SaveOptions);
+            save = JsonSerializer.Deserialize<SaveGame>(currentJson, PantheonJson.SaveOptions);
         }
         catch (JsonException exception)
         {

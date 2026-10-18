@@ -1,4 +1,4 @@
 # Gods
 
-Reserved for god state (identity, Divine Power, influence fields, personality) — Milestones 3, 4 and 10.
-Nothing lives here in Milestone 1; see `docs/GAME_SPEC.md`.
+Reserved for god state (identity, Divine Power, influence fields, personality) — Milestones 3 (First God), 5 (Rival God) and 9 (Four Gods).
+Nothing lives here yet; see `docs/PANTHEON_SPEC.md` §9–13 and §47–48.

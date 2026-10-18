@@ -45,14 +45,18 @@ public sealed class DeterminismTests
     }
 
     [Fact]
-    public void Step_AdvancesTickAndRandomState()
+    public void SettlementStep_AdvancesTheRandomState_OtherTicksOnlyTheTick()
     {
         var world = WorldGenerator.Generate(new WorldSeed(9), TestContent.SmallWorldGen).State;
+        var engine = new SimulationEngine(TestContent.BusyRules);
         var before = world.Random;
 
-        new SimulationEngine(TestContent.BusyRules).Step(world);
+        engine.Step(world);
+        var afterOneTick = (world.Tick, world.Random);
+        engine.Run(world, TestContent.BusyRules.StepIntervalTicks - 1);
 
-        Assert.Equal(1, world.Tick);
+        Assert.Equal((1L, before), afterOneTick);
+        Assert.Equal(TestContent.BusyRules.StepIntervalTicks, world.Tick);
         Assert.NotEqual(before, world.Random);
     }
 
