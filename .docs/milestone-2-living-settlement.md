@@ -356,9 +356,9 @@ sequenceDiagram
     participant Crowd as SettlementCrowd
     participant MM as Citizen MultiMesh
 
-    Root->>Session: Update(delta) (ticks; a settlement step every 10th)
+    Root->>Session: Update(delta) (ticks, with a settlement step every 10th)
     Root->>SP: Sync(world)
-    SP->>SV: Sync(settlement) — on a new tick: outlook, site; houses, building site and fields when they change
+    SP->>SV: Sync(settlement) — on a new tick: outlook and site, then houses, building site and fields when they change
     Root->>SP: UpdateCitizens(simulation seconds, camera position)
     SP->>SV: UpdateCitizens(...)
     SV->>Crowd: SelectTier(camera distance)
@@ -403,7 +403,7 @@ sequenceDiagram
         Save->>Save: deserialize SaveGame (strict)
     else version == 1
         Save->>Mig: Upgrade(JsonObject, 1)
-        Mig->>Mig: v1 → v2: every settlement gets Health 1, ConstructionProgress 0; SaveVersion = 2
+        Mig->>Mig: v1 → v2: every settlement gets Health 1 and ConstructionProgress 0, SaveVersion = 2
         Mig-->>Save: upgraded JsonObject
         Save->>Save: deserialize SaveGame (strict)
     else version > 2 or < 1
@@ -672,12 +672,9 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Layout and views: houses from housing, building site, fields, `settlement_view.json`, client views and materials.
 - [x] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
 - [x] Verify in Godot on both renderers; record the results here (Test Plan → Verification results).
+- [x] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md` and the ADR-004 status line (both with ADR-008). Every Mermaid diagram in the repository parses with Mermaid 11.
 
 ### In Progress
-
-- [ ] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md`, ADR-004 status line.
-
-### Future (this milestone, in order)
 
 - [ ] Update the pull request description with what was built and the verification results.
 

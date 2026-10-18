@@ -30,7 +30,12 @@ followed by the conventions that meet it in this repository.
 - Never keep gameplay state in nodes, and never serialize the SceneTree
   ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). Saves are versioned
   JSON of `WorldState`. A change to the save shape bumps `WorldSaveSerializer.CurrentSaveVersion`
-  and adds a migration from the previous version.
+  and adds a `SaveMigrations` step from the previous version, tested against a save written by
+  the previous build (`src/Pantheon.Tests/Persistence/Fixtures/`).
+- Derived presentation data, such as the settlement layout and the Tier 2 representative
+  citizens (`Pantheon.Game.Presentation` and `Pantheon.Game.Population`), is computed from
+  `WorldState`, never written back and never saved
+  ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).
 
 ### Prefer data-driven content
 
@@ -66,6 +71,9 @@ followed by the conventions that meet it in this repository.
   scans the compiled core assemblies for them.
 - The one exception is the Godot client picking a fresh seed for a new world (F2). The seed is
   shown in the overlay and saved, so the world can be reproduced.
+- Presentation variation (house sizes, field crops, citizens' homes and routines) comes from
+  `PresentationHash` of the seed, ids and slots, never from a simulation stream, so showing
+  something never changes what the simulation does next.
 
 ### Automated tests for important simulation rules
 
@@ -94,9 +102,12 @@ followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
-- Current tools: the F1 debug panel, the B region grid, the F3 region debug map, the `.`
-  single-tick step, the launch options `--seed`, `--load` and `--terrain`, and scripted smoke
-  runs with `--quit-after-frames` and `--screenshot`. The README lists them.
+- Current tools: the F1 debug panel (with the settlement and tier readouts), the B region grid,
+  the F3 region debug map, the `.` single-tick step, the `,` settlement step, F6 (spoil the
+  food stores) and F7 (settlers arrive), the launch options `--seed`, `--load`, `--terrain`,
+  `--advance-ticks` and `--camera-distance`, and scripted smoke runs with
+  `--quit-after-frames` and `--screenshot` that end with a one-line summary per settlement.
+  The README lists them.
 
 ## Where things go
 
@@ -105,7 +116,7 @@ followed by the conventions that meet it in this repository.
 | State and content contracts | `src/Pantheon.Domain` |
 | World generation and tick systems | `src/Pantheon.Simulation`, registered in `SimulationEngine` |
 | Saves and content parsing | `src/Pantheon.Persistence` |
-| Session, commands, scheduler, camera maths, debug readouts, presentation data | `src/Pantheon.Game` |
+| Session, commands, scheduler, camera maths, debug readouts, presentation data, Tier 2 citizens | `src/Pantheon.Game` |
 | Nodes, input, UI | `game/Scripts`, with scenes in `game/Scenes` and actions in `game/project.godot` |
 | Content | `game/Data/*.json` |
 | Tests | `src/Pantheon.Tests` |
@@ -119,6 +130,7 @@ dotnet build Pantheon.sln                # warnings are errors
 dotnet test Pantheon.sln                 # headless, no Godot needed
 godot --path game                        # play
 godot --path game -- --seed=1234 --quit-after-frames=40 --screenshot=/tmp/pantheon.png
+godot --path game -- --seed=1234 --advance-ticks=9000 --camera-distance=110 --quit-after-frames=30 --screenshot=/tmp/grown.png
 godot --path game -- --terrain=fallback  # check the fallback renderer
 ```
 
