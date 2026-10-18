@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://Shaders/overlay_line.gdshader" id="1_line"]
+
+[resource]
+render_priority = 2
+shader = ExtResource("1_line")
+shader_parameter/line_color = Color(1, 0.83, 0.3, 1)
+shader_parameter/depth_bias = 0.006

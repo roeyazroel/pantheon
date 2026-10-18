@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/DebugOverlay.cs" id="1_overlay"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.04, 0.07, 0.1, 0.72)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="SystemFont" id="SystemFont_mono"]
+font_names = PackedStringArray("DejaVu Sans Mono", "Consolas", "Menlo", "Monospace")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(0.55, 0.08, 0.06, 0.88)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="DebugOverlay" type="CanvasLayer"]
+script = ExtResource("1_overlay")
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 12.0
+offset_bottom = 12.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Text" type="Label" parent="Panel"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("SystemFont_mono")
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.93, 0.95, 0.9, 1)
+text = "PANTHEON"
+
+[node name="FallbackBadge" type="Label" parent="."]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -431.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 35.0
+grow_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_badge")
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.95, 0.9, 1)
+text = "FALLBACK TERRAIN RENDERER - Terrain3D unavailable"
