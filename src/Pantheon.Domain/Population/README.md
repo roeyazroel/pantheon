@@ -1,4 +1,5 @@
 # Population
 
-Reserved for regional and full-tier population data (cohorts, promoted villager agents) — Milestones 2 and 12 (ADR-004).
-In Milestone 1 population is a statistical aggregate on `Settlements/SettlementState`.
+Reserved for canonical regional and full-tier population data (cohorts, promoted villager agents) — Milestone 12
+(ADR-004, ADR-008). Population is a statistical aggregate on `Settlements/SettlementState`. Milestone 2's representative
+citizens are derived presentation data in `Pantheon.Game.Population` and are never stored in `WorldState` (ADR-008).
