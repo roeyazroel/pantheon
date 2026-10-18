@@ -37,16 +37,42 @@ public sealed class MiracleCaster
         _book = book;
     }
 
-    /// <summary>Divine Power a miracle costs at a given influence: the base cost raised for weak influence.</summary>
+    /// <summary>
+    /// Divine Power a miracle costs: the base cost raised for weak influence, and raised again by how
+    /// far the strongest rival's influence there exceeds the caster's (spec §10).
+    /// </summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="miracle">The miracle.</param>
     /// <param name="influence">The god's influence at the target (0..1).</param>
+    /// <param name="rivalInfluence">The strongest other god's influence at the target (0..1).</param>
     /// <returns>The cost.</returns>
-    public static float ComputeCost(DivineRules rules, MiracleDefinition miracle, float influence)
+    public static float ComputeCost(DivineRules rules, MiracleDefinition miracle, float influence, float rivalInfluence = 0f)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(miracle);
-        return miracle.PowerCost * (1f + (rules.WeakInfluenceCostFactor * (1f - SimMath.Clamp01(influence))));
+        var own = SimMath.Clamp01(influence);
+        var contest = Math.Max(0f, SimMath.Clamp01(rivalInfluence) - own);
+        return miracle.PowerCost * (1f + (rules.WeakInfluenceCostFactor * (1f - own))) * (1f + (rules.ContestedCostFactor * contest));
+    }
+
+    /// <summary>The strongest influence at a point of any god other than the given one.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god whose rivals count.</param>
+    /// <param name="target">The point.</param>
+    /// <returns>Influence (0..1); 0 without rivals.</returns>
+    public float RivalInfluence(WorldState world, int godId, GroundPosition target)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var strongest = 0f;
+        foreach (var rival in world.Gods)
+        {
+            if (rival.Id != godId)
+            {
+                strongest = Math.Max(strongest, InfluenceField.Build(_rules, world, rival.Id).At(target));
+            }
+        }
+
+        return strongest;
     }
 
     /// <summary>Checks a request in the order of spec §73 without changing the world.</summary>
@@ -71,7 +97,8 @@ public sealed class MiracleCaster
         var cooldown = CooldownTicksLeft(world, god, miracle.Id);
         var inWorld = IsInsideWorld(world.Regions, request.Target);
         var influence = inWorld ? InfluenceField.Build(_rules, world, god.Id).At(request.Target) : 0f;
-        var cost = ComputeCost(_rules, miracle, influence);
+        var rivals = inWorld ? RivalInfluence(world, god.Id, request.Target) : 0f;
+        var cost = ComputeCost(_rules, miracle, influence, rivals);
         var rejection =
             issuerGodId is { } issuer && issuer != god.Id ? CastRejection.NotAuthorized
             : god.Rank < miracle.MinimumRank ? CastRejection.RankTooLow
@@ -240,11 +267,22 @@ public sealed class MiracleCaster
         }
     }
 
-    /// <summary>Lets the people of a settlement who saw the miracle change their belief in the god.</summary>
+    /// <summary>
+    /// Lets the people of a settlement who saw the miracle change their belief in the god, and plants
+    /// doubt about every other god they follow: another god can work wonders here.
+    /// </summary>
     private void Witness(MiracleDefinition miracle, SettlementState settlement, int godId, float closeness, SettlementConditions conditions)
     {
         var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
         var loveScale = _rules.GratitudeFloor + ((1f - _rules.GratitudeFloor) * need);
+        foreach (var other in settlement.Beliefs)
+        {
+            if (other.GodId != godId && other.Adherence > 0f)
+            {
+                other.Doubt = BeliefModel.ApplyChange(other.Doubt, _rules.RivalMiracleDoubt * closeness);
+            }
+        }
+
         var belief = BeliefModel.FindOrAdd(_rules, settlement, godId);
         BeliefModel.ApplyImpulse(belief, miracle.Witness, closeness, loveScale);
     }

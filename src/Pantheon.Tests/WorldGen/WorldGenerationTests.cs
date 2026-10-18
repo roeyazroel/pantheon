@@ -87,22 +87,34 @@ public sealed class WorldGenerationTests
     }
 
     [Fact]
-    public void GeneratedWorld_WithPantheon_FoundsEachGodInItsHomeSettlement()
+    public void GeneratedWorld_WithPantheon_FoundsEachGodInItsHomeSettlement_FarApart()
     {
         var content = TestContent.Shipped;
 
         var state = WorldGenerator.Generate(Seed, content.WorldGen, content.Pantheon).State;
 
-        var god = Assert.Single(state.Gods);
-        Assert.Equal(PantheonFounder.FirstGodId, god.Id);
-        Assert.Equal(content.Pantheon.Gods[0].Name, god.Name);
-        Assert.Equal(content.Pantheon.StartingDivinePower, god.DivinePower);
+        Assert.Equal(content.Pantheon.Gods.Count, state.Gods.Count);
+        var player = state.Gods[0];
+        Assert.Equal(PantheonFounder.FirstGodId, player.Id);
+        Assert.Equal(content.Pantheon.Gods[0].Name, player.Name);
+        Assert.Equal(content.Pantheon.StartingDivinePower, player.DivinePower);
         var home = Assert.Single(state.Settlements[0].Beliefs);
-        Assert.Equal(god.Id, home.GodId);
+        Assert.Equal(player.Id, home.GodId);
         Assert.Equal(content.Pantheon.HomeBelief.Adherence, home.Adherence);
         Assert.Equal(content.Pantheon.HomeBelief.Faith, home.Faith);
-        Assert.All(state.Settlements.Skip(1), settlement => Assert.Empty(settlement.Beliefs));
+
+        var rival = state.Gods[1];
+        Assert.Equal(Pantheon.Domain.Gods.GodController.Ai, rival.Controller);
+        Assert.NotEqual(Pantheon.Domain.Gods.GodPersonality.None, rival.Personality);
+        var rivalHome = Assert.Single(state.Settlements, s => s.Beliefs.Any(b => b.GodId == rival.Id));
+        var farthest = state.Settlements.Skip(1).MaxBy(s => Distance(s.Position, state.Settlements[0].Position))!;
+        Assert.Equal(farthest.Id, rivalHome.Id);
+        Assert.Equal(state.Gods.Count, state.Settlements.Count(s => s.Beliefs.Count > 0));
+        Assert.Null(state.WinnerGodId);
     }
+
+    /// <summary>Distance between two ground positions.</summary>
+    private static float Distance(GroundPosition a, GroundPosition b) => MathF.Sqrt(((a.X - b.X) * (a.X - b.X)) + ((a.Z - b.Z) * (a.Z - b.Z)));
 
     [Fact]
     public void SettlementSites_AreTheBestScoringSiteFirst()

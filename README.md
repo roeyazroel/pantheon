@@ -35,6 +35,12 @@ them. What it does depends on its needs, its personality and what it has learned
 your hand: reward what it does (Z) and it does more of it, punish it (X) and it does less. What it
 does changes what the villagers think of you. It grows to level 10.
 
+**Milestone 5 (Rival God)** brings a rival: Vael the Tyrant, a god with its own village at the far
+end of the island and its own Creature, Gristle. Vael plays by your rules. It casts the same
+miracles, needs influence where it casts and pays more where yours is stronger, and it courts,
+defends and frightens villages as its personality decides. People who lose faith in one god
+turn to another. The first god to hold 60% of all followers for ten minutes wins.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -85,7 +91,9 @@ covers:
 - the Creature: learning from rewards and punishments (spec §25's example), choices from needs,
   preferences and personality, walking around the sea, deeds and their effect on villages and
   belief, levels, banishment and the checks on commands;
-- the HUD model, alerts, map overlays and the migration of Milestone 2 and 3 saves;
+- rival gods: conversion between gods, contested costs, the god AI's choices for each personality,
+  dominance and victory;
+- the HUD model, alerts, map overlays and the migration of Milestone 2, 3 and 4 saves;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -104,7 +112,7 @@ covers:
 | Select a miracle (again to deselect) | 1–9, or click it in the miracle bar |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, faith, food), then off | O |
+| Next map overlay (influence, religion, faith, food), then off | O |
 | Look at the next settlement | F or Home |
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
@@ -189,6 +197,27 @@ its cooldown); hover over a button to read what it does.
 A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
 followers grow hungry. Try Lightning to see how fear behaves.
 
+## Your rival
+
+Vael the Tyrant starts at the far end of the island. The line under your HUD shows its followers
+and its share of all belief. The line below that shows the race: who holds most of the world's
+belief and how long until they win. Hold 60% of all followers for ten minutes and you win; let Vael
+do it and Vael wins. The world goes on either way.
+
+- **Vael thinks like you.** Every few seconds it weighs every miracle it could cast on every
+  village, plus sending its Creature or saving its power, and picks the best. As a Tyrant it
+  strikes villages that follow you with Lightning, heals and feeds its own, and defends villages
+  you court. It teaches its Creature, Gristle, cruelty.
+- **Belief is contested.** People who lose faith in a god turn to whichever other god pulls them
+  most. A miracle makes the people who see it doubt the other gods they follow. Working a miracle
+  where Vael's influence is stronger than yours costs more.
+- **Fear against love.** Fear converts quickly but fades quickly; killings breed doubt, and
+  frightened followers leave at the first trouble. Loved followers stay.
+- Labels take the colour of the god most of a village follows. The Influence overlay shows whose
+  influence is strongest where, and the Religion overlay shows which god each village follows.
+  Alerts warn you when Vael works a miracle on your followers, when its Creature attacks them, and
+  when anyone starts to dominate.
+
 ## Your Creature
 
 Bramble's card on the left shows its level, what it is doing, its health and needs, its loyalty
@@ -220,7 +249,8 @@ now.
 ## Debug tools
 
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed, terrain renderer,
-  camera band, one line per god (power and income, rank, followers, the next rank), the Creature
+  camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
+  goal now and its top candidate actions with their scores and reasons, the Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
   their scores, its learned preferences by situation and its latest memories), the region
   under the cursor with its statistics and every god's influence there, one line per settlement,
@@ -272,7 +302,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|faith\|food` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food` | Start with a map overlay shown. |
 | `--focus=<n>\|creature` | Start looking at settlement `n` (1 is your home; `--cast` targets it) or at your Creature. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
@@ -288,25 +318,26 @@ F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a 
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 4`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 5`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
 (version 1) still load: each settlement starts healthy with no house under construction. Saves
 from Milestones 1 and 2 (versions 1 and 2) get the Milestone 3 god, Ilyra, followed in their one
-settlement. Saves from Milestones 1 to 3 get a newborn Creature, Bramble, for every god.
+settlement. Saves from Milestones 1 to 3 get a newborn Creature, Bramble, for every god. Saves from
+Milestones 1 to 4 stay single-god worlds with nobody to compete with.
 
 ## Repository layout
 
 ```text
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                      creatures.json, settlement_view.json, biome_palette.json, divine_view.json
+                      creatures.json, god_ai.json, settlement_view.json, biome_palette.json, divine_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
   Pantheon.Domain/        World, region, settlement, god, belief and Creature state, events, and content contracts
   Pantheon.Simulation/    Seeded RNG, noise, terrain and world generation, the settlement and belief models,
-                          influence, miracles, the Creature, navigation, tick systems
+                          influence, miracles, the Creature, navigation, the god AI, victory, tick systems
   Pantheon.Persistence/   Versioned JSON saves with migrations, and content parsing
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
@@ -324,8 +355,9 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md),
 [.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md),
-[.docs/milestone-3-first-god.md](.docs/milestone-3-first-god.md) and
-[.docs/milestone-4-creature.md](.docs/milestone-4-creature.md).
+[.docs/milestone-3-first-god.md](.docs/milestone-3-first-god.md),
+[.docs/milestone-4-creature.md](.docs/milestone-4-creature.md) and
+[.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md).
 
 ## Contributing
 

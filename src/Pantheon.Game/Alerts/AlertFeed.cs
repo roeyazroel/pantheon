@@ -115,6 +115,14 @@ public sealed class AlertFeed
                 return (Key("rank", (rank.GodId * 100) + (int)rank.Rank), Format("{0} is now a {1}.", god.Name, DivineText.Rank(rank.Rank)), AlertSeverity.Info, null);
             case CreatureActed acted when world.Creatures.Find(c => c.Id == acted.CreatureId) is { } creature:
                 return DescribeDeed(acted, creature, world, localGodId);
+            case MiracleCast cast when cast.GodId != localGodId:
+                return DescribeRivalCast(cast, world, localGodId);
+            case DominanceChanged dominance when GodStanding.Find(world, dominance.GodId) is { } dominant:
+                return DescribeDominance(dominance, dominant, localGodId);
+            case VictoryAchieved victory when GodStanding.Find(world, victory.GodId) is { } winner:
+                return victory.GodId == localGodId
+                    ? (Key("victory", winner.Id), "You have won: your followers held the world's belief for ten minutes.", AlertSeverity.Good, null)
+                    : (Key("victory", winner.Id), Format("{0} has won the world's belief.", winner.Name), AlertSeverity.Danger, null);
             case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
                 return DescribeChange(changed, creature);
             default:
@@ -122,12 +130,53 @@ public sealed class AlertFeed
         }
     }
 
-    /// <summary>The player's Creature did something notable to a settlement (spec §59: "Your Creature attacked neutral civilians").</summary>
+    /// <summary>A rival's miracle on a settlement where the player has followers.</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeRivalCast(MiracleCast cast, WorldState world, int? localGodId)
+    {
+        var rival = GodStanding.Find(world, cast.GodId)?.Name ?? "A rival";
+        foreach (var id in cast.AffectedSettlementIds)
+        {
+            if (Settlement(world, id) is { } settlement && Concerns(settlement, localGodId))
+            {
+                var deaths = cast.Deaths > 0 ? Format(": {0} died", cast.Deaths) : string.Empty;
+                var severity = cast.Deaths > 0 ? AlertSeverity.Danger : AlertSeverity.Warning;
+                return (Key("rival" + cast.MiracleId, (cast.GodId * 1000) + id), Format("{0} worked a miracle ({1}) on {2}{3}.", rival, cast.MiracleId.Replace('_', ' '), settlement.Name, deaths), severity, settlement.Position);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>A god began or ceased to dominate the world's belief.</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeDominance(DominanceChanged dominance, Domain.Gods.GodState god, int? localGodId)
+    {
+        var key = Key(dominance.Started ? "dominant" : "contested", god.Id);
+        if (god.Id == localGodId)
+        {
+            return dominance.Started
+                ? (key, "You hold most of the world's belief: keep it for ten minutes to win.", AlertSeverity.Good, null)
+                : (key, "You no longer hold most of the world's belief.", AlertSeverity.Warning, null);
+        }
+
+        return dominance.Started
+            ? (key, Format("{0} holds most of the world's belief: it wins in ten minutes unless you stop it.", god.Name), AlertSeverity.Danger, null)
+            : (key, Format("{0} no longer holds most of the world's belief.", god.Name), AlertSeverity.Good, null);
+    }
+
+    /// <summary>A Creature did something notable to a settlement (spec §59: "Your Creature attacked neutral civilians"); a rival's Creature only where the player has followers.</summary>
     private static (string, string, AlertSeverity, GroundPosition?)? DescribeDeed(CreatureActed acted, Domain.Creatures.CreatureState creature, WorldState world, int? localGodId)
     {
-        if (creature.GodId != localGodId || acted.SettlementId is not { } id || Settlement(world, id) is not { } settlement)
+        if (acted.SettlementId is not { } id || Settlement(world, id) is not { } settlement)
         {
             return null;
+        }
+
+        if (creature.GodId != localGodId)
+        {
+            var owner = GodStanding.Find(world, creature.GodId)?.Name ?? "a rival";
+            return acted.Action == CreatureAction.Attack && Concerns(settlement, localGodId)
+                ? (Key("rivaldeed", (creature.Id * 1000) + id), Format("{0}, {1}'s Creature, attacked {2}: {3} died.", creature.Name, owner, settlement.Name, acted.Deaths), AlertSeverity.Danger, settlement.Position)
+                : null;
         }
 
         var key = Key("deed" + acted.Action, id);

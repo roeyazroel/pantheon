@@ -32,6 +32,15 @@ public sealed record HudModel
     /// <summary>Radius in metres of the selected miracle, for the targeting ring; 0 when none is selected.</summary>
     public float TargetRadius { get; init; }
 
+    /// <summary>One line per rival god: name, personality, followers and share of the world's belief.</summary>
+    public IReadOnlyList<string> Rivals { get; init; } = [];
+
+    /// <summary>The race for victory (spec §115): who holds how much of the world's belief and how long until a win.</summary>
+    public string? Contest { get; init; }
+
+    /// <summary>Whether the contest line is good news for the player.</summary>
+    public bool ContestFavoursPlayer { get; init; }
+
     /// <summary>The Creature's card, or <c>null</c> when the god has no Creature.</summary>
     public CreatureCard? Creature { get; init; }
 }

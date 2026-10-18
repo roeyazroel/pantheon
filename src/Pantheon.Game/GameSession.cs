@@ -34,7 +34,7 @@ public sealed class GameSession
     private GameSession(GameContent content, WorldState world, TerrainField terrain)
     {
         Content = content;
-        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures);
+        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles);
         _creatures = new CreatureAuthority(content.Creatures, _engine.Creatures!.Brain);
         _caster = new MiracleCaster(content.DivineRules, content.SettlementRules, content.Miracles);
         _step = StepWorld;
@@ -191,6 +191,12 @@ public sealed class GameSession
     /// <returns>The options; none without a Creature.</returns>
     public IReadOnlyList<CreatureOption> PreviewCreatureOptions() =>
         LocalCreature is { } creature ? _engine.Creatures!.Brain.ListOptions(World, creature) : [];
+
+    /// <summary>What an AI god is weighing now, best first, for the debug view (spec §106).</summary>
+    /// <param name="god">The god.</param>
+    /// <returns>Its candidate actions; none for a god without an AI personality.</returns>
+    public IReadOnlyList<Simulation.Gods.AiCandidate> PreviewGodAi(GodState god) =>
+        god.Controller == GodController.Ai ? _engine.Gods!.Ai.Evaluate(World, god) : [];
 
     /// <summary>The latest miracle cast still waiting to be drained, if any.</summary>
     /// <returns>The event, or <c>null</c>.</returns>

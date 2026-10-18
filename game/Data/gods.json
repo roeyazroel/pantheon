@@ -1,8 +1,10 @@
 {
-  // The gods of a new world. Each is followed in its own home settlement, best site first.
+  // The gods of a new world. The first god's home is the best site; each later god's home is the
+  // settlement furthest from the homes already taken. AI gods need a Personality (god_ai.json).
   "StartingDivinePower": 100.0,
   "HomeBelief": { "Adherence": 0.6, "Faith": 0.5, "Love": 0.3, "Fear": 0.1, "Doubt": 0.15 },
   "Gods": [
-    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble" }
+    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble", "Personality": "None" },
+    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "Personality": "Tyrant" }
   ]
 }

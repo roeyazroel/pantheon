@@ -54,6 +54,7 @@ internal static class DivineWorlds
         BaseApostasy = 0.5f,
         FearFragility = 1f,
         LoveLoyalty = 0.6f,
+        ApostateFreedom = 0.3f,
         ForgottenFaith = 0.01f,
         InfluenceBaseRadius = 400f,
         InfluenceRadiusPerSqrtFollower = 20f,
@@ -64,6 +65,10 @@ internal static class DivineWorlds
         SettlementRadius = 60f,
         WeakInfluenceCostFactor = 1f,
         GratitudeFloor = 0.25f,
+        RivalMiracleDoubt = 0.06f,
+        ContestedCostFactor = 1f,
+        VictoryShare = 0.6f,
+        VictorySeconds = 600f,
         BlessingDecayPerStep = 0.008f,
         Ranks =
         [
@@ -126,10 +131,31 @@ internal static class DivineWorlds
             Random = new SimulationRandom(9).GetState(),
             Regions = grid,
             Settlements = settlements,
-            Gods = [new GodState { Id = GodId, Name = "Testa", Controller = GodController.Human, DivinePower = power, Rank = DivineRank.MinorSpirit, CreatureId = null, Cooldowns = [] }],
+            Gods = [God(GodId, "Testa", GodController.Human, GodPersonality.None, power)],
             Creatures = [],
+            WinnerGodId = null,
         };
     }
+
+    /// <summary>A god with no Creature, no cooldowns and no dominance.</summary>
+    /// <param name="id">Id.</param>
+    /// <param name="name">Name.</param>
+    /// <param name="controller">Player or AI.</param>
+    /// <param name="personality">AI personality.</param>
+    /// <param name="power">Divine Power.</param>
+    /// <returns>The god.</returns>
+    public static GodState God(int id, string name, GodController controller, GodPersonality personality, float power) => new()
+    {
+        Id = id,
+        Name = name,
+        Controller = controller,
+        Personality = personality,
+        DivinePower = power,
+        Rank = DivineRank.MinorSpirit,
+        DominantSinceTick = null,
+        CreatureId = null,
+        Cooldowns = [],
+    };
 
     /// <summary>Gives a settlement a belief in the god.</summary>
     /// <param name="settlement">Settlement.</param>

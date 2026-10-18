@@ -22,6 +22,28 @@ public static class DivineText
         DivineRank.Ascendant => "Ascendant",
     };
 
+    /// <summary>An AI personality as the player reads it.</summary>
+    /// <param name="personality">Personality.</param>
+    /// <returns>For example "Nature Keeper"; empty for a player's god.</returns>
+    public static string Personality(GodPersonality personality) => personality switch
+    {
+        GodPersonality.None => string.Empty,
+        GodPersonality.Guardian => "Guardian",
+        GodPersonality.Tyrant => "Tyrant",
+        GodPersonality.Opportunist => "Opportunist",
+        GodPersonality.Zealot => "Zealot",
+        GodPersonality.NatureKeeper => "Nature Keeper",
+    };
+
+    /// <summary>A duration in minutes and seconds.</summary>
+    /// <param name="seconds">Seconds.</param>
+    /// <returns>For example "6:05".</returns>
+    public static string Clock(double seconds)
+    {
+        var whole = (int)Math.Ceiling(Math.Max(0.0, seconds));
+        return Format("{0}:{1:00}", whole / 60, whole % 60);
+    }
+
     /// <summary>Why a miracle cannot be cast, or what casting it costs.</summary>
     /// <param name="check">The authority's verdict.</param>
     /// <param name="miracleId">The requested miracle id, for unknown miracles.</param>

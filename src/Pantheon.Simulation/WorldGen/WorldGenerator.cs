@@ -48,6 +48,7 @@ public static class WorldGenerator
             Settlements = settlements,
             Gods = gods,
             Creatures = creatures,
+            WinnerGodId = null,
         };
 
         return new GeneratedWorld(state, terrain);

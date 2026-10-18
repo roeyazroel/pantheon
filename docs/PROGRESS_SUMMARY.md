@@ -1,6 +1,6 @@
 # PANTHEON — Progress Summary
 
-This document sums up the work so far, Milestones 1 to 4, against the owner's complete
+This document sums up the work so far, Milestones 1 to 5, against the owner's complete
 specification, [PANTHEON_SPEC.md](PANTHEON_SPEC.md), which is the source of truth. Section numbers
 (§) refer to it. It describes `main` on 2026-10-18.
 
@@ -19,13 +19,14 @@ followed or the target has been measured.
 
 ## In short
 
-- Four of the specification's fifteen milestones are implemented: 1 Foundation (§116),
-  2 Living Settlement (§117), 3 First God (§118) and 4 Creature (§119). Their playable outcomes
-  hold:
+- Five of the specification's fifteen milestones are implemented: 1 Foundation (§116),
+  2 Living Settlement (§117), 3 First God (§118), 4 Creature (§119) and 5 Rival God (§120). Their
+  playable outcomes hold:
   - the player can explore a seeded island;
   - its settlements visibly live and change;
   - the player can gain and spend belief;
-  - the Creature behaves independently.
+  - the Creature behaves independently;
+  - religious competition exists.
 - The world is one 2 km island with eight settlements. Each settlement is simulated
   statistically (Tier 1) and, near the camera, shown by up to 300 representative citizens
   (Tier 2).
@@ -38,9 +39,12 @@ followed or the target has been measured.
 - The god has a Creature, Bramble the Mossback, which lives on its own. It forages, rests, plays,
   helps build, feeds the hungry, steals or attacks, as its needs, personality and learned
   preferences decide. The player teaches it by reward and punishment with a (visual) Divine Hand.
-- Not built yet: rival gods, diplomacy, weather, disasters, migration, history, audio,
-  multiplayer, and picking things up with the hand.
-- 471 xUnit tests pass headless (426 at the end of Milestone 3). The solution builds with no
+- A rival, Vael the Tyrant, competes for the same people with a strategic utility AI that plays
+  by the player's rules. People convert between gods, and the first god to hold 60% of all
+  followers for ten minutes wins (§115).
+- Not built yet: diplomacy, weather, disasters, migration, history, audio, multiplayer, and
+  picking things up with the hand.
+- 494 xUnit tests pass headless (471 at the end of Milestone 4). The solution builds with no
   warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -54,8 +58,8 @@ followed or the target has been measured.
 | 2 | Living Settlement (§117) | Implemented ([#2](https://github.com/roeyazroel/pantheon/pull/2), merged into `main` at the start of Milestone 3) |
 | 3 | First God (§118) | Implemented, on `main` |
 | 4 | Creature (§119) | Implemented, on `main` |
-| 5 | Rival God (§120) | Not started; next. The belief rules already share each settlement between gods. |
-| 6 | Diplomacy (§121) | Not started |
+| 5 | Rival God (§120) | Implemented, on `main` |
+| 6 | Diplomacy (§121) | Not started; next |
 | 7 | Weather (§122) | Not started |
 | 8 | Disaster Simulation (§123) | Not started |
 | 9 | Four Gods (§124) | Not started |
@@ -152,6 +156,21 @@ change the villages' food, houses and belief in its god. Five rewards for feedin
 feeding preference from §25's 0.40 to about 0.86, close to the spec's 0.85. The plan is
 [.docs/milestone-4-creature.md](../.docs/milestone-4-creature.md).
 
+### Milestone 5: Rival God (§120)
+
+| §120 deliverable | Status | What exists |
+| --- | --- | --- |
+| Second god | Implemented | Vael the Tyrant (`gods.json`), an AI god founded in the settlement furthest from the player's home, with its own Creature, Gristle. |
+| Utility AI | Implemented | `GodAi` (ADR-011) scores every allowed miracle on every settlement, sending its Creature, and waiting, every 3 s (§87). Personality-weighted goals: protect, defend, convert (with opportunism), bless and intimidate. It acts through the same authorities as the player, teaches its Creature, and keeps reasons for every score (§49, §106). Five personalities in `god_ai.json`. |
+| Competing belief | Implemented | Several gods per settlement, a miracle plants doubt about the other gods its witnesses follow, contested influence makes the weaker god pay more (§10), and dominance and victory (§115). |
+| Conversion | Implemented | People leaving a god follow the others by their pull (§32); miracles, prosperity, intimidation and the Creature's deeds drive it. |
+
+Playable outcome, "Religious competition exists": met. With seed 1234, a passive player leads
+for nine minutes, then loses the island and the game to Vael at about 19 minutes. A player who
+keeps casting Food at the frontier wins at about 13 minutes, after which Vael retakes villages
+the player does not defend. The plan is
+[.docs/milestone-5-rival-god.md](../.docs/milestone-5-rival-god.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -172,7 +191,7 @@ Sections that only state intent are summarised at the end of this part.
 | 29 | Settlements | Partial | Housing, job allocation (farm, build, worship) and construction are autonomous. Missing: roads, gathering, expansion and priorities set by a god. |
 | 30, 90 | Settlement state | Partial | Population, food, housing, health, construction, and belief, love, fear and doubt per god. Missing: water, safety, happiness, education, wealth, political stability and resentment. |
 | 31, 33–36 | Migration, culture, schisms, atheism, technology | Not started | |
-| 32 | Religious conversion | Partial | Conversion is gradual and driven by miracles and prosperity, and several gods can share a settlement. With one god, conversion is from people who follow no god; conversion between gods comes with Milestone 5. |
+| 32 | Religious conversion | Implemented | Gradual conversion between gods and from people who follow none, driven by miracles, prosperity, intimidation, rival doubt and the Creatures' deeds. Several religions coexist. Missionaries, propaganda, temples and military victory are not modelled. |
 | 80 | Simulation tiering | Partial | Tier 1 simulates the economy, demographics, health and belief. Tier 2 shows walking, working and gathering figures (presentation only). Tier 3 is not started. |
 | 81 | Population representation | Implemented | Up to 300 figures stand for each settlement's population. |
 | 82 | Migration representation | Not started | |
@@ -191,10 +210,13 @@ Sections that only state intent are summarised at the end of this part.
 | 13 | Divine rank | Implemented (followers only) | Six ranks by followers, never lost, unlocking miracles. Achievements, holy places and the Creature do not count yet. |
 | 14 | Miracles | Partial | Minor: Food, Heal, Bless Crops and Lightning. Regional: Mass Healing. No Great miracles or Divine Acts yet. |
 | 15 | Systemic consequences | Partial | Bless Crops raises the yield of the land; Food and Heal change hunger and health, which drive doubt and love; Lightning kills and frightens. Weather, fire and ecology chains need Milestones 7–8. |
-| 47–49, 87 | AI gods | Not started | |
+| 47 | AI gods | Partial | Personality (5 of §47's 8), with risk and aggression as profile weights. Diplomatic memory, short-term and long-term goals are not modelled. |
+| 48 | God AI model | Implemented | Utility AI that continuously scores candidate actions with explainable factors. |
+| 49 | AI betrayal | Not started | Needs diplomacy (Milestone 6). |
+| 87 | God AI architecture | Partial | Strategic evaluation every 3 s. No major planning or diplomatic re-evaluation yet. |
 | 109 | MVP belief | Implemented | Faith, Love, Fear and Doubt. |
 | 110 | MVP miracles | Partial | Heal, Food, Lightning and Bless Crops. Missing: Water, Rain, Fire, Earthquake and Shield, which need water, weather and disasters. |
-| 115 | MVP victory | Not started | |
+| 115 | MVP victory | Implemented | 60% of all followers for 10 minutes, both configurable in `divine_rules.json`; the world goes on afterwards. |
 
 ### The Creature
 
@@ -223,7 +245,9 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 37–46, 113 | Divine politics, diplomacy, betrayal, war, MVP diplomacy | Not started | |
-| 50–54 | History, sacred locations, world events, victory, alliance endgame | Not started | |
+| 50–52 | History, sacred locations, world events | Not started | |
+| 53 | Victory conditions | Partial | Divine Ascendancy (§115's MVP form). Conquest, cultural and pantheon victories, and a sandbox switch are not built. |
+| 54 | Alliance endgame | Not started | |
 | 91 | Event architecture | Partial | Systems and the miracle authority raise transient domain events; alerts and effects read them. |
 | 92 | History system | Not started | |
 
@@ -234,8 +258,8 @@ Sections that only state intent are summarised at the end of this part.
 | 55 | Player interaction | Partial | Miracles are cast with a click (ADR-009). A visual Divine Hand follows the cursor, presses when casting or sending, and pats or swats the Creature (ADR-010). Picking up, carrying and throwing are not built. |
 | 56 | Camera | Partial | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands. Missing: a strategic overview. |
 | 57 | User interface | Partial | HUD with Divine Power, income, followers, rank, the miracle bar and hint, the Creature card and alerts. Missing: the panels (World, Settlements, Diplomacy, Religion, History, Domains, Miracles). |
-| 58 | Map overlays | Partial | Influence, faith and food for the player; the F3 debug map adds the region statistics, blessing and influence. Missing: population, ecology, weather, danger, disaster risk, migration and political control. |
-| 59 | Alert system | Partial | Starving followers, settlements gained or lost, ranks. Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
+| 58 | Map overlays | Partial | Influence (strongest god per region), religion (main god per settlement), faith and food for the player; the F3 debug map adds the region statistics, blessing and influence. Missing: population, ecology, weather, danger, disaster risk, migration and political control. |
+| 59 | Alert system | Partial | Starving followers, settlements gained or lost, ranks, Creature deeds, rival miracles on the player's followers, dominance and victory. Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
 | 60 | Audio | Not started | |
 | 61 | Visual direction | Partial | Stylised terrain, sea, huts, fields, figures, glowing miracle effects, and god colours on labels and overlays. No original art assets, and religion does not yet change how settlements look. |
 
@@ -257,23 +281,23 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 65 | Local-first architecture | Implemented | Fully offline. |
-| 66 | Single-player architecture | Partial | `GameSession` is the local authority over the world, its settlements and the player's god. There are no AI gods yet. |
+| 66 | Single-player architecture | Implemented | The local host (`GameSession`) runs the world with one player and an AI god. |
 | 67–69, 71–72, 95–98 | Multiplayer, ENet, Steam, host disconnect and migration, replication, prediction, cheating | Not started | ADR-003 decides host-authoritative ENet without lockstep. |
-| 73 | Network authority | Partial (local) | `CastMiracleRequest` is an intent; `MiracleCaster` checks power, location, influence, cooldown, rank and authorisation before anything changes. There is no network yet. |
+| 73 | Network authority | Partial (local) | Miracle and Creature commands are intents. `MiracleCaster` and `CreatureAuthority` check them (power, location, influence, cooldown, rank, authorisation, reachability) before anything changes. AI gods use the same path. There is no network yet. |
 | 70 | No required server infrastructure | Implemented | |
 | 75 | Save architecture | Partial | One quicksave holds the seed, generation settings, tick, random state, regions, settlements, gods and beliefs. No GameTime; the other listed state does not exist yet. |
-| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 4 and migrations from versions 1, 2 and 3, each tested against a save written by the previous build. |
+| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 5 and migrations from versions 1 to 4, each tested against a save written by the previous build. |
 | 77–78 | Core rule, layered architecture | Implemented | The core projects never reference Godot (tested). |
-| 79 | Simulation systems | Partial | Settlement, population, belief and Creature systems, and the miracle and Creature authorities. |
+| 79 | Simulation systems | Partial | Settlement, population, belief, victory, Creature and god AI systems, and the miracle and Creature authorities. |
 | 90 | Core data models | Partial | `GodState` (subset), `SettlementState` with belief, love, fear and doubt per god, `CreatureState` (no relationships), `RegionState` (no wildlife, pollution or weather). No DiplomacyRelation, and no WorldEvent records with duration. |
 | 100 | Repository structure | Implemented, with differences | As recommended, plus `World/` and `Miracles/` in `Pantheon.Domain`, `game/Data/`, `game/addons/`, `.docs/` and `AGENTS.md`. |
-| 101 | Architecture decision records | Implemented | ADR-001 to ADR-010. |
+| 101 | Architecture decision records | Implemented | ADR-001 to ADR-011. |
 | 102–103 | Testing, deterministic testing | Implemented | Every rule has tests, including §102's "Fear decreases after prolonged safety" and "God cannot cast miracle without enough power". Randomness is seeded and checked. |
-| 106 | Debug tools | Partial | Influence, belief, population, region boundaries, simulation tier, the frame rate, and the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores). Missing: god AI intentions, navmesh, weather cells, migration routes, network authority and other performance metrics. |
+| 106 | Debug tools | Partial | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons). Missing: relationship reasoning (no diplomacy yet), navmesh, weather cells, migration routes, network authority and other performance metrics. |
 | 107 | Content data | Partial | World generation, settlement and divine balance, miracles, the gods of a new world, Creature rules and presentation are data files, parsed strictly. No domain trees yet. |
-| 108 | MVP world | Partial | One map, three land biomes, 8 settlements. One god of 4 with its Creature, and no AI players. |
+| 108 | MVP world | Partial | One map, three land biomes, 8 settlements. Two of the four gods (1 human, 1 AI), each with its Creature. |
 | 131 | Non-goals | Respected | |
-| 132 | Validation priorities | Partly testable | "Is converting populations fun?" and "Is raising the Creature fun?" can now be tried with one god. The others need rivals, diplomacy or disasters. |
+| 132 | Validation priorities | Partly testable | "Is converting populations fun?", "Is raising the Creature fun?" and "Are rival gods interesting?" can be tried now. Diplomacy and disasters come next. |
 | 134 | Coding agent rules | Followed | `AGENTS.md`; `ArchitectureRulesTests` checks the mechanical ones. |
 
 ### Sections that state intent
@@ -299,29 +323,30 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-008](ADR/ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted; amends ADR-004 |
 | [ADR-009](ADR/ADR-009-belief-influence-and-miracles.md) | Belief, influence and miracles (Milestone 3) | Accepted |
 | [ADR-010](ADR/ADR-010-creature-simulation-and-learning.md) | The Creature: core simulation, learned utility AI and the hand (Milestone 4) | Accepted |
+| [ADR-011](ADR/ADR-011-rival-gods-utility-ai-and-victory.md) | Rival gods: utility AI, conversion between gods and victory (Milestone 5) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 471 tests, and they all pass headless in about ten
+The xUnit suite in `src/Pantheon.Tests` has 494 tests, and they all pass headless in about ten
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | Now |
-| --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 |
-| Belief, influence and miracles | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests` | 0 | 45 | 45 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests`, `SaveMigrationV3Tests`, `DivineSaveTests` | 34 | 47 | 52 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests` | 30 | 45 | 45 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 |
-| **Total** | | **331** | **426** | **471** |
+| Area | Test classes | M2 | M3 | M4 | Now |
+| --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V4Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests` | 30 | 45 | 45 | 51 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 |
+| **Total** | | **331** | **426** | **471** | **494** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -365,7 +390,7 @@ The [README](../README.md) lists every control and option.
 
 ### Scope and scale
 
-- **One god.** The MVP has four (§108); rivals come in Milestones 5 and 9.
+- **Two gods.** The MVP has four (§108); Milestone 9 adds the other two and diplomacy between all.
 - **A small world.** One 2 km island instead of 10–20 km (§6). No trees or other vegetation are
   drawn.
 - **Miracles.** Five of §110's nine kinds; Water, Rain, Fire, Earthquake and Shield wait for
@@ -422,30 +447,26 @@ The [README](../README.md) lists every control and option.
 
 ## Recommended next steps
 
-### Milestone 5: Rival God (§120)
+### Milestone 6: Diplomacy (§121)
 
-Deliverables: a second god, utility AI, competing belief and conversion. Playable outcome:
-religious competition exists.
+Deliverables: relationships, alliance, war and betrayal memory. Playable outcome: the rival can
+cooperate or attack.
 
-1. Add an AI god to `gods.json`, founded in its own home settlement with its own Creature. Its
-   Creature runs the same brain, with preferences shaped by the god's personality instead of a
-   player.
-2. Build the god AI as utility AI (§47–48, §87). Strategic evaluation every 2–5 s scores candidate
-   actions:
-   - convert a settlement with a miracle;
-   - help its followers;
-   - frighten a rival's followers;
-   - bless its land;
-   - direct its Creature.
-
-   Each action has explainable factors. The AI sends the same requests as the player, through the
-   same authority. Personalities (§47) weight the factors.
-3. Competing belief: conversion between gods, not only from the free share (§32). Followers of a
-   rival can be drawn by Faith, Love and Fear when their own god fails them, and contested
-   influence makes the weaker god pay more (§10).
-4. Interface: rival gods on the HUD, belief shares per god on labels and overlays, alerts such as
-   "Vael is converting your followers" (§59), and a god AI debug view with the current goal, top
-   candidate actions, utility scores and reasoning (§106).
+1. `DiplomacyRelation` per pair of gods (§37, §90):
+   - trust, fear, respect, rivalry, gratitude and suspicion;
+   - a status: Neutral, Friendly, Alliance, Hostile or War (§113);
+   - treaties;
+   - a memory of significant acts.
+2. Acts that move relationships: miracles on the other god's followers (hostile), help to its
+   followers (gratitude), its Creature's attacks, breaking a pact (betrayal: trust and
+   reputation, §40), and conversion of its followers.
+3. Diplomatic actions (§113) as commands through an authority: offer alliance, break alliance,
+   declare war, request peace. The AI weighs them in its utility, with explainable reasons
+   (§49).
+4. What status means: allies do not convert each other's followers by force and share
+   influence; war unlocks harsher acts and makes the people of each god resent the other.
+5. Interface: a diplomacy panel and alerts ("Vael proposes an alliance", §59). The AI view gains
+   relationship reasoning (§106).
 
 ### Alongside
 

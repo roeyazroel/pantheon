@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Godot;
 using Pantheon.Client.Camera;
 using Pantheon.Client.Presentation;
@@ -9,6 +10,7 @@ using Pantheon.Client.Presentation.Creatures;
 using Pantheon.Client.Presentation.Divine;
 using Pantheon.Client.UI;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Gods;
 using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Game.Diagnostics;
@@ -124,7 +126,7 @@ public partial class GameRoot : Node3D
         _presenter.Sync(_session.World);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
-        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused);
+        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId);
         if (_pendingJudge is { } judge)
         {
             _pendingJudge = null;
@@ -348,6 +350,10 @@ public partial class GameRoot : Node3D
         LocalGodId = _session.LocalGodId,
         LocalCreatureId = _session.LocalCreature?.Id,
         CreatureOptions = _session.PreviewCreatureOptions(),
+        GodAiCandidates = _session.World.Gods
+            .Where(god => god.Controller == GodController.Ai)
+            .Select(god => (god.Id, _session.PreviewGodAi(god)))
+            .ToList(),
         SelectedSettlementId = cursor is { } point
             ? SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance)?.Id
             : null,

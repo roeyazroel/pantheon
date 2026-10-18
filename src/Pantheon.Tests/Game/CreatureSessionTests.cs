@@ -175,6 +175,6 @@ public sealed class CreatureSessionTests
         var loaded = WorldSaveSerializer.Deserialize(json);
 
         WorldAssert.Equal(_session.World, loaded);
-        Assert.Single(loaded.Creatures);
+        Assert.Equal(TestContent.Shipped.Pantheon.Gods.Count, loaded.Creatures.Count);
     }
 }

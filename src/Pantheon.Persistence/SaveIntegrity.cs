@@ -33,6 +33,11 @@ internal static class SaveIntegrity
 
         ValidateRegions(world, errors);
         var godIds = ValidateGods(world, errors);
+        if (world.WinnerGodId is { } winner && !godIds.Contains(winner))
+        {
+            errors.Add($"The winner is missing god {winner}.");
+        }
+
         ValidateSettlements(world, godIds, errors);
         CreatureIntegrity.Validate(world, godIds, errors);
 
@@ -110,9 +115,14 @@ internal static class SaveIntegrity
                 errors.Add($"God {god.Id} has Divine Power {god.DivinePower}; it must be finite and not negative.");
             }
 
-            if (!Enum.IsDefined(god.Rank) || !Enum.IsDefined(god.Controller))
+            if (!Enum.IsDefined(god.Rank) || !Enum.IsDefined(god.Controller) || !Enum.IsDefined(god.Personality))
             {
-                errors.Add($"God {god.Id} has an unknown rank or controller.");
+                errors.Add($"God {god.Id} has an unknown rank, controller or personality.");
+            }
+
+            if (god.DominantSinceTick is { } since && (since < 0 || since > world.Tick))
+            {
+                errors.Add($"God {god.Id} dominates since tick {since}, outside 0..{world.Tick}.");
             }
 
             if (god.Cooldowns.Exists(c => c is null || string.IsNullOrEmpty(c.MiracleId)))

@@ -20,6 +20,9 @@ public sealed class CreatureSystem : ISimulationSystem
     private const float ReturnHealth = 0.5f;
     private const float ReturnHunger = 0.3f;
 
+    // A need this pressing makes a waiting Creature give up the wait.
+    private const float DesperateNeed = 0.9f;
+
     // Metres within which a waypoint counts as reached.
     private const float ArrivalTolerance = 1e-3f;
 
@@ -88,6 +91,13 @@ public sealed class CreatureSystem : ISimulationSystem
 
                 break;
             case CreaturePhase.Travelling:
+                if (activity.Action == CreatureAction.GoTo && IsDesperate(creature))
+                {
+                    activity.Path.Clear();
+                    activity.Phase = CreaturePhase.Deciding;
+                    break;
+                }
+
                 Walk(creature);
                 if (activity.Path.Count == 0)
                 {
@@ -97,6 +107,11 @@ public sealed class CreatureSystem : ISimulationSystem
 
                 break;
             case CreaturePhase.Performing:
+                if (activity.Action == CreatureAction.GoTo && IsDesperate(creature))
+                {
+                    activity.TicksLeft = 0;
+                }
+
                 if (--activity.TicksLeft <= 0)
                 {
                     _deeds.Complete(world, creature, context.Events);
@@ -108,6 +123,9 @@ public sealed class CreatureSystem : ISimulationSystem
                 break;
         }
     }
+
+    /// <summary>Whether a need is so pressing that the Creature gives up walking to, or waiting at, where it was sent.</summary>
+    private static bool IsDesperate(CreatureState creature) => creature.Needs.Hunger >= DesperateNeed || creature.Needs.Fatigue >= DesperateNeed;
 
     /// <summary>Starvation wears health down; resting restores it.</summary>
     private void UpdateHealth(CreatureState creature)

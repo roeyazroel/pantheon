@@ -27,6 +27,8 @@ internal static class CreatureWorlds
             Id = god.Id,
             Name = god.Name,
             Controller = god.Controller,
+            Personality = god.Personality,
+            DominantSinceTick = god.DominantSinceTick,
             DivinePower = god.DivinePower,
             Rank = god.Rank,
             CreatureId = god.Id,

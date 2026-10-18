@@ -34,6 +34,8 @@ public partial class Hud : CanvasLayer
     private Label _followers = null!;
     private Label _hint = null!;
     private Label _overlayLegend = null!;
+    private Label _rivals = null!;
+    private Label _contest = null!;
     private HBoxContainer _bar = null!;
     private VBoxContainer _alerts = null!;
     private StyleBoxFlat _slotStyle = null!;
@@ -87,6 +89,11 @@ public partial class Hud : CanvasLayer
         _hint.Modulate = model.TargetValid ? Valid : Invalid;
         ShowSlots(model.Miracles);
         ShowCreature(model.Creature);
+        SetText(_rivals, string.Join("   ", model.Rivals));
+        _rivals.Visible = model.Rivals.Count > 0;
+        SetText(_contest, model.Contest ?? string.Empty);
+        _contest.Visible = model.Contest is not null;
+        _contest.Modulate = model.ContestFavoursPlayer ? Valid : Invalid;
     }
 
     /// <summary>Shows the legend of the map overlay, or hides it.</summary>
@@ -143,6 +150,10 @@ public partial class Hud : CanvasLayer
         _power = AddLabel(row, 24, Gold);
         _income = AddLabel(row, 16, Valid);
         _followers = AddLabel(row, 16, Ink);
+        _rivals = AddLabel(column, 14, new Color(0.95f, 0.7f, 0.65f));
+        _rivals.HorizontalAlignment = HorizontalAlignment.Center;
+        _contest = AddLabel(column, 15, Ink);
+        _contest.HorizontalAlignment = HorizontalAlignment.Center;
         _overlayLegend = AddLabel(column, 14, Muted);
         _overlayLegend.HorizontalAlignment = HorizontalAlignment.Center;
         _overlayLegend.Visible = false;

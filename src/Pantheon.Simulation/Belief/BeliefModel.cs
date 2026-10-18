@@ -107,7 +107,9 @@ public static class BeliefModel
     /// Changes in every god's adherence for one step, from the values before it. Each god converts
     /// <c>ConversionPerStep × pull</c> of the people who follow no god and loses
     /// <c>ApostasyPerStep × push</c> of its followers. When the gods together would convert more
-    /// people than are free, their gains are scaled down so the shares never exceed 1.
+    /// people than are free, their gains are scaled down so the shares never exceed 1. The people
+    /// who leave a god go to the other gods in proportion to their pull, or stay without a god in
+    /// proportion to <c>ApostateFreedom</c> (spec §32): conversion between gods.
     /// </summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="beliefs">The settlement's beliefs.</param>
@@ -126,11 +128,33 @@ public static class BeliefModel
         }
 
         var scale = totalGain > free && totalGain > 0f ? Math.Max(0f, free) / totalGain : 1f;
+        var pulls = new float[beliefs.Count];
+        var totalPull = 0f;
+        for (var i = 0; i < beliefs.Count; i++)
+        {
+            pulls[i] = ComputePull(rules, beliefs[i]);
+            totalPull += pulls[i];
+        }
+
         var changes = new float[beliefs.Count];
         for (var i = 0; i < beliefs.Count; i++)
         {
-            var loss = rules.ApostasyPerStep * ComputePush(rules, beliefs[i]) * SimMath.Clamp01(beliefs[i].Adherence);
-            changes[i] = (gains[i] * scale) - Math.Min(loss, SimMath.Clamp01(beliefs[i].Adherence));
+            changes[i] += gains[i] * scale;
+            var loss = Math.Min(rules.ApostasyPerStep * ComputePush(rules, beliefs[i]) * SimMath.Clamp01(beliefs[i].Adherence), SimMath.Clamp01(beliefs[i].Adherence));
+            changes[i] -= loss;
+            var choice = rules.ApostateFreedom + (totalPull - pulls[i]);
+            if (loss <= 0f || choice <= 0f)
+            {
+                continue;
+            }
+
+            for (var j = 0; j < beliefs.Count; j++)
+            {
+                if (j != i)
+                {
+                    changes[j] += loss * pulls[j] / choice;
+                }
+            }
         }
 
         return changes;

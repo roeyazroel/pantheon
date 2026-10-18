@@ -109,6 +109,7 @@ internal static class SettlementWorlds
             },
             Gods = [],
             Creatures = [],
+            WinnerGodId = null,
         };
     }
 

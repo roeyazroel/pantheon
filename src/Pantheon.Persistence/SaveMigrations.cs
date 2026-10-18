@@ -75,6 +75,9 @@ internal static class SaveMigrations
             case 3:
                 UpgradeFrom3(root);
                 break;
+            case 4:
+                UpgradeFrom4(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
@@ -188,6 +191,44 @@ internal static class SaveMigrations
         }
 
         AddNode(world, "Creatures", creatures, fromVersion: 3);
+    }
+
+    /// <summary>
+    /// Version 4 to 5 (Milestone 5): gods gain a personality and the tick since which they dominate,
+    /// and the world a winner. Every god of a version 4 save was a player's, so each gets no
+    /// personality and no dominance, and nobody has won.
+    /// </summary>
+    private static void UpgradeFrom4(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        if (world["Gods"] is JsonArray gods)
+        {
+            foreach (var node in gods)
+            {
+                if (node is JsonObject god)
+                {
+                    AddNode(god, "Personality", "None", fromVersion: 4);
+                    AddNullMember(god, "DominantSinceTick", fromVersion: 4);
+                }
+            }
+        }
+
+        AddNullMember(world, "WinnerGodId", fromVersion: 4);
+    }
+
+    /// <summary>Adds a member, set to null, that the older version could not contain.</summary>
+    private static void AddNullMember(JsonObject target, string name, int fromVersion)
+    {
+        if (target.ContainsKey(name))
+        {
+            throw new SaveFormatException($"A version {fromVersion} save must not contain '{name}'.");
+        }
+
+        target[name] = null;
     }
 
     /// <summary>The settlement where the largest share of the people follow a god, or the first settlement.</summary>

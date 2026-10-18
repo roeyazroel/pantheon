@@ -110,7 +110,8 @@ public sealed class DivinePresentationTests
     public void Overlays_CycleThenTurnOff()
     {
         Assert.Equal(OverlayKind.Influence, OverlayMap.Next(null));
-        Assert.Equal(OverlayKind.Faith, OverlayMap.Next(OverlayKind.Influence));
+        Assert.Equal(OverlayKind.Religion, OverlayMap.Next(OverlayKind.Influence));
+        Assert.Equal(OverlayKind.Faith, OverlayMap.Next(OverlayKind.Religion));
         Assert.Equal(OverlayKind.Food, OverlayMap.Next(OverlayKind.Faith));
         Assert.Null(OverlayMap.Next(OverlayKind.Food));
     }

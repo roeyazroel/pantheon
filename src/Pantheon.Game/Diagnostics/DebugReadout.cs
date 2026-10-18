@@ -44,6 +44,7 @@ public static class DebugReadout
         };
 
         BeliefReadout.AppendGods(lines, snapshot);
+        GodAiReadout.Append(lines, snapshot);
         CreatureReadout.Append(lines, snapshot);
         AppendCursor(lines, world, snapshot.CursorWorldPosition);
         if (snapshot.CursorWorldPosition is { } cursor && world.Regions.TryGetRegionIdAt(cursor.X, cursor.Z, out _))

@@ -29,7 +29,8 @@ public static class OverlayMap
     /// <summary>The overlay after <paramref name="kind"/>, or <c>null</c> after the last one.</summary>
     private static OverlayKind? After(OverlayKind kind) => kind switch
     {
-        OverlayKind.Influence => OverlayKind.Faith,
+        OverlayKind.Influence => OverlayKind.Religion,
+        OverlayKind.Religion => OverlayKind.Faith,
         OverlayKind.Faith => OverlayKind.Food,
         OverlayKind.Food => null,
     };
@@ -52,14 +53,12 @@ public static class OverlayMap
         switch (kind)
         {
             case OverlayKind.Influence:
-                var influence = InfluenceField.Build(rules, world, godId).SampleRegions(grid);
-                var color = view.GodColor(godId);
-                for (var i = 0; i < influence.Length; i++)
-                {
-                    Write(rgba, i, color, influence[i] * view.OverlayOpacity);
-                }
-
-                legend = "Influence: brighter where your god holds more sway";
+                PaintInfluence(world, rules, view, rgba);
+                legend = "Influence: each region in the colour of the strongest god there";
+                break;
+            case OverlayKind.Religion:
+                PaintReligion(world, view, rgba);
+                legend = "Religion: each settlement's lands in the colour of the god most follow (grey: no god)";
                 break;
             case OverlayKind.Faith:
                 PaintTerritories(world, rgba, view.OverlayOpacity, s => BeliefModel.Find(s, godId)?.Faith ?? 0f);
@@ -76,21 +75,56 @@ public static class OverlayMap
         return new OverlayImage(grid.Columns, grid.Rows, rgba, string.Create(CultureInfo.InvariantCulture, $"{kind} overlay - {legend}"));
     }
 
+    /// <summary>Colours each region with the god of the strongest influence there, opacity by that influence.</summary>
+    private static void PaintInfluence(WorldState world, DivineRules rules, DivineViewSettings view, byte[] rgba)
+    {
+        var strongest = new float[world.Regions.Cells.Count];
+        foreach (var god in world.Gods)
+        {
+            var influence = InfluenceField.Build(rules, world, god.Id).SampleRegions(world.Regions);
+            var color = view.GodColor(god.Id);
+            for (var i = 0; i < influence.Length; i++)
+            {
+                if (influence[i] > strongest[i])
+                {
+                    strongest[i] = influence[i];
+                    Write(rgba, i, color, influence[i] * view.OverlayOpacity);
+                }
+            }
+        }
+    }
+
+    /// <summary>Colours each settlement's lands with its main god's colour, opacity by that god's share.</summary>
+    private static void PaintReligion(WorldState world, DivineViewSettings view, byte[] rgba)
+    {
+        foreach (var settlement in world.Settlements)
+        {
+            var main = SettlementLabel.MainBelief(settlement);
+            var color = main is null ? view.UnaffiliatedColor : view.GodColor(main.GodId);
+            var share = main is null ? 0.5f : 0.35f + (0.65f * main.Adherence);
+            PaintTerritory(world.Regions, settlement.RegionId, rgba, color, share * view.OverlayOpacity);
+        }
+    }
+
+    /// <summary>Colours the lands within the territory radius of a region.</summary>
+    private static void PaintTerritory(RegionGrid grid, int regionId, byte[] rgba, RgbColor color, float alpha)
+    {
+        var (column, row) = grid.GetCoordinates(regionId);
+        for (var r = Math.Max(0, row - TerritoryRadius); r <= Math.Min(grid.Rows - 1, row + TerritoryRadius); r++)
+        {
+            for (var c = Math.Max(0, column - TerritoryRadius); c <= Math.Min(grid.Columns - 1, column + TerritoryRadius); c++)
+            {
+                Write(rgba, (r * grid.Columns) + c, color, alpha);
+            }
+        }
+    }
+
     /// <summary>Colours each settlement's lands on a red-to-green ramp by a value of the settlement.</summary>
     private static void PaintTerritories(WorldState world, byte[] rgba, float opacity, Func<Domain.Settlements.SettlementState, float> value)
     {
-        var grid = world.Regions;
         foreach (var settlement in world.Settlements)
         {
-            var color = Ramp(value(settlement));
-            var (column, row) = grid.GetCoordinates(settlement.RegionId);
-            for (var r = Math.Max(0, row - TerritoryRadius); r <= Math.Min(grid.Rows - 1, row + TerritoryRadius); r++)
-            {
-                for (var c = Math.Max(0, column - TerritoryRadius); c <= Math.Min(grid.Columns - 1, column + TerritoryRadius); c++)
-                {
-                    Write(rgba, (r * grid.Columns) + c, color, opacity);
-                }
-            }
+            PaintTerritory(world.Regions, settlement.RegionId, rgba, Ramp(value(settlement)), opacity);
         }
     }
 

@@ -34,6 +34,9 @@ public static class ContentJson
     /// <summary>File name of the Creature rules.</summary>
     public const string CreaturesFileName = "creatures.json";
 
+    /// <summary>File name of the god AI rules.</summary>
+    public const string GodAiFileName = "god_ai.json";
+
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
     /// <param name="json">File text.</param>
@@ -88,4 +91,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The Creature rules.</returns>
     public static CreatureRules ParseCreatures(string json) => Parse<CreatureRules>(json, CreaturesFileName);
+
+    /// <summary>Parses <c>god_ai.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The god AI rules.</returns>
+    public static GodAiRules ParseGodAi(string json) => Parse<GodAiRules>(json, GodAiFileName);
 }

@@ -36,7 +36,8 @@ public sealed class CreaturePresenter
     /// <param name="world">Current world.</param>
     /// <param name="delta">Frame time in seconds.</param>
     /// <param name="simulationRunning">Whether the simulation clock is running.</param>
-    public void Sync(WorldState world, float delta, bool simulationRunning)
+    /// <param name="localGodId">The player's god, whose Creature's label shows no owner.</param>
+    public void Sync(WorldState world, float delta, bool simulationRunning, int? localGodId)
     {
         if (_terrain is null)
         {
@@ -47,7 +48,8 @@ public sealed class CreaturePresenter
         {
             if (!_views.TryGetValue(creature.Id, out var view))
             {
-                view = new CreatureView(_parent, creature.Id, _view.GodColor(creature.GodId).ToGodot());
+                var owner = creature.GodId == localGodId ? string.Empty : world.Gods.Find(g => g.Id == creature.GodId)?.Name ?? string.Empty;
+                view = new CreatureView(_parent, creature.Id, _view.GodColor(creature.GodId).ToGodot(), owner);
                 _views[creature.Id] = view;
             }
 

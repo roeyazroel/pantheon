@@ -7,6 +7,7 @@ using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
 using Pantheon.Game.Population;
 using Pantheon.Simulation.Creatures;
+using Pantheon.Simulation.Gods;
 
 namespace Pantheon.Game.Diagnostics;
 
@@ -33,6 +34,9 @@ public sealed record DebugSnapshot
 
     /// <summary>The local player's Creature, whose options are listed.</summary>
     public int? LocalCreatureId { get; init; }
+
+    /// <summary>Each AI god's candidate actions now, best first, by god id.</summary>
+    public IReadOnlyList<(int GodId, IReadOnlyList<AiCandidate> Candidates)> GodAiCandidates { get; init; } = [];
 
     /// <summary>The local Creature's options now, best first.</summary>
     public IReadOnlyList<CreatureOption> CreatureOptions { get; init; } = [];

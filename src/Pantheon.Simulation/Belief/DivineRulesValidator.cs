@@ -34,6 +34,9 @@ public static class DivineRulesValidator
             (rules.InfluenceStrength, nameof(rules.InfluenceStrength)),
             (rules.WitnessRadius, nameof(rules.WitnessRadius)),
             (rules.CreatureInfluenceReach, nameof(rules.CreatureInfluenceReach)),
+            (rules.ApostateFreedom, nameof(rules.ApostateFreedom)),
+            (rules.ContestedCostFactor, nameof(rules.ContestedCostFactor)),
+            (rules.VictorySeconds, nameof(rules.VictorySeconds)),
             (rules.SettlementRadius, nameof(rules.SettlementRadius)),
             (rules.WeakInfluenceCostFactor, nameof(rules.WeakInfluenceCostFactor)),
         })
@@ -61,6 +64,8 @@ public static class DivineRulesValidator
             (rules.ForgottenFaith, nameof(rules.ForgottenFaith)),
             (rules.GratitudeFloor, nameof(rules.GratitudeFloor)),
             (rules.CreatureInfluenceStrength, nameof(rules.CreatureInfluenceStrength)),
+            (rules.RivalMiracleDoubt, nameof(rules.RivalMiracleDoubt)),
+            (rules.VictoryShare, nameof(rules.VictoryShare)),
             (rules.BlessingDecayPerStep, nameof(rules.BlessingDecayPerStep)),
         })
         {

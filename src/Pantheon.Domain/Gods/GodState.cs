@@ -17,11 +17,17 @@ public sealed class GodState
     /// <summary>Whether a player or the AI decides the god's actions.</summary>
     public required GodController Controller { get; init; }
 
+    /// <summary>The AI's strategic personality; <see cref="GodPersonality.None"/> for a player.</summary>
+    public required GodPersonality Personality { get; init; }
+
     /// <summary>Divine Power available to spend on miracles (spec §9).</summary>
     public required float DivinePower { get; set; }
 
     /// <summary>Highest rank reached; it never falls.</summary>
     public required DivineRank Rank { get; set; }
+
+    /// <summary>Tick from which the god has held the victory share of the world's belief without a break, if it holds it now.</summary>
+    public required long? DominantSinceTick { get; set; }
 
     /// <summary>The god's Creature, if it has one.</summary>
     public required int? CreatureId { get; init; }

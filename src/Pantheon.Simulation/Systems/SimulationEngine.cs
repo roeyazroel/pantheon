@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
+using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
+using Pantheon.Simulation.Gods;
+using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Settlements;
 
@@ -55,8 +58,38 @@ public sealed class SimulationEngine
         _systems = [CreateSettlementStep(settlementRules), CreateBeliefStep(divineRules, settlementRules), Creatures];
     }
 
+    /// <summary>
+    /// Creates the full game pipeline (ADR-011): the settlement step, the belief step and the victory
+    /// check on their intervals, then every Creature every tick, then the AI gods' strategic
+    /// evaluations on theirs. AI gods act through the same miracle and Creature authorities as a
+    /// player.
+    /// </summary>
+    /// <param name="settlementRules">Tuning of the statistical settlement model.</param>
+    /// <param name="divineRules">Tuning of belief, worship and Divine Power.</param>
+    /// <param name="creatureRules">Tuning of Creatures.</param>
+    /// <param name="godAiRules">Tuning of the gods' utility AI.</param>
+    /// <param name="miracles">The miracles the AI may cast.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles)
+    {
+        Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules);
+        var caster = new MiracleCaster(divineRules, settlementRules, miracles);
+        var authority = new CreatureAuthority(creatureRules, Creatures.Brain);
+        Gods = new GodAiSystem(new GodAi(godAiRules, divineRules, miracles, caster, authority, creatureRules), godAiRules.EvaluationIntervalTicks);
+        _systems =
+        [
+            CreateSettlementStep(settlementRules),
+            CreateBeliefStep(divineRules, settlementRules),
+            new IntervalSystem(new VictorySystem(divineRules), divineRules.StepIntervalTicks),
+            Creatures,
+            Gods,
+        ];
+    }
+
     /// <summary>The Creature system of the game's pipeline, or <c>null</c> when the engine has none.</summary>
     public CreatureSystem? Creatures { get; }
+
+    /// <summary>The AI gods' system of the full pipeline, or <c>null</c> when the engine has none.</summary>
+    public GodAiSystem? Gods { get; }
 
     /// <summary>Creates an engine with an explicit system order.</summary>
     /// <param name="systems">Systems, in the order they run each tick.</param>

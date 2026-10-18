@@ -56,13 +56,13 @@
       "Description": "Strikes the target. People who see it fear you; people it strikes die.",
       "Domain": "Storm",
       "Scale": "Minor",
-      "PowerCost": 60.0,
-      "CooldownTicks": 100,
+      "PowerCost": 70.0,
+      "CooldownTicks": 200,
       "Radius": 25.0,
       "InfluenceRequirement": 0.1,
       "MinimumRank": "MinorSpirit",
       "Effects": [ { "Kind": "Smite", "Amount": 3.0 } ],
-      "Witness": { "Faith": 0.2, "Love": -0.12, "Fear": 0.35, "Doubt": -0.2 },
+      "Witness": { "Faith": 0.15, "Love": -0.2, "Fear": 0.3, "Doubt": 0.05 },
       "Gratitude": "None"
     },
     {

@@ -25,7 +25,7 @@
   "LoveFromComfort": 0.004,
   "LoveDecayPerStep": 0.002,
   "LoveLossFromHardship": 0.01,
-  "FearDecayPerStep": 0.006,
+  "FearDecayPerStep": 0.012,
   "SilenceDoubt": 0.25,
   "DoubtDriftPerStep": 0.004,
   "DoubtFromHardship": 0.02,
@@ -37,11 +37,13 @@
   "ConversionPerStep": 0.05,
   "BaseConversion": 0.3,
   "LoveConversion": 0.5,
-  "FearConversion": 0.9,
+  "FearConversion": 0.7,
   "ApostasyPerStep": 0.04,
   "BaseApostasy": 0.5,
-  "FearFragility": 1.0,
+  "FearFragility": 1.5,
   "LoveLoyalty": 0.6,
+  // People who leave a god follow another god in proportion to its pull, or no god in proportion to this.
+  "ApostateFreedom": 0.3,
   "ForgottenFaith": 0.01,
 
   // Influence: each settlement with followers reaches InfluenceBaseRadius + InfluenceRadiusPerSqrtFollower x
@@ -59,7 +61,15 @@
   "CreatureInfluenceReach": 220.0,
   "SettlementRadius": 60.0,
   "WeakInfluenceCostFactor": 1.0,
-  "GratitudeFloor": 0.25,
+  "GratitudeFloor": 0.4,
+  // A miracle plants doubt about the other gods its witnesses follow; a rival's stronger influence at the
+  // target raises the cost by ContestedCostFactor x (rival influence - own influence).
+  "RivalMiracleDoubt": 0.06,
+  "ContestedCostFactor": 1.0,
+
+  // Victory (spec section 115): hold VictoryShare of all followers for VictorySeconds without a break.
+  "VictoryShare": 0.6,
+  "VictorySeconds": 600.0,
   "BlessingDecayPerStep": 0.008,
 
   // Followers needed for each rank (spec section 13). A god never loses a rank.

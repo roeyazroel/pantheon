@@ -30,13 +30,16 @@ internal sealed class CreatureView
     private float _flash;
     private Color _flashColor;
     private bool _placed;
+    private string _owner = string.Empty;
 
     /// <summary>Creates the Creature's nodes under a parent.</summary>
     /// <param name="parent">Node that holds the Creatures.</param>
     /// <param name="creatureId">The Creature's id.</param>
     /// <param name="godColor">Its god's colour.</param>
-    public CreatureView(Node3D parent, int creatureId, Color godColor)
+    /// <param name="owner">Its god's name, shown for rivals' Creatures; empty for the player's.</param>
+    public CreatureView(Node3D parent, int creatureId, Color godColor, string owner)
     {
+        _owner = owner;
         _root = new Node3D { Name = "Creature_" + creatureId };
         parent.AddChild(_root);
         _pose = new Node3D { Name = "Pose" };
@@ -107,7 +110,8 @@ internal sealed class CreatureView
         _root.Scale = new Vector3(scale, scale, scale);
         Pose(creature.Activity, moved / Math.Max(delta, 1e-3f));
         UpdateFlash(delta);
-        var text = $"{creature.Name}\n{CreatureText.DescribeActivity(creature, world)}";
+        var title = _owner.Length > 0 ? $"{creature.Name} ({_owner})" : creature.Name;
+        var text = $"{title}\n{CreatureText.DescribeActivity(creature, world)}";
         if (_label.Text != text)
         {
             _label.Text = text;

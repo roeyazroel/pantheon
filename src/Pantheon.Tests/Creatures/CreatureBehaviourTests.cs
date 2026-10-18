@@ -217,6 +217,54 @@ public sealed class CreatureBehaviourTests
         Assert.NotEmpty(first.Creatures[0].Memories);
     }
 
+    [Fact]
+    public void DesperateCreature_StopsWaitingWhereItWasSent()
+    {
+        var (world, creature) = CreatureWorlds.Create(200f);
+        Assert.True(Brain.Command(world, creature, creature.Position with { X = creature.Position.X + 1f }));
+        Engine.Run(world, 5);
+        Assert.Equal(CreaturePhase.Performing, creature.Activity.Phase);
+
+        creature.Needs.Hunger = 0.95f;
+        Engine.Step(world);
+
+        Assert.Equal(CreaturePhase.Deciding, creature.Activity.Phase);
+    }
+
+    [Fact]
+    public void AiGod_DoesNotSendAHungryCreature()
+    {
+        var (world, creature) = CreatureWorlds.Create(200f, 900f);
+        var god = world.Gods[0];
+        var ai = new Pantheon.Simulation.Gods.GodAi(
+            RivalWorlds.AiRules,
+            DivineWorlds.Rules,
+            DivineWorlds.Miracles,
+            new Pantheon.Simulation.Miracles.MiracleCaster(DivineWorlds.Rules, SettlementWorlds.Rules, DivineWorlds.Miracles),
+            new CreatureAuthority(CreatureWorlds.Rules, Brain),
+            CreatureWorlds.Rules);
+        var zealot = DivineWorlds.God(god.Id, god.Name, Pantheon.Domain.Gods.GodController.Ai, Pantheon.Domain.Gods.GodPersonality.Zealot, 0f);
+        world.Gods[0] = new Pantheon.Domain.Gods.GodState
+        {
+            Id = zealot.Id,
+            Name = zealot.Name,
+            Controller = zealot.Controller,
+            Personality = zealot.Personality,
+            DivinePower = 0f,
+            Rank = zealot.Rank,
+            DominantSinceTick = null,
+            CreatureId = creature.Id,
+            Cooldowns = [],
+        };
+        creature.Needs.Hunger = 0f;
+        creature.Needs.Fatigue = 0f;
+
+        Assert.Contains(ai.Evaluate(world, world.Gods[0]), c => c.Kind == Pantheon.Simulation.Gods.AiActionKind.SendCreature);
+
+        creature.Needs.Hunger = 0.9f;
+        Assert.DoesNotContain(ai.Evaluate(world, world.Gods[0]), c => c.Kind == Pantheon.Simulation.Gods.AiActionKind.SendCreature);
+    }
+
     /// <summary>Starts an action at the Creature's position and runs it to completion.</summary>
     private static List<WorldEvent> Perform(WorldState world, CreatureState creature, CreatureAction action, CreatureSituation situation, int? settlementId)
     {

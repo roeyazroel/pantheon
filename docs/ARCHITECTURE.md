@@ -26,7 +26,8 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
 8. **Commands go through an authority.** A player's intent (casting a miracle, rewarding,
    punishing or sending the Creature) is a request that `MiracleCaster` or `CreatureAuthority`
    checks against the world before anything changes (spec §73, ADR-009, ADR-010). `GameSession` is
-   the local authority; a multiplayer host will run the same checks.
+   the local authority; a multiplayer host will run the same checks. AI gods send the same
+   requests through the same authorities (ADR-011).
 
 ## Repository layout
 
@@ -40,7 +41,7 @@ game/                         Godot 4.7.2 project (res://)
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
   Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                              creatures.json (simulation); settlement_view.json, biome_palette.json,
+                              creatures.json, god_ai.json (simulation); settlement_view.json, biome_palette.json,
                               divine_view.json (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
@@ -49,7 +50,7 @@ src/
   Pantheon.Domain/            State and content contracts: World, Ecology, Settlements, Gods, Belief, Miracles,
                               Creatures, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Navigation, Systems, SimulationEngine
+                              Creatures, Navigation, Gods (AI), Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -109,7 +110,8 @@ files and compiled assemblies and fails when either rule is broken.
 ### Domain (`Pantheon.Domain`)
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
-  (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods` and `Creatures`.
+  (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures` and `WinnerGodId`
+  (once a god has won, spec §115).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -121,8 +123,10 @@ files and compiled assemblies and fails when either rule is broken.
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
   follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt` (0..1).
   Followers are `Population × Adherence` and are never stored (ADR-009).
-- `GodState`: `Id`, `Name`, `Controller` (Human or Ai), `DivinePower`, `Rank` (never falls),
-  `CreatureId` and `Cooldowns`. Followers and influence are derived from the beliefs.
+- `GodState`: `Id`, `Name`, `Controller` (Human or Ai), `Personality` (`None` for players;
+  Guardian, Tyrant, Opportunist, Zealot or NatureKeeper for AI gods), `DivinePower`, `Rank`
+  (never falls), `DominantSinceTick` (while it holds the victory share), `CreatureId` and
+  `Cooldowns`. Followers and influence are derived from the beliefs.
 - `CreatureState` (ADR-010): a Tier 3 entity saved whole: position and heading, level, experience,
   health, loyalty, morality, `Needs` (hunger, fatigue, boredom), `Personality` (kindness,
   aggression, laziness, curiosity), `Activity` (action, situation, phase, target, path, ticks
@@ -136,7 +140,8 @@ files and compiled assemblies and fails when either rule is broken.
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
   `MiracleCatalog` and `MiracleDefinition` (`miracles.json`), `PantheonSetup` (the gods of a
-  new world and their Creatures' names, `gods.json`) and `CreatureRules` (`creatures.json`).
+  new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
+  (`creatures.json`) and `GodAiRules` with one `GodProfile` per personality (`god_ai.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -174,16 +179,19 @@ files and compiled assemblies and fails when either rule is broken.
   to the world), `CreatureSystem` (the per-tick state machine), `CreatureAuthority` (rewards,
   punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
+- `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
+  `GodAiSystem`. `Belief/VictorySystem` tracks dominance and victory.
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-- `SimulationEngine.Step(WorldState, events)` runs the systems in order (the settlement step and
-  the belief step, each in an `IntervalSystem`, then the Creature system every tick) with a
+- `SimulationEngine.Step(WorldState, events)` runs the systems in order (the settlement step, the
+  belief step and the victory check, each in an `IntervalSystem`, then the Creature system every
+  tick, then the AI gods every `EvaluationIntervalTicks`) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
   the RNG state back and increments `Tick`.
 - `Terrain/TerrainRaycaster`: ray against the heightfield (used for cursor picking).
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 4, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 5, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -193,7 +201,8 @@ files and compiled assemblies and fails when either rule is broken.
   (Ilyra, 100 Divine Power) followed by 60% of the first settlement, empty beliefs elsewhere, no
   blessing on any region and founding settings for one settlement. Version 3 → 4 gives every god
   the Milestone 4 newborn Creature, Bramble, at the settlement where most of the people follow
-  it. A missing, unsupported or newer version raises `SaveFormatException` with a clear message.
+  it. Version 4 → 5 gives every god no personality and no dominance, and the world no winner. A
+  missing, unsupported or newer version raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
   and blessing in 0..1, god ids and Divine Power, and beliefs (known gods, one each, values in
@@ -211,7 +220,8 @@ files and compiled assemblies and fails when either rule is broken.
   `CastMiracle` sends the request through `MiracleCaster` with the local god as issuer, and
   `DrainEvents` hands the tick and command events to the client. `CommandCreature` sends the
   local Creature's commands through `CreatureAuthority`; `FindJudgedAction` and
-  `PreviewCreatureOptions` feed the HUD card and the debug view.
+  `PreviewCreatureOptions` feed the HUD card and the debug view, and `PreviewGodAi` the god AI
+  view.
   `StepOneTick` runs one tick through the same engine call as the scheduler; `RunTicks` and
   `StepToNextSettlementStep` run several. `SimulationSeconds` is the simulation time including
   the scheduler's progress towards the next tick, which drives the citizens' routines.
@@ -241,13 +251,15 @@ files and compiled assemblies and fails when either rule is broken.
 - `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
   target hint and the Creature card (level, activity, needs, loyalty, morality, what feedback would
-  judge). `Divine/DivineText` words ranks and cast verdicts; `Creatures/CreatureText` words
+  judge), the rival gods and the race for victory. `Divine/DivineText` words ranks, personalities,
+  clocks and cast verdicts; `Creatures/CreatureText` words
   Creature activities and command outcomes.
 - `Alerts/AlertFeed` turns events into alerts for the local player (§59): only those about the
   player's god or followers, never the same alert twice within 30 simulated seconds, the most
   urgent kept when full.
-- `Presentation/OverlayMap` builds the map overlays (§58): influence (the god's colour, opacity by
-  influence), faith and food (each settlement's lands on a red-to-green ramp).
+- `Presentation/OverlayMap` builds the map overlays (§58): influence (each region in the colour of
+  the strongest god, opacity by its influence), religion (each settlement's lands in its main god's
+  colour), faith and food (each settlement's lands on a red-to-green ramp).
   `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
   looks. `SettlementLabel` adds the main god's share; `SettlementPicker` finds the settlement
   nearest a point.
@@ -543,6 +555,32 @@ flowchart LR
     Deeds --> Villages
 ```
 
+## Rival gods
+
+ADR-011 records the decisions, and the Milestone 5 plan
+([.docs/milestone-5-rival-god.md](../.docs/milestone-5-rival-god.md)) has the goal formulas and
+the measured contests.
+
+- **Homes** are spread out: the first god takes the best site, and each later god takes the free
+  settlement furthest from the homes already taken.
+- **The god AI** (`GodAi`, every 3 s) scores every allowed miracle on every settlement, sending its
+  Creature, and waiting. A cast's value is the sum over the settlements it reaches of the
+  personality's goals:
+  - protect followers in need;
+  - defend followers being courted;
+  - convert others, more in hardship or doubt;
+  - bless land;
+  - intimidate rivals' followers.
+
+  Utility is value × (1 − thrift × cost / power). The best candidate (plus jitter) goes through
+  the authorities as the god itself, and the god then rewards or punishes its Creature's latest
+  deed by its personality. Candidates keep their reasons for the debug view.
+- **Competition.** People leaving a god follow the others by their pull, or no god by
+  `ApostateFreedom`. A miracle plants doubt about the other gods its witnesses follow. Casting
+  under a stronger rival's influence costs more.
+- **Victory** (`VictorySystem`): 60% of all followers held for 600 s wins (`WinnerGodId`,
+  `VictoryAchieved`), and the world goes on.
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -580,8 +618,10 @@ the client.
 - The F1 panel's Creature view (`CreatureReadout`, §106) shows its level, health, loyalty,
   morality and position, its activity, needs and personality, its best options with their
   utilities, its learned preferences and its latest memories.
+- The F1 panel's god AI view (`GodAiReadout`, §106) shows each AI god's personality, its goal now
+  (its best candidate) and its top three candidates with utilities and reasons.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
-- O cycles the player map overlays (influence, faith, food), which double as debug views.
+- O cycles the player map overlays (influence, religion, faith, food), which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
   runs n ticks before the first frame and `--camera-distance=<m>` sets the starting camera
   distance, so a grown settlement can be captured up close. `--divine-power`, `--cast`,
@@ -676,7 +716,9 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   alerts, overlays, the version 2 → 3 migration (against `save-v2.json`, written by the
   Milestone 2 build) and several settlements. Since Milestone 4 it covers the Creature's
   learning, brain, deeds, banishment, commands and navigation, and the version 3 → 4 migration
-  (against `save-v3.json`, written by the Milestone 3 build). The tests load the shipped `game/Data/*.json`;
+  (against `save-v3.json`, written by the Milestone 3 build). Since Milestone 5 it covers conversion
+  between gods, contested costs, rival doubt, the god AI's choices for each personality, dominance
+  and victory, and the version 4 → 5 migration (against `save-v4.json`). The tests load the shipped `game/Data/*.json`;
   rule tests pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`) so retuning
   the data does not change their meaning.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
@@ -696,7 +738,7 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   `SaveMigrations` step from the previous version, tested against a save written by the
   previous build.
 - The step, the layout, the tiers and the views iterate over every settlement, and world
-  generation founds eight. The belief rules already share each settlement's free share between
-  gods, so a rival god (Milestone 5) adds AI decisions, not new belief rules.
+  generation founds eight. More gods (Milestone 9) are more entries in `gods.json`; the AI, belief
+  and victory rules already handle any number.
 - Tier 3 adds agents with effects and promotion and demotion that write back to the
   aggregates; the milestone that adds it amends or supersedes ADR-008.

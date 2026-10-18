@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.World;
 using Pantheon.Game.Creatures;
@@ -85,7 +86,70 @@ public static class HudReadout
             TargetValid = valid,
             TargetRadius = selected?.Radius ?? 0f,
             Creature = BuildCreatureCard(session),
+            Rivals = BuildRivals(session.World, god.Id),
+            Contest = DescribeContest(session, god, out var favours),
+            ContestFavoursPlayer = favours,
         };
+    }
+
+    /// <summary>One line per other god.</summary>
+    private static IReadOnlyList<string> BuildRivals(WorldState world, int localGodId)
+    {
+        var lines = new List<string>();
+        foreach (var rival in world.Gods)
+        {
+            if (rival.Id == localGodId)
+            {
+                continue;
+            }
+
+            var personality = DivineText.Personality(rival.Personality);
+            lines.Add(Format(
+                "{0}{1}: {2} followers ({3:0%})",
+                rival.Name,
+                personality.Length > 0 ? " the " + personality : string.Empty,
+                GodStanding.CountFollowers(world, rival.Id),
+                VictorySystem.ShareOf(world, rival.Id)));
+        }
+
+        return lines;
+    }
+
+    /// <summary>The race for victory, from the player's side.</summary>
+    private static string? DescribeContest(GameSession session, GodState local, out bool favoursPlayer)
+    {
+        var world = session.World;
+        favoursPlayer = false;
+        if (world.Gods.Count < 2)
+        {
+            return null;
+        }
+
+        var rules = session.Content.DivineRules;
+        if (world.WinnerGodId is { } winner)
+        {
+            favoursPlayer = winner == local.Id;
+            return favoursPlayer ? "You have won. The world goes on." : Format("{0} has won. The world goes on.", GodStanding.Find(world, winner)?.Name);
+        }
+
+        foreach (var god in world.Gods)
+        {
+            if (god.DominantSinceTick is { } since)
+            {
+                var left = (VictorySystem.TicksToWin(rules) - (world.Tick - since)) / session.Scheduler.TicksPerSecond;
+                favoursPlayer = god.Id == local.Id;
+                return favoursPlayer
+                    ? Format("You hold {0:0%} of all belief: you win in {1}", VictorySystem.ShareOf(world, god.Id), DivineText.Clock(left))
+                    : Format("{0} holds {1:0%} of all belief: it wins in {2}", god.Name, VictorySystem.ShareOf(world, god.Id), DivineText.Clock(left));
+            }
+        }
+
+        favoursPlayer = true;
+        return Format(
+            "You hold {0:0%} of all belief; {1:0%} for {2} wins",
+            VictorySystem.ShareOf(world, local.Id),
+            rules.VictoryShare,
+            DivineText.Clock(rules.VictorySeconds));
     }
 
     /// <summary>The Creature's card: level, activity, needs, loyalty and what feedback would judge.</summary>

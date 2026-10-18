@@ -88,6 +88,13 @@ public sealed record DivineRules
     /// <summary>Share of the push that full Love holds back: loving followers stay.</summary>
     public required float LoveLoyalty { get; init; }
 
+    /// <summary>
+    /// Pull of following no god, against which the gods' pulls compete for the people who leave a
+    /// god: they follow another god in proportion to its pull and stay without a god in proportion
+    /// to this (spec §32: conversion between gods).
+    /// </summary>
+    public required float ApostateFreedom { get; init; }
+
     /// <summary>Faith below which a belief without followers is forgotten and removed.</summary>
     public required float ForgottenFaith { get; init; }
 
@@ -114,6 +121,18 @@ public sealed record DivineRules
 
     /// <summary>Extra cost share of a miracle cast with no influence; costs scale by <c>1 + factor × (1 − influence)</c>.</summary>
     public required float WeakInfluenceCostFactor { get; init; }
+
+    /// <summary>Doubt that a rival god's miracle adds to the followers of every other god who see it (scaled by closeness).</summary>
+    public required float RivalMiracleDoubt { get; init; }
+
+    /// <summary>Extra cost share per unit by which the strongest rival's influence at the target exceeds the caster's (spec §10).</summary>
+    public required float ContestedCostFactor { get; init; }
+
+    /// <summary>Share of the world's followers a god must hold to dominate (spec §115: 60%).</summary>
+    public required float VictoryShare { get; init; }
+
+    /// <summary>Simulated seconds of unbroken dominance that win the game (spec §115: ten minutes).</summary>
+    public required float VictorySeconds { get; init; }
 
     /// <summary>Share of a miracle's Love that people get even when they did not need it.</summary>
     public required float GratitudeFloor { get; init; }
