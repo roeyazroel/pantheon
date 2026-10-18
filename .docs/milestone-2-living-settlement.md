@@ -35,8 +35,9 @@ one living settlement, so those items are listed under Tasks → Future: foundin
 need more than one settlement, worship needs belief (Milestone 3) and gathering needs ecology.
 The owner's complete specification, added after this milestone as `docs/PANTHEON_SPEC.md`, lists
 exactly this milestone's deliverables in §117: aggregate population, food, housing, health and
-visible representative citizens. The code iterates over every settlement, so a second settlement
-needs no rework of the model, the views or the saves.
+visible representative citizens. The model, the views and the saves handle a list of
+settlements, so a second settlement should need no rework of them, but nothing has run with two
+yet: world generation founds one and no test uses more.
 
 **Plan pattern: Non-TDD (architecture first).** The architecture follows from ADR-004 and
 ADR-006 and from this milestone's brief, so design drives implementation and the tests are
@@ -51,6 +52,8 @@ and full tiers effects of their own.
 
 **Status:** implemented and verified; see Test Plan → Verification results. In review in
 [#2](https://github.com/roeyazroel/pantheon/pull/2).
+[docs/PROGRESS_SUMMARY.md](../docs/PROGRESS_SUMMARY.md) maps Milestones 1 and 2 against the
+specification.
 
 ## Architecture
 
@@ -691,6 +694,13 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   so. The README, AGENTS.md, `docs/ARCHITECTURE.md`, this plan, the reserved
   `src/Pantheon.Domain` folders, the ADR-003 status line and two code comments now use the
   specification's numbers.
+- [x] After the milestone: write `docs/PROGRESS_SUMMARY.md`, which maps Milestones 1 and 2
+  against the specification (implemented, partial or not started for each milestone and
+  section), with the ADRs, test counts per area (169 after Milestone 1, 331 now), how to run,
+  the known gaps and deviations, and the recommended next steps from Milestone 3. Link it from
+  the README, AGENTS.md (including the definition of done), `docs/GAME_SPEC.md` and
+  `docs/ARCHITECTURE.md`. Two sentences, in this plan's Scope and in the architecture's
+  Extending section, now say that nothing has run with two settlements yet.
 
 ### In Progress
 
@@ -709,7 +719,8 @@ None.
 ## Relevant Files
 
 - `.docs/milestone-2-living-settlement.md`: this plan.
-- `docs/PANTHEON_SPEC.md` (the owner's specification, verbatim), `docs/GAME_SPEC.md`.
+- `docs/PANTHEON_SPEC.md` (the owner's specification, verbatim), `docs/PROGRESS_SUMMARY.md`,
+  `docs/GAME_SPEC.md`.
 - `docs/ADR/ADR-008-settlement-step-and-representative-citizens.md`, `docs/ADR/README.md`,
   `docs/ADR/ADR-004-statistical-population-simulation-with-tiering.md` and
   `docs/ADR/ADR-003-host-authoritative-enet-networking.md` (status lines only).

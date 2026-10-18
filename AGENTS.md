@@ -6,7 +6,8 @@ The owner's complete specification, [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.m
 of truth for what to build and how. Where this file, `docs/GAME_SPEC.md`, `docs/ARCHITECTURE.md`,
 a milestone plan or the code disagrees with it, the specification wins. An accepted ADR still
 changes only through a new ADR, as below. The specification is the owner's document: keep it
-verbatim and do not edit it.
+verbatim and do not edit it. What is built so far, section by section against the
+specification, is in [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md).
 
 The rules below are the specification's coding agent rules (section 134) and are binding. Each
 rule is followed by the conventions that meet it in this repository.
@@ -162,4 +163,5 @@ godot --path game -- --terrain=fallback  # check the fallback renderer
 - The game starts and stays playable with both terrain renderers.
 - New simulation rules have tests, and new systems have debug tooling.
 - The README (controls and options), `docs/ARCHITECTURE.md`, the milestone plan and, for
-  decisions, a new ADR are updated.
+  decisions, a new ADR are updated. When a milestone is finished, so is
+  `docs/PROGRESS_SUMMARY.md`.

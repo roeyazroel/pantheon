@@ -2,9 +2,10 @@
 
 This document describes how the code is organised and the rules that keep the simulation
 independent of the engine. The owner's complete specification,
-[PANTHEON_SPEC.md](PANTHEON_SPEC.md), is the source of truth for the architecture it describes.
-Decisions are recorded in [ADR/](ADR/README.md), and the coding rules every change follows are
-in [AGENTS.md](../AGENTS.md).
+[PANTHEON_SPEC.md](PANTHEON_SPEC.md), is the source of truth for the architecture it describes,
+and [PROGRESS_SUMMARY.md](PROGRESS_SUMMARY.md) maps what is built so far against it. Decisions
+are recorded in [ADR/](ADR/README.md), and the coding rules every change follows are in
+[AGENTS.md](../AGENTS.md).
 
 ## Guiding rules
 
@@ -47,7 +48,8 @@ src/
   Pantheon.Networking/        Reserved for host-authoritative ENet (ADR-003)
   Pantheon.Tests/             xUnit tests (headless)
 tools/                        Maintenance scripts (vendor-terrain3d.sh)
-docs/                         PANTHEON_SPEC.md (the owner's specification), GAME_SPEC.md, ARCHITECTURE.md, ADR/
+docs/                         PANTHEON_SPEC.md (the owner's specification), PROGRESS_SUMMARY.md,
+                              GAME_SPEC.md, ARCHITECTURE.md, ADR/
 .docs/                        Milestone task files (plan / progress contracts)
 ```
 
@@ -503,7 +505,8 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
 - Breaking changes to the save shape bump `WorldSaveSerializer.CurrentSaveVersion` and add a
   `SaveMigrations` step from the previous version, tested against a save written by the
   previous build.
-- More settlements need no rework: the step, the layout, the tiers and the views already
-  iterate over every settlement.
+- The step, the layout, the tiers and the views iterate over every settlement, so more
+  settlements should need no rework there. Nothing has run with two yet: world generation
+  founds one, no test uses more, and the focus key goes to the first.
 - Tier 3 adds agents with effects and promotion and demotion that write back to the
   aggregates; the milestone that adds it amends or supersedes ADR-008.
