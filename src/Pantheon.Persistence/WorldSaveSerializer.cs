@@ -1,0 +1,147 @@
+using System;
+using System.IO;
+using System.Text;
+using System.Text.Json;
+using Pantheon.Domain.World;
+
+namespace Pantheon.Persistence;
+
+/// <summary>
+/// Reads and writes versioned, human-readable JSON saves of <see cref="WorldState"/>.
+/// The version is checked before the rest of the file is read, so newer or malformed saves fail
+/// with a clear <see cref="SaveFormatException"/>.
+/// </summary>
+public static class WorldSaveSerializer
+{
+    /// <summary>Format version written by this build. Bump it, and add a migration, when the save shape changes.</summary>
+    public const int CurrentSaveVersion = 1;
+
+    /// <summary>Oldest format version this build can read.</summary>
+    public const int MinimumSupportedSaveVersion = 1;
+
+    private const string TemporaryFileSuffix = ".tmp";
+
+    private static readonly UTF8Encoding Utf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false);
+
+    /// <summary>Serializes a world into save-file JSON.</summary>
+    /// <param name="world">World to save.</param>
+    /// <returns>Indented JSON whose first member is <c>SaveVersion</c>.</returns>
+    public static string Serialize(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var save = new SaveGame { SaveVersion = CurrentSaveVersion, World = world };
+        return JsonSerializer.Serialize(save, PantheonJson.SaveOptions);
+    }
+
+    /// <summary>Parses save-file JSON back into a world.</summary>
+    /// <param name="json">Save-file text.</param>
+    /// <returns>The loaded world.</returns>
+    /// <exception cref="SaveFormatException">The JSON is malformed, inconsistent or has an unsupported version.</exception>
+    public static WorldState Deserialize(string json)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        EnsureSupportedVersion(ReadSaveVersion(json));
+
+        SaveGame? save;
+        try
+        {
+            save = JsonSerializer.Deserialize<SaveGame>(json, PantheonJson.SaveOptions);
+        }
+        catch (JsonException exception)
+        {
+            throw new SaveFormatException($"The save file is malformed: {exception.Message}", exception);
+        }
+
+        if (save is null)
+        {
+            throw new SaveFormatException("The save file does not contain a save object.");
+        }
+
+        SaveIntegrity.Validate(save.World);
+        return save.World;
+    }
+
+    /// <summary>
+    /// Writes a save file. The JSON goes to a temporary file first and then replaces the target, so
+    /// a crash mid-write never leaves a truncated save behind.
+    /// </summary>
+    /// <param name="world">World to save.</param>
+    /// <param name="path">Destination file path; missing directories are created.</param>
+    public static void SaveToFile(WorldState world, string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var json = Serialize(world);
+
+        var fullPath = Path.GetFullPath(path);
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var temporaryPath = fullPath + TemporaryFileSuffix;
+        File.WriteAllText(temporaryPath, json, Utf8WithoutBom);
+        File.Move(temporaryPath, fullPath, overwrite: true);
+    }
+
+    /// <summary>Reads a save file.</summary>
+    /// <param name="path">Save file path.</param>
+    /// <returns>The loaded world.</returns>
+    /// <exception cref="SaveFormatException">The file content is not a valid save.</exception>
+    /// <exception cref="IOException">The file cannot be read.</exception>
+    public static WorldState LoadFromFile(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        return Deserialize(File.ReadAllText(path, Encoding.UTF8));
+    }
+
+    /// <summary>Reads only the <c>SaveVersion</c> member, without binding the rest of the document.</summary>
+    private static int ReadSaveVersion(string json)
+    {
+        JsonDocument document;
+        try
+        {
+            document = JsonDocument.Parse(json);
+        }
+        catch (JsonException exception)
+        {
+            throw new SaveFormatException($"The save file is not valid JSON: {exception.Message}", exception);
+        }
+
+        using (document)
+        {
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                throw new SaveFormatException("The save file must contain a JSON object.");
+            }
+
+            if (!root.TryGetProperty(nameof(SaveGame.SaveVersion), out var element))
+            {
+                throw new SaveFormatException($"The save file has no {nameof(SaveGame.SaveVersion)}.");
+            }
+
+            if (element.ValueKind != JsonValueKind.Number || !element.TryGetInt32(out var version))
+            {
+                throw new SaveFormatException($"{nameof(SaveGame.SaveVersion)} must be an integer.");
+            }
+
+            return version;
+        }
+    }
+
+    /// <summary>Rejects versions this build cannot read.</summary>
+    private static void EnsureSupportedVersion(int version)
+    {
+        if (version > CurrentSaveVersion)
+        {
+            throw new SaveFormatException(
+                $"The save uses format version {version}, but this build reads versions {MinimumSupportedSaveVersion} to {CurrentSaveVersion}. A newer build of the game is required.");
+        }
+
+        if (version < MinimumSupportedSaveVersion)
+        {
+            throw new SaveFormatException($"Save format version {version} is not supported.");
+        }
+    }
+}

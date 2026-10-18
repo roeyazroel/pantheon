@@ -1,0 +1,18 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+
+  <!-- Godot client (namespace Pantheon.Client). Godot requires this file next to project.godot. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <AssemblyName>Pantheon</AssemblyName>
+    <RootNamespace>Pantheon.Client</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Pantheon.Domain\Pantheon.Domain.csproj" />
+    <ProjectReference Include="..\src\Pantheon.Simulation\Pantheon.Simulation.csproj" />
+    <ProjectReference Include="..\src\Pantheon.Persistence\Pantheon.Persistence.csproj" />
+    <ProjectReference Include="..\src\Pantheon.Game\Pantheon.Game.csproj" />
+  </ItemGroup>
+
+</Project>

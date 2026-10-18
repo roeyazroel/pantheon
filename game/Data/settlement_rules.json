@@ -1,0 +1,11 @@
+{
+  // Statistical settlement model. All rates are per simulation tick (10 ticks per second at x1).
+  "WorkforceShare": 0.5,
+  "FoodPerWorkerPerTick": 0.02,
+  "FoodPerPersonPerTick": 0.004,
+  "FoodStoragePerHousing": 5.0,
+  "SurplusFoodPerPerson": 2.0,
+  "BirthChancePerPersonPerTick": 0.00008,
+  "DeathChancePerPersonPerTick": 0.00003,
+  "StarvationDeathChancePerPersonPerTick": 0.0005
+}

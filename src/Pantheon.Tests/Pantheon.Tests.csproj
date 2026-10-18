@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pantheon.Domain\Pantheon.Domain.csproj" />
+    <ProjectReference Include="..\Pantheon.Simulation\Pantheon.Simulation.csproj" />
+    <ProjectReference Include="..\Pantheon.Persistence\Pantheon.Persistence.csproj" />
+    <ProjectReference Include="..\Pantheon.Game\Pantheon.Game.csproj" />
+  </ItemGroup>
+
+  <!-- Tests run against the shipped content files, not copies. -->
+  <ItemGroup>
+    <None Include="..\..\game\Data\*.json" Link="Data\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

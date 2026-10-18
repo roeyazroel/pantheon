@@ -1,0 +1,20 @@
+# Godot
+.godot/
+*.translation
+mono_crash.*.json
+
+# .NET
+bin/
+obj/
+# Vendored Terrain3D native libraries (ADR-005) are not build output.
+!game/addons/terrain_3d/bin/
+TestResults/
+*.user
+*.suo
+*.DotSettings.user
+.vs/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,73 @@
+using System.Diagnostics;
+using Godot;
+using Pantheon.Client.Presentation.Regions;
+using Pantheon.Client.Presentation.Settlements;
+using Pantheon.Client.Presentation.Terrain;
+using Pantheon.Client.Presentation.Water;
+using Pantheon.Domain.World;
+using Pantheon.Game.Launch;
+using Pantheon.Game.Presentation;
+using Pantheon.Simulation.Terrain;
+
+namespace Pantheon.Client.Presentation;
+
+/// <summary>
+/// Owns every world visual and builds them from <see cref="WorldState"/> (ADR-006): the nodes are
+/// disposable views, recreated by <see cref="Rebuild"/> whenever the world is replaced.
+/// </summary>
+public sealed class WorldPresenter
+{
+    private readonly BiomePalette _palette;
+    private readonly ITerrainPresenter _terrain;
+    private readonly WaterPresenter _water;
+    private readonly SettlementPresenter _settlements;
+    private readonly RegionBoundaryOverlay _regions;
+
+    /// <summary>Creates one child layer per kind of visual under <paramref name="root"/>.</summary>
+    /// <param name="root">Node that holds the world visuals.</param>
+    /// <param name="camera">Rendering camera.</param>
+    /// <param name="palette">Presentation colours.</param>
+    /// <param name="terrainPreference">Terrain renderer preference from the command line.</param>
+    public WorldPresenter(Node3D root, Camera3D camera, BiomePalette palette, TerrainBackendPreference terrainPreference)
+    {
+        _palette = palette;
+        _terrain = TerrainPresenterFactory.Create(terrainPreference, root.AddLayer("Terrain"), camera);
+        _water = new WaterPresenter(root.AddLayer("Water"));
+        _settlements = new SettlementPresenter(root.AddLayer("Settlements"));
+        _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), palette);
+    }
+
+    /// <summary>Name of the active terrain renderer.</summary>
+    public string TerrainBackend => _terrain.BackendName;
+
+    /// <summary>Whether the fallback terrain renderer is active.</summary>
+    public bool TerrainIsFallback => _terrain.IsFallback;
+
+    /// <summary>Whether region boundaries are drawn.</summary>
+    public bool RegionBoundariesVisible
+    {
+        get => _regions.Visible;
+        set => _regions.Visible = value;
+    }
+
+    /// <summary>Discards all world visuals and builds new ones from the state.</summary>
+    /// <param name="world">World to show.</param>
+    /// <param name="terrain">Terrain derived from the world.</param>
+    public void Rebuild(WorldState world, TerrainField terrain)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        _terrain.Build(terrain, _palette);
+        _water.Build(terrain, _palette);
+        _settlements.Build(world, terrain);
+        _regions.Build(world.Regions, terrain);
+        GD.Print($"World visuals for seed {world.Seed} built in {stopwatch.ElapsedMilliseconds} ms ({TerrainBackend}).");
+    }
+
+    /// <summary>Refreshes visuals that follow the simulation, such as settlement labels and huts.</summary>
+    /// <param name="world">Current world.</param>
+    public void Sync(WorldState world) => _settlements.Sync(world);
+
+    /// <summary>Outlines the region under the cursor (only visible while boundaries are shown).</summary>
+    /// <param name="regionId">Region id, or <c>null</c> when the cursor is not over the world.</param>
+    public void SetHoveredRegion(int? regionId) => _regions.SetHighlightedRegion(regionId);
+}
