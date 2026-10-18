@@ -50,6 +50,7 @@ public sealed class SaveMigrationV2Tests
     {
         var expected = ReadFixture();
         Version3Expectations.Apply(expected);
+        Version4Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version2SavePath)));
 
@@ -60,7 +61,7 @@ public sealed class SaveMigrationV2Tests
     public void LoadVersion2_KeepsSimulatingDeterministicallyWithBelief()
     {
         var content = TestContent.Shipped;
-        var engine = new SimulationEngine(content.SettlementRules, content.DivineRules);
+        var engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures);
         var straight = WorldSaveSerializer.LoadFromFile(Version2SavePath);
         var resumed = WorldSaveSerializer.LoadFromFile(Version2SavePath);
 

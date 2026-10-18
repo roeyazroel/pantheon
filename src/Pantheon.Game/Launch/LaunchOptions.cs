@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
 
@@ -30,6 +31,7 @@ public sealed record LaunchOptions
         "focus",
         "debug-panel",
         "select",
+        "judge",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -68,8 +70,14 @@ public sealed record LaunchOptions
     /// <summary>Settlement (1 for the first) the camera starts on and <see cref="CastAtStart"/> targets.</summary>
     public int? FocusSettlement { get; init; }
 
+    /// <summary>Whether the camera starts on the player's Creature (<c>--focus=creature</c>).</summary>
+    public bool FocusCreature { get; init; }
+
     /// <summary>Miracle selected at the start, so a capture shows its targeting ring at the screen centre.</summary>
     public string? SelectMiracle { get; init; }
+
+    /// <summary>Reward or punishment given to the player's Creature on the first frame, so a capture shows the hand's gesture.</summary>
+    public CreatureCommandKind? Judge { get; init; }
 
     /// <summary>Whether the F1 debug panel starts visible.</summary>
     public bool? DebugPanel { get; init; }
@@ -163,9 +171,21 @@ public sealed record LaunchOptions
                     ? options with { Overlay = overlay }
                     : Warn(options, warnings, $"Unknown overlay '{value}'; expected influence, faith or food.");
             case "focus":
+                if (string.Equals(value.Trim(), "creature", StringComparison.OrdinalIgnoreCase))
+                {
+                    return options with { FocusCreature = true };
+                }
+
                 return TryParsePositiveInt(value, out var focus)
                     ? options with { FocusSettlement = focus }
-                    : Warn(options, warnings, $"'--focus' needs a settlement number from 1, got '{value}'.");
+                    : Warn(options, warnings, $"'--focus' needs a settlement number from 1 or 'creature', got '{value}'.");
+            case "judge":
+                return value.Trim().ToLowerInvariant() switch
+                {
+                    "reward" => options with { Judge = CreatureCommandKind.Reward },
+                    "punish" => options with { Judge = CreatureCommandKind.Punish },
+                    _ => Warn(options, warnings, $"'--judge' needs reward or punish, got '{value}'."),
+                };
             case "select":
                 return options with { SelectMiracle = value.Trim() };
             case "debug-panel":

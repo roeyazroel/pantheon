@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
+using Pantheon.Game.Creatures;
 using Pantheon.Game.Divine;
 using Pantheon.Persistence;
 
@@ -144,6 +146,19 @@ public static class SessionCommands
             ? string.Empty
             : string.Join(", ", session.World.Settlements.Where(s => cast.AffectedSettlementIds.Contains(s.Id)).Select(s => s.Name));
         return DivineText.DescribeCast(miracle, check.Cost, names, cast?.Deaths ?? 0);
+    }
+
+    /// <summary>Sends a command to the local player's Creature; the session checks it first.</summary>
+    /// <param name="session">Session to command in.</param>
+    /// <param name="kind">Reward, punish or go to.</param>
+    /// <param name="target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>.</param>
+    /// <returns>Status line.</returns>
+    public static string CommandCreature(GameSession session, CreatureCommandKind kind, GroundPosition target = default)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var name = session.LocalCreature?.Name ?? "Your Creature";
+        var result = session.CommandCreature(kind, target);
+        return CreatureText.DescribeCommand(result, kind, name);
     }
 
     /// <summary>Debug: grants the local player's god <see cref="GrantedPower"/> Divine Power.</summary>

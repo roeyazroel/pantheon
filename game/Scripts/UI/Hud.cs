@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Godot;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
 using Pantheon.Game.Alerts;
 using Pantheon.Game.Hud;
@@ -36,6 +37,14 @@ public partial class Hud : CanvasLayer
     private HBoxContainer _bar = null!;
     private VBoxContainer _alerts = null!;
     private StyleBoxFlat _slotStyle = null!;
+    private PanelContainer _creaturePanel = null!;
+    private Label _creatureTitle = null!;
+    private Label _creatureDoing = null!;
+    private Label _creatureCondition = null!;
+    private Label _creatureTemperament = null!;
+    private Label _creatureJudge = null!;
+    private Button _reward = null!;
+    private Button _punish = null!;
     private StyleBoxFlat _selectedStyle = null!;
 
     /// <summary>The player clicked a miracle button; the id is the miracle, or <c>null</c> to deselect it.</summary>
@@ -43,6 +52,15 @@ public partial class Hud : CanvasLayer
 
     /// <summary>The player clicked an alert that has a place.</summary>
     public event Action<GroundPosition>? AlertClicked;
+
+    /// <summary>The player clicked Reward or Punish on the Creature card.</summary>
+    public event Action<CreatureCommandKind>? CreatureJudged;
+
+    /// <summary>The player clicked Look on the Creature card.</summary>
+    public event Action? CreatureLookClicked;
+
+    /// <summary>The player clicked Send on the Creature card: the next click on the ground sends it there.</summary>
+    public event Action? CreatureSendClicked;
 
     /// <summary>Builds the HUD's controls.</summary>
     public override void _Ready()
@@ -53,6 +71,7 @@ public partial class Hud : CanvasLayer
         BuildTopBar();
         BuildMiracleBar();
         BuildAlerts();
+        BuildCreatureCard();
     }
 
     /// <summary>Shows a new HUD model; controls change only where the text or state changed.</summary>
@@ -67,6 +86,7 @@ public partial class Hud : CanvasLayer
         SetText(_hint, model.TargetHint ?? string.Empty);
         _hint.Modulate = model.TargetValid ? Valid : Invalid;
         ShowSlots(model.Miracles);
+        ShowCreature(model.Creature);
     }
 
     /// <summary>Shows the legend of the map overlay, or hides it.</summary>
@@ -154,6 +174,63 @@ public partial class Hud : CanvasLayer
         _alerts.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight, Control.LayoutPresetMode.Minsize, Margin);
         _alerts.GrowHorizontal = Control.GrowDirection.Begin;
         _alerts.OffsetTop = 56;
+    }
+
+    /// <summary>Left side: the Creature's card with its buttons.</summary>
+    private void BuildCreatureCard()
+    {
+        _creaturePanel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Stop, Visible = false, CustomMinimumSize = new Vector2(330, 0) };
+        _creaturePanel.AddThemeStyleboxOverride("panel", Panel(new Color(0.05f, 0.07f, 0.06f, 0.82f), new Color(0.3f, 0.45f, 0.25f), 1));
+        AddChild(_creaturePanel);
+        _creaturePanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterLeft, Control.LayoutPresetMode.Minsize, Margin);
+        _creaturePanel.GrowVertical = Control.GrowDirection.Both;
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 4);
+        _creaturePanel.AddChild(column);
+        _creatureTitle = AddLabel(column, 17, Gold);
+        _creatureDoing = AddLabel(column, 15, Ink);
+        _creatureCondition = AddLabel(column, 13, Muted);
+        _creatureTemperament = AddLabel(column, 13, Muted);
+        _creatureJudge = AddLabel(column, 13, Valid);
+        _creatureJudge.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 6);
+        column.AddChild(row);
+        _reward = AddCardButton(row, "Reward [Z]", () => CreatureJudged?.Invoke(CreatureCommandKind.Reward));
+        _punish = AddCardButton(row, "Punish [X]", () => CreatureJudged?.Invoke(CreatureCommandKind.Punish));
+        AddCardButton(row, "Look [C]", () => CreatureLookClicked?.Invoke());
+        AddCardButton(row, "Send [V]", () => CreatureSendClicked?.Invoke());
+    }
+
+    /// <summary>Shows the Creature card, or hides it without a Creature.</summary>
+    private void ShowCreature(CreatureCard? card)
+    {
+        _creaturePanel.Visible = card is not null;
+        if (card is null)
+        {
+            return;
+        }
+
+        SetText(_creatureTitle, card.Title);
+        SetText(_creatureDoing, card.Doing);
+        SetText(_creatureCondition, card.Condition);
+        SetText(_creatureTemperament, card.Temperament);
+        SetText(_creatureJudge, card.JudgeHint);
+        _creatureJudge.Modulate = card.CanJudge ? Colors.White : new Color(0.7f, 0.7f, 0.7f);
+        _reward.Disabled = !card.CanJudge;
+        _punish.Disabled = !card.CanJudge;
+        _creatureDoing.Modulate = card.Banished ? Invalid : Colors.White;
+    }
+
+    /// <summary>A small button on the Creature card.</summary>
+    private Button AddCardButton(Container parent, string text, Action pressed)
+    {
+        var button = new Button { Text = text, FocusMode = Control.FocusModeEnum.None };
+        button.AddThemeFontSizeOverride("font_size", 13);
+        button.AddThemeStyleboxOverride("normal", _slotStyle);
+        button.Pressed += pressed;
+        parent.AddChild(button);
+        return button;
     }
 
     /// <summary>Creates, updates or removes the miracle buttons to match the slots.</summary>

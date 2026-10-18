@@ -33,6 +33,7 @@ public static class DivineRulesValidator
             (rules.InfluenceRadiusPerSqrtFollower, nameof(rules.InfluenceRadiusPerSqrtFollower)),
             (rules.InfluenceStrength, nameof(rules.InfluenceStrength)),
             (rules.WitnessRadius, nameof(rules.WitnessRadius)),
+            (rules.CreatureInfluenceReach, nameof(rules.CreatureInfluenceReach)),
             (rules.SettlementRadius, nameof(rules.SettlementRadius)),
             (rules.WeakInfluenceCostFactor, nameof(rules.WeakInfluenceCostFactor)),
         })
@@ -59,6 +60,7 @@ public static class DivineRulesValidator
             (rules.LoveLoyalty, nameof(rules.LoveLoyalty)),
             (rules.ForgottenFaith, nameof(rules.ForgottenFaith)),
             (rules.GratitudeFloor, nameof(rules.GratitudeFloor)),
+            (rules.CreatureInfluenceStrength, nameof(rules.CreatureInfluenceStrength)),
             (rules.BlessingDecayPerStep, nameof(rules.BlessingDecayPerStep)),
         })
         {

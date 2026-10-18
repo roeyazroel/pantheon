@@ -22,6 +22,9 @@ public static class DebugReadout
     /// <summary>Debug tool key hints shown at the bottom of the overlay.</summary>
     public const string DebugHints = "[F1] panel  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F4] +500 power  [F6] spoil food  [F7] settlers";
 
+    /// <summary>Creature key hints shown at the bottom of the overlay.</summary>
+    public const string CreatureHints = "[C] look at the Creature  [Z] reward  [X] punish  [V] send it to the cursor";
+
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
     /// <summary>Builds the overlay content.</summary>
@@ -41,6 +44,7 @@ public static class DebugReadout
         };
 
         BeliefReadout.AppendGods(lines, snapshot);
+        CreatureReadout.Append(lines, snapshot);
         AppendCursor(lines, world, snapshot.CursorWorldPosition);
         if (snapshot.CursorWorldPosition is { } cursor && world.Regions.TryGetRegionIdAt(cursor.X, cursor.Z, out _))
         {
@@ -69,6 +73,7 @@ public static class DebugReadout
 
         lines.Add(CameraHints);
         lines.Add(KeyHints);
+        lines.Add(CreatureHints);
         lines.Add(DebugHints);
         return new DebugPanelModel(lines);
     }
@@ -97,6 +102,18 @@ public static class DebugReadout
                 settlement.Food,
                 SettlementReadout.DescribeTier(crowd?.Tier ?? SimulationTier.Statistical),
                 crowd?.Representatives ?? 0));
+        }
+
+        foreach (var creature in world.Creatures)
+        {
+            parts.Add(Format(
+                "{0}: level {1}, {2}, at ({3:0}, {4:0}), {5} memories",
+                creature.Name,
+                creature.Level,
+                Creatures.CreatureText.DescribeActivity(creature, world),
+                creature.Position.X,
+                creature.Position.Z,
+                creature.Memories.Count));
         }
 
         return string.Join("; ", parts);

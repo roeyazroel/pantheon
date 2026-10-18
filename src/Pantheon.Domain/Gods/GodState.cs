@@ -23,6 +23,9 @@ public sealed class GodState
     /// <summary>Highest rank reached; it never falls.</summary>
     public required DivineRank Rank { get; set; }
 
+    /// <summary>The god's Creature, if it has one.</summary>
+    public required int? CreatureId { get; init; }
+
     /// <summary>Miracles that are cooling down. Entries whose tick has passed may linger until the miracle is cast again.</summary>
     public required List<MiracleCooldown> Cooldowns { get; init; }
 }

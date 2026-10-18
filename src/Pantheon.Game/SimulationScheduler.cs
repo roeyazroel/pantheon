@@ -10,7 +10,7 @@ namespace Pantheon.Game;
 public sealed class SimulationScheduler
 {
     /// <summary>Simulation rate at time scale 1.</summary>
-    public const double DefaultTicksPerSecond = 10.0;
+    public const double DefaultTicksPerSecond = Pantheon.Domain.World.SimulationTime.TicksPerSecond;
 
     /// <summary>Tick cap per update. It covers time scale 16 down to about 5 frames per second.</summary>
     public const int DefaultMaxTicksPerUpdate = 32;

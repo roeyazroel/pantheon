@@ -1,4 +1,5 @@
 using System;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.World;
 using Pantheon.Domain.World.Generation;
@@ -22,19 +23,20 @@ public static class WorldGenerator
     /// <returns>The new world state and its terrain.</returns>
     public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings) => Generate(seed, settings, pantheon: null);
 
-    /// <summary>Generates terrain, regions, the starting settlements and the gods.</summary>
+    /// <summary>Generates terrain, regions, the starting settlements, the gods and their Creatures.</summary>
     /// <param name="seed">World seed.</param>
     /// <param name="settings">Data-driven generation settings; they are stored in the state.</param>
     /// <param name="pantheon">The gods to create, each followed in its own home settlement; <c>null</c> for none.</param>
+    /// <param name="creatureRules">Creature rules, so each god's Creature is born at its home; <c>null</c> for none.</param>
     /// <returns>The new world state and its terrain.</returns>
-    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings, PantheonSetup? pantheon)
+    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings, PantheonSetup? pantheon, CreatureRules? creatureRules = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
         var terrain = TerrainGenerator.Generate(seed, settings);
         var regions = RegionBuilder.Build(terrain, settings);
         var settlements = SettlementFounder.FoundAll(regions, terrain, seed, settings.StartingSettlement);
-        var gods = pantheon is null ? [] : PantheonFounder.Found(pantheon, settlements);
+        var (gods, creatures) = pantheon is null ? ([], []) : PantheonFounder.Found(pantheon, settlements, creatureRules, seed, regions);
 
         var state = new WorldState
         {
@@ -45,6 +47,7 @@ public static class WorldGenerator
             Regions = regions,
             Settlements = settlements,
             Gods = gods,
+            Creatures = creatures,
         };
 
         return new GeneratedWorld(state, terrain);

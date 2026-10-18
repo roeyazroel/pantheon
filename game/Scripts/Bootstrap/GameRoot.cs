@@ -5,8 +5,10 @@ using System.IO;
 using Godot;
 using Pantheon.Client.Camera;
 using Pantheon.Client.Presentation;
+using Pantheon.Client.Presentation.Creatures;
 using Pantheon.Client.Presentation.Divine;
 using Pantheon.Client.UI;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Game.Diagnostics;
@@ -27,6 +29,9 @@ public partial class GameRoot : Node3D
     private const string QuickSavePath = "user://saves/quicksave.json";
     private const float FocusDistance = 220f;
 
+    // C brings the camera this close to the Creature.
+    private const float CreatureFocusDistance = 90f;
+
     // The debug panel details the settlement nearest the cursor within this distance.
     private const float SelectDistance = 250f;
 
@@ -39,8 +44,10 @@ public partial class GameRoot : Node3D
     private GodCameraController _camera = null!;
     private DebugOverlay _overlay = null!;
     private DivinePresenter _divinePresenter = null!;
+    private CreaturePresenter _creatures = null!;
     private DivineController _divine = null!;
     private int _focusIndex = -1;
+    private CreatureCommandKind? _pendingJudge;
     private IReadOnlyList<(StringName Action, Action Run)> _hotkeys = [];
     private string? _status;
     private RegionDebugLayer? _regionMapLayer;
@@ -69,12 +76,17 @@ public partial class GameRoot : Node3D
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
         _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain);
-        _divinePresenter = new DivinePresenter(GetNode<Node3D>("World").AddLayer("Divine"), presentation.DivineView);
+        var worldNode = GetNode<Node3D>("World");
+        _divinePresenter = new DivinePresenter(worldNode.AddLayer("Divine"), presentation.DivineView);
+        _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
+        var hand = DivineHand.Create();
+        worldNode.AddChild(hand);
         _session = CreateSession(content, options);
         var hud = new Hud { Name = "Hud" };
         AddChild(hud);
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
-        _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus);
+        hud.CreatureLookClicked += FocusCreature;
+        _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         if (options.AdvanceTicks is { } ticks)
         {
@@ -86,7 +98,11 @@ public partial class GameRoot : Node3D
 
         ShowWorld();
         ApplyDivineOptions(options);
-        if (options.CameraDistance is { } distance)
+        if (options.FocusCreature && _session.LocalCreature is { } creature)
+        {
+            _camera.FocusOn(creature.Position, options.CameraDistance ?? CreatureFocusDistance, snap: true);
+        }
+        else if (options.CameraDistance is { } distance)
         {
             FocusSettlement(distance, snap: true);
         }
@@ -108,8 +124,14 @@ public partial class GameRoot : Node3D
         _presenter.Sync(_session.World);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
+        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused);
+        if (_pendingJudge is { } judge)
+        {
+            _pendingJudge = null;
+            _divine.JudgeCreature(judge);
+        }
         var cursor = _camera.CursorGroundPoint;
-        _divine.Process(delta, cursor);
+        _divine.Process(delta, cursor, _camera.Model.Distance);
         var cursorRegion = RegionAt(cursor);
         _presenter.SetHoveredRegion(cursorRegion);
         UpdateRegionMap(cursorRegion);
@@ -155,6 +177,10 @@ public partial class GameRoot : Node3D
         (InputActions.SimSpeedUp, () => SetStatus(SessionCommands.ChangeSpeed(_session, 1))),
         .. CreateMiracleHotkeys(),
         (InputActions.MiracleCancel, () => _divine.Select(null)),
+        (InputActions.CreatureFocus, FocusCreature),
+        (InputActions.CreatureReward, () => _divine.JudgeCreature(CreatureCommandKind.Reward)),
+        (InputActions.CreaturePunish, () => _divine.JudgeCreature(CreatureCommandKind.Punish)),
+        (InputActions.CreatureSend, () => _divine.SendCreature(_camera.CursorGroundPoint)),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
@@ -203,6 +229,7 @@ public partial class GameRoot : Node3D
     {
         _presenter.Rebuild(_session.World, _session.Terrain);
         _divinePresenter.Rebuild(_session.Terrain, _session.World.Regions.Columns * _session.World.Regions.RegionSize);
+        _creatures.Rebuild(_session.Terrain);
         _divine?.Reset();
         _focusIndex = -1;
         _camera.SetTerrain(_session.Terrain);
@@ -241,6 +268,7 @@ public partial class GameRoot : Node3D
             SetStatus(SessionCommands.CastMiracle(_session, miracle, target));
         }
 
+        _pendingJudge = options.Judge;
         if (options.SelectMiracle is { } selected)
         {
             _divine.Select(selected);
@@ -249,6 +277,16 @@ public partial class GameRoot : Node3D
         while (_divine.Overlay != options.Overlay && options.Overlay is not null)
         {
             _divine.CycleOverlay();
+        }
+    }
+
+    /// <summary>Glides to the player's Creature (spec §56: focus Creature).</summary>
+    private void FocusCreature()
+    {
+        if (_session.LocalCreature is { } creature)
+        {
+            _camera.FocusOn(creature.Position, CreatureFocusDistance, snap: false);
+            SetStatus($"Looking at {creature.Name}");
         }
     }
 
@@ -306,7 +344,10 @@ public partial class GameRoot : Node3D
         World = _session.World,
         SettlementRules = _session.Content.SettlementRules,
         DivineRules = _session.Content.DivineRules,
+        CreatureRules = _session.Content.Creatures,
         LocalGodId = _session.LocalGodId,
+        LocalCreatureId = _session.LocalCreature?.Id,
+        CreatureOptions = _session.PreviewCreatureOptions(),
         SelectedSettlementId = cursor is { } point
             ? SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance)?.Id
             : null,

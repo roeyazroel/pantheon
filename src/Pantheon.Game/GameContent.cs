@@ -1,10 +1,12 @@
 using System;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World.Generation;
 using Pantheon.Persistence;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Settlements;
 using Pantheon.Simulation.WorldGen;
@@ -17,7 +19,8 @@ namespace Pantheon.Game;
 /// <param name="DivineRules">Belief, worship, Divine Power and influence tuning.</param>
 /// <param name="Miracles">The miracles.</param>
 /// <param name="Pantheon">The gods of a new world.</param>
-public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon)
+/// <param name="Creatures">Creature tuning.</param>
+public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures)
 {
     /// <summary>Parses and validates the content files.</summary>
     /// <param name="files">Text of each content file.</param>
@@ -31,6 +34,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         var divine = ContentJson.ParseDivineRules(files.DivineRules);
         var catalog = ContentJson.ParseMiracles(files.Miracles);
         var pantheon = ContentJson.ParseGods(files.Gods);
+        var creatures = ContentJson.ParseCreatures(files.Creatures);
 
         Check(ContentJson.WorldGenFileName, () =>
         {
@@ -40,9 +44,10 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         Check(ContentJson.SettlementRulesFileName, () => SettlementRulesValidator.Validate(rules));
         Check(ContentJson.DivineRulesFileName, () => DivineRulesValidator.Validate(divine));
         Check(ContentJson.GodsFileName, () => PantheonFounder.Validate(pantheon));
+        Check(ContentJson.CreaturesFileName, () => CreatureRulesValidator.Validate(creatures));
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
-        return new GameContent(worldGen, rules, divine, book!, pantheon);
+        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures);
     }
 
     /// <summary>Runs a validator and reports its problems as a content error of one file.</summary>
@@ -65,7 +70,8 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
 /// <param name="DivineRules"><c>divine_rules.json</c>.</param>
 /// <param name="Miracles"><c>miracles.json</c>.</param>
 /// <param name="Gods"><c>gods.json</c>.</param>
-public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods)
+/// <param name="Creatures"><c>creatures.json</c>.</param>
+public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures)
 {
     /// <summary>Reads every file through a function that returns a content file's text by name.</summary>
     /// <param name="read">Reads one file of <c>game/Data</c>.</param>
@@ -78,6 +84,7 @@ public sealed record GameContentFiles(string WorldGen, string SettlementRules, s
             read(ContentJson.SettlementRulesFileName),
             read(ContentJson.DivineRulesFileName),
             read(ContentJson.MiraclesFileName),
-            read(ContentJson.GodsFileName));
+            read(ContentJson.GodsFileName),
+            read(ContentJson.CreaturesFileName));
     }
 }

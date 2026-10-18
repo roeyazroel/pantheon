@@ -21,11 +21,12 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
    assemblies for `System.Random`, clock and tick-count reads and GUIDs.
 6. **Data-driven content** where practical (`game/Data/*.json`), parsed strictly (unknown or
    missing members are errors).
-7. **No speculative infrastructure or optimisation.** Reserved areas (creatures, diplomacy,
-   weather, networking) contain only a README until their milestone.
-8. **Commands go through an authority.** A player's intent (today, casting a miracle) is a
-   request that `MiracleCaster` checks against the world before anything changes (spec §73,
-   ADR-009). `GameSession` is the local authority; a multiplayer host will run the same check.
+7. **No speculative infrastructure or optimisation.** Reserved areas (diplomacy, weather,
+   networking) contain only a README until their milestone.
+8. **Commands go through an authority.** A player's intent (casting a miracle, rewarding,
+   punishing or sending the Creature) is a request that `MiracleCaster` or `CreatureAuthority`
+   checks against the world before anything changes (spec §73, ADR-009, ADR-010). `GameSession` is
+   the local authority; a multiplayer host will run the same checks.
 
 ## Repository layout
 
@@ -38,16 +39,17 @@ game/                         Godot 4.7.2 project (res://)
   Pantheon.csproj             Godot.NET.Sdk/4.7.2 project: assembly "Pantheon", namespace Pantheon.Client
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
   Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
-  Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json
-                              (simulation); settlement_view.json, biome_palette.json, divine_view.json (presentation)
+  Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
+                              creatures.json (simulation); settlement_view.json, biome_palette.json,
+                              divine_view.json (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology, Settlements, Gods, Belief, Miracles,
-                              Events (+ reserved folders)
+                              Creatures, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Systems, SimulationEngine
+                              Creatures, Navigation, Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -107,7 +109,7 @@ files and compiled assemblies and fails when either rule is broken.
 ### Domain (`Pantheon.Domain`)
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
-  (RNG state), `Regions` (`RegionGrid`), `Settlements` and `Gods`.
+  (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods` and `Creatures`.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -119,16 +121,22 @@ files and compiled assemblies and fails when either rule is broken.
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
   follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt` (0..1).
   Followers are `Population × Adherence` and are never stored (ADR-009).
-- `GodState`: `Id`, `Name`, `Controller` (Human or Ai), `DivinePower`, `Rank` (never falls) and
-  `Cooldowns`. Followers and influence are derived from the beliefs.
+- `GodState`: `Id`, `Name`, `Controller` (Human or Ai), `DivinePower`, `Rank` (never falls),
+  `CreatureId` and `Cooldowns`. Followers and influence are derived from the beliefs.
+- `CreatureState` (ADR-010): a Tier 3 entity saved whole: position and heading, level, experience,
+  health, loyalty, morality, `Needs` (hunger, fatigue, boredom), `Personality` (kindness,
+  aggression, laziness, curiosity), `Activity` (action, situation, phase, target, path, ticks
+  left), `Preferences` (learned weight per situation and action) and `Memories` (recent deeds with
+  the god's feedback). `CreatureCommand` (reward, punish, go to) is the intent the authority
+  checks. `World/SimulationTime` fixes 10 ticks per simulated second.
 - `CastMiracleRequest` (god, miracle id, target): the intent that the authority checks (§73).
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
   `FamineStarted`) raised during a tick or a command and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
-  `MiracleCatalog` and `MiracleDefinition` (`miracles.json`) and `PantheonSetup` (the gods of a
-  new world, `gods.json`).
+  `MiracleCatalog` and `MiracleDefinition` (`miracles.json`), `PantheonSetup` (the gods of a
+  new world and their Creatures' names, `gods.json`) and `CreatureRules` (`creatures.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -161,16 +169,21 @@ files and compiled assemblies and fails when either rule is broken.
   sums power and picks ranks.
 - `Miracles/MiracleBook` validates and indexes the miracles; `MiracleCaster` checks requests
   (§73), computes costs and applies accepted casts.
+- `Creatures/`: `CreatureModel` (growth, needs and learning as pure functions), `CreatureBrain`
+  (options and utilities, decisions, planned routes), `CreatureDeeds` (what a finished action does
+  to the world), `CreatureSystem` (the per-tick state machine), `CreatureAuthority` (rewards,
+  punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
+  `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-- `SimulationEngine.Step(WorldState, events)` runs the systems in order (the settlement step,
-  then the belief step, each in an `IntervalSystem`) with a `SimulationRandom` restored from
-  `WorldState.Random`, collects the events they raise, writes the RNG state back and increments
-  `Tick`.
+- `SimulationEngine.Step(WorldState, events)` runs the systems in order (the settlement step and
+  the belief step, each in an `IntervalSystem`, then the Creature system every tick) with a
+  `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
+  the RNG state back and increments `Tick`.
 - `Terrain/TerrainRaycaster`: ray against the heightfield (used for cursor picking).
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 3, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 4, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -178,12 +191,14 @@ files and compiled assemblies and fails when either rule is broken.
   save gets exactly the checks of a current one. Version 1 → 2 gives every settlement
   `"Health": 1` and `"ConstructionProgress": 0`. Version 2 → 3 adds the Milestone 3 player god
   (Ilyra, 100 Divine Power) followed by 60% of the first settlement, empty beliefs elsewhere, no
-  blessing on any region and founding settings for one settlement. A missing, unsupported or
-  newer version raises `SaveFormatException` with a clear message.
+  blessing on any region and founding settings for one settlement. Version 3 → 4 gives every god
+  the Milestone 4 newborn Creature, Bramble, at the settlement where most of the people follow
+  it. A missing, unsupported or newer version raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
   and blessing in 0..1, god ids and Divine Power, and beliefs (known gods, one each, values in
-  0..1, shares adding up to at most 1).
+  0..1, shares adding up to at most 1), and Creatures (`CreatureIntegrity`: owners, home and
+  target settlements, levels, values in range).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -194,7 +209,9 @@ files and compiled assemblies and fails when either rule is broken.
   scheduler, saves and loads, and raises `WorldReplaced` so presentation rebuilds. It is the local
   authority: `LocalGodId` is the first human god, `CheckCast` and `FindReached` preview a cast,
   `CastMiracle` sends the request through `MiracleCaster` with the local god as issuer, and
-  `DrainEvents` hands the tick and command events to the client.
+  `DrainEvents` hands the tick and command events to the client. `CommandCreature` sends the
+  local Creature's commands through `CreatureAuthority`; `FindJudgedAction` and
+  `PreviewCreatureOptions` feed the HUD card and the debug view.
   `StepOneTick` runs one tick through the same engine call as the scheduler; `RunTicks` and
   `StepToNextSettlementStep` run several. `SimulationSeconds` is the simulation time including
   the scheduler's progress towards the next tick, which drives the citizens' routines.
@@ -222,8 +239,10 @@ files and compiled assemblies and fails when either rule is broken.
   random stream. `PresentationContent` bundles the biome palette and the settlement view
   settings.
 - `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
-  followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable) and
-  the target hint. `Divine/DivineText` words ranks and cast verdicts.
+  followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
+  target hint and the Creature card (level, activity, needs, loyalty, morality, what feedback would
+  judge). `Divine/DivineText` words ranks and cast verdicts; `Creatures/CreatureText` words
+  Creature activities and command outcomes.
 - `Alerts/AlertFeed` turns events into alerts for the local player (§59): only those about the
   player's god or followers, never the same alert twice within 30 simulated seconds, the most
   urgent kept when full.
@@ -268,8 +287,14 @@ files and compiled assemblies and fails when either rule is broken.
 - `UI/Hud`: the player HUD, built in code: the top bar, the miracle bar with the target hint and
   the clickable alerts. It shows `HudModel`s and reports clicks.
 - `Bootstrap/DivineController`: the player's divine interface. It selects miracles (keys 1–9 or
-  the bar), casts at the cursor on a left click, drains the session's events into effects and
-  alerts, and refreshes the HUD, the targeting ring and the overlay.
+  the bar), casts at the cursor on a left click, rewards, punishes and sends the Creature (Z, X, V
+  or the card), drives the hand's gestures, drains the session's events into effects and alerts,
+  and refreshes the HUD, the targeting ring and the overlay.
+- `Presentation/Creatures/`: `CreatureBody` (the Mossback from primitive meshes, tinted by its
+  god), `CreatureView` (follows the simulated position smoothly, grows with level, walks and poses
+  per action, flashes on feedback, labels its activity) and `CreaturePresenter`.
+  `Presentation/Divine/DivineHand`: the god's hand as a visual: it follows the cursor, presses
+  when casting or sending, and pats or swats the Creature.
 - `Presentation/Divine/DivinePresenter`: the targeting ring (a decal with a procedural ring
   texture), the map overlay (one decal over the world with one pixel per region) and miracle
   effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a
@@ -301,11 +326,12 @@ sequenceDiagram
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
             Engine->>State: belief step (drift, conversion, power, ranks, blessings)
         end
+        Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds)
         Engine->>State: RNG state, Tick++
     end
     Root->>Session: DrainEvents() (via DivineController)
     Root->>View: effects and alerts for the events, HUD, targeting ring, overlay
-    Root->>View: Sync(world), SetHoveredRegion(region under cursor)
+    Root->>View: Sync(world), Creatures.Sync (smoothed pose), SetHoveredRegion(region under cursor)
     Root->>View: UpdateCitizens(world, simulation seconds, camera position)
     View->>Crowd: SelectTier, Refresh, Advance (reads WorldState only)
     Crowd-->>View: poses for the citizen MultiMesh (none in Tier 1)
@@ -484,6 +510,39 @@ flowchart LR
     Witness --> Followers
 ```
 
+## The Creature
+
+ADR-010 records the decisions, and the Milestone 4 plan
+([.docs/milestone-4-creature.md](../.docs/milestone-4-creature.md)) has the tables of options and
+deeds.
+
+- **State machine** (`CreatureSystem`, every tick). Needs grow and health follows hunger and rest.
+  Deciding picks an option at most every `DecisionIntervalTicks` (5 Hz). Travelling walks the
+  path at the level's speed. Performing counts down and then applies the deed. Banished counts
+  down to the Creature's return home.
+- **Brain** (`CreatureBrain`). Options come from the Creature's needs and from each settlement
+  within `PerceptionRadius`, classified as in need, building or thriving. Utility is learned
+  preference × drive × personality × closeness, plus seeded jitter; the best reachable option
+  wins.
+- **Learning** (`CreatureAuthority`). A reward or punishment judges the current action, or the
+  last one within `FeedbackWindowSeconds`. It moves the preference for that situation and action,
+  the trait behind it and loyalty; a punishment also stops the action.
+- **Deeds** (`CreatureDeeds`) change food, houses and population. They change the people's belief
+  in the Creature's god and the Creature's morality, and they add experience and a memory. The
+  Creature's presence carries its god's influence.
+
+```mermaid
+flowchart LR
+    Needs["Needs<br/>hunger, fatigue, boredom"] --> Options
+    Villages["Settlements in view<br/>in need / building / thriving"] --> Options["Options"]
+    Options --> Score["preference x drive x personality x closeness + jitter"]
+    Score --> Act["Travel, then perform"]
+    Act --> Deeds["Deeds: food, houses, deaths,<br/>belief, morality, XP, memory"]
+    Player["God: reward / punish"] --> Learn["Preferences, traits, loyalty"]
+    Learn --> Score
+    Deeds --> Villages
+```
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -518,13 +577,16 @@ the client.
 - F6 (`SpoilFood`) empties every settlement's food stores, and F7 (`AddSettlers`) grows every
   settlement by half (at least 10 people). Together they drive a famine: the stores run out,
   health falls, deaths rise and the settlement recovers once the land feeds it again.
+- The F1 panel's Creature view (`CreatureReadout`, §106) shows its level, health, loyalty,
+  morality and position, its activity, needs and personality, its best options with their
+  utilities, its learned preferences and its latest memories.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
 - O cycles the player map overlays (influence, faith, food), which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
   runs n ticks before the first frame and `--camera-distance=<m>` sets the starting camera
   distance, so a grown settlement can be captured up close. `--divine-power`, `--cast`,
-  `--select`, `--overlay`, `--focus` and `--debug-panel` script captures of casting, targeting and
-  overlays; in scripted runs the cursor falls back to the screen centre. Unattended runs end with a
+  `--select`, `--overlay`, `--focus` (a settlement or `creature`), `--judge` and `--debug-panel`
+  script captures of casting, targeting, overlays and the Creature; in scripted runs the cursor falls back to the screen centre. Unattended runs end with a
   one-line summary per settlement (`DebugReadout.Summarize`), including its tier and the
   citizens shown.
 
@@ -612,7 +674,9 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   map, and the Terrain3D shader patch. Since Milestone 3 it also covers the belief rules and
   step, influence, every miracle check and effect, the session as the authority, the HUD model,
   alerts, overlays, the version 2 → 3 migration (against `save-v2.json`, written by the
-  Milestone 2 build) and several settlements. The tests load the shipped `game/Data/*.json`;
+  Milestone 2 build) and several settlements. Since Milestone 4 it covers the Creature's
+  learning, brain, deeds, banishment, commands and navigation, and the version 3 → 4 migration
+  (against `save-v3.json`, written by the Milestone 3 build). The tests load the shipped `game/Data/*.json`;
   rule tests pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`) so retuning
   the data does not change their meaning.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering

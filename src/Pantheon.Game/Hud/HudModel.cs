@@ -31,4 +31,7 @@ public sealed record HudModel
 
     /// <summary>Radius in metres of the selected miracle, for the targeting ring; 0 when none is selected.</summary>
     public float TargetRadius { get; init; }
+
+    /// <summary>The Creature's card, or <c>null</c> when the god has no Creature.</summary>
+    public CreatureCard? Creature { get; init; }
 }

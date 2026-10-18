@@ -100,6 +100,12 @@ public sealed record DivineRules
     /// <summary>Influence at the centre of a settlement that wholly follows the god with full Faith (capped at 1).</summary>
     public required float InfluenceStrength { get; init; }
 
+    /// <summary>Influence of a god at its Creature (spec §10: Creature presence), fading to 0 at <see cref="CreatureInfluenceReach"/>.</summary>
+    public required float CreatureInfluenceStrength { get; init; }
+
+    /// <summary>Distance in metres over which the influence of a god's Creature fades.</summary>
+    public required float CreatureInfluenceReach { get; init; }
+
     /// <summary>Distance in metres within which people see a miracle and change their belief.</summary>
     public required float WitnessRadius { get; init; }
 

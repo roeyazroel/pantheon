@@ -108,6 +108,7 @@ internal static class SettlementWorlds
                 },
             },
             Gods = [],
+            Creatures = [],
         };
     }
 

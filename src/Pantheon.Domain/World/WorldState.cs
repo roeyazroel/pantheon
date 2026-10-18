@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World.Generation;
@@ -35,4 +36,7 @@ public sealed class WorldState
 
     /// <summary>All gods in the world, ordered by id.</summary>
     public required List<GodState> Gods { get; init; }
+
+    /// <summary>All Creatures in the world, ordered by id: at most one per god (spec §22).</summary>
+    public required List<CreatureState> Creatures { get; init; }
 }

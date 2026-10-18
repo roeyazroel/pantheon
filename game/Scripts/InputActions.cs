@@ -81,6 +81,18 @@ public static class InputActions
     /// <summary>Show the next map overlay, or hide it after the last one (O).</summary>
     public static readonly StringName ToggleMapOverlay = "toggle_map_overlay";
 
+    /// <summary>Glide to the player's Creature (C).</summary>
+    public static readonly StringName CreatureFocus = "creature_focus";
+
+    /// <summary>Reward the Creature for what it is doing or just did (Z).</summary>
+    public static readonly StringName CreatureReward = "creature_reward";
+
+    /// <summary>Punish the Creature for what it is doing or just did (X).</summary>
+    public static readonly StringName CreaturePunish = "creature_punish";
+
+    /// <summary>Send the Creature to the ground under the cursor (V).</summary>
+    public static readonly StringName CreatureSend = "creature_send";
+
     /// <summary>Debug: grant the player's god 500 Divine Power (F4).</summary>
     public static readonly StringName DebugGrantPower = "debug_grant_power";
 
@@ -104,5 +116,6 @@ public static class InputActions
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
         SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
+        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend,
     ];
 }

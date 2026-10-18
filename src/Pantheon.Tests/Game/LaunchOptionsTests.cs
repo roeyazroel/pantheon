@@ -103,6 +103,9 @@ public sealed class LaunchOptionsTests
         Assert.Equal(3, options.FocusSettlement);
         Assert.True(options.DebugPanel);
         Assert.Equal("heal", options.SelectMiracle);
+        Assert.True(LaunchOptions.Parse(["--focus=Creature"]).FocusCreature);
+        Assert.Equal(Pantheon.Domain.Creatures.CreatureCommandKind.Punish, LaunchOptions.Parse(["--judge=punish"]).Judge);
+        Assert.Single(LaunchOptions.Parse(["--judge=pat"]).Warnings);
         Assert.Empty(options.Warnings);
     }
 

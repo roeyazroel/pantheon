@@ -3,6 +3,6 @@
   "StartingDivinePower": 100.0,
   "HomeBelief": { "Adherence": 0.6, "Faith": 0.5, "Love": 0.3, "Fear": 0.1, "Doubt": 0.15 },
   "Gods": [
-    { "Name": "Ilyra", "Controller": "Human" }
+    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble" }
   ]
 }

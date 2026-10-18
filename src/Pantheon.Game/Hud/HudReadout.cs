@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.World;
+using Pantheon.Game.Creatures;
 using Pantheon.Game.Divine;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Miracles;
@@ -82,6 +84,42 @@ public static class HudReadout
             TargetHint = hint,
             TargetValid = valid,
             TargetRadius = selected?.Radius ?? 0f,
+            Creature = BuildCreatureCard(session),
+        };
+    }
+
+    /// <summary>The Creature's card: level, activity, needs, loyalty and what feedback would judge.</summary>
+    /// <param name="session">Game session.</param>
+    /// <returns>The card, or <c>null</c> without a Creature.</returns>
+    public static CreatureCard? BuildCreatureCard(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.LocalCreature is not { } creature)
+        {
+            return null;
+        }
+
+        var world = session.World;
+        var judged = session.FindJudgedAction();
+        var needs = creature.Needs;
+        var place = judged?.SettlementId is { } id ? world.Settlements.Find(s => s.Id == id)?.Name : null;
+        var morality = creature.Morality switch
+        {
+            > 0.3f => "kind",
+            < -0.3f => "cruel",
+            _ => "neither kind nor cruel",
+        };
+        return new CreatureCard
+        {
+            Title = Format("{0} the {1} - level {2}", creature.Name, creature.Species, creature.Level),
+            Doing = CreatureText.DescribeActivity(creature, world),
+            Condition = Format("health {0:0%}   hunger {1:0%}   tiredness {2:0%}   boredom {3:0%}", creature.Health, needs.Hunger, needs.Fatigue, needs.Boredom),
+            Temperament = Format("loyalty {0:0%}   {1} ({2:+0.00;-0.00;0.00})", creature.Loyalty, morality, creature.Morality),
+            JudgeHint = judged is { } j
+                ? Format("Reward or punish: {0}", CreatureText.Doing(j.Action, place))
+                : "Nothing to reward or punish right now",
+            CanJudge = judged is not null,
+            Banished = creature.Activity.Phase == CreaturePhase.Banished,
         };
     }
 

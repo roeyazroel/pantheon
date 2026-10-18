@@ -58,6 +58,8 @@ internal static class DivineWorlds
         InfluenceBaseRadius = 400f,
         InfluenceRadiusPerSqrtFollower = 20f,
         InfluenceStrength = 2.5f,
+        CreatureInfluenceStrength = 0.5f,
+        CreatureInfluenceReach = 220f,
         WitnessRadius = 350f,
         SettlementRadius = 60f,
         WeakInfluenceCostFactor = 1f,
@@ -124,7 +126,8 @@ internal static class DivineWorlds
             Random = new SimulationRandom(9).GetState(),
             Regions = grid,
             Settlements = settlements,
-            Gods = [new GodState { Id = GodId, Name = "Testa", Controller = GodController.Human, DivinePower = power, Rank = DivineRank.MinorSpirit, Cooldowns = [] }],
+            Gods = [new GodState { Id = GodId, Name = "Testa", Controller = GodController.Human, DivinePower = power, Rank = DivineRank.MinorSpirit, CreatureId = null, Cooldowns = [] }],
+            Creatures = [],
         };
     }
 

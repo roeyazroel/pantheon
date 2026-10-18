@@ -56,6 +56,30 @@ public sealed class ContentTests
     }
 
     [Fact]
+    public void ShippedCreatureRules_Parse_WithARuleForEveryAction()
+    {
+        var rules = TestContent.Shipped.Creatures;
+
+        Assert.Equal("Mossback", rules.Species);
+        Assert.Equal(Enum.GetValues<Pantheon.Domain.Creatures.CreatureAction>().Length - 1, rules.Actions.Count);
+        Assert.Contains(rules.StartingPreferences, p => p.Action == Pantheon.Domain.Creatures.CreatureAction.Feed && p.Weight == 0.4f);
+    }
+
+    [Theory]
+    [InlineData("\"RewardLearningRate\": 0.25", "\"RewardLearningRate\": 1.25", "RewardLearningRate")]
+    [InlineData("{ \"Action\": \"Rest\", \"Seconds\": 25.0", "{ \"Action\": \"Wander\", \"Seconds\": 25.0", "no rule for Rest")]
+    [InlineData("\"LevelExperience\": [40.0, 100.0", "\"LevelExperience\": [100.0, 40.0", "must rise")]
+    public void CreatureRules_WithBadValues_FailValidation(string from, string to, string expected)
+    {
+        var text = TestContent.ReadText(ContentJson.CreaturesFileName);
+        Assert.Contains(from, text, StringComparison.Ordinal);
+        var files = GameContentFiles.Read(name => name == ContentJson.CreaturesFileName ? text.Replace(from, to, StringComparison.Ordinal) : TestContent.ReadText(name));
+
+        var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(files));
+        Assert.Contains(expected, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Miracles_WithUnknownEffect_Throw()
     {
         var json = TestContent.ReadText("miracles.json").Replace("\"Kind\": \"Smite\"", "\"Kind\": \"Meteor\"", StringComparison.Ordinal);

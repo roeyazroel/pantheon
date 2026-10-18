@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
+using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Settlements;
 
@@ -39,6 +41,22 @@ public sealed class SimulationEngine
         : this([CreateSettlementStep(settlementRules), CreateBeliefStep(divineRules, settlementRules)])
     {
     }
+
+    /// <summary>
+    /// Creates the game's pipeline with Creatures: the settlement step, the belief step, then every
+    /// Creature every tick (ADR-010).
+    /// </summary>
+    /// <param name="settlementRules">Tuning of the statistical settlement model.</param>
+    /// <param name="divineRules">Tuning of belief, worship and Divine Power.</param>
+    /// <param name="creatureRules">Tuning of Creatures.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules)
+    {
+        Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules);
+        _systems = [CreateSettlementStep(settlementRules), CreateBeliefStep(divineRules, settlementRules), Creatures];
+    }
+
+    /// <summary>The Creature system of the game's pipeline, or <c>null</c> when the engine has none.</summary>
+    public CreatureSystem? Creatures { get; }
 
     /// <summary>Creates an engine with an explicit system order.</summary>
     /// <param name="systems">Systems, in the order they run each tick.</param>

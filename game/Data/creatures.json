@@ -1,0 +1,88 @@
+{
+  // Creatures (ADR-010). Rates are per simulated second; distances in metres. The Creature moves
+  // every tick and decides at most every DecisionIntervalTicks ticks (2 ticks = 5 Hz at x1).
+  "DecisionIntervalTicks": 2,
+  "Species": "Mossback",
+  "BaseSpeed": 7.0,
+  "SpeedPerLevel": 0.5,
+  "BaseStrength": 1.0,
+  "StrengthPerLevel": 0.3,
+  "PerceptionRadius": 500.0,
+  "DistanceHalfUtility": 300.0,
+  "DecisionJitter": 0.08,
+
+  // Needs grow over time; actions ease them (Actions below).
+  "HungerPerSecond": 0.005,
+  "FatiguePerSecond": 0.004,
+  "BoredomPerSecond": 0.006,
+  "HungryThreshold": 0.55,
+  "TiredThreshold": 0.7,
+  "BoredThreshold": 0.6,
+  "StarvationHealthLossPerSecond": 0.01,
+  "RestHealthPerSecond": 0.01,
+  "BanishedSeconds": 60.0,
+
+  // A settlement whose food or health need reaches this counts as in need.
+  "VillageNeedThreshold": 0.5,
+
+  // Learning (spec section 25): a reward closes RewardLearningRate of the gap to 1 in the judged
+  // preference, a punishment removes PunishmentLearningRate of it; both nudge the trait behind the
+  // action and change loyalty. They judge the current action or one finished within the window.
+  "RewardLearningRate": 0.25,
+  "PunishmentLearningRate": 0.35,
+  "PersonalityNudge": 0.04,
+  "StartingLoyalty": 0.7,
+  "LoyaltyPerReward": 0.02,
+  "LoyaltyPerPunishment": 0.04,
+  "FeedbackWindowSeconds": 15.0,
+  "CommandStaySeconds": 30.0,
+  "MemoryCapacity": 12,
+  "PersonalitySpread": 0.25,
+
+  // Experience for levels 2 to 10 (spec section 23: MVP maximum 10).
+  "LevelExperience": [40.0, 100.0, 180.0, 280.0, 400.0, 540.0, 700.0, 880.0, 1080.0],
+
+  // Amount (times strength where it does work): food given (Feed), food eaten (EatFromStores),
+  // builder-steps (HelpBuild), people killed (Attack), metres walked (Wander, Ignore).
+  // Kindness moves the Creature's morality; Witness changes the belief of the people it acts on.
+  "Actions": [
+    { "Action": "Wander", "Seconds": 3.0, "Amount": 160.0, "Experience": 1.0, "HungerRelief": 0.0, "FatigueRelief": 0.0, "BoredomRelief": 0.35, "Kindness": 0.0,
+      "Witness": { "Faith": 0.0, "Love": 0.0, "Fear": 0.0, "Doubt": 0.0 } },
+    { "Action": "Rest", "Seconds": 25.0, "Amount": 0.0, "Experience": 0.5, "HungerRelief": 0.0, "FatigueRelief": 0.8, "BoredomRelief": 0.0, "Kindness": 0.0,
+      "Witness": { "Faith": 0.0, "Love": 0.0, "Fear": 0.0, "Doubt": 0.0 } },
+    { "Action": "Forage", "Seconds": 12.0, "Amount": 0.0, "Experience": 2.0, "HungerRelief": 0.6, "FatigueRelief": -0.05, "BoredomRelief": 0.1, "Kindness": 0.0,
+      "Witness": { "Faith": 0.0, "Love": 0.0, "Fear": 0.0, "Doubt": 0.0 } },
+    { "Action": "EatFromStores", "Seconds": 6.0, "Amount": 60.0, "Experience": 2.0, "HungerRelief": 0.8, "FatigueRelief": 0.0, "BoredomRelief": 0.05, "Kindness": -0.4,
+      "Witness": { "Faith": 0.05, "Love": -0.15, "Fear": 0.15, "Doubt": 0.05 } },
+    { "Action": "Feed", "Seconds": 12.0, "Amount": 80.0, "Experience": 6.0, "HungerRelief": 0.0, "FatigueRelief": -0.15, "BoredomRelief": 0.15, "Kindness": 1.0,
+      "Witness": { "Faith": 0.1, "Love": 0.2, "Fear": 0.0, "Doubt": -0.1 } },
+    { "Action": "HelpBuild", "Seconds": 12.0, "Amount": 40.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.2, "BoredomRelief": 0.2, "Kindness": 0.6,
+      "Witness": { "Faith": 0.08, "Love": 0.15, "Fear": 0.0, "Doubt": -0.05 } },
+    { "Action": "Play", "Seconds": 8.0, "Amount": 0.0, "Experience": 3.0, "HungerRelief": 0.0, "FatigueRelief": -0.1, "BoredomRelief": 0.7, "Kindness": 0.3,
+      "Witness": { "Faith": 0.05, "Love": 0.1, "Fear": 0.0, "Doubt": -0.03 } },
+    { "Action": "Attack", "Seconds": 5.0, "Amount": 3.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.15, "BoredomRelief": 0.3, "Kindness": -1.0,
+      "Witness": { "Faith": 0.12, "Love": -0.25, "Fear": 0.35, "Doubt": -0.05 } },
+    { "Action": "Ignore", "Seconds": 2.0, "Amount": 160.0, "Experience": 0.5, "HungerRelief": 0.0, "FatigueRelief": 0.0, "BoredomRelief": 0.2, "Kindness": -0.1,
+      "Witness": { "Faith": 0.0, "Love": -0.03, "Fear": 0.0, "Doubt": 0.02 } }
+  ],
+
+  // What a newborn Creature prefers (spec section 25's example: Feed 0.40, Ignore 0.30, Eat 0.55, Steal 0.20, Attack 0.05).
+  "StartingPreferences": [
+    { "Situation": "VillageInNeed", "Action": "Feed", "Weight": 0.4 },
+    { "Situation": "VillageInNeed", "Action": "Ignore", "Weight": 0.3 },
+    { "Situation": "VillageInNeed", "Action": "EatFromStores", "Weight": 0.2 },
+    { "Situation": "VillageInNeed", "Action": "Attack", "Weight": 0.05 },
+    { "Situation": "Hungry", "Action": "EatFromStores", "Weight": 0.55 },
+    { "Situation": "Hungry", "Action": "Forage", "Weight": 0.45 },
+    { "Situation": "Tired", "Action": "Rest", "Weight": 0.8 },
+    { "Situation": "Bored", "Action": "Wander", "Weight": 0.5 },
+    { "Situation": "Idle", "Action": "Wander", "Weight": 0.4 },
+    { "Situation": "Idle", "Action": "Rest", "Weight": 0.3 },
+    { "Situation": "VillageBuilding", "Action": "HelpBuild", "Weight": 0.45 },
+    { "Situation": "VillageBuilding", "Action": "Ignore", "Weight": 0.3 },
+    { "Situation": "VillageBuilding", "Action": "Attack", "Weight": 0.05 },
+    { "Situation": "VillageThriving", "Action": "Play", "Weight": 0.45 },
+    { "Situation": "VillageThriving", "Action": "Ignore", "Weight": 0.3 },
+    { "Situation": "VillageThriving", "Action": "Attack", "Weight": 0.05 }
+  ]
+}

@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
@@ -29,6 +30,9 @@ public static class ContentJson
 
     /// <summary>File name of the gods of a new world.</summary>
     public const string GodsFileName = "gods.json";
+
+    /// <summary>File name of the Creature rules.</summary>
+    public const string CreaturesFileName = "creatures.json";
 
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
@@ -79,4 +83,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The pantheon setup.</returns>
     public static PantheonSetup ParseGods(string json) => Parse<PantheonSetup>(json, GodsFileName);
+
+    /// <summary>Parses <c>creatures.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The Creature rules.</returns>
+    public static CreatureRules ParseCreatures(string json) => Parse<CreatureRules>(json, CreaturesFileName);
 }

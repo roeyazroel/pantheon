@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Pantheon.Domain.Belief;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
 using Pantheon.Game.Population;
+using Pantheon.Simulation.Creatures;
 
 namespace Pantheon.Game.Diagnostics;
 
@@ -25,6 +27,15 @@ public sealed record DebugSnapshot
 
     /// <summary>The god the local player controls, if any.</summary>
     public int? LocalGodId { get; init; }
+
+    /// <summary>Creature rules, for the levels in the Creature view; <c>null</c> hides the next level's experience.</summary>
+    public CreatureRules? CreatureRules { get; init; }
+
+    /// <summary>The local player's Creature, whose options are listed.</summary>
+    public int? LocalCreatureId { get; init; }
+
+    /// <summary>The local Creature's options now, best first.</summary>
+    public IReadOnlyList<CreatureOption> CreatureOptions { get; init; } = [];
 
     /// <summary>Settlement shown in detail; the others get one line each. <c>null</c> shows the first.</summary>
     public int? SelectedSettlementId { get; init; }

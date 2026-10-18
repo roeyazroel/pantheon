@@ -34,6 +34,7 @@ internal static class SaveIntegrity
         ValidateRegions(world, errors);
         var godIds = ValidateGods(world, errors);
         ValidateSettlements(world, godIds, errors);
+        CreatureIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {

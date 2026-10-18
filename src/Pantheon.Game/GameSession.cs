@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
 using Pantheon.Domain.World;
 using Pantheon.Persistence;
+using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Systems;
 using Pantheon.Simulation.Terrain;
@@ -24,6 +26,7 @@ public sealed class GameSession
 
     private readonly SimulationEngine _engine;
     private readonly MiracleCaster _caster;
+    private readonly CreatureAuthority _creatures;
     private readonly Action _step;
     private readonly List<WorldEvent> _events = [];
 
@@ -31,7 +34,8 @@ public sealed class GameSession
     private GameSession(GameContent content, WorldState world, TerrainField terrain)
     {
         Content = content;
-        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules);
+        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures);
+        _creatures = new CreatureAuthority(content.Creatures, _engine.Creatures!.Brain);
         _caster = new MiracleCaster(content.DivineRules, content.SettlementRules, content.Miracles);
         _step = StepWorld;
         World = world;
@@ -61,6 +65,9 @@ public sealed class GameSession
     /// <summary>The god the local player controls, if any.</summary>
     public GodState? LocalGod => LocalGodId is { } id ? World.Gods.Find(god => god.Id == id) : null;
 
+    /// <summary>The local player's god's Creature, if it has one.</summary>
+    public CreatureState? LocalCreature => LocalGod?.CreatureId is { } id ? World.Creatures.Find(creature => creature.Id == id) : null;
+
     /// <summary>
     /// Simulated time in seconds, including the progress towards the next tick, for smooth
     /// presentation such as walking citizens. It stands still while the clock is paused.
@@ -74,7 +81,7 @@ public sealed class GameSession
     public static GameSession CreateNew(GameContent content, WorldSeed seed)
     {
         ArgumentNullException.ThrowIfNull(content);
-        var generated = WorldGenerator.Generate(seed, content.WorldGen, content.Pantheon);
+        var generated = WorldGenerator.Generate(seed, content.WorldGen, content.Pantheon, content.Creatures);
         return new GameSession(content, generated.State, generated.Terrain);
     }
 
@@ -126,7 +133,7 @@ public sealed class GameSession
     /// <param name="seed">Seed of the new world.</param>
     public void StartNewWorld(WorldSeed seed)
     {
-        var generated = WorldGenerator.Generate(seed, Content.WorldGen, Content.Pantheon);
+        var generated = WorldGenerator.Generate(seed, Content.WorldGen, Content.Pantheon, Content.Creatures);
         Replace(generated.State, generated.Terrain);
     }
 
@@ -153,6 +160,37 @@ public sealed class GameSession
     /// <returns>The verdict.</returns>
     public CastCheck CastMiracle(string miracleId, GroundPosition target) =>
         _caster.Cast(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0, _events);
+
+    /// <summary>
+    /// Sends a command to the local player's Creature (spec §73, ADR-010): reward or punish what it is
+    /// doing or just did, or send it somewhere. The authority checks it first.
+    /// </summary>
+    /// <param name="kind">Reward, punish or go to.</param>
+    /// <param name="target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>.</param>
+    /// <returns>The outcome.</returns>
+    public CreatureCommandResult CommandCreature(CreatureCommandKind kind, GroundPosition target = default)
+    {
+        var god = LocalGodId ?? 0;
+        var creature = LocalGod?.CreatureId ?? 0;
+        return _creatures.Execute(World, new CreatureCommand(god, creature, kind, target), god, _events);
+    }
+
+    /// <summary>What a reward or punishment of the local Creature would judge now, if anything.</summary>
+    /// <returns>The situation, the action and the settlement it concerned, or <c>null</c>.</returns>
+    public (CreatureSituation Situation, CreatureAction Action, int? SettlementId)? FindJudgedAction()
+    {
+        if (LocalCreature is not { } creature || _creatures.FindJudged(World, creature) is not { } judged)
+        {
+            return null;
+        }
+
+        return (judged.Situation, judged.Action, judged.Memory is { } memory ? memory.SettlementId : creature.Activity.TargetSettlementId);
+    }
+
+    /// <summary>The local Creature's options now, best first, for the debug view.</summary>
+    /// <returns>The options; none without a Creature.</returns>
+    public IReadOnlyList<CreatureOption> PreviewCreatureOptions() =>
+        LocalCreature is { } creature ? _engine.Creatures!.Brain.ListOptions(World, creature) : [];
 
     /// <summary>The latest miracle cast still waiting to be drained, if any.</summary>
     /// <returns>The event, or <c>null</c>.</returns>

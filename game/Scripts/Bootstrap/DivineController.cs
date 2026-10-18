@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Godot;
+using Pantheon.Client.Presentation.Creatures;
 using Pantheon.Client.Presentation.Divine;
 using Pantheon.Client.UI;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.World;
 using Pantheon.Game;
@@ -14,8 +17,9 @@ namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
 /// The player's divine interface: selecting and casting miracles at the cursor (click-to-cast,
-/// ADR-009), the HUD, alerts, miracle effects and map overlays. It reads the session and sends
-/// commands to it; the session decides what happens.
+/// ADR-009), rewarding, punishing and sending the Creature with the hand (ADR-010), the HUD,
+/// alerts, miracle effects and map overlays. It reads the session and sends commands to it; the
+/// session decides what happens.
 /// </summary>
 internal sealed class DivineController
 {
@@ -25,6 +29,8 @@ internal sealed class DivineController
     private readonly GameSession _session;
     private readonly Hud _hud;
     private readonly DivinePresenter _presenter;
+    private readonly CreaturePresenter _creatures;
+    private readonly DivineHand _hand;
     private readonly DivineViewSettings _view;
     private readonly Action<string> _setStatus;
     private readonly AlertFeed _feed = new();
@@ -38,15 +44,24 @@ internal sealed class DivineController
     /// <param name="presenter">Divine visuals.</param>
     /// <param name="view">God colours and miracle looks.</param>
     /// <param name="setStatus">Shows a status line.</param>
-    public DivineController(GameSession session, Hud hud, DivinePresenter presenter, DivineViewSettings view, Action<string> setStatus)
+    /// <param name="creatures">Creature visuals, for the hand's gestures.</param>
+    /// <param name="hand">The god's hand.</param>
+    public DivineController(GameSession session, Hud hud, DivinePresenter presenter, DivineViewSettings view, Action<string> setStatus, CreaturePresenter creatures, DivineHand hand)
     {
         _session = session;
         _hud = hud;
         _presenter = presenter;
         _view = view;
         _setStatus = setStatus;
+        _creatures = creatures;
+        _hand = hand;
         _hud.MiracleClicked += Select;
+        _hud.CreatureJudged += JudgeCreature;
+        _hud.CreatureSendClicked += BeginSend;
     }
+
+    /// <summary>Whether the next click on the ground sends the Creature there.</summary>
+    public bool SendMode { get; private set; }
 
     /// <summary>The selected miracle, if any.</summary>
     public string? SelectedMiracle { get; private set; }
@@ -70,24 +85,89 @@ internal sealed class DivineController
     public void Select(string? miracleId)
     {
         SelectedMiracle = miracleId;
+        SendMode = false;
         if (miracleId is null)
         {
             _presenter.HideTarget();
         }
     }
 
-    /// <summary>Casts the selected miracle at the cursor.</summary>
+    /// <summary>Casts the selected miracle at the cursor, or sends the Creature there in send mode.</summary>
     /// <param name="cursor">Ground point under the cursor.</param>
-    /// <returns><c>true</c> when a miracle was selected, so the click is used up.</returns>
+    /// <returns><c>true</c> when the click was used.</returns>
     public bool TryCast(NVector3? cursor)
     {
-        if (SelectedMiracle is not { } miracle || cursor is not { } point)
+        if (cursor is not { } point)
         {
             return false;
         }
 
+        if (SendMode)
+        {
+            SendCreature(cursor);
+            return true;
+        }
+
+        if (SelectedMiracle is not { } miracle)
+        {
+            return false;
+        }
+
+        var power = _session.LocalGod?.DivinePower;
         _setStatus(SessionCommands.CastMiracle(_session, miracle, new GroundPosition(point.X, point.Z)));
+        if (_session.LocalGod?.DivinePower < power)
+        {
+            _hand.Press(point.ToGodot());
+        }
+
         return true;
+    }
+
+    /// <summary>Rewards or punishes the Creature, with a pat or a swat of the hand when it lands.</summary>
+    /// <param name="kind">Reward or punish.</param>
+    public void JudgeCreature(CreatureCommandKind kind)
+    {
+        var creature = _session.LocalCreature;
+        var status = SessionCommands.CommandCreature(_session, kind);
+        _setStatus(status);
+        if (creature is null || _creatures.Find(creature.Id) is not { } shown)
+        {
+            return;
+        }
+
+        if (status.StartsWith("You reward", StringComparison.Ordinal))
+        {
+            _hand.Pat(shown.Position, shown.HeadHeight);
+            _creatures.Flash(creature.Id, new Color(1f, 0.85f, 0.4f));
+        }
+        else if (status.StartsWith("You punish", StringComparison.Ordinal))
+        {
+            _hand.Swat(shown.Position, shown.HeadHeight);
+            _creatures.Flash(creature.Id, new Color(1f, 0.15f, 0.1f));
+        }
+    }
+
+    /// <summary>The next click on the ground sends the Creature there.</summary>
+    public void BeginSend()
+    {
+        SelectedMiracle = null;
+        SendMode = _session.LocalCreature is not null;
+        _presenter.HideTarget();
+        _setStatus(SendMode ? "Click where your Creature should go (Esc cancels)" : "You have no Creature");
+    }
+
+    /// <summary>Sends the Creature to a ground point.</summary>
+    /// <param name="cursor">Ground point under the cursor.</param>
+    public void SendCreature(NVector3? cursor)
+    {
+        SendMode = false;
+        if (cursor is not { } point)
+        {
+            return;
+        }
+
+        _setStatus(SessionCommands.CommandCreature(_session, CreatureCommandKind.GoTo, new GroundPosition(point.X, point.Z)));
+        _hand.Press(point.ToGodot());
     }
 
     /// <summary>Shows the next map overlay, or hides it after the last one.</summary>
@@ -110,9 +190,11 @@ internal sealed class DivineController
     /// <summary>Handles new events, then refreshes the HUD, the targeting ring and the overlay.</summary>
     /// <param name="delta">Real frame time in seconds.</param>
     /// <param name="cursor">Ground point under the cursor, if any.</param>
-    public void Process(double delta, NVector3? cursor)
+    /// <param name="cameraDistance">Camera distance in metres, for the hand's size.</param>
+    public void Process(double delta, NVector3? cursor, float cameraDistance)
     {
         _clock += delta;
+        _hand.Follow(cursor?.ToGodot(), cameraDistance);
         HandleEvents();
         var target = cursor is { } point ? new GroundPosition(point.X, point.Z) : (GroundPosition?)null;
         var hud = HudReadout.Build(_session, SelectedMiracle, target);

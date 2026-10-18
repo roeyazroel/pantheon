@@ -54,6 +54,9 @@
   // SettlementRadius metres of a settlement's centre touches it. Costs scale by 1 + WeakInfluenceCostFactor x
   // (1 - influence). Love for a miracle that answers a need scales from GratitudeFloor (no need) to 1.
   "WitnessRadius": 350.0,
+  // A god's Creature carries influence with it, fading to 0 at CreatureInfluenceReach metres.
+  "CreatureInfluenceStrength": 0.5,
+  "CreatureInfluenceReach": 220.0,
   "SettlementRadius": 60.0,
   "WeakInfluenceCostFactor": 1.0,
   "GratitudeFloor": 0.25,

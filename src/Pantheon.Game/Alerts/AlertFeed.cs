@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
@@ -112,10 +113,42 @@ public sealed class AlertFeed
                 return (Key("rank", (int)rank.Rank), Format("You are now a {0}.", DivineText.Rank(rank.Rank)), AlertSeverity.Good, null);
             case RankAchieved rank when GodStanding.Find(world, rank.GodId) is { } god:
                 return (Key("rank", (rank.GodId * 100) + (int)rank.Rank), Format("{0} is now a {1}.", god.Name, DivineText.Rank(rank.Rank)), AlertSeverity.Info, null);
+            case CreatureActed acted when world.Creatures.Find(c => c.Id == acted.CreatureId) is { } creature:
+                return DescribeDeed(acted, creature, world, localGodId);
+            case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
+                return DescribeChange(changed, creature);
             default:
                 return null;
         }
     }
+
+    /// <summary>The player's Creature did something notable to a settlement (spec §59: "Your Creature attacked neutral civilians").</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeDeed(CreatureActed acted, Domain.Creatures.CreatureState creature, WorldState world, int? localGodId)
+    {
+        if (creature.GodId != localGodId || acted.SettlementId is not { } id || Settlement(world, id) is not { } settlement)
+        {
+            return null;
+        }
+
+        var key = Key("deed" + acted.Action, id);
+        return acted.Action switch
+        {
+            CreatureAction.Attack => (key, Format("{0} attacked {1}: {2} died.", creature.Name, settlement.Name, acted.Deaths), AlertSeverity.Danger, settlement.Position),
+            CreatureAction.EatFromStores => (key, Format("{0} ate {1:0} food from the stores of {2}.", creature.Name, -acted.Food, settlement.Name), AlertSeverity.Warning, settlement.Position),
+            CreatureAction.Feed => (key, Format("{0} brought {1:0} food to {2}.", creature.Name, acted.Food, settlement.Name), AlertSeverity.Good, settlement.Position),
+            CreatureAction.HelpBuild => (key, Format("{0} helped {1} build.", creature.Name, settlement.Name), AlertSeverity.Info, settlement.Position),
+            _ => null,
+        };
+    }
+
+    /// <summary>The player's Creature levelled up, was banished or came back.</summary>
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeChange(CreatureChanged changed, Domain.Creatures.CreatureState creature) => changed.Change switch
+    {
+        CreatureChange.LevelledUp => (Key("level", creature.Level), Format("{0} reached level {1}.", creature.Name, creature.Level), AlertSeverity.Good, creature.Position),
+        CreatureChange.Banished => (Key("banished", creature.Id), Format("{0} starved and was banished. It will return home.", creature.Name), AlertSeverity.Danger, null),
+        CreatureChange.Returned => (Key("returned", creature.Id), Format("{0} has returned.", creature.Name), AlertSeverity.Info, creature.Position),
+        CreatureChange.Rewarded or CreatureChange.Punished => null,
+    };
 
     /// <summary>A settlement gained or lost a god's majority.</summary>
     private static (string, string, AlertSeverity, GroundPosition?)? DescribeFollowing(FollowingChanged change, SettlementState settlement, WorldState world, int? localGodId)

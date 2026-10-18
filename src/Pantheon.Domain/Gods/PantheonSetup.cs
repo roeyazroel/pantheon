@@ -27,4 +27,7 @@ public sealed record GodSlot
 
     /// <summary>Player or AI.</summary>
     public required GodController Controller { get; init; }
+
+    /// <summary>Name of the god's Creature.</summary>
+    public required string CreatureName { get; init; }
 }

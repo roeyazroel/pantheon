@@ -15,6 +15,27 @@ namespace Pantheon.Persistence;
 /// </remarks>
 internal static class SaveMigrations
 {
+    /// <summary>The starting preferences of a Milestone 4 Creature (spec §25's "initially").</summary>
+    private static readonly (string Situation, string Action, double Weight)[] Version4StartingPreferences =
+    [
+        ("VillageInNeed", "Feed", 0.4),
+        ("VillageInNeed", "Ignore", 0.3),
+        ("VillageInNeed", "EatFromStores", 0.2),
+        ("VillageInNeed", "Attack", 0.05),
+        ("Hungry", "EatFromStores", 0.55),
+        ("Hungry", "Forage", 0.45),
+        ("Tired", "Rest", 0.8),
+        ("Bored", "Wander", 0.5),
+        ("Idle", "Wander", 0.4),
+        ("Idle", "Rest", 0.3),
+        ("VillageBuilding", "HelpBuild", 0.45),
+        ("VillageBuilding", "Ignore", 0.3),
+        ("VillageBuilding", "Attack", 0.05),
+        ("VillageThriving", "Play", 0.45),
+        ("VillageThriving", "Ignore", 0.3),
+        ("VillageThriving", "Attack", 0.05),
+    ];
+
     /// <summary>Parses an older save and upgrades it to <see cref="WorldSaveSerializer.CurrentSaveVersion"/>.</summary>
     /// <param name="json">Save-file text; its version has been read and checked already.</param>
     /// <param name="fromVersion">Version the save was written with.</param>
@@ -50,6 +71,9 @@ internal static class SaveMigrations
                 break;
             case 2:
                 UpgradeFrom2(root);
+                break;
+            case 3:
+                UpgradeFrom3(root);
                 break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
@@ -132,6 +156,126 @@ internal static class SaveMigrations
             AddMember(founding, "PopulationVariation", 0f, fromVersion: 2);
         }
     }
+
+    /// <summary>
+    /// Version 3 to 4 (Milestone 4): the world gains Creatures. Version 3 had none, so every god
+    /// gets the Milestone 4 newborn Creature, Bramble, at the settlement where most of the people
+    /// follow it (the first settlement when none does), with an even temper and the Milestone 4
+    /// starting preferences, and the god's <c>CreatureId</c> points to it.
+    /// </summary>
+    private static void UpgradeFrom3(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world || world["Gods"] is not JsonArray gods)
+        {
+            return;
+        }
+
+        var creatures = new JsonArray();
+        foreach (var node in gods)
+        {
+            if (node is not JsonObject god || ReadNumber(god["Id"]) is var number && double.IsNaN(number))
+            {
+                continue;
+            }
+
+            var id = (int)number;
+
+            AddNode(god, "CreatureId", id, fromVersion: 3);
+            if (FindHome(world, id) is { } home)
+            {
+                creatures.Add(Version4Creature(id, home));
+            }
+        }
+
+        AddNode(world, "Creatures", creatures, fromVersion: 3);
+    }
+
+    /// <summary>The settlement where the largest share of the people follow a god, or the first settlement.</summary>
+    private static (int Id, double X, double Z)? FindHome(JsonObject world, int godId)
+    {
+        if (world["Settlements"] is not JsonArray settlements || settlements.Count == 0)
+        {
+            return null;
+        }
+
+        JsonObject? best = null;
+        var bestShare = -1.0;
+        foreach (var node in settlements)
+        {
+            if (node is not JsonObject settlement || settlement["Beliefs"] is not JsonArray beliefs)
+            {
+                continue;
+            }
+
+            foreach (var beliefNode in beliefs)
+            {
+                if (beliefNode is JsonObject belief && ReadNumber(belief["GodId"]) == godId && ReadNumber(belief["Adherence"]) > bestShare)
+                {
+                    bestShare = ReadNumber(belief["Adherence"]);
+                    best = settlement;
+                }
+            }
+        }
+
+        best ??= settlements[0] as JsonObject;
+        if (best?["Position"] is not JsonObject position)
+        {
+            return null;
+        }
+
+        return ((int)ReadNumber(best["Id"]), ReadNumber(position["X"]), ReadNumber(position["Z"]));
+    }
+
+    /// <summary>
+    /// A number in the tree, whether it was parsed from text or written by an earlier step (which
+    /// may hold a float, an int or a double); NaN when the node is not a number.
+    /// </summary>
+    private static double ReadNumber(JsonNode? node) =>
+        node is JsonValue value && value.GetValueKind() == JsonValueKind.Number
+            ? double.Parse(value.ToJsonString(), System.Globalization.CultureInfo.InvariantCulture)
+            : double.NaN;
+
+    /// <summary>The Milestone 4 newborn Creature, as the version 4 format writes it.</summary>
+    private static JsonObject Version4Creature(int godId, (int Id, double X, double Z) home)
+    {
+        var preferences = new JsonArray();
+        foreach (var (situation, action, weight) in Version4StartingPreferences)
+        {
+            preferences.Add(new JsonObject { ["Situation"] = situation, ["Action"] = action, ["Weight"] = weight });
+        }
+
+        var position = new JsonObject { ["X"] = home.X, ["Z"] = home.Z };
+        return new JsonObject
+        {
+            ["Id"] = godId,
+            ["GodId"] = godId,
+            ["Name"] = "Bramble",
+            ["Species"] = "Mossback",
+            ["Position"] = position,
+            ["Heading"] = 0,
+            ["Level"] = 1,
+            ["Experience"] = 0,
+            ["Health"] = 1,
+            ["Loyalty"] = 0.7,
+            ["Morality"] = 0,
+            ["Needs"] = new JsonObject { ["Hunger"] = 0.2, ["Fatigue"] = 0.1, ["Boredom"] = 0.3 },
+            ["Personality"] = new JsonObject { ["Kindness"] = 0.5, ["Aggression"] = 0.5, ["Laziness"] = 0.5, ["Curiosity"] = 0.5 },
+            ["Activity"] = new JsonObject
+            {
+                ["Action"] = "Rest",
+                ["Situation"] = "Idle",
+                ["Phase"] = "Deciding",
+                ["TargetSettlementId"] = null,
+                ["Target"] = position.DeepClone(),
+                ["Path"] = new JsonArray(),
+                ["TicksLeft"] = 0,
+            },
+            ["Preferences"] = preferences,
+            ["Memories"] = new JsonArray(),
+            ["HomeSettlementId"] = home.Id,
+        };
+    }
+
 
     /// <summary>The Milestone 3 home belief of the player god, given to the first settlement of a version 2 save.</summary>
     private static JsonObject HomeBelief() => new()
