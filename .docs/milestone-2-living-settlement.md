@@ -46,7 +46,7 @@ assumption, as in Milestone 1.
 amends ADR-004: Tier numbering, the 1 Hz settlement step, and representative citizens as the
 Regional tier's derived, non-canonical presentation until Milestone 12.
 
-**Status:** planned.
+**Status:** in progress.
 
 ## Architecture
 
@@ -120,14 +120,18 @@ Design notes:
 - The two random draws per settlement (births, then deaths) come from the shared
   `SimulationRandom`, in list order, so runs and save/load continuations stay deterministic.
 
-Balance (prototype of the step above with the shipped values, seed 1234: 24 land regions with
-mean fertility 0.46): the settlement starts its first house after about 1.5 minutes at ×1,
-builds one house every ten seconds while crowded, and levels off at about 535 people in 127
-houses after about 22 minutes (under 90 seconds at ×16), healthy, with spare housing and full
-stores. A poor site (14 land regions, fertility 0.39) levels off near 200. Emptying the stores at
-the limit stops births until they refill; arriving settlers beyond what the land feeds cause
-starvation, health falls to about 0.6, deaths bring the population back within the land's
-limit, and health recovers.
+Balance (the shipped step and values, measured headless on seed 1234: 24 land regions with mean
+fertility 0.46; simulated time at ×1): the settlement starts its first house after about a
+minute (tick 590) and finishes it 15 seconds later, then builds a house every 10 to 15 seconds
+while crowded. It reaches 95% of its limit after 18 minutes and levels off at about 540 people
+in 129 houses after about 25 minutes (about 90 seconds at ×16), healthy, with spare housing and
+full stores. A poor site (seed 2: 14 land regions, fertility 0.39) levels off near 210.
+Emptying the stores at the limit (F6) stops births for about 11 minutes while they refill; the
+population falls to about 425 by ordinary deaths and climbs back. Arriving settlers beyond what
+the land feeds (F7 at the limit: 541 → 811 people) eat the stores in about 6 minutes, then
+starve for about 4 minutes: health falls to about 0.7, deaths bring the population back within
+the land's limit, health is full again a minute after its lowest point, and births return once
+the stores refill.
 
 ### Tier 2: representative citizens (ADR-008)
 
@@ -212,7 +216,7 @@ limit, and health recovers.
 | --- | --- | --- |
 | Build incrementally; every milestone leaves the game playable | Each commit builds, passes the tests and launches; the settlement grows on its own. | Windowed runs on both renderers |
 | Simulation and presentation separate; core testable without rendering | The rules, Tier 2 derivation and layout are engine-agnostic C#; the client only builds nodes. | `ArchitectureRulesTests`, headless tests |
-| `WorldState` authoritative | The settlement step, the session commands and the save migration are the only writers. Tier 2 reads state and is never saved. | `RepresentativeRosterTests` (world unchanged), save tests |
+| `WorldState` authoritative | The settlement step, the session commands (including the `,` F6 F7 debug commands) and the save migration are the only writers. Tier 2 reads state and is never saved. | `RepresentativeRosterTests` (world unchanged), save tests |
 | Data-driven content | Balance in `settlement_rules.json`; layout, colours, Tier 2 distances and routines in `settlement_view.json`. | `ContentTests` |
 | Don't optimise before profiling | Simple per-frame pose evaluation and per-instance MultiMesh writes; the frame cost is measured and recorded. | Verification results |
 | No infrastructure without need | No new tools, services or packages. | Review |
@@ -417,19 +421,25 @@ sealed class IntervalSystem : ISimulationSystem {            // Systems/
     void Update(TickContext context); }
 readonly record struct FarmlandSurvey(int LandRegions, float MeanFertility);           // Settlements/
 readonly record struct LabourAllocation(float Workers, float Farmers, float Builders) { float NotWorking(int population); }
-sealed record SettlementOutlook(FarmlandSurvey Land, LabourAllocation Labour, float Production, float Consumption,
-    float StorageCapacity, bool ConstructionWanted, bool ConstructionFunded, double BirthChance, double DeathChance) {
-    float NetFood; bool IsStarving(float food); }
+enum BirthBlocker { None, NoPeople, NoFreeHousing, NoFoodSurplus }
+sealed record SettlementOutlook { FarmlandSurvey Land; LabourAllocation Labour; float Production, Consumption, Storage,
+    FedShare, FoodAfter, HealthAfter; bool ConstructionWanted, ConstructionFunded; BirthBlocker BirthBlocker;
+    double BirthChance, DeathChance, ExpectedBirths, ExpectedDeaths;
+    float NetFood; bool IsStarving; bool ConstructionWaitsForFood; }                   // the next step, before its random draws
 static class SettlementEconomy {
-    FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius);
+    FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius); bool IsFarmland(RegionState region);
     float ComputeConsumption(SettlementRules rules, int population);
     float ComputeStorage(SettlementRules rules, int housing);
+    int ComputeHouseCount(SettlementRules rules, int housing);                          // ceil(housing / HousingPerHouse)
     bool WantsConstruction(SettlementRules rules, SettlementState settlement);
+    bool CanFundConstruction(SettlementRules rules, SettlementState settlement);
     LabourAllocation AllocateLabour(SettlementRules rules, SettlementState settlement);
     float ComputeProduction(SettlementRules rules, float farmers, FarmlandSurvey land);
+    float ComputeFedShare(float available, float consumption);
     float ComputeHealth(SettlementRules rules, float health, float fedShare);
     double ComputeBirthChance(SettlementRules rules, float health);
     double ComputeDeathChance(SettlementRules rules, float health);
+    BirthBlocker FindBirthBlocker(SettlementRules rules, SettlementState settlement, float production, float consumption, float foodAfter);
     SettlementOutlook Assess(SettlementRules rules, SettlementState settlement, RegionGrid regions); }
 sealed class SettlementSystem : ISimulationSystem { SettlementSystem(SettlementRules rules); void Update(TickContext context); }
 static class SettlementRulesValidator { void Validate(SettlementRules rules); }        // lists every error
@@ -498,14 +508,17 @@ static class SettlementLayout {
 
 // Diagnostics/
 sealed record DebugSnapshot { ...; IReadOnlyList<CrowdStatus> Crowds { get; init; } = []; }
-static class DebugReadout { ... settlement lines as in Architecture → Debug tools ...;
-    const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F6] spoil food  [F7] settlers"; }
+static class DebugReadout { ... the step cadence line ...;
+    const string DebugHints = "[F1] overlay  [B] regions  [F3] debug map  [.] step tick  [,] step settlement  [F6] spoil food  [F7] settlers";
+    string Summarize(WorldState world, SettlementRules rules); }                 // one line for the log after a capture
+internal static class SettlementReadout { void Append(List<string> lines, DebugSnapshot snapshot, SettlementState s); }
+                                                                                  // the settlement lines of Architecture → Debug tools
 
 // Session and launch
 sealed class GameSession { double SimulationSeconds { get; }  // (Tick + Alpha) × TickDuration
     void RunTicks(int ticks); int StepToNextSettlementStep(); }
-static class SessionCommands { string StepSettlement(GameSession); string SpoilFood(GameSession); string AddSettlers(GameSession);
-    const float SettlerShare = 0.5f; const int MinimumSettlers = 10; }
+static class SessionCommands { string StepSettlement(GameSession); string AdvanceTicks(GameSession, int ticks);
+    string SpoilFood(GameSession); string AddSettlers(GameSession); const float SettlerShare = 0.5f; const int MinimumSettlers = 10; }
 sealed record LaunchOptions { int? AdvanceTicks; float? CameraDistance; }        // --advance-ticks, --camera-distance
 ```
 
@@ -563,17 +576,18 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Prototype the Tier 1 balance numerically (growth, equilibrium, famine and recovery, poor sites).
 - [x] Write a version 1 save with the Milestone 1 build for the migration test.
 - [x] Write this plan.
+- [x] ADR-008 (amends ADR-004) and the ADR index.
+- [x] Saves: `Health` and `ConstructionProgress` on `SettlementState`, `SaveVersion` 2, `SaveMigrations`, integrity checks, migration tests.
+- [x] Tier 1: `SettlementRules`, `settlement_rules.json`, `SettlementEconomy`, `SettlementSystem`, `IntervalSystem`, validator, rule and cadence tests.
+- [x] Readouts and drivers: settlement readout lines, `,` F6 F7, input map, launch options, tests.
+- [x] Measure the shipped balance headless (Architecture → Tier 1).
 
 ### In Progress
 
-- [ ] ADR-008 (amends ADR-004) and the ADR index.
+- [ ] Layout and views: houses from housing, building site, fields, `settlement_view.json`, client views and materials.
 
 ### Future (this milestone, in order)
 
-- [ ] Saves: `Health` and `ConstructionProgress` on `SettlementState`, `SaveVersion` 2, `SaveMigrations`, integrity checks, migration tests.
-- [ ] Tier 1: `SettlementRules`, `settlement_rules.json`, `SettlementEconomy`, `SettlementSystem`, `IntervalSystem`, validator, rule and cadence tests.
-- [ ] Readouts and drivers: settlement readout lines, `,` F6 F7, input map, launch options, tests.
-- [ ] Layout and views: houses from housing, building site, fields, `settlement_view.json`, client views and materials.
 - [ ] Tier 2: `Pantheon.Game.Population`, `CitizenView`, tier readout, tests.
 - [ ] Docs: `docs/ARCHITECTURE.md` (+ diagrams), README, AGENTS.md (current tools), `src/Pantheon.Domain/Population/README.md`, ADR-004 status line.
 - [ ] Verify in Godot on both renderers; record the results here.
