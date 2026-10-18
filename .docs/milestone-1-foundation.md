@@ -28,9 +28,9 @@ design drives implementation; tests are specified in the Test Plan and written a
 libraries. The user asked for fully autonomous execution, so the pattern could not be confirmed
 interactively. This is recorded as an explicit assumption.
 
-**Status:** implemented and verified; see Test Plan → Verification results. The owner's coding
-rules (spec §134, see Architecture → Coding rules) added the tasks under Tasks → In Progress. The
-items under Tasks → Future are follow-ups outside this milestone.
+**Status:** implemented and verified; see Test Plan → Verification results. The tasks added by
+the owner's coding rules (spec §134, see Architecture → Coding rules) are complete. The items
+under Tasks → Future are follow-ups outside this milestone.
 
 ## Architecture
 
@@ -161,7 +161,7 @@ every contributor. Milestone 1 meets them as follows.
   Elevation, Temperature, Moisture, Fertility, Vegetation and off. Numeric layers use a dark-to-bright
   ramp from the lowest to the highest value, and the legend names the range. The region under the
   cursor is white and settlement regions are red. The map is rebuilt only when the layer, the
-  cursor region, the tick or the world changes.
+  cursor region, the tick or the world changes, and it stays up when F1 hides the panel.
 - `.`: pauses the simulation and runs exactly one tick, through the same engine call as the
   scheduler, so stepping N times equals running N scheduled ticks.
 - Launch options and `SmokeTestDriver` for scripted runs (see Runtime data flow).
@@ -416,8 +416,8 @@ Zoom bands: Close ≤ 120 m camera distance, Regional ≤ 700 m, Strategic up to
 
 ## Test Plan
 
-Unit and integration tests in `src/Pantheon.Tests` (xUnit, headless, no Godot): 118 test
-methods, 147 test cases.
+Unit and integration tests in `src/Pantheon.Tests` (xUnit, headless, no Godot): 129 test
+methods, 169 test cases.
 
 | Area | Tests | Verifies |
 | --- | --- | --- |
@@ -450,12 +450,12 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - A stress loop (zoom in and out across all bands, cursor sweeps, boundaries on) that checks for
   driver crashes.
 - Edge-scroll captures at the world's east and south edges on both backends, looking for seams.
-- Debug tools: F3 cycles every map layer and turns the map off, and `.` advances exactly one tick
-  while paused.
+- Debug tools on both renderers: F3 cycles every map layer and turns the map off, `.` advances
+  exactly one tick while paused, and F1 hides only the panel.
 
 ### Verification results
 
-- Build: 0 warnings, 0 errors. Tests: 147 of 147 passed.
+- Build: 0 warnings, 0 errors. Tests: 169 of 169 passed.
 - Headless and windowed runs: both backends start, render and quit cleanly. The fallback shows
   its badge and reason. Unknown options warn, and a bad `--load` falls back to a new world.
 - Interactive checks:
@@ -486,6 +486,15 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   - After the fix, captures at the same camera position (cursor 1926, 992) and at the
     south-east corner show no line, even with contrast boosted ×4. The fixed-camera smoke
     capture is unchanged apart from one overlay digit.
+- Debug tools, seed 1234 on both renderers:
+  - F3 cycled Biome, Elevation, Temperature, Moisture, Fertility and Vegetation, then turned
+    the map off. Both renderers showed the same ranges, for example elevation −40.0 m to
+    100.1 m and vegetation 0.00 to 0.88. The white cursor pixel and the red settlement pixel
+    sat on the regions the panel named.
+  - `.` paused the simulation and advanced exactly one tick per press: to ticks 447, 448, 449
+    and 450 on Terrain3D, and 302 and 303 on the fallback. The tick did not move between
+    presses, and Space resumed at ×1.
+  - F1 hid the panel and left the map and the fallback badge visible.
 
 ## Tasks
 
@@ -500,7 +509,7 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
 - [x] Pantheon.Simulation: RNG, noise, terrain generation, regions, settlement founding, tick systems.
 - [x] Pantheon.Persistence: versioned saves and content parsing.
 - [x] Pantheon.Game: session, session commands, scheduler, camera model, edge scroll, readouts, launch options, presentation data.
-- [x] Pantheon.Tests: tests from the Test Plan; run them (147 passing).
+- [x] Pantheon.Tests: tests from the Test Plan; run them (169 passing).
 - [x] Godot project: `project.godot` (input map), scenes, data files, materials, shaders.
 - [x] Godot client scripts: bootstrap, camera, presenters (Terrain3D + fallback), overlay, smoke-test driver.
 - [x] Vendor the Terrain3D runtime subset and add `tools/vendor-terrain3d.sh`.
@@ -522,12 +531,12 @@ Client verification (Godot 4.7.2 .NET on the VM, Forward+ on lavapipe):
   the README and `docs/ARCHITECTURE.md`.
 - [x] Debug tool: `.` pauses and steps exactly one tick (`GameSession.StepOneTick`, `SessionCommands.StepTick`).
 - [x] Debug tool: F3 region debug map (`RegionDebugMap`, `DebugOverlay.ShowRegionMap`).
+- [x] Coding rules: update the README, `docs/ARCHITECTURE.md` and this plan; verify both
+  renderers and the new hotkeys (Test Plan → Verification results → Debug tools).
 
 ### In Progress
 
-Added by the owner's coding rules (spec §134):
-
-- [ ] Update the README, `docs/ARCHITECTURE.md` and this plan; verify both renderers and the new hotkeys.
+None.
 
 ### Future
 
