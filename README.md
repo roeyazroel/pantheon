@@ -512,7 +512,8 @@ its cooldown); hover over a button to read what it does.
     alerts, the history, the book's World and Religion pages and F1 follow them.
 
 A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
-followers grow hungry. Try Lightning to see how fear behaves.
+followers grow hungry. Try Lightning to see how fear behaves; but beware, a bolt can set dry woods
+alight, and a forest fire drives off the game the villages hunt (ADR-041).
 
 ## Your rivals
 
@@ -641,7 +642,8 @@ broken") and whether you sign them in secret.
   for it. You may owe favours too.
 - **Absorbing an ally.** You may break an alliance and take a share of your ally's followers
   wherever you are followed more than it is. It is a betrayal, and the alternative to sharing a
-  victory.
+  victory. An AI ally that means to betray you absorbs you instead when that takes it enough of
+  your followers (ADR-040).
 
 ### The Divine Council
 
@@ -721,7 +723,8 @@ see the clouds; up close you see the rain, and the light dims under a storm.
 - **Fog.** Calm, cool, humid weather is fog: mist and drizzle.
 - **Hurricanes.** A storm born over warm sea in summer or autumn may grow into a hurricane. It
   keeps its winds far inland and tears down houses where it passes; shields, the Protection
-  domain, shelters and architecture spare some. Other storms never reach its strength.
+  domain, shelters and architecture spare some. Other storms never reach its strength. An alert
+  warns you as soon as one forms: "A hurricane is approaching the western coast" (ADR-041).
 - **Heat and cold waves.** A heat wave bakes and dries the land, lights fires, spoils stores and
   sickens the weak; a cold wave freezes and snows, spoils the harvest and sickens the homeless.
 - **Water in the soil.** Rain soaks the farmland, warmth dries it (faster in a dry spell), and

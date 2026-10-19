@@ -61,7 +61,7 @@ public sealed class WeatherSystem : ISimulationSystem
         var climate = ClimateModel.Now(_rules, world);
         var season = ClimateModel.OfSeason(_rules, ClimateModel.SeasonOf(_rules, world));
         UpdateCells(world, seconds, climate.TemperatureShift);
-        SpawnCell(world, random, seconds, climate, season);
+        SpawnCell(world, random, seconds, climate, season, context.Events);
         Rain(world, seconds, climate);
         Storms(world, windBefore, seconds, context.Events);
         ReportDroughts(world, droughtBefore, context.Events);
@@ -176,7 +176,7 @@ public sealed class WeatherSystem : ISimulationSystem
     /// Perhaps lets a new cell blow in at the upwind edge of the map: more often in a wet spell or a
     /// rainy season, rarely in a dry one.
     /// </summary>
-    private void SpawnCell(WorldState world, SimulationRandom random, float seconds, ClimateEffects climate, ClimateEffects season)
+    private void SpawnCell(WorldState world, SimulationRandom random, float seconds, ClimateEffects climate, ClimateEffects season, List<WorldEvent> events)
     {
         var weather = world.Weather;
         var chance = _rules.CellsPerSecond * WeatherModel.CellFactor(_rules, weather.Spell) * climate.RainFactor * seconds;
@@ -185,6 +185,11 @@ public sealed class WeatherSystem : ISimulationSystem
             var cell = CreateCell(world, random, scattered: false);
             Strengthen(cell, random, climate.TemperatureShift, season);
             weather.Cells.Add(cell);
+            if (cell.Wind >= _rules.Extremes.HurricaneWind)
+            {
+                // A hurricane is news before it makes landfall (spec §59, ADR-041).
+                events.Add(new HurricaneApproaching { Tick = world.Tick, CellId = cell.Id, X = cell.X, Z = cell.Z });
+            }
         }
     }
 

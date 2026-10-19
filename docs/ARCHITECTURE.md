@@ -1541,7 +1541,12 @@ the AI diplomat's utilities.
   other's costs, and their AI and Creatures spare each other's people. At war, peoples resist the
   enemy where their own god leads, and AI gods and Creatures target the enemy more.
 - **The AI diplomat** (`GodDiplomat`) answers proposals and weighs alliance, war, betrayal and
-  peace by its view, the balance of followers, war-weariness and its personality.
+  peace by its view, the balance of followers, war-weariness and its personality. Beside betraying
+  an ally it weighs absorbing it, by the believers it would take (ADR-040).
+- **Lightning and hurricanes (ADR-041).** `MiracleEffects.Strike` lets a smiting bolt light the
+  struck region by its flammability, from a stream of the seed and the tick. `WeatherSystem` raises
+  `HurricaneApproaching` when a hurricane forms, and `WeatherText.Coast` names the coast for the
+  alert.
 
 ```mermaid
 flowchart LR

@@ -64,6 +64,28 @@ public static class WeatherText
         return "the " + Compass[index];
     }
 
+    /// <summary>The side of the island a point lies off, on an eight-point compass (ADR-041).</summary>
+    /// <param name="regions">The region grid, for the island's centre.</param>
+    /// <param name="x">Metres east.</param>
+    /// <param name="z">Metres south.</param>
+    /// <returns>For example "the western coast".</returns>
+    public static string Coast(RegionGrid regions, float x, float z)
+    {
+        ArgumentNullException.ThrowIfNull(regions);
+        var centre = regions.Columns * regions.RegionSize / 2f;
+        var bearing = MathF.Atan2(x - centre, -(z - centre)) * (180f / MathF.PI);
+        var index = (int)MathF.Round((bearing < 0f ? bearing + 360f : bearing) / 45f) % Compass.Length;
+        var side = Compass[index] switch
+        {
+            "north" => "northern",
+            "east" => "eastern",
+            "south" => "southern",
+            "west" => "western",
+            var corner => corner + "ern",
+        };
+        return "the " + side + " coast";
+    }
+
     /// <summary>The spell, how long it lasts and the wind, for the HUD and the debug panel.</summary>
     /// <param name="weather">The weather.</param>
     /// <param name="tick">The current tick.</param>

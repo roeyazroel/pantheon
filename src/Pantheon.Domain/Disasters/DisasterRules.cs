@@ -12,6 +12,9 @@ public sealed record DisasterRules
     /// <summary>Chance per second, per unit of lightning, coverage and flammability, that a thunderstorm sets a region alight.</summary>
     public required float LightningIgnitionPerSecond { get; init; }
 
+    /// <summary>Chance, per unit of the struck region's flammability, that a god's bolt of lightning sets it alight (spec §15, ADR-041); never when absent.</summary>
+    public float LightningMiracleIgnition { get; init; }
+
     /// <summary>Chance per second that a spark from the hearths of a settlement of 100 people sets one of the regions around it alight, per unit of that region's flammability.</summary>
     public required float HearthFirePerSecond { get; init; }
 

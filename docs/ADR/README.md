@@ -55,6 +55,8 @@ silently:
 | [ADR-037](ADR-037-creature-temperament.md) | Creature temperament: courage, protectiveness, jealousy and playfulness | Accepted |
 | [ADR-038](ADR-038-the-biomes-of-the-world.md) | The biomes of the world | Accepted |
 | [ADR-039](ADR-039-offerings.md) | Offerings | Accepted |
+| [ADR-040](ADR-040-ai-gods-absorb-their-allies.md) | AI gods absorb their allies | Accepted |
+| [ADR-041](ADR-041-lightning-fires-and-hurricane-warnings.md) | Lightning's fires and hurricane warnings | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

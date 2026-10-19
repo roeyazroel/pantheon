@@ -138,6 +138,8 @@ public sealed class AlertFeed
                     : (Key("victory", victory.GodIds[0]), Format("{0} {1} {2}.", DivineText.Names(world, victory.GodIds, localGodId), victory.GodIds.Count > 1 ? "have" : "has", Flow.VictoryText.Deed(victory.Kind)), AlertSeverity.Danger, null);
             case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
                 return DescribeChange(changed, creature);
+            case HurricaneApproaching hurricane:
+                return (Key("hurricane", hurricane.CellId), Format("A hurricane is approaching {0}: its winds tear down houses and ruin stores.", Weather.WeatherText.Coast(world.Regions, hurricane.X, hurricane.Z)), AlertSeverity.Warning, new GroundPosition(hurricane.X, hurricane.Z));
             case WeatherSpellChanged spell:
                 return DescribeSpell(spell);
             case DroughtChanged drought when Settlement(world, drought.SettlementId) is { } settlement && Concerns(settlement, localGodId):

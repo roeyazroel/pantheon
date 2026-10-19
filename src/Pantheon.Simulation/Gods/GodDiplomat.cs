@@ -30,6 +30,12 @@ public sealed class GodDiplomat
     // Allies this close to winning together weigh loyalty against personal ascendancy (spec §54).
     private const float EndgameMargin = 0.15f;
 
+    // How much more a treacherous god likes absorbing an ally than breaking with it, per share of all believers gained (ADR-040).
+    private const float AbsorbAppeal = 3f;
+
+    // Absorbing is worth its name only when it takes at least this share of all believers; else the god simply breaks with its ally.
+    private const float MinAbsorbGain = 0.005f;
+
     private readonly DiplomacyRules _rules;
     private readonly DivineRules _divine;
     private readonly DiplomacyAuthority _authority;
@@ -162,6 +168,15 @@ public sealed class GodDiplomat
                 var betray = (profile.Treachery * (Math.Max(0f, advantage) + view.Rivalry)) + (aloneDominant ? 0.8f : 0f) + Endgame(world, god.Id, other.Id, profile) - view.Trust - goodwill - 0.4f
                     + GoalFocus.Diplomacy(_planning, god, other.Id, DiplomaticCommandKind.BreakAlliance);
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.BreakAlliance, other.Id, betray, why));
+
+                // Absorbing the ally is the same betrayal, sweetened by the believers it would take
+                // where this god leads (spec §54, ADR-040).
+                var gain = AbsorbGain(world, god.Id, other.Id);
+                if (gain >= MinAbsorbGain && _authority.Check(world, new DiplomaticCommand(god.Id, other.Id, DiplomaticCommandKind.Absorb), god.Id) == DiplomacyRejection.None)
+                {
+                    candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.Absorb, other.Id, betray + (profile.Treachery * AbsorbAppeal * gain), why + Format(", would take {0:0.0%} of all believers", gain)));
+                }
+
                 break;
             case DiplomaticStatus.War:
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.RequestPeace, other.Id, peace, why));
@@ -236,6 +251,29 @@ public sealed class GodDiplomat
 
         var lead = VictorySystem.ShareOf(world, godId) - VictorySystem.ShareOf(world, otherId);
         return (profile.Treachery * 3f * Math.Max(0f, lead)) - ((1f - profile.Treachery) * 0.5f);
+    }
+
+    /// <summary>
+    /// The share of all believers that absorbing an ally would turn to this god: a share of the ally's
+    /// followers in every village where this god is followed more (as <c>PoliticsActions.Absorb</c> does).
+    /// </summary>
+    private float AbsorbGain(WorldState world, int godId, int allyId)
+    {
+        var (gained, all) = (0f, 0f);
+        foreach (var settlement in world.Settlements)
+        {
+            foreach (var belief in settlement.Beliefs)
+            {
+                all += belief.Adherence * settlement.Population;
+            }
+
+            if (BeliefModel.Find(settlement, godId) is { } mine && BeliefModel.Find(settlement, allyId) is { Adherence: > 0f } theirs && mine.Adherence > theirs.Adherence)
+            {
+                gained += theirs.Adherence * _rules.Politics.AbsorbShare * settlement.Population;
+            }
+        }
+
+        return all > 0f ? gained / all : 0f;
     }
 
     /// <summary>Simulated seconds the pair has been at war; 0 when not at war.</summary>

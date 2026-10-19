@@ -217,6 +217,7 @@ internal sealed class MiracleEffects
                     break;
                 case MiracleEffectKind.Smite when _disasters is not null:
                     GreatEvents.BeastModel.Smite(_disasters.GreatEvents.Beast, world, godId, target, miracle.Radius, effect.Amount);
+                    Strike(world, target, events);
                     break;
                 case MiracleEffectKind.Ignite when _disasters is not null:
                     Ignite(world, miracle.Radius, effect.Amount, target, events);
@@ -439,6 +440,27 @@ internal sealed class MiracleEffects
                     _ledger.Record(world, a, b, DiplomaticAct.Harmed, null);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// A bolt that strikes dry growth may set it alight, as a storm's does (spec §15's lightning, tree,
+    /// fire, ADR-041): with <c>LightningMiracleIgnition</c> times the region's flammability, drawn from
+    /// a stream of the seed and the tick.
+    /// </summary>
+    private void Strike(WorldState world, GroundPosition target, ICollection<WorldEvent> events)
+    {
+        if (_disasters!.LightningMiracleIgnition <= 0f || !world.Regions.TryGetRegionIdAt(target.X, target.Z, out var regionId))
+        {
+            return;
+        }
+
+        var region = world.Regions.Cells[regionId];
+        var chance = _disasters.LightningMiracleIgnition * DisasterModel.Flammability(_disasters, region);
+        var roll = new Randomness.SimulationRandom(Randomness.SeedMixer.Derive(world.Seed, "lightning-strike", world.Tick)).NextDouble();
+        if (region.Fire <= 0f && roll < chance && DisasterModel.Ignite(_disasters, region, _disasters.IgnitionIntensity))
+        {
+            events.Add(new WildfireStarted { Tick = world.Tick, RegionId = regionId, Cause = FireCause.Lightning });
         }
     }
 

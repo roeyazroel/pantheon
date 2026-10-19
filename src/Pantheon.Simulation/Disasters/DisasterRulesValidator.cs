@@ -17,6 +17,7 @@ public static class DisasterRulesValidator
 
         errors.RequireAtLeast(rules.StepIntervalTicks, 1, nameof(rules.StepIntervalTicks));
         errors.RequireNonNegative(rules.LightningIgnitionPerSecond, nameof(rules.LightningIgnitionPerSecond));
+        errors.RequireShare(rules.LightningMiracleIgnition, nameof(rules.LightningMiracleIgnition));
         errors.RequireShare(rules.HearthFirePerSecond, nameof(rules.HearthFirePerSecond));
         errors.RequireNonNegative(rules.FuelHeat, nameof(rules.FuelHeat));
         errors.RequireShare(rules.IgnitionIntensity, nameof(rules.IgnitionIntensity));

@@ -9,6 +9,9 @@
   // downwind) and dies in the rain, under firefighting or for want of fuel. Scorched land regrows.
   "StepIntervalTicks": 10,
   "LightningIgnitionPerSecond": 0.004,
+  // A god's bolt of lightning sets the struck region alight with this chance per unit of its
+  // flammability, as a storm's does (spec section 15, ADR-041).
+  "LightningMiracleIgnition": 1.0,
   "HearthFirePerSecond": 0.001,
   "FuelHeat": 2.0,
   "IgnitionIntensity": 0.4,
