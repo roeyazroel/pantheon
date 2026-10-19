@@ -143,6 +143,7 @@ public partial class GameRoot : Node3D
         }
 
         _session.WorldReplaced += ShowWorld;
+        _session.TerrainChanged += () => Rebuild(newWorld: false);
         _hotkeys = CreateHotkeys();
 
         ShowWorld();
@@ -295,7 +296,10 @@ public partial class GameRoot : Node3D
     }
 
     /// <summary>Rebuilds every visual from the current state and points the camera at the settlement.</summary>
-    private void ShowWorld()
+    private void ShowWorld() => Rebuild(newWorld: true);
+
+    /// <summary>Rebuilds every visual from the current state: for a new world the camera goes to its settlement; for reshaped land (ADR-045) it stays.</summary>
+    private void Rebuild(bool newWorld)
     {
         // A larger island thins the fog, so its far shore still shows from the camera's greater height (ADR-027).
         var extent = _session.World.Regions.Columns * _session.World.Regions.RegionSize;
@@ -311,10 +315,13 @@ public partial class GameRoot : Node3D
         _weather.Rebuild(_session.Terrain);
         _disasters.Rebuild(_session.Terrain, _session.World.Regions.RegionSize);
         _migrants.Rebuild(_session.Terrain);
-        _divine?.Reset();
-        _focusIndex = -1;
         _camera.SetTerrain(_session.Terrain);
-        FocusSettlement(distance: null, snap: true);
+        if (newWorld)
+        {
+            _divine?.Reset();
+            _focusIndex = -1;
+            FocusSettlement(distance: null, snap: true);
+        }
     }
 
     /// <summary>Moves the camera to the focused settlement (the first unless <c>--focus</c> chose another).</summary>

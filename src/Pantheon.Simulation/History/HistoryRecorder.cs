@@ -170,7 +170,10 @@ public sealed class HistoryRecorder
                     DivineActKind.Hallowing => HistoryKind.Hallowing,
                     DivineActKind.Awakening => HistoryKind.Awakening,
                     DivineActKind.Stillness => HistoryKind.Stillness,
-                }, god: act.GodId, settlement: NearestId(world, act.Position));
+                    DivineActKind.Raising => HistoryKind.Raising,
+                    DivineActKind.Splitting => HistoryKind.Splitting,
+                    DivineActKind.Diverting => HistoryKind.Diverting,
+                }, god: act.GodId, settlement: NearestId(world, act.Position), name: act.Name);
                 break;
             case ThirstStarted thirst:
                 Once(world, HistoryKind.Thirst, thirst.SettlementId, null, 0);

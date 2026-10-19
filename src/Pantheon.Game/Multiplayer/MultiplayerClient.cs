@@ -281,6 +281,11 @@ public sealed class MultiplayerClient : IDisposable
         {
             session.World.Tick = tick;
         }
+
+        if (update.Section == WorldSection.Land)
+        {
+            session.SyncLand();
+        }
     }
 
     /// <summary>Who plays which god now; players who came or went are announced.</summary>

@@ -34,11 +34,15 @@ internal sealed class MiracleEffects
     private readonly CreatureRules? _creatures;
     private readonly DomainRules? _domains;
     private readonly Domain.Notables.NotableRules _notables;
+    private readonly Judgement _judgement;
+    private readonly Land.LandStage? _land;
+    private readonly Domain.Land.LandRules _landRules;
 
     /// <summary>Creates the effects over validated rules; any rules may be missing, and the effects that need them then do nothing.</summary>
-    public MiracleEffects(SettlementRules settlementRules, IActRecorder? ledger, WeatherRules? weather, DisasterRules? disasters, CreatureRules? creatures, DomainRules? domains, Domain.Notables.NotableRules? notables = null)
+    public MiracleEffects(SettlementRules settlementRules, IActRecorder? ledger, WeatherRules? weather, DisasterRules? disasters, CreatureRules? creatures, DomainRules? domains, Domain.Notables.NotableRules? notables = null, Land.LandStage? land = null, Domain.Land.LandRules? landRules = null)
     {
         _notables = notables ?? Domain.Notables.NotableRules.None;
+        (_judgement, _land, _landRules) = (new Judgement(domains), land, landRules ?? Domain.Land.LandRules.None);
         _settlementRules = settlementRules;
         _ledger = ledger;
         _weather = weather;
@@ -61,10 +65,11 @@ internal sealed class MiracleEffects
                 MiracleEffectKind.Wound => FindRivalCreatures(world, godId, target, miracle.Radius).Count > 0,
                 MiracleEffectKind.Teach => FindOwnCreature(world, godId, target, miracle.Radius) is not null,
                 MiracleEffectKind.Flood => Water.WaterModel.Reach(world.Regions, target, miracle.Radius, effect.Amount).Count > 0,
-                MiracleEffectKind.Judge => world.Settlements.Exists(s => Distance(s.Position, target) <= miracle.Radius && HasGuilty(world, godId, s)),
+                MiracleEffectKind.Judge => world.Settlements.Exists(s => Distance(s.Position, target) <= miracle.Radius && _judgement.HasGuilty(world, godId, s)),
                 MiracleEffectKind.Awaken => DivineActs.CanAwaken(_disasters, world),
                 MiracleEffectKind.Still => DivineActs.Unquiet(_weather, world),
                 MiracleEffectKind.Anoint => Anointable(world, godId, target, miracle.Radius) is not null,
+                MiracleEffectKind.Raise or MiracleEffectKind.Split or MiracleEffectKind.Divert => Land.LandActs.CanAct(_landRules, _land, world, godId, Land.LandActs.KindOf(effect.Kind)!.Value, target),
                 _ => true,
             };
             if (!found)
@@ -120,7 +125,7 @@ internal sealed class MiracleEffects
                     settlement.Water = Math.Max(settlement.Water, Math.Min(cisterns, settlement.Water + effect.Amount));
                     break;
                 case MiracleEffectKind.Judge:
-                    deaths += Judge(world, settlement, godId, effect.Amount);
+                    deaths += _judgement.Judge(world, settlement, godId, effect.Amount);
                     break;
                 case MiracleEffectKind.Soak:
                 case MiracleEffectKind.Flood:
@@ -137,6 +142,9 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Awaken:
                 case MiracleEffectKind.Still:
                 case MiracleEffectKind.Anoint:
+                case MiracleEffectKind.Raise:
+                case MiracleEffectKind.Split:
+                case MiracleEffectKind.Divert:
                     break;
             }
         }
@@ -255,6 +263,9 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Anoint when Anointable(world, godId, target, miracle.Radius) is { } village:
                     Notables.NotableModel.Raise(_notables, world, Domain.Notables.NotableKind.Prophet, godId, village, anointed: true, events);
                     break;
+                case MiracleEffectKind.Raise or MiracleEffectKind.Split or MiracleEffectKind.Divert:
+                    Land.LandActs.Act(_landRules, _land, world, godId, Land.LandActs.KindOf(effect.Kind)!.Value, target, events);
+                    break;
             }
         }
     }
@@ -284,57 +295,8 @@ internal sealed class MiracleEffects
         return best;
     }
 
-    /// <summary>Whether a god wronged the caster: they are at war, or the caster bears it a grudge of at least the Justice domain's measure (ADR-022).</summary>
-    public bool IsGuilty(WorldState world, int casterId, int godId)
-    {
-        if (godId == casterId || DiplomacyModel.AreAllied(world, casterId, godId))
-        {
-            return false;
-        }
-
-        if (DiplomacyModel.AreAtWar(world, casterId, godId))
-        {
-            return true;
-        }
-
-        return _domains is not null && DiplomacyModel.FindRelation(world, casterId, godId) is { } view && DiplomacyModel.Grudge(view) >= _domains.Boons.JusticeGuiltGrudge;
-    }
-
-    /// <summary>Whether a settlement's people follow, in any number, a god who wronged the caster.</summary>
-    public bool HasGuilty(WorldState world, int casterId, SettlementState settlement)
-    {
-        foreach (var belief in settlement.Beliefs)
-        {
-            if (belief.Adherence > 0.05f && IsGuilty(world, casterId, belief.GodId))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>The followers of the gods who wronged the caster are punished: some die, and the rest doubt their god.</summary>
-    /// <returns>People killed.</returns>
-    private int Judge(WorldState world, SettlementState settlement, int casterId, float amount)
-    {
-        var deaths = 0;
-        foreach (var belief in settlement.Beliefs)
-        {
-            if (belief.Adherence <= 0.05f || !IsGuilty(world, casterId, belief.GodId))
-            {
-                continue;
-            }
-
-            var killed = Math.Min(settlement.Population, (int)MathF.Round(amount * settlement.Population * SimMath.Clamp01(belief.Adherence)));
-            settlement.Population -= killed;
-            deaths += killed;
-            belief.Faith = BeliefModel.ApplyChange(belief.Faith, -amount);
-            belief.Doubt = BeliefModel.ApplyChange(belief.Doubt, amount);
-        }
-
-        return deaths;
-    }
+    /// <summary>Whether a god wronged the caster: they are at war, or the caster bears it a grudge (ADR-022).</summary>
+    public bool IsGuilty(WorldState world, int casterId, int godId) => _judgement.IsGuilty(world, casterId, godId);
 
     /// <summary>The strongest rain or storm cloud within a distance of a point, if any.</summary>
     public WeatherCell? FindCloud(WorldState world, GroundPosition target, float range)

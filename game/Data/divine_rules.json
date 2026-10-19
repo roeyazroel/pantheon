@@ -247,5 +247,27 @@
     "Abduction": { "Faith": 0.0, "Love": -0.05, "Fear": 0.08, "Doubt": 0.05 },
     "Smiting": { "Faith": 0.02, "Love": -0.1, "Fear": 0.2, "Doubt": 0.0 },
     "Planting": { "Faith": 0.01, "Love": 0.03, "Fear": 0.0, "Doubt": 0.0 }
+  },
+  // The Divine Acts that reshape the land (ADR-045). Raise an Island lifts an island of IslandRadius
+  // metres with a peak IslandPeak metres above the sea. Split the Mountain cuts a gorge GorgeLength
+  // metres long and 2 x GorgeWidth wide through ground at least MountainHeight metres high, along
+  // the way whose ends both lie PassDrop metres lower. Turn the River takes the river within
+  // DivertReach metres of where the god points (at least MinChannel away) down to that point, which
+  // must lie MinFall metres lower: a channel ChannelWidth metres to each side starts ChannelDepth
+  // metres below the river, and a dam DamHeight metres high stands DamOffset metres down its old course.
+  "Land": {
+    "IslandRadius": 110.0,
+    "IslandPeak": 14.0,
+    "GorgeLength": 320.0,
+    "GorgeWidth": 40.0,
+    "MountainHeight": 45.0,
+    "PassDrop": 15.0,
+    "ChannelWidth": 12.0,
+    "ChannelDepth": 3.0,
+    "DamHeight": 6.0,
+    "DamOffset": 30.0,
+    "DivertReach": 900.0,
+    "MinFall": 3.0,
+    "MinChannel": 60.0
   }
 }

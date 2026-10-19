@@ -118,7 +118,7 @@ public sealed class PowerPresentationTests
         var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(77));
 
         var acts = DomainReadout.Build(session).Acts;
-        Assert.Equal(["hallow", "awaken", "still"], acts.Select(a => a.MiracleId));
+        Assert.Equal(["hallow", "awaken", "still", "raise_island", "split_mountain", "turn_river"], acts.Select(a => a.MiracleId));
         Assert.All(acts, a => Assert.False(a.CanChoose));
         Assert.StartsWith("Greater God, 1500 power", acts[0].Requirement, StringComparison.Ordinal);
 

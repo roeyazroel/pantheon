@@ -129,6 +129,12 @@ public static class DivineText
                     return "no disaster to still";
                 case Pantheon.Domain.Miracles.MiracleEffectKind.Anoint:
                     return "no village devout enough, or you have all the prophets you may";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Raise:
+                    return "an island rises only from the open sea";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Split:
+                    return "no mountain there with low ground on both sides";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Divert:
+                    return "no river near enough that could run down to here";
             }
         }
 

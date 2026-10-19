@@ -139,6 +139,16 @@ internal sealed class NatureDebug
             _setStatus(Pantheon.Game.Notables.NotableCommands.RaiseProphet(_session, village));
         }
 
+        if (options.Reshape is { } reshape && focus is { } near)
+        {
+            var (made, said) = Pantheon.Game.Land.LandCommands.Reshape(_session, reshape, near);
+            _setStatus(said);
+            if (made is { } at)
+            {
+                _camera.FocusOn(at, options.CameraDistance ?? 300f, snap: true);
+            }
+        }
+
         if (options.Overview)
         {
             _camera.Model.ToggleOverview();

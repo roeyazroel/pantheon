@@ -45,6 +45,9 @@ internal static class PowerAlerts
                     DivineActKind.Hallowing => Format("{0} {1} the land around {2}: its blessing will never fade.", who, act.GodId == localGodId ? "hallow" : "hallows", near),
                     DivineActKind.Awakening => Format("{0} {1} {2}: the volcano rumbles.", who, act.GodId == localGodId ? "wake" : "wakes", world.Disasters.Volcano is { } volcano ? DisasterText.VolcanoName(world, volcano.RegionId) : "the mountain"),
                     DivineActKind.Stillness => Format("{0} {1} the world: every quake, fire, flood and storm falls quiet.", who, act.GodId == localGodId ? "still" : "stills"),
+                    DivineActKind.Raising => Format("{0} {1} an island from the sea off {2}: new land to settle.", who, act.GodId == localGodId ? "raise" : "raises", near),
+                    DivineActKind.Splitting => Format("{0} {1} the mountain above {2}: a gorge opens through it.", who, act.GodId == localGodId ? "split" : "splits", near),
+                    DivineActKind.Diverting => Format("{0} {1} {2} towards {3}: its old course runs dry below the dam.", who, act.GodId == localGodId ? "turn" : "turns", act.Name ?? "a river", near),
                 }, act.Act == DivineActKind.Awakening ? AlertSeverity.Warning : AlertSeverity.Good, act.Position);
             default:
                 return null;

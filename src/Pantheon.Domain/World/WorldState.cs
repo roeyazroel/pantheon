@@ -89,6 +89,9 @@ public sealed class WorldState
     /// <summary>Id the next followed villager will get.</summary>
     public int NextVillagerId { get; set; } = 1;
 
+    /// <summary>The land's lasting changes by Divine Acts (spec §14, ADR-045): the terrain is made with them.</summary>
+    public Land.LandState Land { get; init; } = new();
+
     /// <summary>The roads between villages, built and being built (spec §29, ADR-033).</summary>
     public List<Roads.RoadState> Roads { get; init; } = [];
 

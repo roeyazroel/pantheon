@@ -197,6 +197,9 @@ public enum WorldSection
 
     /// <summary>The great events under way and the next eclipse (ADR-034): a low rate, when they change.</summary>
     GreatEvents,
+
+    /// <summary>The land's reshapings by Divine Acts (ADR-045): a low rate, when they change; a player makes its terrain again.</summary>
+    Land,
 }
 
 /// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>

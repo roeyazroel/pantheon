@@ -161,7 +161,10 @@ internal sealed class MiracleValuer
                     value += conditions.DangerNeed >= StillDanger ? Note(reasons, settlement, "still", profile.Protect * mine * conditions.DangerNeed * size) : 0f;
                     break;
                 case MiracleEffectKind.Awaken:
-                    // The AI never wakes the volcano: it cannot aim at the mountain, only at villages.
+                case MiracleEffectKind.Raise:
+                case MiracleEffectKind.Split:
+                case MiracleEffectKind.Divert:
+                    // The AI never wakes the volcano or reshapes the land: it aims at villages, not at the sea, mountains or rivers (ADR-045).
                     break;
                 case MiracleEffectKind.Anoint:
                     // A prophet from its own people goes out to win the others (ADR-032).

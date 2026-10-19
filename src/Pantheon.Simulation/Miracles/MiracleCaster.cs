@@ -71,7 +71,7 @@ public sealed class MiracleCaster
         _rules = rules;
         _settlementRules = settlementRules;
         _book = book;
-        _effects = new MiracleEffects(settlementRules, ledger, weather, disasters, creatures, domains, rules.Notables);
+        _effects = new MiracleEffects(settlementRules, ledger, weather, disasters, creatures, domains, rules.Notables, Land, rules.Land);
     }
 
     /// <summary>The domain rules, if gods have domains (ADR-021).</summary>
@@ -339,6 +339,9 @@ public sealed class MiracleCaster
     /// <param name="godId">The god judged.</param>
     /// <returns><c>true</c> when they are at war or the judge bears it a grudge.</returns>
     public bool IsGuilty(WorldState world, int casterId, int godId) => _effects.IsGuilty(world, casterId, godId);
+
+    /// <summary>The terrain the Divine Acts reshape (ADR-045): whoever holds the world's terrain sets it, and each act replaces it.</summary>
+    public Land.LandStage Land { get; } = new();
 
     /// <summary>How readily a settlement's own region would burn now (0 without disaster rules).</summary>
     /// <param name="world">World state.</param>

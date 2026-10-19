@@ -49,6 +49,7 @@ public static class WorldSections
             WorldSection.Water => Json(world.Water),
             WorldSection.Roads => Json(new RoadsPart(world.Roads, world.NextRoadId)),
             WorldSection.GreatEvents => Json(world.GreatEvents),
+            WorldSection.Land => Json(world.Land),
             WorldSection.Regions => throw new ArgumentException("Regions are written as changes, by WriteRegions.", nameof(section)),
         };
     }
@@ -163,6 +164,11 @@ public static class WorldSections
                 return null;
             case WorldSection.HolySites:
                 Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
+                return null;
+            case WorldSection.Land:
+                var land = Read<Domain.Land.LandState>(data);
+                Replace(world.Land.Reshapes, land.Reshapes);
+                world.Land.NextReshapeId = land.NextReshapeId;
                 return null;
             case WorldSection.GreatEvents:
                 var great = Read<Domain.GreatEvents.GreatEventsState>(data);

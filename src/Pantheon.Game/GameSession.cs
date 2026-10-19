@@ -31,6 +31,7 @@ public sealed class GameSession
     private readonly SessionEvents _queue = new();
     private readonly List<WorldEvent> _predicted = [];
     private readonly Dictionary<int, string> _players = [];
+    private TerrainField _terrain;
 
     /// <summary>Creates a session around an existing world.</summary>
     private GameSession(GameContent content, WorldState world, TerrainField terrain, int? localGodId = null)
@@ -40,7 +41,8 @@ public sealed class GameSession
         _authorities = _engine.Authorities!;
         _step = StepWorld;
         World = world;
-        Terrain = terrain;
+        _terrain = terrain;
+        (_authorities.Miracles.Land.Terrain, _authorities.Miracles.Land.Shaped) = (terrain, world.Land.Reshapes.Count);
         Scheduler = new SimulationScheduler();
         LocalGodId = localGodId ?? FindLocalGod(world);
     }
@@ -48,14 +50,21 @@ public sealed class GameSession
     /// <summary>Raised after <see cref="World"/> and <see cref="Terrain"/> are replaced by a new or loaded world.</summary>
     public event Action? WorldReplaced;
 
+    /// <summary>Raised after a Divine Act reshaped the land and <see cref="Terrain"/> was made again (ADR-045).</summary>
+    public event Action? TerrainChanged;
+
     /// <summary>Content the session was created with.</summary>
     public GameContent Content { get; }
 
     /// <summary>Authoritative world state.</summary>
     public WorldState World { get; private set; }
 
-    /// <summary>Terrain derived from <see cref="World"/>.</summary>
-    public TerrainField Terrain { get; private set; }
+    /// <summary>Terrain derived from <see cref="World"/>, with the land's reshapings (ADR-045).</summary>
+    public TerrainField Terrain
+    {
+        get => _terrain;
+        private set => _authorities.Miracles.Land.Terrain = _terrain = value;
+    }
 
     /// <summary>Fixed-step simulation clock.</summary>
     public SimulationScheduler Scheduler { get; }
@@ -121,7 +130,7 @@ public sealed class GameSession
     public static GameSession Load(GameContent content, string path)
     {
         ArgumentNullException.ThrowIfNull(content);
-        var (world, terrain) = LoadWorld(content, path);
+        var (world, terrain) = SessionStore.LoadWorld(content, path);
         return new GameSession(content, world, terrain);
     }
 
@@ -136,7 +145,7 @@ public sealed class GameSession
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(client);
-        return new GameSession(content, world, TerrainGenerator.Generate(world.Seed, world.Generation), localGodId) { Client = client };
+        return new GameSession(content, world, TerrainGenerator.Generate(world.Seed, world.Generation, world.Land.Reshapes), localGodId) { Client = client };
     }
 
     /// <summary>
@@ -158,9 +167,24 @@ public sealed class GameSession
         Scheduler.IsPaused = paused;
         if (!sameLand)
         {
-            Terrain = TerrainGenerator.Generate(world.Seed, world.Generation);
+            Terrain = TerrainGenerator.Generate(world.Seed, world.Generation, world.Land.Reshapes);
+            _authorities.Miracles.Land.Shaped = world.Land.Reshapes.Count;
             Scheduler.Reset();
             WorldReplaced?.Invoke();
+            return;
+        }
+
+        SyncLand();
+    }
+
+    /// <summary>Makes the terrain again when the world holds reshapings it lacks: a host's Divine Act reached a replica (ADR-045).</summary>
+    public void SyncLand()
+    {
+        if (World.Land.Reshapes.Count != _authorities.Miracles.Land.Shaped)
+        {
+            Terrain = TerrainGenerator.Reshape(Terrain, World.Seed, World.Generation, World.Land.Reshapes);
+            _authorities.Miracles.Land.Shaped = World.Land.Reshapes.Count;
+            TerrainChanged?.Invoke();
         }
     }
 
@@ -397,36 +421,8 @@ public sealed class GameSession
     /// <exception cref="SaveFormatException">The save is invalid.</exception>
     public void LoadFrom(string path)
     {
-        var (world, terrain) = LoadWorld(Content, path);
+        var (world, terrain) = SessionStore.LoadWorld(Content, path);
         Replace(world, terrain);
-    }
-
-    /// <summary>
-    /// Reads a save and regenerates its terrain from the saved seed and generation settings. Gods that
-    /// connected players played go back to the AI, and a world from before holy sites finds its own (ADR-021).
-    /// </summary>
-    private static (WorldState World, TerrainField Terrain) LoadWorld(GameContent content, string path)
-    {
-        var world = WorldSaveSerializer.LoadFromFile(path);
-        Simulation.HolySites.HolySitePlacer.EnsurePlaced(content.HolySites, world);
-        foreach (var god in world.Gods)
-        {
-            if (god.Controller == GodController.Remote)
-            {
-                god.Controller = GodController.Ai;
-            }
-        }
-
-        try
-        {
-            // The saved settings, not the current content files, define the terrain, so a save
-            // always reproduces the terrain it was played on.
-            return (world, TerrainGenerator.Generate(world.Seed, world.Generation));
-        }
-        catch (ArgumentException exception)
-        {
-            throw new SaveFormatException($"The save's generation settings are invalid: {exception.Message}", exception);
-        }
     }
 
     /// <summary>Swaps in a new world and notifies listeners.</summary>
@@ -434,6 +430,7 @@ public sealed class GameSession
     {
         World = world;
         Terrain = terrain;
+        _authorities.Miracles.Land.Shaped = world.Land.Reshapes.Count;
         LocalGodId = FindLocalGod(world);
         _queue.Clear();
         Scheduler.Reset();
@@ -446,6 +443,13 @@ public sealed class GameSession
         var first = _queue.Pending.Count;
         var result = command();
         _engine.Chronicle(World, _queue.Pending, first);
+        if (_authorities.Miracles.Land.Terrain is { } shaped && !ReferenceEquals(shaped, _terrain))
+        {
+            // A Divine Act reshaped the land and made the terrain again (ADR-045).
+            (_terrain, _authorities.Miracles.Land.Shaped) = (shaped, World.Land.Reshapes.Count);
+            TerrainChanged?.Invoke();
+        }
+
         return result;
     }
 

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Pantheon.Domain.Land;
 using Pantheon.Domain.Ecology;
 using Pantheon.Domain.World;
 using Pantheon.Domain.World.Generation;
@@ -10,18 +12,28 @@ namespace Pantheon.Simulation.Terrain;
 
 /// <summary>
 /// Generates the world heightfield, climate fields and per-sample biomes. The output is a pure
-/// function of the seed and the settings.
+/// function of the seed, the settings and the land's reshapings (ADR-045).
 /// </summary>
 public static class TerrainGenerator
 {
-    /// <summary>Generates the terrain for a seed.</summary>
+    /// <summary>Generates the terrain for a seed, as no Divine Act has reshaped it.</summary>
     /// <param name="seed">World seed.</param>
     /// <param name="settings">Data-driven generation settings.</param>
     /// <returns>The generated terrain field.</returns>
-    public static TerrainField Generate(WorldSeed seed, WorldGenSettings settings)
+    public static TerrainField Generate(WorldSeed seed, WorldGenSettings settings) => Generate(seed, settings, []);
+
+    /// <summary>
+    /// Generates the terrain for a seed with the land's reshapings applied, in order, to the ground
+    /// before the rivers are found, so the water and the biomes follow the new land (ADR-045).
+    /// </summary>
+    /// <param name="seed">World seed.</param>
+    /// <param name="settings">Data-driven generation settings.</param>
+    /// <param name="reshapes">The reshapings, oldest first.</param>
+    /// <returns>The generated terrain field.</returns>
+    public static TerrainField Generate(WorldSeed seed, WorldGenSettings settings, IReadOnlyList<TerrainReshape> reshapes)
     {
+        ArgumentNullException.ThrowIfNull(reshapes);
         WorldGenSettingsValidator.Validate(settings);
-        var classifier = new BiomeClassifier(settings.Biomes);
         var noise = new TerrainNoise(seed, settings);
 
         var resolution = settings.HeightmapResolution;
@@ -29,7 +41,6 @@ public static class TerrainGenerator
         var heights = new float[count];
         var moisture = new float[count];
         var temperature = new float[count];
-        var biomes = new Biome[count];
 
         for (var z = 0; z < resolution; z++)
         {
@@ -43,6 +54,64 @@ public static class TerrainGenerator
                 heights[index] = height;
                 moisture[index] = ComputeMoisture(noise, settings.Climate, worldX, worldZ, height);
                 temperature[index] = ComputeTemperature(noise, settings, worldX, worldZ, height);
+            }
+        }
+
+        return Finish(seed, settings, noise, heights, moisture, temperature, reshapes);
+    }
+
+    /// <summary>
+    /// The terrain of the same seed with these reshapings, made from an earlier terrain's ground
+    /// without sampling the noise again: only the reshaped ground's climate, the rivers, the biomes
+    /// and the landforms are found anew. The same as <see cref="Generate(WorldSeed, WorldGenSettings, IReadOnlyList{TerrainReshape})"/>.
+    /// </summary>
+    /// <param name="previous">The terrain of the same seed and settings, with any reshapings.</param>
+    /// <param name="seed">World seed.</param>
+    /// <param name="settings">Data-driven generation settings.</param>
+    /// <param name="reshapes">The reshapings, oldest first.</param>
+    /// <returns>The reshaped terrain.</returns>
+    public static TerrainField Reshape(TerrainField previous, WorldSeed seed, WorldGenSettings settings, IReadOnlyList<TerrainReshape> reshapes)
+    {
+        ArgumentNullException.ThrowIfNull(previous);
+        ArgumentNullException.ThrowIfNull(settings);
+        var noise = new TerrainNoise(seed, settings);
+        var ground = previous.Ground.ToArray();
+        var moisture = previous.Moisture.ToArray();
+        var temperature = previous.Temperature.ToArray();
+        var resolution = settings.HeightmapResolution;
+        for (var index = 0; index < ground.Length; index++)
+        {
+            if (previous.Heights[index] != ground[index])
+            {
+                // Ground a channel or an earlier reshaping moved starts again from the climate of the ground as it was made.
+                var (worldX, worldZ) = (index % resolution * settings.VertexSpacing, index / resolution * settings.VertexSpacing);
+                moisture[index] = ComputeMoisture(noise, settings.Climate, worldX, worldZ, ground[index]);
+                temperature[index] = ComputeTemperature(noise, settings, worldX, worldZ, ground[index]);
+            }
+        }
+
+        return Finish(seed, settings, noise, ground, moisture, temperature, reshapes);
+    }
+
+    /// <summary>Reshapes the ground, finds the water, classifies the biomes and marks the landforms.</summary>
+    private static TerrainField Finish(WorldSeed seed, WorldGenSettings settings, TerrainNoise noise, float[] ground, float[] moisture, float[] temperature, IReadOnlyList<TerrainReshape> reshapes)
+    {
+        var resolution = settings.HeightmapResolution;
+        var count = resolution * resolution;
+        var heights = (float[])ground.Clone();
+        var classifier = new BiomeClassifier(settings.Biomes);
+        var biomes = new Biome[count];
+        if (reshapes.Count > 0)
+        {
+            TerrainReshaper.Apply(reshapes, resolution, settings.VertexSpacing, heights);
+            for (var index = 0; index < count; index++)
+            {
+                if (heights[index] != ground[index])
+                {
+                    var (worldX, worldZ) = (index % resolution * settings.VertexSpacing, index / resolution * settings.VertexSpacing);
+                    moisture[index] = ComputeMoisture(noise, settings.Climate, worldX, worldZ, heights[index]);
+                    temperature[index] = ComputeTemperature(noise, settings, worldX, worldZ, heights[index]);
+                }
             }
         }
 
@@ -61,7 +130,7 @@ public static class TerrainGenerator
             LandformMarker.Mark(landforms, settings.RegionsPerSide, resolution, settings.VertexSpacing, heights, hydrology, biomes);
         }
 
-        return new TerrainField(resolution, settings.VertexSpacing, heights, moisture, temperature, biomes, hydrology);
+        return new TerrainField(resolution, settings.VertexSpacing, heights, moisture, temperature, biomes, hydrology, ground);
     }
 
     /// <summary>Combines continent and mountain noise under the island mask, then converts to metres.</summary>

@@ -513,6 +513,15 @@ its cooldown); hover over a button to read what it does.
 - **Divine Acts.** A Greater God can do the dearest miracles of all, from the Domains panel (G):
   Hallow the Land (its blessing never fades), Wake the Volcano and Still the World (every quake,
   fire, flood, storm, swarm, blight and drought ends at once). The world's history remembers each.
+- **Reshaping the land (ADR-045).** Three more Divine Acts change the land for good:
+  - **Raise an Island:** point at the open sea, and new land rises for villages to settle.
+  - **Split the Mountain:** point at a mountain, and a gorge opens through it, down to the low ground
+    on either side. A river may find its way through.
+  - **Turn the River:** point at land below a river within 900 m, and the river runs there instead,
+    dammed below where it leaves. The land it now reaches has water, and its old course dries.
+
+  The rivers, biomes and regions follow the new land, saves keep it, and a shared game shows it to
+  everyone. The numbers are in `divine_rules.json` (`Land`).
 - **The Book of the World (Tab).** Four pages: the **World** (every god's standing, ties and
   Creature, the race for victory, the dangers under way and the holy sites), **Religion** (your
   followers village by village, with the failing ones in red, every god's faith, the Old Faiths and
@@ -1309,7 +1318,8 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
   view of every Creature it has met with their latest encounters, its learned preferences by
   situation and its latest memories), every followed villager with what they do and their faith,
-  and for yours their needs, options with their reasons, danger and last memory, the region
+  and for yours their needs, options with their reasons, danger and last memory, the land's
+  reshapings, the region
   under the cursor with its statistics, soil, rain, wind, snow, wildlife, harm, scar, pollution and
   biodiversity and every god's influence there, one
   line per settlement, and, for the settlement nearest the cursor:
@@ -1409,6 +1419,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--great-event=plague\|eclipse\|reformation\|beast\|anomaly` | Start a great event at the start: the plague in the focused settlement, an eclipse, your faith's reformation, the beast's waking or the anomaly at the focused settlement; the camera looks at the beast or the anomaly. |
 | `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
 | `--villager=on\|off` | You follow one of the focused settlement's people at the start, the camera on them (ADR-043). |
+| `--reshape=island\|gorge\|river` | Raise an island, split a mountain or turn a river near the focused settlement at the start, as the Divine Act would, and look at it (ADR-045; without `--camera-distance`, which looks at the settlement). |
 | `--hand=villagers\|creature\|offering` | Your hand lifts villagers of the focused settlement, your Creature, or an offering from the focused settlement's stores, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
@@ -1525,7 +1536,7 @@ find their beast's lair and set their first anomaly when loaded. In saves from b
 every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
 start with middling courage, protectiveness, jealousy and playfulness. Worlds from before part 18
 keep their four biomes. Hands from before part 19 hold no offering. In saves from before part 22
-no god follows a villager. Saves from before part 13
+no god follows a villager. In saves from before part 24 the land is as the seed made it. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.

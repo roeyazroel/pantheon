@@ -192,6 +192,15 @@ public enum HistoryKind
 
     /// <summary>Two gods met (ADR-036); the count is the <see cref="Events.MeetingWay"/>.</summary>
     GodsMet,
+
+    /// <summary>A god raised an island from the sea (a Divine Act, ADR-045).</summary>
+    Raising,
+
+    /// <summary>A god split a mountain (a Divine Act, ADR-045).</summary>
+    Splitting,
+
+    /// <summary>A god turned a river to a new course (a Divine Act, ADR-045); <see cref="HistoryRecord.Name"/> is the river.</summary>
+    Diverting,
 }
 
 /// <summary>

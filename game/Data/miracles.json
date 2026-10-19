@@ -425,6 +425,53 @@
       "Effects": [ { "Kind": "Still", "Amount": 1.0 } ],
       "Witness": { "Faith": 0.35, "Love": 0.4, "Fear": 0.1, "Doubt": -0.25 },
       "Gratitude": "Danger"
+    },
+    // The Divine Acts that reshape the land for good (ADR-045): the world is made again with them,
+    // its rivers, biomes and regions following the new land.
+    {
+      "Id": "raise_island",
+      "Name": "Raise an Island",
+      "Description": "A Divine Act: an island rises from the open sea where you point, new land for villages to settle.",
+      "Domain": "Ocean",
+      "Scale": "DivineAct",
+      "PowerCost": 3000.0,
+      "CooldownTicks": 18000,
+      "Radius": 400.0,
+      "InfluenceRequirement": 0.0,
+      "MinimumRank": "GreaterGod",
+      "Effects": [ { "Kind": "Raise", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.4, "Love": 0.2, "Fear": 0.3, "Doubt": -0.25 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "split_mountain",
+      "Name": "Split the Mountain",
+      "Description": "A Divine Act: the mountain where you point splits, a gorge opening through it down to the low ground on either side.",
+      "Domain": "Chaos",
+      "Scale": "DivineAct",
+      "PowerCost": 2500.0,
+      "CooldownTicks": 18000,
+      "Radius": 400.0,
+      "InfluenceRequirement": 0.0,
+      "MinimumRank": "GreaterGod",
+      "Effects": [ { "Kind": "Split", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.4, "Love": 0.05, "Fear": 0.45, "Doubt": -0.25 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "turn_river",
+      "Name": "Turn the River",
+      "Description": "A Divine Act: the nearest river turns to run down to where you point, and a dam stops its old course, which runs dry.",
+      "Domain": "Nature",
+      "Scale": "DivineAct",
+      "PowerCost": 2500.0,
+      "CooldownTicks": 18000,
+      "Radius": 400.0,
+      "InfluenceRequirement": 0.2,
+      "MinimumRank": "GreaterGod",
+      "Effects": [ { "Kind": "Divert", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.35, "Love": 0.15, "Fear": 0.3, "Doubt": -0.2 },
+      "Gratitude": "None"
     }
   ]
 }

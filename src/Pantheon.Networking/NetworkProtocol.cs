@@ -17,9 +17,10 @@ public static class NetworkProtocol
     /// (part 16) the gods each god knows and its goals, version 16 (part 17) Creatures' courage,
     /// protectiveness, jealousy and playfulness, version 17 (part 18) the biomes of §5 and the landforms,
     /// version 18 (part 19) offerings in the hand and the hand's new action, version 19 (part 22) the
-    /// villagers the gods follow and the intent to follow one.
+    /// villagers the gods follow and the intent to follow one, version 20 (part 24) the land's
+    /// reshapings by Divine Acts.
     /// </summary>
-    public const int Version = 19;
+    public const int Version = 20;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

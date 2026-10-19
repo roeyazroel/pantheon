@@ -77,4 +77,13 @@ public enum MiracleEffectKind
 
     /// <summary>Anoints a prophet in the devout village beneath it (ADR-032).</summary>
     Anoint,
+
+    /// <summary>Raises an island from the sea where it is cast (a Divine Act, ADR-045).</summary>
+    Raise,
+
+    /// <summary>Splits the mountain where it is cast with a gorge down to the low ground on either side (a Divine Act, ADR-045).</summary>
+    Split,
+
+    /// <summary>Turns the nearest river to flow to where it is cast, damming its old course (a Divine Act, ADR-045).</summary>
+    Divert,
 }

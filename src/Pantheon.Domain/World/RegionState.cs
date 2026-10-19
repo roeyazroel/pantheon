@@ -49,7 +49,7 @@ public sealed class RegionState
     /// How much of the region a river or lake waters (0 = none, 1 = fully), fixed when the world is
     /// made (ADR-022). People nearby draw water from it and it keeps the soil moist.
     /// </summary>
-    public required float FreshWater { get; init; }
+    public required float FreshWater { get; set; }
 
     /// <summary>How deep the region lies under a flood now (0 = dry, 1 = drowned; ADR-022).</summary>
     public required float Flood { get; set; }

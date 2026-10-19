@@ -87,6 +87,7 @@ public static class DivineRulesValidator
         ValidateCulture(rules.Culture, errors);
         Hand.HandRulesValidator.Check(errors, rules.Hand);
         Notables.NotableRulesValidator.Check(errors, rules.Notables);
+        Land.LandRulesValidator.Check(errors, rules.Land);
         errors.RequireNonNegative(rules.TempleInfluenceStrength, nameof(rules.TempleInfluenceStrength));
         errors.RequireNonNegative(rules.TempleInfluenceReach, nameof(rules.TempleInfluenceReach));
         errors.ThrowIfAny("divine rules", nameof(rules));

@@ -173,6 +173,9 @@ public sealed record DivineRules
     /// <summary>What the Divine Hand can do (spec §55, ADR-030); no hand without it.</summary>
     public Hand.HandRules Hand { get; init; } = Pantheon.Domain.Hand.HandRules.None;
 
+    /// <summary>The Divine Acts that reshape the land (spec §14, ADR-045); <see cref="Land.LandRules.None"/> when absent.</summary>
+    public Land.LandRules Land { get; init; } = Pantheon.Domain.Land.LandRules.None;
+
     /// <summary>Share of all followers every opponent must fall below for a conquest (spec §53, ADR-027).</summary>
     public float ConquestShare { get; init; } = 0.05f;
 

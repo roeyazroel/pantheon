@@ -118,6 +118,9 @@ public static class AudioDirector
                 case MiracleEffectKind.Quake:
                 case MiracleEffectKind.Flood:
                 case MiracleEffectKind.Awaken:
+                case MiracleEffectKind.Raise:
+                case MiracleEffectKind.Split:
+                case MiracleEffectKind.Divert:
                     return SoundKind.Rumble;
                 case MiracleEffectKind.Ignite:
                     return SoundKind.Crackle;

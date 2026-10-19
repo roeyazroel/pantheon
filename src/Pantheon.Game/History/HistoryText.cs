@@ -86,6 +86,9 @@ public static class HistoryText
             HistoryKind.Hallowing => Format("{0} hallows the land of {1}", god, place),
             HistoryKind.Awakening => Format("{0} wakes {1}", god, world.Disasters.Volcano is { } volcano ? Disasters.DisasterText.VolcanoName(world, volcano.RegionId) : "the mountain"),
             HistoryKind.Stillness => Format("The Great Stillness of {0}", god),
+            HistoryKind.Raising => Format("{0} raises an island from the sea by {1}", god, place),
+            HistoryKind.Splitting => Format("{0} splits the mountain above {1}", god, place),
+            HistoryKind.Diverting => Format("{0} turns {1} towards {2}", god, record.Name ?? "a river", place),
             HistoryKind.Prophet => Format("{0}, prophet of {1}, arises in {2}", record.Name ?? "A prophet", god, place),
             HistoryKind.Martyrdom => Format("The Martyrdom of {0} at {1}", record.Name ?? "a prophet", place),
             HistoryKind.ElderTurned => Format("{0}, elder of {1}, turns from {2} to {3}", record.Name ?? "The elder", place, god, other),
@@ -137,6 +140,7 @@ public static class HistoryText
                 or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure or HistoryKind.Scar
                 or HistoryKind.Eruption or HistoryKind.Meteor or HistoryKind.Blight or HistoryKind.Locusts
                 or HistoryKind.Calling or HistoryKind.Hallowing or HistoryKind.Awakening or HistoryKind.Stillness
+                or HistoryKind.Raising or HistoryKind.Splitting or HistoryKind.Diverting
                 or HistoryKind.Martyrdom or HistoryKind.ElderTurned => string.Empty,
             HistoryKind.Prophet => record.Count > 0 ? "anointed by their god" : "called by the faithful",
             HistoryKind.Plague => Format("{0} villages sick at once", record.Count),

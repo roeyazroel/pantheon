@@ -55,6 +55,7 @@ internal static class SaveIntegrity
         ConflictIntegrity.Validate(world, godIds, errors);
         NotableIntegrity.Validate(world, godIds, errors);
         VillagerIntegrity.Validate(world, godIds, errors);
+        LandIntegrity.Validate(world, godIds, errors);
         RoadIntegrity.Validate(world, errors);
         GreatEventIntegrity.Validate(world, godIds, errors);
         PlanIntegrity.Validate(world, godIds, errors);

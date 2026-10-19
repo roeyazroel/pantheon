@@ -11,6 +11,7 @@ namespace Pantheon.Simulation.Terrain;
 public sealed class TerrainField
 {
     private readonly float[] _heights;
+    private readonly float[] _ground;
     private readonly float[] _moisture;
     private readonly float[] _temperature;
     private readonly Biome[] _biomes;
@@ -23,7 +24,8 @@ public sealed class TerrainField
     /// <param name="temperature">Normalised temperature per sample.</param>
     /// <param name="biomes">Biome per sample.</param>
     /// <param name="hydrology">The rivers and lakes cut into the heights (ADR-022); <c>null</c> for none.</param>
-    public TerrainField(int resolution, float spacing, float[] heights, float[] moisture, float[] temperature, Biome[] biomes, HydrologyMap? hydrology = null)
+    /// <param name="ground">The ground as the noise made it, before any reshaping or channel (ADR-045); the heights when <c>null</c>.</param>
+    public TerrainField(int resolution, float spacing, float[] heights, float[] moisture, float[] temperature, Biome[] biomes, HydrologyMap? hydrology = null, float[]? ground = null)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(resolution, 2);
         if (!(spacing > 0f))
@@ -43,6 +45,8 @@ public sealed class TerrainField
         _moisture = moisture;
         _temperature = temperature;
         _biomes = biomes;
+        _ground = ground ?? heights;
+        EnsureLength(_ground, count, nameof(ground));
         Hydrology = hydrology ?? HydrologyMap.Dry(count);
         if (Hydrology.WaterSurface.Length != count)
         {
@@ -64,6 +68,9 @@ public sealed class TerrainField
 
     /// <summary>Heights in metres, row-major.</summary>
     public ReadOnlySpan<float> Heights => _heights;
+
+    /// <summary>The ground as the noise made it, before any reshaping or channel (ADR-045), from which a reshaped terrain is made again.</summary>
+    public ReadOnlySpan<float> Ground => _ground;
 
     /// <summary>Normalised moisture, row-major.</summary>
     public ReadOnlySpan<float> Moisture => _moisture;

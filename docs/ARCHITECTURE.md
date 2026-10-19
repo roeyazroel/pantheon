@@ -285,10 +285,13 @@ files and compiled assemblies and fails when either rule is broken.
   1. Continent fBm plus ridged mountain noise, shaped by a radial island falloff.
   2. Normalised elevation is remapped to metres (land exponent for flatter lowlands).
   3. Moisture (noise plus coastal bonus) and temperature (noise minus elevation lapse rate).
-  4. With `Hydrology` set, rivers and lakes are found and cut into the land (ADR-022):
+  4. The land's reshapings (ADR-045) are sculpted into the ground by `TerrainReshaper`, and the
+     moved ground's climate is found again. The field keeps the ground as the noise made it
+     (`Ground`), so `TerrainGenerator.Reshape` can make a reshaped terrain without the noise.
+  5. With `Hydrology` set, rivers and lakes are found and cut into the land (ADR-022):
      `WorldGen/FlowGrid` routes water by a priority flood, `HydrologyGenerator` finds the lakes and
      rivers and `ChannelCarver` cuts the channels; the result is the field's `HydrologyMap`.
-  5. Each sample is classified by data-driven `BiomeRule`s (first match wins): the climate's
+  6. Each sample is classified by data-driven `BiomeRule`s (first match wins): the climate's
      biomes, including tundra, desert and swamp (ADR-038).
   6. With `Landforms` set, `WorldGen/LandformMarker` marks the biomes place decides, in order:
      islands, the volcanic land around the highest land region (the one `HazardModel.FindVolcano`
@@ -335,7 +338,12 @@ files and compiled assemblies and fails when either rule is broken.
   (belief), `HandCarry` (villagers set down), `HandThrow` (things thrown), `HandCreatures` (the
   Creature lifted) and `HandOfferings` (offerings taken and given, ADR-039). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
 - `Miracles/DivineActs`: hallowing the land, waking the volcano and stilling every disaster
-  (ADR-030), applied by `MiracleEffects`.
+  (ADR-030), applied by `MiracleEffects`. `Miracles/Judgement` holds the Justice domain's judgement
+  (ADR-022).
+- `Land/` (ADR-045): `LandShaper` plans an island, a gorge or a river's new course where a god
+  points, keeps it in `WorldState.Land`, makes the terrain again and settles the regions and water;
+  `LandActs` does the three acts for `MiracleEffects` on the terrain in `LandStage`
+  (`MiracleCaster.Land`). See [Reshaping the land](#reshaping-the-land).
 - `GreatEvents/`: `PlagueModel` (ripeness, course, shield, catching, cure), `EclipseModel`,
   `ReformationModel`, `GreatEventWatch` (world war, great drought, great migration),
   `GreatEventModel` (beginning, ending, names and an eclipse's awe) and `GreatEventSystem`;
@@ -437,7 +445,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (19 since ADR-043, for `VillagerIntent` and the followed
+- `NetworkProtocol`: the protocol version (20 since ADR-045, for `WorldSection.Land`; 19 since
+  ADR-043, for `VillagerIntent` and the followed
   villagers sent with the notables; 18 since ADR-039, for the hand's offering and its
   action; 17 since ADR-038, whose regions and generation carry the
   new biomes and landforms; 16 since ADR-037, whose Creatures carry their new traits;
@@ -509,7 +518,8 @@ jealousy and playfulness. Version 28 → 29 (`LandformSaveMigration`) gives the 
 landforms, so the terrain grows as it was. Version 29 → 30 (`OfferingSaveMigration`) gives
 whatever a hand holds no stores. Version 30 → 31 (`VillagerSaveMigration`) gives the world no
 followed villagers; `VillagerIntegrity` checks them (one for each god, known villages and gods,
-needs and faith in 0..1, a life longer than their age). A missing,
+needs and faith in 0..1, a life longer than their age). Version 31 → 32 (`LandSaveMigration`)
+gives the land no reshapings, and `LandIntegrity` checks them. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -551,7 +561,9 @@ needs and faith in 0..1, a life longer than their age). A missing,
   size and the victories): `AtSize` turns a `world_sizes.json` size into generation settings and
   gods, and `Validate` checks every size as part of the content's strict parsing.
 - `GameSession`: creates or loads worlds, owns `WorldState` + `TerrainField`, runs the
-  scheduler, saves and loads, and raises `WorldReplaced` so presentation rebuilds. It is the local
+  scheduler, saves and loads (`SessionStore` reads a save with its reshaped terrain), and raises
+  `WorldReplaced` so presentation rebuilds, and `TerrainChanged` when a Divine Act reshaped the land
+  (ADR-045; a replica's `SyncLand` makes its terrain again when the host's reshapings arrive). It is the local
   authority: `LocalGodId` is the first human god, `CheckCast` and `FindReached` preview a cast,
   `CastMiracle` sends the request through `MiracleCaster` with the local god as issuer, and
   `DrainEvents` hands the tick and command events to the client. `CommandCreature` sends the
@@ -1839,8 +1851,47 @@ flowchart LR
   `MiracleEffects` hallows regions and calls `DivineActs` to wake the volcano or still every
   disaster; `DivineActDone` reaches the alerts and the history. `BeliefSystem` keeps a hallowed
   region's blessing at least its `Hallowed`.
-- **Not modelled:** acts that change the terrain, carried offerings, Creatures above level 10 and
-  the AI using the hand.
+- **Not modelled:** carried offerings, Creatures above level 10 and the AI using the hand. The acts
+  that change the terrain came in part 24: see [Reshaping the land](#reshaping-the-land).
+
+## Reshaping the land
+
+§14's Divine Acts that change the land's shape (ADR-045) are kept in the world and made into the
+terrain: Raise an Island, Split the Mountain and Turn the River.
+
+```mermaid
+flowchart LR
+    cast[A Greater God casts an act] --> plan[LandShaper.Plan: where and how]
+    plan --> keep[WorldState.Land keeps the reshaping]
+    keep --> make[TerrainGenerator.Reshape: ground, rivers, biomes]
+    make --> settle[LandShaper.Settle: regions and water]
+    make --> session[GameSession.TerrainChanged]
+    session --> client[The client rebuilds the terrain]
+    keep --> history[History, alerts and the Land section]
+```
+
+- **Planning.** `LandShaper.Plan` fixes everything the terrain needs when the act is cast:
+  - an island's centre in a sea region;
+  - a gorge's ends, along the direction whose ends lie lowest, with its floor heights;
+  - a channel from the nearest inland river point down to the point, with the dam's place a little
+    downstream and its crest.
+
+  Where nothing can be done it returns nothing, and the cast is refused.
+- **Making the terrain.** `TerrainReshaper` sculpts every reshaping into the ground before the
+  rivers are found, so they follow the new land: a lobed dome, a floor between two heights,
+  or a falling channel and a dam. `TerrainGenerator.Reshape` starts from the kept ground: an
+  act costs 200–280 ms on the default island instead of 1.4 s, with the same result.
+- **Settling the world.** `LandShaper.Settle` gives changed regions their new height, climate,
+  biome and fresh water, new land its soil, plants, forest and stone, and finds the rivers and
+  lakes again, each river keeping the level of the old one it shares most land with.
+- **Holding the terrain.** `MiracleCaster.Land` (`LandStage`) holds the current terrain, set by
+  `GameSession`. The acts replace it, and the session takes it up after the command and raises
+  `TerrainChanged`. The client rebuilds the terrain and everything set on it, without moving the
+  camera.
+- **Shown and shared.**
+  - `DivineActDone` reaches the history (Raising, Splitting, Diverting) and the alerts;
+  - `LandReadout` lists the reshapings in F1, and `--reshape` makes one for captures;
+  - `WorldSection.Land` carries them to joined players.
 
 ## Great events
 
@@ -2189,11 +2240,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 31 (current)
+    alt version 32 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 30
+    else versions 1 to 31
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 31, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers)
+        Mig-->>Save: JsonObject at version 32, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
