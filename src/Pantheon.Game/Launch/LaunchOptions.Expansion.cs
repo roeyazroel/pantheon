@@ -70,6 +70,9 @@ public sealed partial record LaunchOptions
     /// <summary>Whether a new world is the stress scenario of spec §104 (ADR-044): 50 villages of 100,000 people, weather and disasters.</summary>
     public bool Stress { get; init; }
 
+    /// <summary>Whether the camera goes to the herd nearest the focused settlement at the start (ADR-054).</summary>
+    public bool FocusWildlife { get; init; }
+
     /// <summary>A reshaping of the land made near the focused settlement at the start (ADR-045), for captures.</summary>
     public Domain.Land.ReshapeKind? Reshape { get; init; }
 
@@ -96,7 +99,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -220,6 +223,8 @@ public sealed partial record LaunchOptions
                 return Enum.TryParse<HandAtStart>(trimmed, ignoreCase: true, out var hand) && Enum.IsDefined(hand) && !int.TryParse(trimmed, out _)
                     ? options with { Hand = hand }
                     : Warn(options, warnings, $"'--hand' needs villagers, creature, offering or throw, got '{value}'.");
+            case "wildlife":
+                return OnOff(value) is { } wild ? options with { FocusWildlife = wild } : Warn(options, warnings, $"'--wildlife' needs on or off, got '{value}'.");
             case "victory":
                 return ParseVictory(trimmed) is { } victory
                     ? options with { Victory = victory }

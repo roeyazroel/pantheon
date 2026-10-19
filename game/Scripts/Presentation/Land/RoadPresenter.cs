@@ -31,11 +31,17 @@ public sealed class RoadPresenter
     /// <summary>Creates the presenter; nothing is shown until <see cref="Rebuild"/>.</summary>
     /// <param name="parent">Node that holds the roads.</param>
     /// <param name="rules">Road rules, for whether a road is cut.</param>
-    public RoadPresenter(Node3D parent, RoadRules rules)
+    /// <param name="buildings">The buildings made in code, for the bridges' timber (ADR-054).</param>
+    public RoadPresenter(Node3D parent, RoadRules rules, Buildings.BuildingAssets buildings)
     {
         _parent = parent;
         _rules = rules;
+        _buildings = buildings;
+        _bridge = Meshes.ToArrayMesh(BridgeLayout.Mesh(), buildings.Material);
     }
+
+    private readonly Buildings.BuildingAssets _buildings;
+    private readonly ArrayMesh _bridge;
 
     /// <summary>Drops every road, for a new or loaded world.</summary>
     /// <param name="world">World to show.</param>
@@ -106,6 +112,7 @@ public sealed class RoadPresenter
         }
 
         _parent.AddChild(node);
+        Bridges(road, node);
         return node;
     }
 
@@ -130,4 +137,21 @@ public sealed class RoadPresenter
 
     /// <summary>A layout point as a Godot vector.</summary>
     private static Vector3 Point(System.Numerics.Vector3 point) => new(point.X, point.Y, point.Z);
+
+    /// <summary>A plank bridge over each stretch of water the road crosses (ADR-054), stretched bank to bank.</summary>
+    private void Bridges(RoadState road, Node3D under)
+    {
+        foreach (var (start, finish) in BridgeLayout.Spans(road, _terrain!))
+        {
+            var (a, b) = (new Vector3(start.X, start.Y, start.Z), new Vector3(finish.X, finish.Y, finish.Z));
+            var length = a.DistanceTo(b) + 2f;
+            var multimesh = Buildings.BuildingAssets.NewMultiMesh(_bridge);
+            multimesh.InstanceCount = 1;
+            var basis = new Basis(Vector3.Up, Mathf.Atan2(b.X - a.X, b.Z - a.Z)).Scaled(new Vector3(1f, 1f, length));
+            multimesh.SetInstanceTransform(0, new Transform3D(basis, (a + b) / 2f));
+            multimesh.SetInstanceColor(0, Buildings.BuildingAssets.InstanceColor(_buildings.Settings.Styles[Pantheon.Game.Presentation.HouseStyle.Longhouse].Walls[0]));
+            multimesh.SetInstanceCustomData(0, Buildings.BuildingAssets.InstanceCustom(_buildings.Settings.Trim, Pantheon.Game.Presentation.SurfacePattern.Planks, Pantheon.Game.Presentation.SurfacePattern.Planks));
+            under.AddChild(new MultiMeshInstance3D { Name = "Bridge", Multimesh = multimesh });
+        }
+    }
 }

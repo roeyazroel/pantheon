@@ -56,7 +56,7 @@ internal sealed class DebugView
 
     /// <summary>What streams near the camera now.</summary>
     private StreamingStatus Streaming() =>
-        new(_presenter.Streaming.Forests.Loaded, _presenter.Streaming.Forests.Chunks, _presenter.Streaming.Terrain, _fires().Shown, _fires().Burning, _streaming, (_presenter.GroundCover.Loaded, _presenter.GroundCover.Chunks, _coverRadius));
+        new(_presenter.Streaming.Forests.Loaded, _presenter.Streaming.Forests.Chunks, _presenter.Streaming.Terrain, _fires().Shown, _fires().Burning, _streaming, (_presenter.GroundCover.Loaded, _presenter.GroundCover.Chunks, _coverRadius), _presenter.Wildlife);
     private readonly Pantheon.Game.Presentation.StreamingSettings _streaming;
     private readonly float _coverRadius;
 

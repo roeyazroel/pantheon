@@ -158,6 +158,11 @@ public partial class GameRoot : Node3D
             FocusSettlement(distance, snap: true);
         }
 
+        if (options.FocusWildlife && Wildlife.NearestDeer(_session.World, _session.Terrain, new System.Numerics.Vector2(_camera.Model.Focus.X, _camera.Model.Focus.Y), _session.Crowds.Seconds, presentation.SettlementView.Wildlife) is { } deer)
+        {
+            _camera.FocusOn(new GroundPosition(deer.X, deer.Z), options.CameraDistance ?? 18f, snap: true);
+        }
+
         if (options.Stress && !_session.IsReplica)
         {
             SetStatus(StressScenario.Apply(_session));
@@ -185,7 +190,7 @@ public partial class GameRoot : Node3D
         _debug.Performance.Frame(delta);
         _presenter.Sync(_session.World, delta);
         var crowds = _session.Crowds.Advance(delta, _session.Scheduler.TimeScale, _session.Scheduler.IsPaused, _presenter.CrowdPace);
-        _presenter.UpdateCitizens(_session.World, crowds, _camera.ViewCamera.GlobalPosition);
+        _presenter.UpdateCitizens(_session.World, crowds, _camera.ViewCamera.GlobalPosition, delta);
 
         _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId, _divine.HeldCreatureAt(_camera.CursorGroundPoint));
         var focus = new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);

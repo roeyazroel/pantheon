@@ -69,6 +69,7 @@ silently:
 | [ADR-051](ADR-051-ground-textures-and-light.md) | Ground textures and light | Accepted |
 | [ADR-052](ADR-052-village-architecture.md) | Village architecture | Accepted |
 | [ADR-053](ADR-053-trees-ground-cover-and-wind.md) | Trees, ground cover and wind | Accepted |
+| [ADR-054](ADR-054-wildlife-and-bridges.md) | Wildlife and bridges | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

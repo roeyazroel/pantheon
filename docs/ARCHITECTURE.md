@@ -1439,6 +1439,12 @@ running for every settlement either way.
   taking their shares first so they stay put), never in water, on bare rock, on a road, by a house,
   on a field or on a village's square (`BareGround`). `ChunkStreamer` looks only at the chunks
   within its load radius, so small chunks over a large island cost nothing far away.
+- `Wildlife` (ADR-054) places the herds and flocks near the camera from each region's wildlife
+  and biome, closed-form in the crowds' time (a herd grazes, then walks on to the next spot; a
+  flock wheels round its point), never on water or a village's bare ground. `AnimalMesh` builds a
+  deer and a bird, their parts tagged for `Shaders/animal.gdshader` (legs swing, heads lower to
+  graze, wings beat, antlers for stags). `BridgeLayout` finds where a road crosses water and lays
+  a plank bridge from bank to bank (`RoadPresenter`).
 - `VillageArchitecture` (ADR-052) gives a village its look: the style its land builds in
   (`StyleOf`: adobe, stilt houses, stone cottages, timber longhouses, round huts), longhouses and
   an upper storey as it grows, colours from `Architecture` in `settlement_view.json`, and its

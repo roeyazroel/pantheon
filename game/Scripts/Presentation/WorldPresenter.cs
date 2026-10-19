@@ -30,6 +30,7 @@ public sealed class WorldPresenter
     private readonly SettlementPresenter _settlements;
     private readonly ForestPresenter _forests;
     private readonly GroundCoverPresenter _groundCover;
+    private readonly WildlifePresenter _wildlife;
     private readonly RoadPresenter _roads;
     private readonly GreatEvents.GreatEventPresenter _greatEvents;
     private readonly RegionBoundaryOverlay _regions;
@@ -52,7 +53,8 @@ public sealed class WorldPresenter
         _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
         _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout, content.SettlementView.Streaming, content.SettlementView.Trees);
         _groundCover = new GroundCoverPresenter(root.AddLayer("GroundCover"), content.SettlementView, rules, content.Palette.RockSlopeStart);
-        _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
+        _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads, Buildings.BuildingAssets.For(content.SettlementView.Architecture));
+        _wildlife = new WildlifePresenter(root.AddLayer("Wildlife"), content.SettlementView, rules);
         _greatEvents = new GreatEvents.GreatEventPresenter(root.AddLayer("GreatEvents"), content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
         _debris = new DebrisPresenter(root.AddLayer("Debris"), content.SettlementView.Debris, () => _terrainField!);
@@ -101,6 +103,7 @@ public sealed class WorldPresenter
         _settlements.Build(world, terrain);
         _forests.Rebuild(world, terrain);
         _groundCover.Rebuild(world, terrain);
+        _wildlife.Rebuild(terrain);
         _roads.Rebuild(world, terrain);
         _greatEvents.Rebuild(terrain);
         _regions.Build(world.Regions, terrain);
@@ -142,8 +145,15 @@ public sealed class WorldPresenter
     /// <param name="world">Current world.</param>
     /// <param name="simulationSeconds">The crowds' time (ADR-049), which drives the citizens' routines.</param>
     /// <param name="camera">Camera position in the world.</param>
-    public void UpdateCitizens(WorldState world, double simulationSeconds, Vector3 camera) =>
+    /// <param name="delta">Frame time in seconds.</param>
+    public void UpdateCitizens(WorldState world, double simulationSeconds, Vector3 camera, double delta)
+    {
         _settlements.UpdateCitizens(world, simulationSeconds, camera);
+        _wildlife.Sync(world, camera, simulationSeconds, delta);
+    }
+
+    /// <summary>Deer and birds drawn now (ADR-054).</summary>
+    public (int Deer, int Birds) Wildlife => _wildlife.Counts;
 
     /// <summary>Outlines the region under the cursor (only visible while boundaries are shown).</summary>
     /// <param name="regionId">Region id, or <c>null</c> when the cursor is not over the world.</param>

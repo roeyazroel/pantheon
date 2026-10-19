@@ -23,6 +23,9 @@ public sealed record SettlementViewSettings
     /// <summary>How people look (ADR-049).</summary>
     public required PeopleSettings People { get; init; }
 
+    /// <summary>The wildlife near the camera (ADR-054).</summary>
+    public required WildlifeSettings Wildlife { get; init; }
+
     /// <summary>The ground cover near the camera (ADR-053).</summary>
     public required GroundCoverSettings GroundCover { get; init; }
 
@@ -72,6 +75,7 @@ public sealed record SettlementViewSettings
         Collect(errors, nameof(Architecture), Architecture.Validate);
         Collect(errors, nameof(Trees), Trees.Validate);
         Collect(errors, nameof(GroundCover), GroundCover.Validate);
+        Collect(errors, nameof(Wildlife), Wildlife.Validate);
         Collect(errors, nameof(Debris), Debris.Validate);
         Collect(errors, nameof(Streaming), Streaming.Validate);
         if (errors.Count > 0)

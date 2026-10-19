@@ -10,7 +10,7 @@ namespace Pantheon.Client.Presentation.Buildings;
 /// walls and towers from <see cref="HouseMesh"/> and <see cref="CivicMesh"/>, built on first use,
 /// with the building shader that paints them. Shared by every village.
 /// </summary>
-internal sealed class BuildingAssets
+public sealed class BuildingAssets
 {
     private static BuildingAssets? _shared;
     private readonly Dictionary<(HouseStyle, bool), ArrayMesh> _houses = [];

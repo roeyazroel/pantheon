@@ -143,7 +143,10 @@ public sealed class GroundCoverPresenter
         var settings = _view.GroundCover;
         var (minX, minZ) = (chunk % _perSide * settings.ChunkMetres, chunk / _perSide * settings.ChunkMetres);
         _placed.Clear();
-        GroundCoverLayout.Place(world, _terrain!, minX, minZ, settings.ChunkMetres, _clearings, settings, _rockSlope, _placed);
+        // Only the bare patches over this chunk matter; a big world's villages hold tens of thousands.
+        var (midX, midZ, reach) = (minX + (settings.ChunkMetres / 2f), minZ + (settings.ChunkMetres / 2f), (settings.ChunkMetres * 0.75f) + 12f);
+        var near = _clearings.Where(c => MathF.Abs(c.Center.X - midX) < reach + c.Radius && MathF.Abs(c.Center.Y - midZ) < reach + c.Radius).ToList();
+        GroundCoverLayout.Place(world, _terrain!, minX, minZ, settings.ChunkMetres, near, settings, _rockSlope, _placed);
         var nodes = _chunks[chunk]!;
         foreach (var kind in Enum.GetValues<GroundCoverKind>())
         {

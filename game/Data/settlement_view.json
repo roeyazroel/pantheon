@@ -179,6 +179,28 @@
     "Reeds": "#7f8a4a"
   },
 
+  // Wildlife (spec section 61, ADR-054): within Radius metres of the camera, a region of DeerBiomes
+  // may hold a herd and one of BirdBiomes a flock, with chances HerdChance and FlockChance times its
+  // wildlife, which hunting, fire and cleared forests lower. A herd has HerdSize [fewest, most] deer
+  // and a flock FlockSize birds, more where wildlife abounds. A herd grazes GrazeSeconds in one place
+  // and walks WalkSeconds to the next; birds fly at BirdSpeed m/s. At most MaxAnimals deer and as
+  // many birds are drawn.
+  "Wildlife": {
+    "Radius": 280.0,
+    "DeerBiomes": ["Grassland", "Forest", "RiverValley", "Highland", "Tundra", "Coast", "Island"],
+    "BirdBiomes": ["Forest", "RiverValley", "Coast", "Island", "Swamp", "Grassland"],
+    "HerdChance": 0.55,
+    "FlockChance": 0.35,
+    "HerdSize": [2, 8],
+    "FlockSize": [4, 10],
+    "GrazeSeconds": 45.0,
+    "WalkSeconds": 18.0,
+    "BirdSpeed": 8.0,
+    "MaxAnimals": 140,
+    "Coats": ["#8a5a36", "#7a4e2e", "#9a6a42", "#6e4a30"],
+    "Plumage": ["#2b2b2e", "#4a3a2e", "#ece9e2", "#3a4450"]
+  },
+
   // Religion's look (spec section 61, ADR-042). The god most of a village follows gives it a motif:
   // gardens (Nature, Life, Prosperity, Ocean; compassion, mercy, generosity; nature worship,
   // pacifism, charity; love), monuments (War, Death, Fire, Storm, Chaos; cruelty, vengeance,

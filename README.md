@@ -429,6 +429,13 @@ and ×16 speed it up. Each step:
   vegetation, bushes, stones and reeds in swamps, but not by houses, on fields or on a village's
   square. Trees and grass sway in the wind and bend hard in a storm. The species, colours and
   sway are in `Trees`, and the ground cover in `GroundCover`, in `game/Data/settlement_view.json`.
+- **Wildlife (spec §61, ADR-054).** Near the camera, herds of deer graze and walk on to fresh
+  pasture, stags among them, and flocks of birds wheel over forests, rivers and coasts. There are
+  as many as the land's wildlife allows, so hunted, burnt or cleared land is empty of them. They
+  keep a natural pace at any game speed and stop when it is paused. Roads cross rivers on plank
+  bridges. `--wildlife=on` takes the camera to the herd nearest the focused village, and the debug
+  panel's streaming line counts the deer and birds. The numbers are in `Wildlife` in
+  `game/Data/settlement_view.json`.
 - **How villages build (spec §61, ADR-052).** The land picks the houses: round huts of wattle and
   thatch on grassland and by rivers and coasts, timber longhouses in forests and the tundra, stone
   cottages with slate roofs and chimneys in the highlands and on volcanic land, flat-roofed adobe
@@ -1456,6 +1463,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 25–2600, or further over a larger island). |
 | `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). The run prints its frame times, the performance lines with a save timed, and the world's load. |
 | `--stress=on\|off` | Start the stress scenario of spec §104 (ADR-044): the vast island with 50 villages of 2,000 people, 8 gods and their Creatures, 20 weather cells and an earthquake, a fire and a flood, the crowd drawn in thousands. |
+| `--wildlife=on\|off` | Take the camera to the herd of deer nearest the focused settlement at the start (ADR-054). |
 | `--screenshot=<file.png>` | Together with `--quit-after-frames`, save a screenshot just before quitting (not in headless mode). |
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
