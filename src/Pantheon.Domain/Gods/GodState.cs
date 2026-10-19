@@ -53,4 +53,7 @@ public sealed class GodState
 
     /// <summary>How the world sees the god now, from its conduct (spec §11, ADR-024).</summary>
     public required List<Culture.GodTrait> Traits { get; init; }
+
+    /// <summary>What its Divine Hand holds now, if anything (spec §55, ADR-030).</summary>
+    public Hand.HeldObject? Held { get; set; }
 }

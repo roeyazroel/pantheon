@@ -60,6 +60,8 @@ internal sealed class MiracleEffects
                 MiracleEffectKind.Teach => FindOwnCreature(world, godId, target, miracle.Radius) is not null,
                 MiracleEffectKind.Flood => Water.WaterModel.Reach(world.Regions, target, miracle.Radius, effect.Amount).Count > 0,
                 MiracleEffectKind.Judge => world.Settlements.Exists(s => Distance(s.Position, target) <= miracle.Radius && HasGuilty(world, godId, s)),
+                MiracleEffectKind.Awaken => DivineActs.CanAwaken(_disasters, world),
+                MiracleEffectKind.Still => DivineActs.Unquiet(_weather, world),
                 _ => true,
             };
             if (!found)
@@ -123,6 +125,9 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Wound:
                 case MiracleEffectKind.Teach:
                 case MiracleEffectKind.Discord:
+                case MiracleEffectKind.Hallow:
+                case MiracleEffectKind.Awaken:
+                case MiracleEffectKind.Still:
                     break;
             }
         }
@@ -140,7 +145,7 @@ internal sealed class MiracleEffects
         var struck = grid.TryGetRegionIdAt(target.X, target.Z, out var under) ? under : -1;
         foreach (var effect in miracle.Effects)
         {
-            if (effect.Kind is not (MiracleEffectKind.Bless or MiracleEffectKind.Regrow or MiracleEffectKind.Soak) && !(effect.Kind == MiracleEffectKind.Smite && smiteHarm > 0f))
+            if (effect.Kind is not (MiracleEffectKind.Bless or MiracleEffectKind.Regrow or MiracleEffectKind.Soak or MiracleEffectKind.Hallow) && !(effect.Kind == MiracleEffectKind.Smite && smiteHarm > 0f))
             {
                 continue;
             }
@@ -163,6 +168,10 @@ internal sealed class MiracleEffects
                 else if (effect.Kind == MiracleEffectKind.Smite)
                 {
                     region.Damage = SimMath.Clamp01(region.Damage + smiteHarm);
+                }
+                else if (effect.Kind == MiracleEffectKind.Hallow)
+                {
+                    DivineActs.Hallow(region, effect.Amount);
                 }
                 else
                 {
@@ -217,6 +226,15 @@ internal sealed class MiracleEffects
                     break;
                 case MiracleEffectKind.Flood when Water.WaterModel.Inundate(world, target, miracle.Radius, effect.Amount) is { } deepest:
                     events.Add(new FloodStarted { Tick = world.Tick, RiverId = null, GodId = godId, RegionId = deepest });
+                    break;
+                case MiracleEffectKind.Hallow:
+                    events.Add(new DivineActDone { Tick = world.Tick, GodId = godId, Act = DivineActKind.Hallowing, Position = target });
+                    break;
+                case MiracleEffectKind.Awaken when _disasters is not null:
+                    DivineActs.Awaken(_disasters, world, godId, events);
+                    break;
+                case MiracleEffectKind.Still:
+                    DivineActs.Still(_weather, _disasters, world, godId, target, events);
                     break;
             }
         }
@@ -328,12 +346,12 @@ internal sealed class MiracleEffects
         }
     }
 
-    /// <summary>Wounds every rival Creature in reach; the harm is divided by its species' toughness, and the god whose Creature it is notes it.</summary>
+    /// <summary>Wounds every rival Creature in reach; the harm is divided by its resilience, and the god whose Creature it is notes it.</summary>
     private void Wound(WorldState world, int godId, GroundPosition target, float radius, float amount)
     {
         foreach (var creature in FindRivalCreatures(world, godId, target, radius))
         {
-            var toughness = _creatures is null ? 1f : CreatureModel.SpeciesOf(_creatures, creature).Toughness;
+            var toughness = _creatures is null ? 1f : CreatureAttributes.Resilience(_creatures, creature);
             creature.Health = SimMath.Clamp01(creature.Health - (amount / toughness));
             _ledger?.Record(world, creature.GodId, godId, DiplomaticAct.Harmed, null);
         }

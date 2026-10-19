@@ -70,6 +70,9 @@
   // A god's Creature carries influence with it, fading to 0 at CreatureInfluenceReach metres.
   "CreatureInfluenceStrength": 0.5,
   "CreatureInfluenceReach": 220.0,
+  // ...and further as it grows: its divine affinity (spec section 23, ADR-030) adds this share of
+  // the reach per level above the first.
+  "CreatureAffinityPerLevel": 0.05,
   "SettlementRadius": 60.0,
   "WeakInfluenceCostFactor": 1.0,
   "GratitudeFloor": 0.4,
@@ -173,5 +176,34 @@
     "ConductFadePerSecond": 0.0005,
     "TraitThreshold": 5.0,
     "Contradiction": 1.0
+  },
+  // The Divine Hand (spec section 55, ADR-030), where the god's influence reaches at least
+  // MinInfluence. Within Reach metres it lifts the god's Creature, else up to VillagersPerGrab people
+  // (at most MaxShare of a village), else a tree from land at least TreeVegetation green (taking
+  // TreeCover of it) or a rock. People lifted out of danger and set down safe feel Rescue, and so
+  // does everyone within WitnessRadius; people taken from a safe home, and those left, feel
+  // Abduction. A thrown rock wrecks ThrowHousingLoss of the houses and kills ThrowDeaths of the
+  // people within ThrowRadius metres at the centre (a tree or a body TreeThrowFactor as much),
+  // harms the land by ThrowLandHarm and makes those it strikes feel Smiting; a thrown Creature loses
+  // ThrownCreatureHealth. A planted tree makes the village beside it feel Planting.
+  "Hand": {
+    "Enabled": true,
+    "MinInfluence": 0.05,
+    "Reach": 60.0,
+    "VillagersPerGrab": 10,
+    "MaxShare": 0.25,
+    "TreeVegetation": 0.6,
+    "TreeCover": 0.05,
+    "ThrowRadius": 25.0,
+    "ThrowHousingLoss": 0.15,
+    "ThrowDeaths": 0.04,
+    "TreeThrowFactor": 0.6,
+    "ThrowLandHarm": 0.3,
+    "ThrownCreatureHealth": 0.15,
+    "WitnessRadius": 300.0,
+    "Rescue": { "Faith": 0.05, "Love": 0.15, "Fear": 0.0, "Doubt": -0.05 },
+    "Abduction": { "Faith": 0.0, "Love": -0.05, "Fear": 0.08, "Doubt": 0.05 },
+    "Smiting": { "Faith": 0.02, "Love": -0.1, "Fear": 0.2, "Doubt": 0.0 },
+    "Planting": { "Faith": 0.01, "Love": 0.03, "Fear": 0.0, "Doubt": 0.0 }
   }
 }

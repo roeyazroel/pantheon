@@ -141,13 +141,14 @@ public static class CultureModel
     /// <summary>Factor on how strongly a settlement draws migrants: isolationists keep strangers out.</summary>
     public static float WelcomeFactor(CultureRules rules, CultureState culture) => Math.Max(0f, 1f - (rules.DoctrineEffect * culture.Isolationism));
 
-    /// <summary>Whether a miracle blesses the land: blessing, rain, water, regrowth.</summary>
+    /// <summary>Whether a miracle blesses the land: blessing, rain, water, regrowth, hallowing and stilling disasters.</summary>
     public static bool Blesses(MiracleDefinition miracle)
     {
         ArgumentNullException.ThrowIfNull(miracle);
         foreach (var effect in miracle.Effects)
         {
-            if (effect.Kind is MiracleEffectKind.Bless or MiracleEffectKind.Rain or MiracleEffectKind.Regrow or MiracleEffectKind.Soak or MiracleEffectKind.Water)
+            if (effect.Kind is MiracleEffectKind.Bless or MiracleEffectKind.Rain or MiracleEffectKind.Regrow or MiracleEffectKind.Soak or MiracleEffectKind.Water
+                or MiracleEffectKind.Hallow or MiracleEffectKind.Still)
             {
                 return true;
             }
@@ -156,13 +157,13 @@ public static class CultureModel
         return false;
     }
 
-    /// <summary>Whether a miracle ravages the land: fire, quakes, floods.</summary>
+    /// <summary>Whether a miracle ravages the land: fire, quakes, floods, a woken volcano.</summary>
     public static bool Ravages(MiracleDefinition miracle)
     {
         ArgumentNullException.ThrowIfNull(miracle);
         foreach (var effect in miracle.Effects)
         {
-            if (effect.Kind is MiracleEffectKind.Ignite or MiracleEffectKind.Quake or MiracleEffectKind.Flood)
+            if (effect.Kind is MiracleEffectKind.Ignite or MiracleEffectKind.Quake or MiracleEffectKind.Flood or MiracleEffectKind.Awaken)
             {
                 return true;
             }

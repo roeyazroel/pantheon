@@ -104,7 +104,7 @@ public static class CreatureBonds
         return DiplomacyModel.AreAtWar(world, creature.GodId, other.GodId) ? CreatureSituation.MeetsEnemyCreature : CreatureSituation.MeetsCreature;
     }
 
-    /// <summary>A Creature's fighting power: strength, raised by combat skill.</summary>
+    /// <summary>A Creature's fighting power: strength, raised by combat skill, and by the Warrior's path (ADR-030).</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="creature">The Creature.</param>
     /// <returns>Power.</returns>
@@ -112,7 +112,7 @@ public static class CreatureBonds
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(creature);
-        return CreatureModel.Strength(rules, creature) * (1f + (rules.Combat.SkillPower * creature.CombatSkill));
+        return CreatureModel.Strength(rules, creature) * (1f + (rules.Combat.SkillPower * creature.CombatSkill)) * CallingEffects.PowerFactor(rules.Callings, creature);
     }
 
     /// <summary>How sure a Creature is of beating another: the ratio of their power and health, from 0.25 to 1 (being stronger adds no wish to fight).</summary>

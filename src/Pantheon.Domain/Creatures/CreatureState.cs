@@ -68,4 +68,10 @@ public sealed class CreatureState
 
     /// <summary>How it regards the other Creatures it has met (spec §27), one entry per Creature.</summary>
     public required List<CreatureRelation> Relations { get; init; }
+
+    /// <summary>The paths it has taken up, in the order it took them (spec §24, ADR-030).</summary>
+    public List<CreatureSpecialisation> Specialisations { get; init; } = [];
+
+    /// <summary>How far its deeds have called it to each path (ADR-030).</summary>
+    public CreatureCallings Callings { get; init; } = new();
 }

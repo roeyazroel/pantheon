@@ -125,6 +125,7 @@ public partial class GameRoot : Node3D
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);
         faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);
+        faith.ActChosen += _divine.Select;
         var politics = new PoliticsController { Name = "Politics" };
         AddChild(politics);
         politics.Setup(_session, _camera, _diplomacy, SetStatus, options);
@@ -173,7 +174,7 @@ public partial class GameRoot : Node3D
         _presenter.Sync(_session.World);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
-        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId);
+        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId, _divine.HeldCreatureAt(_camera.CursorGroundPoint));
         var focus = new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);
         _weather.Sync(_session.World, _session.SimulationSeconds, (float)delta, focus);
         _disasters.Sync(_session.World, (float)delta, focus);
@@ -241,6 +242,7 @@ public partial class GameRoot : Node3D
         (InputActions.CreatureReward, () => _divine.JudgeCreature(CreatureCommandKind.Reward)),
         (InputActions.CreaturePunish, () => _divine.JudgeCreature(CreatureCommandKind.Punish)),
         (InputActions.CreatureSend, () => _divine.SendCreature(_camera.CursorGroundPoint)),
+        (InputActions.HandGrab, () => _divine.UseHand(_camera.CursorGroundPoint, Input.IsKeyPressed(Key.Shift))),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),

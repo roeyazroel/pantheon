@@ -59,7 +59,7 @@ public sealed class InfluenceField
         {
             if (creature.GodId == godId && creature.Activity.Phase != Domain.Creatures.CreaturePhase.Banished && rules.CreatureInfluenceStrength > 0f)
             {
-                sources.Add(new InfluenceSource(creature.Position, Math.Min(1f, rules.CreatureInfluenceStrength), rules.CreatureInfluenceReach));
+                sources.Add(new InfluenceSource(creature.Position, Math.Min(1f, rules.CreatureInfluenceStrength), rules.CreatureInfluenceReach * Creatures.CreatureAttributes.Affinity(rules, creature)));
             }
         }
 

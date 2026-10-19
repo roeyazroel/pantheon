@@ -1,11 +1,13 @@
 using Godot;
+using Pantheon.Domain.Hand;
 
 namespace Pantheon.Client.Presentation.Divine;
 
 /// <summary>
-/// The god's hand (spec §55), for now a visual only (ADR-010): a glowing, translucent hand that
-/// hovers over the cursor, presses down when a miracle is cast, pats the Creature to reward it
-/// and swats it to punish it. Its size follows the camera distance so it reads at every zoom.
+/// The god's hand (spec §55, ADR-010, ADR-030): a glowing, translucent hand that hovers over the
+/// cursor, presses down when a miracle is cast, pats the Creature to reward it and swats it to
+/// punish it, shows what it holds (a rock, a tree, villagers) and flings it when it throws. Its
+/// size follows the camera distance so it reads at every zoom. The world decides what it holds.
 /// </summary>
 internal sealed partial class DivineHand : Node3D
 {
@@ -21,6 +23,7 @@ internal sealed partial class DivineHand : Node3D
     private bool _hasCursor;
     private float _cameraDistance = 300f;
     private float _gestureSize;
+    private Node3D _held = null!;
 
     private enum Gesture
     {
@@ -66,7 +69,45 @@ internal sealed partial class DivineHand : Node3D
             Rotation = new Vector3(Mathf.Pi / 2f, 0f, 0.7f),
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         });
+        hand._held = new Node3D { Name = "Held", Position = new Vector3(0f, -0.55f, 0.3f) };
+        hand.AddChild(hand._held);
+        foreach (var kind in new[] { HeldKind.Rock, HeldKind.Tree, HeldKind.Villagers })
+        {
+            var thing = HeldThing.Create(kind);
+            thing.Visible = false;
+            hand._held.AddChild(thing);
+        }
+
         return hand;
+    }
+
+    /// <summary>Shows what the hand holds under its palm; a held Creature hangs below on its own.</summary>
+    /// <param name="kind">What it holds, or <c>null</c>.</param>
+    public void Hold(HeldKind? kind)
+    {
+        foreach (var child in _held.GetChildren())
+        {
+            if (child is Node3D thing)
+            {
+                thing.Visible = kind is { } held && held != HeldKind.Creature && thing.Name == held.ToString();
+            }
+        }
+    }
+
+    /// <summary>Flings what the hand held from the hand to a point, in an arc (ADR-030).</summary>
+    /// <param name="target">Where it lands.</param>
+    /// <param name="kind">What it was.</param>
+    public void Fling(Vector3 target, HeldKind kind)
+    {
+        if (kind == HeldKind.Creature || GetParent() is not Node3D world)
+        {
+            Press(target);
+            return;
+        }
+
+        var flight = HeldThing.Flight(kind, GlobalPosition, target, Scale.X);
+        world.AddChild(flight);
+        Press(target);
     }
 
     /// <summary>Puts the hand over the cursor point, or hides it when there is none.</summary>

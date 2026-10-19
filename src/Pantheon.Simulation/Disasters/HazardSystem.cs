@@ -37,7 +37,8 @@ public sealed class HazardSystem : ISimulationSystem
     /// <param name="weather">Weather rules, for thunderstorms, rain and the season's warmth.</param>
     /// <param name="intervalTicks">Ticks between its steps.</param>
     /// <param name="domains">Domain rules, for the houses the Protection domain saves; <c>null</c> for none.</param>
-    public HazardSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, int intervalTicks, Domain.Gods.DomainRules? domains = null)
+    /// <param name="callings">Creatures' paths, for the Guardians that shield their villages (ADR-030); <c>null</c> for none.</param>
+    public HazardSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, int intervalTicks, Domain.Gods.DomainRules? domains = null, Domain.Creatures.CallingRules? callings = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
@@ -46,7 +47,7 @@ public sealed class HazardSystem : ISimulationSystem
         ArgumentOutOfRangeException.ThrowIfLessThan(intervalTicks, 1);
         _rules = rules;
         _hazards = rules.Hazards;
-        _damage = new DisasterDamage(rules, settlementRules, divine, domains);
+        _damage = new DisasterDamage(rules, settlementRules, divine, domains, callings);
         _living = new LivingHazards(rules, settlementRules, weather, _damage);
         _intervalTicks = intervalTicks;
     }
@@ -166,7 +167,7 @@ public sealed class HazardSystem : ISimulationSystem
 
         foreach (var settlement in world.Settlements)
         {
-            var ash = HazardModel.Falloff(settlement.Position, crater, rules.AshRadius) * _damage.Protection(settlement, world.Tick);
+            var ash = HazardModel.Falloff(settlement.Position, crater, rules.AshRadius) * _damage.Protection(world, settlement);
             if (ash > 0f && settlement.Population > 0)
             {
                 settlement.Health = Math.Max(0f, settlement.Health - (rules.AshHealthLossPerSecond * ash * seconds));

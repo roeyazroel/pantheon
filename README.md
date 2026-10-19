@@ -260,6 +260,10 @@ covers:
   season does to harvests, stores, health and migration, snow lying and melting, fog and
   hurricanes, harm healing into scars and Nature's healing, wildlife and hunting, pollution, the
   words, alerts, history, readouts and overlay, and the migration of part 7's saves;
+- the Creature's paths and attributes, the Divine Hand (rescues, abductions, carrying, drowning,
+  throwing, trees, the Creature in the hand, every refusal, through a host) and the Divine Acts
+  (hallowing, waking the volcano, stilling every disaster, the rank and power they need), their
+  alerts, history, card, panel and options, and the migration of part 9's saves;
 - hazards: the volcano, its lava and ash, waves from coastal quakes and sea walls, landslides and
   the rubble that blocks the way, meteors, tornadoes, locusts and rain, blight and what cures it,
   evacuation routes, dams and irrigation, marks fading, the same hazards across a save and load,
@@ -320,6 +324,7 @@ covers:
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
+| Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
 | Show or hide the diplomacy panel | P |
 | Show or hide the Divine Council: the vote in session, decrees, and motions to table | U |
 | Toggle region boundaries | B |
@@ -411,6 +416,20 @@ its cooldown); hover over a button to read what it does.
   miracles.
 - **Alerts** on the right tell you when a settlement that follows you starves, when a settlement
   comes to follow you or turns away, and when you reach a rank. Click one to look there.
+- **Your hand.** R picks up what lies under the cursor where your influence reaches, and R again
+  sets it down; Shift+R throws it.
+  - **Villagers (ten at a time):** lift them out of a burning, shaking or flooded village and set
+    them down in a safe one, and they and everyone who sees it love you for it. Taken from a safe
+    home they are afraid. Set down on open land they walk to the nearest village; set down in the
+    sea they drown.
+  - **A tree** from green land, which you can plant elsewhere, or **a rock**: thrown, it wrecks
+    houses and kills where it lands and leaves a crater. Striking your own followers is cruel, and
+    the world will see you so.
+  - **Your Creature:** it waits in your hand until you set it down; thrown, it is hurt and resents
+    it.
+- **Divine Acts.** A Greater God can do the dearest miracles of all, from the Domains panel (G):
+  Hallow the Land (its blessing never fades), Wake the Volcano and Still the World (every quake,
+  fire, flood, storm, swarm, blight and drought ends at once). The world's history remembers each.
 
 A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
 followers grow hungry. Try Lightning to see how fear behaves.
@@ -859,8 +878,24 @@ now.
   - Rewards and punishments also shape its personality and its loyalty.
   - Five rewards for feeding make a dutiful feeder of it.
 - **Send it.** Press V to send it to the cursor; it waits there longer the more loyal it is.
-- **It grows.** Its deeds earn experience. Each level, up to 10, makes it bigger, stronger and
-  faster.
+- **It grows.** Its deeds earn experience. Each level, up to 10, makes it bigger, stronger,
+  faster, cleverer (it learns faster), tougher, and carries your influence further. Its card shows
+  these attributes.
+- **It walks paths.** At levels 3, 6 and 9 it takes up the path its deeds have called it to most,
+  so how you raise it decides what it becomes:
+
+  | Path | Called by | What it does |
+  | --- | --- | --- |
+  | Healer | feeding | heals the people of the villages it helps |
+  | Guardian | building, mercy | your villages near it suffer less from disasters |
+  | Missionary | play, friendship | wins the godless of the villages it visits to you |
+  | Nature Keeper | foraging, wandering | heals the land where it goes |
+  | Warrior | fights won | fights harder |
+  | Destroyer | attacks | its attacks kill more |
+  | Trickster | stealing food, fleeing | sows doubt in your rivals among the villages it visits |
+  | Commander | going where you send it | your villages near it are harder to attack |
+
+  A reward calls it further down the paths of the deed. No Creature walks more than three.
 - **It can be lost for a while.** If it starves, or loses a fight, it is banished for a minute
   and comes home weakened.
 
@@ -1057,7 +1092,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   disasters (earthquakes and the fiercest fires), hazards (the volcano, tornadoes, swarms, blighted
   and buried regions, and marks on the land), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
-  view (level, health, loyalty, morality, activity, needs, personality, its best options with
+  view (level, health, loyalty, morality, attributes, paths and callings, activity, needs, personality, its best options with
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
   view of every Creature it has met with their latest encounters, its learned preferences by
   situation and its latest memories), the region
@@ -1136,6 +1171,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature` | Start with a map overlay shown. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
+| `--hand=villagers\|creature` | Your hand lifts villagers of the focused settlement, or your Creature, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm\|heatwave\|coldwave\|hurricane` | Start in a weather spell, or with a storm or a hurricane over the focused settlement. |
@@ -1241,7 +1277,8 @@ Milestones 1 to 14 start with gods who have chosen no domains and with no villag
 their holy sites when they are loaded. Saves from before Milestone 15, part 7 are won by Divine
 Ascendancy alone. Saves from before part 8 keep an even climate, without seasons, with no snow or
 harm and their land's animals at its cover. Saves from before part 9 start with no blight, rubble,
-tornadoes, swarms or marks, and find their volcano when it is first needed. A save keeps its world's
+tornadoes, swarms or marks, and find their volcano when it is first needed. Saves from before part 10
+start with Creatures that have walked no path, empty hands and no hallowed land. A save keeps its world's
 size, how it may be won and its seasons.
 
 Your settings are kept in `user://settings.json`; the start screen and the pause menu have a

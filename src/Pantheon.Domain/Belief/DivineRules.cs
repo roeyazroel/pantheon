@@ -158,6 +158,12 @@ public sealed record DivineRules
     /// <summary>Whether allied gods who together hold the victory share win together (spec §53 Pantheon victory, ADR-015).</summary>
     public required bool PantheonVictory { get; init; }
 
+    /// <summary>Divine affinity a Creature gains per level above the first (spec §23, ADR-030): its influence reaches that much further.</summary>
+    public float CreatureAffinityPerLevel { get; init; }
+
+    /// <summary>What the Divine Hand can do (spec §55, ADR-030); no hand without it.</summary>
+    public Hand.HandRules Hand { get; init; } = Pantheon.Domain.Hand.HandRules.None;
+
     /// <summary>Share of all followers every opponent must fall below for a conquest (spec §53, ADR-027).</summary>
     public float ConquestShare { get; init; } = 0.05f;
 

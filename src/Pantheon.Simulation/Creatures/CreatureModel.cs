@@ -1,5 +1,6 @@
 using System;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.World;
 
 namespace Pantheon.Simulation.Creatures;
 
@@ -25,6 +26,17 @@ public static class CreatureModel
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(creature);
         return (rules.BaseStrength + (rules.StrengthPerLevel * (creature.Level - 1))) * SpeciesOf(rules, creature).Strength;
+    }
+
+    /// <summary>Whether the Creature's god holds it in its hand now (ADR-030): it does nothing until set down.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <returns><c>true</c> while it is held.</returns>
+    public static bool IsHeld(WorldState world, CreatureState creature)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(creature);
+        return world.Gods.Find(g => g.Id == creature.GodId)?.Held?.Kind == Domain.Hand.HeldKind.Creature;
     }
 
     /// <summary>The Creature's species (ADR-021); the first species when its own is not listed, as a Creature from older content.</summary>
@@ -153,7 +165,7 @@ public static class CreatureModel
             creature.Preferences.Add(preference);
         }
 
-        var learning = SpeciesOf(rules, creature).Learning * (1f + Math.Max(0f, boost));
+        var learning = CreatureAttributes.Intelligence(rules, creature) * (1f + Math.Max(0f, boost));
         preference.Weight = feedback switch
         {
             CreatureFeedback.None => preference.Weight,

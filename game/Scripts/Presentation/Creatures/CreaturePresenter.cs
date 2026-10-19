@@ -37,7 +37,8 @@ public sealed class CreaturePresenter
     /// <param name="delta">Frame time in seconds.</param>
     /// <param name="simulationRunning">Whether the simulation clock is running.</param>
     /// <param name="localGodId">The player's god, whose Creature's label shows no owner.</param>
-    public void Sync(WorldState world, float delta, bool simulationRunning, int? localGodId)
+    /// <param name="heldAt">Where the player's hand holds its Creature, if it does (ADR-030).</param>
+    public void Sync(WorldState world, float delta, bool simulationRunning, int? localGodId, Vector3? heldAt = null)
     {
         if (_terrain is null)
         {
@@ -53,7 +54,7 @@ public sealed class CreaturePresenter
                 _views[creature.Id] = view;
             }
 
-            view.Sync(creature, world, _terrain, delta, simulationRunning);
+            view.Sync(creature, world, _terrain, delta, simulationRunning, creature.GodId == localGodId ? heldAt : null);
         }
     }
 

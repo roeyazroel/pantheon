@@ -77,4 +77,7 @@ public sealed class RegionState
 
     /// <summary>Landslide rubble (0..1, spec §20, ADR-029): enough of it blocks the way until it is cleared.</summary>
     public float Rubble { get; set; }
+
+    /// <summary>Blessing that never fades (0..1, spec §14, ADR-030): a god hallowed the land, and its <see cref="Blessing"/> stays at least this.</summary>
+    public float Hallowed { get; set; }
 }

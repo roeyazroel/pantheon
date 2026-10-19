@@ -15,6 +15,12 @@ public sealed record CreatureCard
     /// <summary>Loyalty and what its deeds add up to.</summary>
     public required string Temperament { get; init; }
 
+    /// <summary>The paths it walks and what the next calling level brings (ADR-030).</summary>
+    public string Paths { get; init; } = string.Empty;
+
+    /// <summary>Its attributes (spec §23).</summary>
+    public string Attributes { get; init; } = string.Empty;
+
     /// <summary>How it regards the Creatures it has met (ADR-017).</summary>
     public required string Bonds { get; init; }
 

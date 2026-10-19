@@ -111,6 +111,9 @@ public sealed record CreatureRules
 
     /// <summary>How Creatures fight (ADR-017).</summary>
     public required CreatureCombatRules Combat { get; init; }
+
+    /// <summary>The paths Creatures take up and the attributes that grow with level (spec §23–24, ADR-030).</summary>
+    public CallingRules Callings { get; init; } = CallingRules.None;
 }
 
 /// <summary>How one Creature action plays out.</summary>

@@ -184,7 +184,7 @@ public sealed class BeliefSystem : ISimulationSystem
         return factors;
     }
 
-    /// <summary>Lets every region's blessing fade by its decay share.</summary>
+    /// <summary>Lets every region's blessing fade by its decay share, never below what a god hallowed (ADR-030).</summary>
     private void FadeBlessings(RegionGrid regions)
     {
         foreach (var region in regions.Cells)
@@ -195,7 +195,7 @@ public sealed class BeliefSystem : ISimulationSystem
             }
 
             var blessing = region.Blessing * (1f - _rules.BlessingDecayPerStep);
-            region.Blessing = blessing < VanishedBlessing ? 0f : blessing;
+            region.Blessing = Math.Max(region.Hallowed, blessing < VanishedBlessing ? 0f : blessing);
         }
     }
 }

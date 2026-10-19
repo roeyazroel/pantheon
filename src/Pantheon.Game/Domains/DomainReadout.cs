@@ -31,7 +31,19 @@ public sealed record HolySiteEntry(string Name, string Description, string State
 /// <param name="Slots">How many domains the god holds and may hold.</param>
 /// <param name="Domains">Every domain, the god's first.</param>
 /// <param name="Sites">The world's holy sites.</param>
-public sealed record DomainPanelModel(string Slots, IReadOnlyList<DomainEntry> Domains, IReadOnlyList<HolySiteEntry> Sites);
+public sealed record DomainPanelModel(string Slots, IReadOnlyList<DomainEntry> Domains, IReadOnlyList<HolySiteEntry> Sites)
+{
+    /// <summary>The Divine Acts (ADR-030), dearest of all miracles.</summary>
+    public IReadOnlyList<ActEntry> Acts { get; init; } = [];
+}
+
+/// <summary>A Divine Act in the Domains panel (spec §14, ADR-030).</summary>
+/// <param name="MiracleId">The act's miracle.</param>
+/// <param name="Name">Its name.</param>
+/// <param name="Description">What it does.</param>
+/// <param name="Requirement">The rank it needs, its cost and any cooldown.</param>
+/// <param name="CanChoose">Whether the god may cast it now.</param>
+public sealed record ActEntry(string MiracleId, string Name, string Description, string Requirement, bool CanChoose);
 
 /// <summary>Builds the Domains panel from the session. Pure.</summary>
 public static class DomainReadout
@@ -66,7 +78,28 @@ public static class DomainReadout
             DomainText.SiteState(world, site, content.HolySites.ClaimSeconds),
             site.KeeperGodId == god.Id,
             site.Position));
-        return new DomainPanelModel(DescribeSlots(rules, god), [.. held, .. others], sites);
+        return new DomainPanelModel(DescribeSlots(rules, god), [.. held, .. others], sites) { Acts = Acts(session, god) };
+    }
+
+    /// <summary>The Divine Acts and whether the god may cast each now.</summary>
+    private static List<ActEntry> Acts(GameSession session, GodState god)
+    {
+        var acts = new List<ActEntry>();
+        var ticksPerSecond = session.Scheduler.TicksPerSecond;
+        foreach (var act in session.Content.Miracles.Miracles)
+        {
+            if (act.Scale != Domain.Miracles.MiracleScale.DivineAct)
+            {
+                continue;
+            }
+
+            var cost = act.PowerCost * DomainModel.CostFactor(session.Content.Domains, god, act);
+            var waiting = Simulation.Miracles.MiracleCaster.CooldownTicksLeft(session.World, god, act.Id) / ticksPerSecond;
+            var requirement = Format("{0}, {1:0} power{2}", DivineText.Rank(act.MinimumRank), cost, waiting > 0 ? Format(", ready in {0}", DivineText.Clock(waiting)) : string.Empty);
+            acts.Add(new ActEntry(act.Id, act.Name, act.Description, requirement, god.Rank >= act.MinimumRank && god.DivinePower >= cost && waiting <= 0));
+        }
+
+        return acts;
     }
 
     /// <summary>How many domains the god holds, may hold, and may hold at its next rank that offers more.</summary>

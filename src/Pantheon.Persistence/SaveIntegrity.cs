@@ -119,6 +119,10 @@ internal static class SaveIntegrity
             {
                 errors.Add($"Region {i} has snow, wildlife, harm, scar, pollution, blight or rubble outside 0 to 1, or more scar than harm (ADR-028, ADR-029).");
             }
+            else if (!IsShare(cell.Hallowed) || cell.Hallowed > cell.Blessing + 1e-4f)
+            {
+                errors.Add($"Region {i} is hallowed {cell.Hallowed}, outside 0 to 1 or above its blessing {cell.Blessing} (ADR-030).");
+            }
         }
     }
 
@@ -141,6 +145,7 @@ internal static class SaveIntegrity
             }
 
             CultureIntegrity.Validate(god, errors);
+            HandIntegrity.Validate(world, god, errors);
 
             if (!float.IsFinite(god.DivinePower) || god.DivinePower < 0f)
             {

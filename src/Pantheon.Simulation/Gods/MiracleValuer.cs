@@ -25,6 +25,9 @@ internal sealed class MiracleValuer
     // A village whose own region lies this low is within a wave's reach.
     private const float FloodHeightValued = 10f;
 
+    // Danger to its own people from which the god will still the whole world (ADR-030).
+    private const float StillDanger = 0.5f;
+
     private readonly GodAiRules _rules;
     private readonly MiracleCaster _caster;
 
@@ -147,6 +150,18 @@ internal sealed class MiracleValuer
                     break;
                 case MiracleEffectKind.Discord:
                     value += ValueDiscord(world, god, profile, settlement, reasons);
+                    break;
+                case MiracleEffectKind.Hallow:
+                    // A lasting blessing on its own lands not yet hallowed, worth more the hungrier they are (ADR-030).
+                    var unhallowed = 1f - SimMath.Clamp01(world.Regions.Cells[settlement.RegionId].Hallowed / Math.Max(0.01f, effect.Amount));
+                    value += Note(reasons, settlement, "hallow", profile.Bless * mine * unhallowed * (0.5f + (0.5f * conditions.FoodNeed)) * size);
+                    break;
+                case MiracleEffectKind.Still:
+                    // Only a real disaster among its own people is worth stilling the whole world for.
+                    value += conditions.DangerNeed >= StillDanger ? Note(reasons, settlement, "still", profile.Protect * mine * conditions.DangerNeed * size) : 0f;
+                    break;
+                case MiracleEffectKind.Awaken:
+                    // The AI never wakes the volcano: it cannot aim at the mountain, only at villages.
                     break;
             }
         }

@@ -170,6 +170,37 @@ internal sealed class DivineController
         _hand.Press(point.ToGodot());
     }
 
+    /// <summary>Uses the hand at the cursor (R, ADR-030): picks up, sets down, or with Shift throws what it holds.</summary>
+    /// <param name="cursor">Ground point under the cursor.</param>
+    /// <param name="shift">Whether Shift is held.</param>
+    public void UseHand(NVector3? cursor, bool shift)
+    {
+        if (cursor is not { } point)
+        {
+            _setStatus("Point at the ground to use your hand");
+            return;
+        }
+
+        var held = _session.LocalGod?.Held;
+        var action = Pantheon.Game.Hand.HandCommands.ActionFor(_session, shift);
+        var status = Pantheon.Game.Hand.HandCommands.Use(_session, action, new GroundPosition(point.X, point.Z));
+        _setStatus(status);
+        if (action == Pantheon.Domain.Hand.HandAction.Throw && held is not null && _session.LocalGod?.Held is null)
+        {
+            _hand.Fling(point.ToGodot(), held.Kind);
+        }
+        else
+        {
+            _hand.Press(point.ToGodot());
+        }
+    }
+
+    /// <summary>Where the player's Creature hangs from the hand, while the hand holds it.</summary>
+    /// <param name="cursor">Ground point under the cursor.</param>
+    /// <returns>The point, or <c>null</c> when the hand does not hold it.</returns>
+    public Vector3? HeldCreatureAt(NVector3? cursor) =>
+        _session.LocalGod?.Held?.Kind == Pantheon.Domain.Hand.HeldKind.Creature && cursor is { } point ? point.ToGodot() + new Vector3(0f, 12f, 0f) : null;
+
     /// <summary>Shows the next map overlay, or hides it after the last one.</summary>
     public void CycleOverlay()
     {
@@ -195,6 +226,7 @@ internal sealed class DivineController
     {
         _clock += delta;
         _hand.Follow(cursor?.ToGodot(), cameraDistance);
+        _hand.Hold(_session.LocalGod?.Held?.Kind);
         HandleEvents();
         var target = cursor is { } point ? new GroundPosition(point.X, point.Z) : (GroundPosition?)null;
         var hud = HudReadout.Build(_session, SelectedMiracle, target);

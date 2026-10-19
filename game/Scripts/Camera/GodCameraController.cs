@@ -44,7 +44,7 @@ public partial class GodCameraController : Node3D
     /// <summary>Ground (or sea surface) point under the mouse, updated every frame.</summary>
     public NVector3? CursorGroundPoint { get; private set; }
 
-    /// <summary>Whether the cursor point falls back to the screen centre while the mouse is away (scripted runs, so captures can show targeting).</summary>
+    /// <summary>Whether the cursor point is the screen centre whatever the mouse does (scripted runs, so captures can show targeting and the hand).</summary>
     public bool CenterCursorWhenAway { get; set; }
 
     /// <summary>Finds the camera node.</summary>
@@ -87,8 +87,9 @@ public partial class GodCameraController : Node3D
         ApplyGrabPan();
         Model.Update(deltaSeconds, _groundHeight);
         ApplyPose();
-        var screenPoint = _mouseInWindow ? GetViewport().GetMousePosition()
-            : CenterCursorWhenAway ? GetViewport().GetVisibleRect().Size / 2f
+        // Scripted runs aim at the screen centre whatever the mouse does, so captures are the same every time.
+        var screenPoint = CenterCursorWhenAway ? GetViewport().GetVisibleRect().Size / 2f
+            : _mouseInWindow ? GetViewport().GetMousePosition()
             : (Vector2?)null;
         CursorGroundPoint = screenPoint is { } point && TryPickGround(point, out var hit) ? hit : null;
     }

@@ -252,7 +252,8 @@ public sealed record CreatureMotion(
 /// <param name="Pollution">Its pollution (ADR-028).</param>
 /// <param name="Blight">The blight in its fields (ADR-029).</param>
 /// <param name="Rubble">The landslide rubble on it (ADR-029).</param>
-public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood, float Snow = 0f, float Wildlife = 0f, float Damage = 0f, float Scar = 0f, float Pollution = 0f, float Blight = 0f, float Rubble = 0f)
+/// <param name="Hallowed">The blessing a god hallowed (ADR-030).</param>
+public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood, float Snow = 0f, float Wildlife = 0f, float Damage = 0f, float Scar = 0f, float Pollution = 0f, float Blight = 0f, float Rubble = 0f, float Hallowed = 0f)
 {
     /// <summary>A region's changing values now.</summary>
     /// <param name="region">The region.</param>
@@ -260,7 +261,7 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
     public static RegionChange Of(RegionState region)
     {
         ArgumentNullException.ThrowIfNull(region);
-        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution, region.Blight, region.Rubble);
+        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution, region.Blight, region.Rubble, region.Hallowed);
     }
 
     /// <summary>Sets a replica's region to these values.</summary>
@@ -270,6 +271,6 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
         ArgumentNullException.ThrowIfNull(region);
         (region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood) = (Fertility, Vegetation, Blessing, SoilMoisture, Fire, Scorch, Flood);
         (region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution) = (Snow, Wildlife, Damage, Scar, Pollution);
-        (region.Blight, region.Rubble) = (Blight, Rubble);
+        (region.Blight, region.Rubble, region.Hallowed) = (Blight, Rubble, Hallowed);
     }
 }

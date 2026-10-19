@@ -82,6 +82,8 @@ public static class HudReadout
             });
         }
 
+        // A Divine Act is chosen from the Domains panel rather than the bar (ADR-030).
+        selected ??= selectedMiracleId is null ? null : content.Miracles.Find(selectedMiracleId);
         var (hint, valid) = DescribeTarget(session, selected, target, god.DivinePower);
         return new HudModel
         {
@@ -122,13 +124,13 @@ public static class HudReadout
         return kept.Count == 0 ? line : line + " - keeps " + string.Join(", ", kept);
     }
 
-    /// <summary>The miracles of the local god's bar, in order: every miracle but the signatures of domains it does not hold (ADR-021).</summary>
+    /// <summary>The miracles of the local god's bar, in order: every miracle but the Divine Acts (ADR-030) and the signatures of domains it does not hold (ADR-021).</summary>
     /// <param name="session">Game session.</param>
     /// <returns>The miracles; none without a god.</returns>
     public static IReadOnlyList<MiracleDefinition> AvailableMiracles(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
-        return session.LocalGod is not { } god ? [] : [.. session.Content.Miracles.Miracles.Where(m => !m.RequiresDomain || DomainModel.Holds(god, m.Domain))];
+        return session.LocalGod is not { } god ? [] : [.. session.Content.Miracles.Miracles.Where(m => m.Scale != MiracleScale.DivineAct && (!m.RequiresDomain || DomainModel.Holds(god, m.Domain)))];
     }
 
     /// <summary>
@@ -377,6 +379,8 @@ public static class HudReadout
                 creature.Morality,
                 creature.CombatSkill,
                 creature.Scars switch { 0 => string.Empty, 1 => "   1 scar", _ => Format("   {0} scars", creature.Scars) }),
+            Paths = CreatureGrowthText.Paths(session.Content.Creatures, creature),
+            Attributes = CreatureGrowthText.Attributes(session.Content.Creatures, session.Content.DivineRules, creature),
             Bonds = CreatureBondText.Summary(session.Content.Creatures.Bonds, world, creature),
             JudgeHint = judged is { } j
                 ? Format("Reward or punish: {0}", CreatureText.Doing(j.Action, place))

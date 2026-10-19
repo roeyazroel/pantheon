@@ -48,6 +48,8 @@ public partial class Hud : CanvasLayer
     private Label _creatureDoing = null!;
     private Label _creatureCondition = null!;
     private Label _creatureTemperament = null!;
+    private Label _creaturePaths = null!;
+    private Label _creatureAttributes = null!;
     private Label _creatureBonds = null!;
     private Label _creatureJudge = null!;
     private Button _reward = null!;
@@ -221,6 +223,9 @@ public partial class Hud : CanvasLayer
         _creatureDoing = AddLabel(column, 15, Ink);
         _creatureCondition = AddLabel(column, 13, Muted);
         _creatureTemperament = AddLabel(column, 13, Muted);
+        _creaturePaths = AddLabel(column, 13, Gold);
+        _creaturePaths.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _creatureAttributes = AddLabel(column, 12, Muted);
         _creatureBonds = AddLabel(column, 13, new Color(0.62f, 0.8f, 1f));
         _creatureBonds.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         _creatureJudge = AddLabel(column, 13, Valid);
@@ -247,6 +252,8 @@ public partial class Hud : CanvasLayer
         SetText(_creatureDoing, card.Doing);
         SetText(_creatureCondition, card.Condition);
         SetText(_creatureTemperament, card.Temperament);
+        SetText(_creaturePaths, card.Paths);
+        SetText(_creatureAttributes, card.Attributes);
         SetText(_creatureBonds, card.Bonds);
         SetText(_creatureJudge, card.JudgeHint);
         _creatureJudge.Modulate = card.CanJudge ? Colors.White : new Color(0.7f, 0.7f, 0.7f);

@@ -65,4 +65,13 @@ public enum MiracleEffectKind
     /// much of their Faith in that god gives way to Doubt. A god wronged the caster when they are at war or the caster bears it a grudge (Justice, ADR-022).
     /// </summary>
     Judge,
+
+    /// <summary>Hallows every region it reaches: their blessing never falls below <c>Amount</c> again (a Divine Act, ADR-030).</summary>
+    Hallow,
+
+    /// <summary>Wakes the island's sleeping volcano, wherever it stands (a Divine Act, ADR-030).</summary>
+    Awaken,
+
+    /// <summary>Stills every disaster on the island at once: quakes, fires, floods, storms, tornadoes, locusts, blight and the volcano (a Divine Act, ADR-030).</summary>
+    Still,
 }

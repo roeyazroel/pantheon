@@ -71,7 +71,13 @@ public sealed class CreatureSystem : ISimulationSystem
         var decides = IntervalSystem.IsDue(world.Tick, _rules.DecisionIntervalTicks);
         foreach (var creature in world.Creatures)
         {
-            Step(context, creature, decides);
+            // A Creature in its god's hand waits there until it is set down (ADR-030).
+            if (!CreatureModel.IsHeld(world, creature))
+            {
+                Step(context, creature, decides);
+            }
+
+            CreatureCalling.Grow(_rules.Callings, creature, world.Tick, context.Events);
         }
 
         if (decides)
@@ -189,7 +195,7 @@ public sealed class CreatureSystem : ISimulationSystem
         var resting = activity.Action == CreatureAction.Rest && activity.Phase == CreaturePhase.Performing;
         if (creature.Needs.Hunger >= 1f)
         {
-            creature.Health -= _rules.StarvationHealthLossPerSecond * SimulationTime.SecondsPerTick / CreatureModel.SpeciesOf(_rules, creature).Toughness;
+            creature.Health -= _rules.StarvationHealthLossPerSecond * SimulationTime.SecondsPerTick / CreatureAttributes.Resilience(_rules, creature);
         }
         else if (resting)
         {

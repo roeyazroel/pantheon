@@ -102,7 +102,8 @@ public sealed class SimulationEngine
             domainRules is null ? null : new Domains.DomainAuthority(domainRules),
             societyRules is null ? null : new Society.SocietyAuthority(societyRules),
             new Politics.CouncilAuthority(),
-            new Conflict.ConflictAuthority(divineRules, diplomacyRules.Conflict, ledger));
+            new Conflict.ConflictAuthority(divineRules, diplomacyRules.Conflict, ledger),
+            new Hand.HandAuthority(divineRules.Hand, divineRules, settlementRules));
         Politics = new Politics.PoliticsSystem(diplomacyRules, ledger, Authorities.Diplomacy);
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
         var ai = new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains);
@@ -123,13 +124,13 @@ public sealed class SimulationEngine
         };
         if (waterRules is not null)
         {
-            systems.Add(new IntervalSystem(new Water.WaterSystem(waterRules, weatherRules, settlementRules, divineRules, disasterRules, domainRules), waterRules.StepIntervalTicks));
+            systems.Add(new IntervalSystem(new Water.WaterSystem(waterRules, weatherRules, settlementRules, divineRules, disasterRules, domainRules, creatureRules.Callings), waterRules.StepIntervalTicks));
         }
 
         systems.AddRange(
         [
-            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules, ecologyRules), disasterRules.StepIntervalTicks),
-            new IntervalSystem(new HazardSystem(disasterRules, settlementRules, divineRules, weatherRules, disasterRules.StepIntervalTicks, domainRules), disasterRules.StepIntervalTicks),
+            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules, ecologyRules, creatureRules.Callings), disasterRules.StepIntervalTicks),
+            new IntervalSystem(new HazardSystem(disasterRules, settlementRules, divineRules, weatherRules, disasterRules.StepIntervalTicks, domainRules, creatureRules.Callings), disasterRules.StepIntervalTicks),
         ]);
         if (ecologyRules is not null)
         {

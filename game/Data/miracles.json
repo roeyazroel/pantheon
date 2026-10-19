@@ -363,6 +363,53 @@
       "Effects": [ { "Kind": "Judge", "Amount": 0.12 } ],
       "Witness": { "Faith": 0.2, "Love": 0.05, "Fear": 0.25, "Doubt": -0.05 },
       "Gratitude": "None"
+    },
+    // Divine Acts (spec section 14, ADR-030): the dearest miracles, cast from the Domains panel (G)
+    // by a Greater God or above, and remembered by the world's history.
+    {
+      "Id": "hallow",
+      "Name": "Hallow the Land",
+      "Description": "A Divine Act: the land beneath it is blessed forever, and its harvests never lose the blessing.",
+      "Domain": "Life",
+      "Scale": "DivineAct",
+      "PowerCost": 1500.0,
+      "CooldownTicks": 12000,
+      "Radius": 180.0,
+      "InfluenceRequirement": 0.5,
+      "MinimumRank": "GreaterGod",
+      "Effects": [ { "Kind": "Hallow", "Amount": 0.6 } ],
+      "Witness": { "Faith": 0.3, "Love": 0.35, "Fear": 0.05, "Doubt": -0.2 },
+      "Gratitude": "Food"
+    },
+    {
+      "Id": "awaken",
+      "Name": "Wake the Volcano",
+      "Description": "A Divine Act: the island's sleeping volcano wakes, wherever it stands; it rumbles, then erupts.",
+      "Domain": "Fire",
+      "Scale": "DivineAct",
+      "PowerCost": 2000.0,
+      "CooldownTicks": 12000,
+      "Radius": 100.0,
+      "InfluenceRequirement": 0.0,
+      "MinimumRank": "GreaterGod",
+      "Effects": [ { "Kind": "Awaken", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.3, "Love": -0.2, "Fear": 0.5, "Doubt": -0.1 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "still",
+      "Name": "Still the World",
+      "Description": "A Divine Act: every disaster on the island falls quiet at once: quakes, fires, floods, storms, tornadoes, locusts, blight, drought and the volcano.",
+      "Domain": "Protection",
+      "Scale": "DivineAct",
+      "PowerCost": 2500.0,
+      "CooldownTicks": 18000,
+      "Radius": 250.0,
+      "InfluenceRequirement": 0.3,
+      "MinimumRank": "GreaterGod",
+      "Effects": [ { "Kind": "Still", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.35, "Love": 0.4, "Fear": 0.1, "Doubt": -0.25 },
+      "Gratitude": "Danger"
     }
   ]
 }

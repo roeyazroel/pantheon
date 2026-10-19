@@ -27,7 +27,10 @@
     { "MiracleId": "upheaval", "Style": "Wave", "Color": "#a8784a", "Seconds": 4.0 },
     { "MiracleId": "water", "Style": "Shower", "Color": "#5fb8f0", "Seconds": 3.0 },
     { "MiracleId": "tidal_wave", "Style": "Wave", "Color": "#2f7fd8", "Seconds": 4.5 },
-    { "MiracleId": "judgement", "Style": "Bolt", "Color": "#f6f0c8", "Seconds": 1.4 }
+    { "MiracleId": "judgement", "Style": "Bolt", "Color": "#f6f0c8", "Seconds": 1.4 },
+    { "MiracleId": "hallow", "Style": "Rise", "Color": "#ffe9a8", "Seconds": 6.0 },
+    { "MiracleId": "awaken", "Style": "Wave", "Color": "#ff5a1f", "Seconds": 6.0 },
+    { "MiracleId": "still", "Style": "Shower", "Color": "#e8f4ff", "Seconds": 6.0 }
   ],
   // Creature species (creatures.json): colours of hide, belly and back tufts (tinted by the god), girth,
   // height and horn length as factors, and how much the hide glows.

@@ -46,6 +46,9 @@ public sealed partial record LaunchOptions
     /// <summary>The season that begins at the start (ADR-028), for captures.</summary>
     public Domain.Weather.Season? Season { get; init; }
 
+    /// <summary>What the player's hand lifts at the start (ADR-030), for captures.</summary>
+    public HandAtStart? Hand { get; init; }
+
     /// <summary>How to make the world these options ask for, with names the content knows.</summary>
     /// <param name="content">Validated content.</param>
     /// <returns>The species, size and victories; an unknown species or size is left to the content's own.</returns>
@@ -60,7 +63,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -143,6 +146,10 @@ public sealed partial record LaunchOptions
                 return Enum.TryParse<Domain.Weather.Season>(trimmed, ignoreCase: true, out var season) && Enum.IsDefined(season) && !int.TryParse(trimmed, out _)
                     ? options with { Season = season }
                     : Warn(options, warnings, $"'--season' needs spring, summer, autumn or winter, got '{value}'.");
+            case "hand":
+                return Enum.TryParse<HandAtStart>(trimmed, ignoreCase: true, out var hand) && Enum.IsDefined(hand) && !int.TryParse(trimmed, out _)
+                    ? options with { Hand = hand }
+                    : Warn(options, warnings, $"'--hand' needs villagers or creature, got '{value}'.");
             case "victory":
                 return ParseVictory(trimmed) is { } victory
                     ? options with { Victory = victory }

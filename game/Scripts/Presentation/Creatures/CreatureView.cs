@@ -97,7 +97,8 @@ internal sealed class CreatureView
     /// <param name="terrain">Terrain, for the ground height.</param>
     /// <param name="delta">Frame time in seconds.</param>
     /// <param name="simulationRunning">Whether the simulation clock is running; poses freeze while paused.</param>
-    public void Sync(CreatureState creature, WorldState world, TerrainField terrain, float delta, bool simulationRunning)
+    /// <param name="heldAt">Where its god's hand holds it, if it does (ADR-030).</param>
+    public void Sync(CreatureState creature, WorldState world, TerrainField terrain, float delta, bool simulationRunning, Vector3? heldAt = null)
     {
         var banished = creature.Activity.Phase == CreaturePhase.Banished;
         _root.Visible = !banished;
@@ -107,7 +108,7 @@ internal sealed class CreatureView
             return;
         }
 
-        var target = Ground(terrain, creature.Position);
+        var target = heldAt ?? Ground(terrain, creature.Position);
         var blend = _placed ? 1f - Mathf.Exp(-FollowRate * delta) : 1f;
         var before = _shown;
         _shown = _placed ? _shown.Lerp(target, blend) : target;

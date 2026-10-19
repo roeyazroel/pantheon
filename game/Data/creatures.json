@@ -167,5 +167,49 @@
     "WitnessRadius": 300.0,
     "VictoryWitness": { "Faith": 0.06, "Love": 0.0, "Fear": 0.08, "Doubt": -0.04 },
     "DefeatWitness": { "Faith": -0.04, "Love": 0.0, "Fear": 0.0, "Doubt": 0.08 }
+  },
+  // Paths (spec sections 23 and 24, ADR-030). At each of Levels a Creature takes up the path its
+  // deeds have called it to most: each deed below calls it by its Weight, a rewarded deed by
+  // RewardCalling more, a fight won towards Warrior and a beaten foe spared towards Guardian.
+  // Intelligence (how fast it learns) and resilience (how little harm it takes) grow per level.
+  // A Guardian spares its god's villages within GuardRadius metres GuardianShield of a disaster's
+  // harm, and a Commander gives them CommanderDefence against Creatures' attacks; a Warrior has
+  // WarriorPower more combat power and a Destroyer's attacks kill DestroyerAttack more; a Healer's
+  // deed in a village gives HealerHealth, a Nature Keeper's heals KeeperHealing of the harm and blight
+  // around it, a Missionary's wins MissionaryConversion of the godless, and a Trickster's sows
+  // TricksterDoubt in the village's main rival god.
+  "Callings": {
+    "Levels": [3, 6, 9],
+    "Deeds": [
+      { "Action": "Feed", "Specialisation": "Healer", "Weight": 1.0 },
+      { "Action": "Feed", "Specialisation": "Guardian", "Weight": 0.3 },
+      { "Action": "HelpBuild", "Specialisation": "Guardian", "Weight": 1.0 },
+      { "Action": "HelpBuild", "Specialisation": "Commander", "Weight": 0.3 },
+      { "Action": "Play", "Specialisation": "Missionary", "Weight": 1.0 },
+      { "Action": "Befriend", "Specialisation": "Missionary", "Weight": 0.5 },
+      { "Action": "Befriend", "Specialisation": "Commander", "Weight": 0.5 },
+      { "Action": "Attack", "Specialisation": "Destroyer", "Weight": 1.0 },
+      { "Action": "Attack", "Specialisation": "Warrior", "Weight": 0.3 },
+      { "Action": "EatFromStores", "Specialisation": "Trickster", "Weight": 1.0 },
+      { "Action": "Flee", "Specialisation": "Trickster", "Weight": 0.3 },
+      { "Action": "Forage", "Specialisation": "NatureKeeper", "Weight": 1.0 },
+      { "Action": "Wander", "Specialisation": "NatureKeeper", "Weight": 0.5 },
+      { "Action": "Rest", "Specialisation": "Guardian", "Weight": 0.2 },
+      { "Action": "GoTo", "Specialisation": "Commander", "Weight": 1.0 }
+    ],
+    "RewardCalling": 1.0,
+    "VictoryCalling": 1.5,
+    "MercyCalling": 1.0,
+    "IntelligencePerLevel": 0.05,
+    "ResiliencePerLevel": 0.05,
+    "GuardRadius": 250.0,
+    "GuardianShield": 0.3,
+    "WarriorPower": 0.3,
+    "DestroyerAttack": 0.5,
+    "HealerHealth": 0.05,
+    "KeeperHealing": 0.05,
+    "MissionaryConversion": 0.02,
+    "TricksterDoubt": 0.03,
+    "CommanderDefence": 0.2
   }
 }

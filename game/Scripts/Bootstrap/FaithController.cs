@@ -25,6 +25,9 @@ internal sealed partial class FaithController : Node
     private DomainPanel _panel = null!;
     private HolySitePresenter _sites = null!;
 
+    /// <summary>Raised with a Divine Act chosen in the panel, to aim it like a miracle (ADR-030).</summary>
+    public event Action<string>? ActChosen;
+
     /// <summary>Connects the panel and the sites to the session and applies the launch options.</summary>
     /// <param name="session">The session.</param>
     /// <param name="layer">Node that holds the holy sites.</param>
@@ -41,6 +44,11 @@ internal sealed partial class FaithController : Node
         AddChild(_panel);
         _panel.DomainChosen += domain => _setStatus(DomainCommands.Choose(_session, domain));
         _panel.SiteClicked += position => _camera.FocusOn(position, SiteDistance, snap: false);
+        _panel.ActChosen += act =>
+        {
+            _panel.PanelVisible = false;
+            ActChosen?.Invoke(act);
+        };
         _sites = new HolySitePresenter(layer, view);
         session.WorldReplaced += Rebuild;
         Rebuild();

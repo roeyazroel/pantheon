@@ -22,6 +22,7 @@ public partial class DomainPanel : CanvasLayer
     private Label _slots = null!;
     private GridContainer _domains = null!;
     private VBoxContainer _sites = null!;
+    private VBoxContainer _acts = null!;
     private ScrollContainer _scroll = null!;
     private string _shown = string.Empty;
 
@@ -30,6 +31,9 @@ public partial class DomainPanel : CanvasLayer
 
     /// <summary>The player asked to look at a holy site.</summary>
     public event Action<GroundPosition>? SiteClicked;
+
+    /// <summary>Raised with a Divine Act chosen to aim (ADR-030).</summary>
+    public event Action<string>? ActChosen;
 
     /// <summary>Whether the panel is shown.</summary>
     public bool PanelVisible
@@ -54,9 +58,13 @@ public partial class DomainPanel : CanvasLayer
         column.AddThemeConstantOverride("separation", 8);
         scroll.AddChild(column);
         _scroll = scroll;
-        column.AddChild(UiKit.Text("Domains and holy sites  (G to close)", 20, UiKit.Gold));
+        column.AddChild(UiKit.Text("Divine Acts, domains and holy sites  (G to close)", 20, UiKit.Gold));
         _slots = UiKit.Text(string.Empty, 15, UiKit.Ink);
         column.AddChild(_slots);
+        column.AddChild(UiKit.Text("Divine Acts: the dearest miracles, for a Greater God and above. The world remembers them.", 15, UiKit.Gold));
+        _acts = new VBoxContainer();
+        _acts.AddThemeConstantOverride("separation", 4);
+        column.AddChild(_acts);
         _domains = new GridContainer { Columns = Columns };
         _domains.AddThemeConstantOverride("h_separation", 10);
         _domains.AddThemeConstantOverride("v_separation", 10);
@@ -72,7 +80,8 @@ public partial class DomainPanel : CanvasLayer
     public void ShowModel(DomainPanelModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        var signature = model.Slots + string.Concat(model.Domains.Select(d => $"{d.Domain}{d.Held}{d.CanChoose}")) + string.Concat(model.Sites.Select(s => s.State));
+        var signature = model.Slots + string.Concat(model.Domains.Select(d => $"{d.Domain}{d.Held}{d.CanChoose}")) + string.Concat(model.Sites.Select(s => s.State))
+            + string.Concat(model.Acts.Select(a => a.Requirement + a.CanChoose));
         if (signature == _shown)
         {
             return;
@@ -98,6 +107,21 @@ public partial class DomainPanel : CanvasLayer
             var position = site.Position;
             row.AddChild(UiKit.Button("Look", () => SiteClicked?.Invoke(position)));
             _sites.AddChild(row);
+        }
+
+        UiKit.Clear(_acts);
+        foreach (var act in model.Acts)
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+            var text = UiKit.Text($"{act.Name} ({act.Requirement}): {act.Description}", 13, act.CanChoose ? UiKit.Ink : UiKit.Muted);
+            text.CustomMinimumSize = new Vector2(900, 0);
+            row.AddChild(text);
+            var id = act.MiracleId;
+            var button = UiKit.Button("Aim", () => ActChosen?.Invoke(id));
+            button.Disabled = !act.CanChoose;
+            row.AddChild(button);
+            _acts.AddChild(row);
         }
     }
 

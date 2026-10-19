@@ -44,7 +44,8 @@ public sealed class DisasterSystem : ISimulationSystem
     /// <param name="weather">Weather rules, for lightning, rain and wind.</param>
     /// <param name="domains">Domain rules, for the houses the Protection domain saves (ADR-021); <c>null</c> for none.</param>
     /// <param name="ecology">The land's life, which earthquakes harm (ADR-028); <c>null</c> for land that never changes.</param>
-    public DisasterSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, Domain.Gods.DomainRules? domains = null, EcologyRules? ecology = null)
+    /// <param name="callings">Creatures' paths, for the Guardians that shield their villages (ADR-030); <c>null</c> for none.</param>
+    public DisasterSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, Domain.Gods.DomainRules? domains = null, EcologyRules? ecology = null, Domain.Creatures.CallingRules? callings = null)
     {
         DisasterRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
@@ -54,7 +55,7 @@ public sealed class DisasterSystem : ISimulationSystem
         _weather = weather;
         _ecology = ecology;
         _fires = new Wildfires(rules, weather);
-        _damage = new DisasterDamage(rules, settlementRules, divine, domains);
+        _damage = new DisasterDamage(rules, settlementRules, divine, domains, callings);
     }
 
     /// <inheritdoc />
@@ -111,7 +112,7 @@ public sealed class DisasterSystem : ISimulationSystem
                 continue;
             }
 
-            var severity = (0.5f + (0.5f * (wind - extremes.HurricaneWind) / (1f - extremes.HurricaneWind))) * _damage.Protection(settlement, world.Tick);
+            var severity = (0.5f + (0.5f * (wind - extremes.HurricaneWind) / (1f - extremes.HurricaneWind))) * _damage.Protection(world, settlement);
             var houses = _damage.Destroy(settlement, random, extremes.HurricaneHouseLossPerSecond * severity * seconds * _damage.Fragility(world, settlement) * _damage.Exposure(settlement, DisasterKind.Hurricane));
             _damage.Frighten(settlement, severity * seconds * _rules.FireDreadPerSecond);
             DisasterDamage.Report(world, settlement, DisasterKind.Hurricane, houses, 0, events);
@@ -148,7 +149,7 @@ public sealed class DisasterSystem : ISimulationSystem
         {
             foreach (var settlement in world.Settlements)
             {
-                var shaking = DisasterModel.Shaking(quake, settlement.Position) * _damage.Protection(settlement, world.Tick);
+                var shaking = DisasterModel.Shaking(quake, settlement.Position) * _damage.Protection(world, settlement);
                 if (shaking <= 0f)
                 {
                     continue;
@@ -175,7 +176,7 @@ public sealed class DisasterSystem : ISimulationSystem
     {
         foreach (var settlement in world.Settlements)
         {
-            var fire = world.Regions.Cells[settlement.RegionId].Fire * _damage.Protection(settlement, world.Tick);
+            var fire = world.Regions.Cells[settlement.RegionId].Fire * _damage.Protection(world, settlement);
             if (fire <= 0f)
             {
                 continue;

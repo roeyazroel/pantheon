@@ -26,4 +26,7 @@ public enum MigrationCause
 
     /// <summary>Their settlement's order is breaking down (ADR-023).</summary>
     Unrest,
+
+    /// <summary>A god's hand carried them away and set them down (ADR-030).</summary>
+    Carried,
 }

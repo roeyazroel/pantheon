@@ -400,7 +400,7 @@ public sealed class MiracleCaster
         var harms = false;
         foreach (var effect in miracle.Effects)
         {
-            harms |= effect.Kind is MiracleEffectKind.Smite or MiracleEffectKind.Ignite or MiracleEffectKind.Quake or MiracleEffectKind.Flood or MiracleEffectKind.Judge;
+            harms |= effect.Kind is MiracleEffectKind.Smite or MiracleEffectKind.Ignite or MiracleEffectKind.Quake or MiracleEffectKind.Flood or MiracleEffectKind.Judge or MiracleEffectKind.Awaken;
         }
 
         foreach (var rival in world.Gods)

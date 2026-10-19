@@ -42,7 +42,8 @@ public sealed class WaterSystem : ISimulationSystem
     /// <param name="divine">Divine rules, for how floods shake belief.</param>
     /// <param name="disasters">Disaster rules, for what a Shield spares.</param>
     /// <param name="domains">Domain rules, for the houses Protection saves; <c>null</c> for none.</param>
-    public WaterSystem(WaterRules rules, WeatherRules weather, SettlementRules settlementRules, DivineRules divine, DisasterRules disasters, DomainRules? domains = null)
+    /// <param name="callings">Creatures' paths, for the Guardians that shield their villages (ADR-030); <c>null</c> for none.</param>
+    public WaterSystem(WaterRules rules, WeatherRules weather, SettlementRules settlementRules, DivineRules divine, DisasterRules disasters, DomainRules? domains = null, Domain.Creatures.CallingRules? callings = null)
     {
         WaterRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(weather);
@@ -51,7 +52,7 @@ public sealed class WaterSystem : ISimulationSystem
         ArgumentNullException.ThrowIfNull(disasters);
         _rules = rules;
         _weather = weather;
-        _damage = new DisasterDamage(disasters, settlementRules, divine, domains);
+        _damage = new DisasterDamage(disasters, settlementRules, divine, domains, callings);
     }
 
     /// <inheritdoc />
@@ -124,7 +125,7 @@ public sealed class WaterSystem : ISimulationSystem
     {
         foreach (var settlement in world.Settlements)
         {
-            var flood = world.Regions.Cells[settlement.RegionId].Flood * _damage.Protection(settlement, world.Tick);
+            var flood = world.Regions.Cells[settlement.RegionId].Flood * _damage.Protection(world, settlement);
             if (flood <= 0f || settlement.Population <= 0)
             {
                 continue;

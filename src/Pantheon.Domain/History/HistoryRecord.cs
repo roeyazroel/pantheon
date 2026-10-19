@@ -135,6 +135,24 @@ public enum HistoryKind
 
     /// <summary>Locusts fell on a settlement (ADR-029).</summary>
     Locusts,
+
+    /// <summary>A Creature took up a calling; <see cref="HistoryRecord.Count"/> is the <c>CreatureSpecialisation</c> (ADR-030).</summary>
+    Calling,
+
+    /// <summary>A god's hand carried people out of danger; <see cref="HistoryRecord.Count"/> is how many (ADR-030).</summary>
+    Rescue,
+
+    /// <summary>Something a god's hand threw struck a settlement; <see cref="HistoryRecord.Count"/> is the dead (ADR-030).</summary>
+    Stoning,
+
+    /// <summary>A god hallowed the land by a settlement (a Divine Act, ADR-030).</summary>
+    Hallowing,
+
+    /// <summary>A god woke the volcano (a Divine Act, ADR-030).</summary>
+    Awakening,
+
+    /// <summary>A god stilled every disaster on the island (a Divine Act, ADR-030).</summary>
+    Stillness,
 }
 
 /// <summary>

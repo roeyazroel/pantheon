@@ -127,6 +127,23 @@ public sealed class HistoryRecorder
             case SwarmArrived swarm:
                 Once(world, HistoryKind.Locusts, swarm.SettlementId, null, 0);
                 break;
+            case CreatureSpecialised calling:
+                Add(world, HistoryKind.Calling, god: calling.GodId, creature: calling.CreatureId, count: (int)calling.Specialisation);
+                break;
+            case VillagersSetDown { Rescued: true } rescue when rescue.People >= _rules.EarthquakeDeaths:
+                Once(world, HistoryKind.Rescue, rescue.FromSettlementId, rescue.GodId, rescue.People);
+                break;
+            case HandStruck { SettlementId: { } stoned } stoning when stoning.Deaths >= _rules.EarthquakeDeaths || stoning.HousesLost >= _rules.HousesLost:
+                Once(world, HistoryKind.Stoning, stoned, stoning.GodId, stoning.Deaths);
+                break;
+            case DivineActDone act:
+                Add(world, act.Act switch
+                {
+                    DivineActKind.Hallowing => HistoryKind.Hallowing,
+                    DivineActKind.Awakening => HistoryKind.Awakening,
+                    DivineActKind.Stillness => HistoryKind.Stillness,
+                }, god: act.GodId, settlement: NearestId(world, act.Position));
+                break;
             case ThirstStarted thirst:
                 Once(world, HistoryKind.Thirst, thirst.SettlementId, null, 0);
                 break;

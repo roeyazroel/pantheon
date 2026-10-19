@@ -45,6 +45,12 @@ internal static class CreatureReadout
                 creature.Morality,
                 creature.Position.X,
                 creature.Position.Z));
+            if (snapshot.CreatureRules is { } growth)
+            {
+                lines.Add("  " + CreatureGrowthText.Attributes(growth, snapshot.DivineRules, creature));
+                lines.Add(Format("  paths: {0}   callings: {1}", CreatureGrowthText.Paths(growth, creature), CreatureGrowthText.Callings(creature)));
+            }
+
             lines.Add(Format(
                 "  doing: {0} [{1}, {2}, {3} waypoints, {4} ticks left]",
                 CreatureText.DescribeActivity(creature, world),

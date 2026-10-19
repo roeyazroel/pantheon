@@ -24,19 +24,21 @@ internal sealed class DisasterDamage
     private readonly SettlementRules _settlementRules;
     private readonly DivineRules _divine;
     private readonly DomainRules? _domains;
+    private readonly Domain.Creatures.CallingRules? _callings;
 
     /// <summary>Creates the damage over validated rules.</summary>
-    public DisasterDamage(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, DomainRules? domains)
+    public DisasterDamage(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, DomainRules? domains, Domain.Creatures.CallingRules? callings = null)
     {
         _rules = rules;
         _settlementRules = settlementRules;
         _divine = divine;
         _domains = domains;
+        _callings = callings;
     }
 
-    /// <summary>Share of disaster damage a settlement takes: all of it, or a little under a Shield.</summary>
-    public float Protection(SettlementState settlement, long tick) =>
-        DisasterModel.IsShielded(settlement, tick) ? _rules.ShieldedDamage : 1f;
+    /// <summary>Share of disaster damage a settlement takes: all of it, a little under a Shield, and less with a Guardian Creature of its god near (ADR-030).</summary>
+    public float Protection(WorldState world, SettlementState settlement) =>
+        (DisasterModel.IsShielded(settlement, world.Tick) ? _rules.ShieldedDamage : 1f) * (_callings is null ? 1f : Creatures.CallingEffects.Shield(_callings, world, settlement));
 
     /// <summary>Share of the houses a disaster would destroy that fall: fewer where the majority's god holds Protection (ADR-021), and with architecture (ADR-023).</summary>
     public float Fragility(WorldState world, SettlementState settlement)
@@ -89,7 +91,7 @@ internal sealed class DisasterDamage
             return;
         }
 
-        severity *= Protection(settlement, world.Tick);
+        severity *= Protection(world, settlement);
         var houses = Destroy(settlement, random, housing * severity * Fragility(world, settlement) * Exposure(settlement, kind));
         var killed = Kill(settlement, random, deaths * severity * Deadliness(settlement, kind) * Exposure(settlement, kind));
         Frighten(settlement, severity);

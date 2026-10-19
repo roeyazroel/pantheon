@@ -25,6 +25,7 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(RefugeeIntent), "Refugees")]
 [JsonDerivedType(typeof(DomainIntent), "Domain")]
 [JsonDerivedType(typeof(PriorityIntent), "Priority")]
+[JsonDerivedType(typeof(HandIntent), "Hand")]
 [JsonDerivedType(typeof(Verdict), "Verdict")]
 [JsonDerivedType(typeof(Goodbye), "Goodbye")]
 [JsonDerivedType(typeof(SectionUpdate), "Section")]
@@ -130,6 +131,12 @@ public sealed record DomainIntent(int RequestId, Pantheon.Domain.Gods.GodDomain 
 /// <param name="SettlementId">The settlement.</param>
 /// <param name="Priority">The priority.</param>
 public sealed record PriorityIntent(int RequestId, int SettlementId, Pantheon.Domain.Society.SettlementPriority Priority) : NetMessage;
+
+/// <summary>A player uses its god's Divine Hand at a point (ADR-030).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="Action">Pick up, set down or throw.</param>
+/// <param name="Target">Where.</param>
+public sealed record HandIntent(int RequestId, Pantheon.Domain.Hand.HandAction Action, GroundPosition Target) : NetMessage;
 
 /// <summary>The host's answer to an intent: whether it was carried out, and what happened or why not.</summary>
 /// <param name="RequestId">The request it answers.</param>

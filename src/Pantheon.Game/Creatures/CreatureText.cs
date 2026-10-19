@@ -9,6 +9,36 @@ namespace Pantheon.Game.Creatures;
 /// <summary>Player-facing wording for Creatures: what they are doing and why a command was refused. Pure and culture-invariant.</summary>
 public static class CreatureText
 {
+    /// <summary>A path's name (spec §24, ADR-030).</summary>
+    /// <param name="path">The path.</param>
+    /// <returns>For example "Nature Keeper".</returns>
+    public static string Path(CreatureSpecialisation path) => path switch
+    {
+        CreatureSpecialisation.Guardian => "Guardian",
+        CreatureSpecialisation.Warrior => "Warrior",
+        CreatureSpecialisation.Destroyer => "Destroyer",
+        CreatureSpecialisation.Healer => "Healer",
+        CreatureSpecialisation.NatureKeeper => "Nature Keeper",
+        CreatureSpecialisation.Missionary => "Missionary",
+        CreatureSpecialisation.Trickster => "Trickster",
+        CreatureSpecialisation.Commander => "Commander",
+    };
+
+    /// <summary>What a path does, in a few words.</summary>
+    /// <param name="path">The path.</param>
+    /// <returns>For example "heals the people it helps".</returns>
+    public static string PathEffect(CreatureSpecialisation path) => path switch
+    {
+        CreatureSpecialisation.Guardian => "shields your villages near it from disasters",
+        CreatureSpecialisation.Warrior => "fights harder",
+        CreatureSpecialisation.Destroyer => "kills more when it attacks",
+        CreatureSpecialisation.Healer => "heals the people it helps",
+        CreatureSpecialisation.NatureKeeper => "heals the land where it goes",
+        CreatureSpecialisation.Missionary => "wins the godless to you",
+        CreatureSpecialisation.Trickster => "sows doubt in your rivals",
+        CreatureSpecialisation.Commander => "makes your villages near it harder to attack",
+    };
+
     /// <summary>An action as a short verb phrase.</summary>
     /// <param name="action">The action.</param>
     /// <param name="place">The settlement it concerns, if any.</param>
@@ -54,6 +84,11 @@ public static class CreatureText
         var activity = creature.Activity;
         var place = Concerning(world, activity.TargetSettlementId, activity.TargetCreatureId);
         var doing = Doing(activity.Action, place);
+        if (Simulation.Creatures.CreatureModel.IsHeld(world, creature))
+        {
+            return "Held in its god's hand";
+        }
+
         return activity.Phase switch
         {
             CreaturePhase.Deciding => "Thinking what to do",

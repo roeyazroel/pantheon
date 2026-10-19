@@ -117,6 +117,7 @@ public static class AudioDirector
                     return SoundKind.Bolt;
                 case MiracleEffectKind.Quake:
                 case MiracleEffectKind.Flood:
+                case MiracleEffectKind.Awaken:
                     return SoundKind.Rumble;
                 case MiracleEffectKind.Ignite:
                     return SoundKind.Crackle;
@@ -137,6 +138,8 @@ public static class AudioDirector
                 case MiracleEffectKind.Teach:
                 case MiracleEffectKind.Water:
                 case MiracleEffectKind.Soak:
+                case MiracleEffectKind.Hallow:
+                case MiracleEffectKind.Still:
                     continue;
             }
         }

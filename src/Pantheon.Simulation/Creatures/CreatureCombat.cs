@@ -92,8 +92,8 @@ public sealed class CreatureCombat
         var powerA = CreatureBonds.Power(_rules, a);
         var powerB = CreatureBonds.Power(_rules, b);
         var blow = combat.DamagePerSecond * SimulationTime.SecondsPerTick * 2f / (powerA + powerB);
-        b.Health = SimMath.Clamp01(b.Health - (blow * powerA * Fury(world, a) * Jitter(random) / CreatureModel.SpeciesOf(_rules, b).Toughness));
-        a.Health = SimMath.Clamp01(a.Health - (blow * powerB * Fury(world, b) * Jitter(random) / CreatureModel.SpeciesOf(_rules, a).Toughness));
+        b.Health = SimMath.Clamp01(b.Health - (blow * powerA * Fury(world, a) * Jitter(random) / CreatureAttributes.Resilience(_rules, b)));
+        a.Health = SimMath.Clamp01(a.Health - (blow * powerB * Fury(world, b) * Jitter(random) / CreatureAttributes.Resilience(_rules, a)));
         a.Activity.TicksLeft--;
         b.Activity.TicksLeft--;
         var aDown = a.Health <= combat.YieldHealth;
@@ -128,11 +128,13 @@ public sealed class CreatureCombat
         var ratio = Math.Clamp(loser.Level / (float)winner.Level, 0.25f, 2f);
         Gain(winner, FightRule.Experience + (combat.WinnerExperience * ratio), tick, events);
         winner.Personality.Aggression = SimMath.Clamp01(winner.Personality.Aggression + combat.AggressionPerVictory);
+        CreatureCalling.Add(winner.Callings, Domain.Creatures.CreatureSpecialisation.Warrior, _rules.Callings.VictoryCalling);
         CreatureModel.Reinforce(winner, winner.Activity.Situation, CreatureAction.Fight, combat.FightLearningRate);
         Witness(world, winner, loser);
         if (spared)
         {
             winner.Morality = Math.Clamp(winner.Morality + MoralityStep, -1f, 1f);
+            CreatureCalling.Add(winner.Callings, Domain.Creatures.CreatureSpecialisation.Guardian, _rules.Callings.MercyCalling);
             Gain(loser, FightRule.Experience * 0.5f, tick, events);
         }
         else

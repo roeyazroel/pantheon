@@ -159,6 +159,12 @@ public sealed class CreatureAuthority
         var preference = CreatureModel.Learn(_rules, creature, judged.Situation, judged.Action, feedback, knowledge);
         CreatureModel.Nudge(_rules, creature.Personality, judged.Action, feedback);
         var rewarded = feedback == CreatureFeedback.Rewarded;
+        if (rewarded)
+        {
+            // A rewarded deed calls the Creature further down its paths (ADR-030).
+            CreatureCalling.Deed(_rules.Callings, creature, judged.Action, _rules.Callings.RewardCalling);
+        }
+
         creature.Loyalty = SimMath.Clamp01(creature.Loyalty + (rewarded ? _rules.LoyaltyPerReward : -_rules.LoyaltyPerPunishment));
         if (judged.Memory is { } memory)
         {

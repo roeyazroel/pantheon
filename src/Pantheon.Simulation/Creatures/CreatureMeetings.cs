@@ -48,7 +48,7 @@ public sealed class CreatureMeetings
             for (var j = i + 1; j < creatures.Count; j++)
             {
                 var (a, b) = (creatures[i], creatures[j]);
-                if (IsFree(a) && IsFree(b) && Distance(a.Position, b.Position) <= bonds.MeetRadius
+                if (IsFree(a) && IsFree(b) && !CreatureModel.IsHeld(world, a) && !CreatureModel.IsHeld(world, b) && Distance(a.Position, b.Position) <= bonds.MeetRadius
                     && CreatureBonds.CanMeet(bonds, CreatureBonds.Find(a, b.Id), world.Tick)
                     && CreatureBonds.CanMeet(bonds, CreatureBonds.Find(b, a.Id), world.Tick))
                 {

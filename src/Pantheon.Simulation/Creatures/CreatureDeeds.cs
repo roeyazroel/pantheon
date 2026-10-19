@@ -52,7 +52,7 @@ public sealed class CreatureDeeds
         var activity = creature.Activity;
         var rule = activity.Action == CreatureAction.GoTo ? null : CreatureModel.RuleFor(_rules, activity.Action);
         var settlement = activity.TargetSettlementId is { } id ? world.Settlements.Find(s => s.Id == id) : null;
-        var (food, deaths, share) = rule is null ? (0f, 0, 1f) : ApplyToSettlement(creature, rule, settlement);
+        var (food, deaths, share) = rule is null ? (0f, 0, 1f) : ApplyToSettlement(world, creature, rule, settlement);
         if (rule is not null)
         {
             CreatureModel.Relieve(rule, creature.Needs, share);
@@ -69,6 +69,8 @@ public sealed class CreatureDeeds
             Gain(creature, rule.Experience, world.Tick, events);
         }
 
+        CreatureCalling.Deed(_rules.Callings, creature, activity.Action);
+        CallingEffects.AfterDeed(_rules.Callings, world, creature, settlement, activity.Action);
         if (activity.Action == CreatureAction.Befriend && activity.TargetCreatureId is { } playmate)
         {
             CreatureBonds.Played(_rules.Bonds, creature, playmate, world.Tick);
@@ -88,7 +90,7 @@ public sealed class CreatureDeeds
 
     /// <summary>The action's effect on its settlement.</summary>
     /// <returns>Food given (positive) or taken (negative), people killed, and the share of the action's relief earned.</returns>
-    private (float Food, int Deaths, float Share) ApplyToSettlement(CreatureState creature, CreatureActionRule rule, SettlementState? settlement)
+    private (float Food, int Deaths, float Share) ApplyToSettlement(WorldState world, CreatureState creature, CreatureActionRule rule, SettlementState? settlement)
     {
         var size = rule.Amount * CreatureModel.Strength(_rules, creature);
         if (settlement is null)
@@ -111,7 +113,8 @@ public sealed class CreatureDeeds
                 Build(settlement, size);
                 return (0f, 0, 1f);
             case CreatureAction.Attack:
-                var killed = Math.Min(settlement.Population, (int)MathF.Round(size * (1f - CivicModel.Defence(_settlementRules, settlement))));
+                var defence = Math.Min(1f, CivicModel.Defence(_settlementRules, settlement) + CallingEffects.CommandedDefence(_rules.Callings, world, settlement));
+                var killed = Math.Min(settlement.Population, (int)MathF.Round(size * CallingEffects.AttackFactor(_rules.Callings, creature) * (1f - defence)));
                 settlement.Population -= killed;
                 return (0f, killed, 1f);
             case CreatureAction.Wander:

@@ -34,6 +34,7 @@ public static class DivineRulesValidator
             (rules.InfluenceStrength, nameof(rules.InfluenceStrength)),
             (rules.WitnessRadius, nameof(rules.WitnessRadius)),
             (rules.CreatureInfluenceReach, nameof(rules.CreatureInfluenceReach)),
+            (rules.CreatureAffinityPerLevel, nameof(rules.CreatureAffinityPerLevel)),
             (rules.ApostateFreedom, nameof(rules.ApostateFreedom)),
             (rules.ContestedCostFactor, nameof(rules.ContestedCostFactor)),
             (rules.VictorySeconds, nameof(rules.VictorySeconds)),
@@ -84,6 +85,7 @@ public static class DivineRulesValidator
         errors.RequireNonNegative(rules.HolySiteInfluenceReach, nameof(rules.HolySiteInfluenceReach));
         ValidateSchism(rules.Schism, errors);
         ValidateCulture(rules.Culture, errors);
+        Hand.HandRulesValidator.Check(errors, rules.Hand);
         errors.ThrowIfAny("divine rules", nameof(rules));
     }
 

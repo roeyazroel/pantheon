@@ -80,6 +80,12 @@ public static class HistoryText
             HistoryKind.Meteor => Format("The Falling Star of {0}", place),
             HistoryKind.Blight => Format("The Blight of {0}", place),
             HistoryKind.Locusts => Format("The Locusts of {0}", place),
+            HistoryKind.Calling => Format("{0} becomes a {1}", creature, Creatures.CreatureText.Path((Domain.Creatures.CreatureSpecialisation)record.Count)),
+            HistoryKind.Rescue => Format("The Rescue of {0} by {1}", place, god),
+            HistoryKind.Stoning => Format("The Stoning of {0}", place),
+            HistoryKind.Hallowing => Format("{0} hallows the land of {1}", god, place),
+            HistoryKind.Awakening => Format("{0} wakes {1}", god, world.Disasters.Volcano is { } volcano ? Disasters.DisasterText.VolcanoName(world, volcano.RegionId) : "the mountain"),
+            HistoryKind.Stillness => Format("The Great Stillness of {0}", god),
         };
     }
 
@@ -98,6 +104,8 @@ public static class HistoryText
             HistoryKind.Flood => record.Count > 0 ? Format("{0} houses lost", record.Count) : "people drowned",
             HistoryKind.Hurricane or HistoryKind.Tsunami or HistoryKind.Tornado => Format("{0} houses lost", record.Count),
             HistoryKind.Landslide => record.Count > 0 ? Format("{0} dead", record.Count) : "houses buried",
+            HistoryKind.Rescue => Format("{0} carried to safety", record.Count),
+            HistoryKind.Stoning => record.Count > 0 ? Format("{0} dead", record.Count) : "houses fell",
             HistoryKind.Founding => Format("{0} settlers", record.Count),
             HistoryKind.Revolt => Format("{0} renounced their god", record.Count),
             HistoryKind.Absorption => Format("{0} turned", record.Count),
@@ -111,7 +119,8 @@ public static class HistoryText
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
                 or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine
                 or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure or HistoryKind.Scar
-                or HistoryKind.Eruption or HistoryKind.Meteor or HistoryKind.Blight or HistoryKind.Locusts => string.Empty,
+                or HistoryKind.Eruption or HistoryKind.Meteor or HistoryKind.Blight or HistoryKind.Locusts
+                or HistoryKind.Calling or HistoryKind.Hallowing or HistoryKind.Awakening or HistoryKind.Stillness => string.Empty,
         };
     }
 

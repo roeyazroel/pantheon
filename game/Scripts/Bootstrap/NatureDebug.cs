@@ -93,6 +93,11 @@ internal sealed class NatureDebug
             _setStatus(MigrationCommands.SendFrom(_session, home, people));
         }
 
+        if (options.Hand is { } hand && (hand == HandAtStart.Creature ? _session.LocalCreature?.Position : focus) is { } grip)
+        {
+            _setStatus(Pantheon.Game.Hand.HandCommands.Use(_session, Pantheon.Domain.Hand.HandAction.PickUp, grip));
+        }
+
         if (options.Meet is { } name)
         {
             _setStatus(CreatureCommands.BringOther(_session, name));

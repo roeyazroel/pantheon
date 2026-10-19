@@ -77,6 +77,7 @@ public static class CreatureRulesValidator
 
         ValidateBonds(rules.Bonds, rules.PerceptionRadius, errors);
         ValidateCombat(rules.Combat, errors);
+        CallingRulesValidator.Check(errors, rules.Callings);
         errors.ThrowIfAny("creature rules", nameof(rules));
     }
 

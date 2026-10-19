@@ -134,7 +134,9 @@ files and compiled assemblies and fails when either rule is broken.
   world's size lives only in `Generation` and its gods. Since ADR-028, `Seasons` (`SeasonState`:
   the tick the year began) is present when the world turns through seasons, and regions carry
   `Snow`, `Wildlife`, `Damage`, `Scar` and `Pollution`. Since ADR-029 regions carry `Blight` and
-  landslide `Rubble`.
+  landslide `Rubble`. Since ADR-030 regions carry `Hallowed` (blessing that never fades), gods what
+  their hand holds (`GodState.Held`: `HeldObject`, villagers with their beliefs, a rock, a tree or
+  the Creature), and Creatures the paths they took up (`Specialisations`) and their `Callings`.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -229,7 +231,9 @@ files and compiled assemblies and fails when either rule is broken.
   (ADR-021). `WorldSizes` lists the `WorldSizePreset`s a new world may be made at, with extra
   settlement and river names (`world_sizes.json`), `PantheonSetup.ExtraGods` the gods larger
   worlds add, and `DivineRules.ConquestShare` and `CulturalShare` the other victories' thresholds
-  (ADR-027). `WeatherRules.Seasons` (`SeasonRules`: the season's length and each season's
+  (ADR-027). `CreatureRules.Callings` (`CallingRules`: the calling levels, which deeds lead to which
+  path, the paths' effects and the attributes' growth) and `DivineRules.Hand` (`HandRules`) shape
+  the paths and the hand (ADR-030). `WeatherRules.Seasons` (`SeasonRules`: the season's length and each season's
   `ClimateEffects`) and `WeatherRules.Extremes` (`ExtremeRules`: snow, fog, hurricanes, heat and
   cold waves), and `EcologyRules` (`ecology.json`), shape the year and the land's life (ADR-028).
   `DisasterRules.Hazards` (`HazardRules`: tsunamis, landslides, the volcano, tornadoes, meteors,
@@ -281,6 +285,14 @@ files and compiled assemblies and fails when either rule is broken.
   punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
   `CreatureBonds` (views and urges), `CreatureMeetings` and `CreatureCombat` are the Creatures'
   dealings with each other (see [Creature relationships](#creature-relationships)).
+  `CreatureCalling` (callings and taking up paths), `CallingEffects` (what the paths add to deeds,
+  fights and disasters) and `CreatureAttributes` (intelligence, resilience, divine affinity) are the
+  paths and attributes of ADR-030.
+- `Hand/`: `HandAuthority` checks and carries out the Divine Hand's commands, with `HandModel`
+  (belief), `HandCarry` (villagers set down), `HandThrow` (things thrown) and `HandCreatures` (the
+  Creature lifted). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
+- `Miracles/DivineActs`: hallowing the land, waking the volcano and stilling every disaster
+  (ADR-030), applied by `MiracleEffects`.
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
   `GodAiSystem`; `Gods/MiracleValuer` weighs what each miracle is worth to it, and
@@ -359,8 +371,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (9 since ADR-029, whose disasters and regions carry the
-  hazards, blight and rubble), the default port (7777), the host's peer id and the most players.
+- `NetworkProtocol`: the protocol version (10 since ADR-030, which adds `HandIntent` and whose
+  Creatures, gods and regions carry paths, what hands hold and hallowed land), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
   `ViewFocus`, the intents (`CastIntent`, veiled or not, `CreatureIntent`, `DiplomacyIntent` with a
@@ -408,7 +420,8 @@ conquest or cultural clock. Version 19 → 20 (`NatureSaveMigration`) keeps the 
 climate, without seasons, and gives its regions no snow, harm, scars or pollution and their
 animals at their cover. Version 20 → 21 (`HazardSaveMigration`) gives regions no blight or rubble
 and the disasters nothing on the move, no marks, no village told of blight and a volcano still to
-be found. A missing,
+be found. Version 21 → 22 (`CallingSaveMigration`) gives Creatures no paths or callings, every hand
+nothing and no land hallowed. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -490,7 +503,10 @@ be found. A missing,
   `Divine/DivineText` words ranks, personalities, clocks and cast verdicts;
   `Creatures/CreatureText` words Creature activities and command outcomes;
   `Creatures/CreatureBondText` words how Creatures regard each other, and
-  `Creatures/CreatureCommands` brings another Creature to the player's (K).
+  `Creatures/CreatureCommands` brings another Creature to the player's (K);
+  `Creatures/CreatureGrowthText` words its paths, callings and attributes (ADR-030).
+- `Hand/HandCommands` uses the player's hand (R, Shift+R, `HandIntent` for a joined player) and
+  `Hand/HandText` words it; `Alerts/PowerAlerts` tells of hands, paths and Divine Acts (ADR-030).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
   `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging,
   and `Disasters/HazardCommands` any hazard (I, `--disaster`); `Alerts/HazardAlerts` tells of the
@@ -635,8 +651,9 @@ be found. A missing,
 - `Presentation/Creatures/`: `CreatureBody` (the Mossback from primitive meshes, tinted by its
   god), `CreatureView` (follows the simulated position smoothly, grows with level, walks and poses
   per action, flashes on feedback, labels its activity) and `CreaturePresenter`.
-  `Presentation/Divine/DivineHand`: the god's hand as a visual: it follows the cursor, presses
-  when casting or sending, and pats or swats the Creature.
+  `Presentation/Divine/DivineHand`: the god's hand: it follows the cursor, presses when casting or
+  sending, pats or swats the Creature, shows the rock, tree or villagers it holds (`HeldThing`) and
+  flings them when it throws; a held Creature hangs under it (ADR-030).
 - `Presentation/Divine/DivinePresenter`: the targeting ring (a decal with a procedural ring
   texture), the map overlay (one decal over the world with one pixel per region) and miracle
   effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a
@@ -1605,6 +1622,46 @@ flowchart LR
 - **Not modelled:** lava as its own flow, slides that change the terrain's height, tornadoes
   that carry things, and reservoirs beyond the cistern.
 
+## Paths, the hand and the Divine Acts
+
+ADR-030 records the decisions, and the plan
+([.docs/milestone-15-part-10-powers.md](../.docs/milestone-15-part-10-powers.md)) the numbers.
+
+```mermaid
+flowchart LR
+    deeds[Deeds, fights, rewards] --> callings[CreatureState.Callings]
+    callings --> grow[CreatureCalling.Grow at levels 3, 6 and 9]
+    grow --> paths[CreatureState.Specialisations]
+    paths --> effects[CallingEffects: deeds, fights, disasters]
+    key[R and Shift+R] --> hand[HandAuthority]
+    hand --> held[GodState.Held]
+    hand --> carry[HandCarry: join, walk or drown]
+    hand --> throw[HandThrow: ruin, crater, fear]
+    carry --> belief[Rescue or abduction in belief]
+    panel[Domains panel] --> act[DivineActs: hallow, awaken, still]
+    act --> history[History records]
+```
+
+- **Paths.** `CreatureDeeds.Complete` calls the Creature down the deed's paths and applies its
+  paths' effects (`CallingEffects.AfterDeed`); a reward and the outcome of a fight call it too.
+  `CreatureSystem` lets each Creature take up its due paths every tick (`CreatureCalling.Grow`) and
+  skips one its god's hand holds. A Warrior's power is in `CreatureBonds.Power`, a Destroyer's and
+  a Commander's effects in the Attack deed, and a Guardian's in `DisasterDamage.Protection`, which
+  every disaster uses.
+- **Attributes.** `CreatureAttributes` derives intelligence (in `CreatureModel.Learn`), resilience
+  (in combat, starvation and wounds) and divine affinity (in `InfluenceField`) from level.
+- **The hand.** `HandAuthority` checks the god, the hand's rules, the island, a full or empty hand
+  and the god's influence, then lifts the nearest of the Creature and villagers, else a tree or a
+  rock, sets it down or throws it. It is one of the `Authorities`, so the player's commands and a
+  joined player's `HandIntent` take the same path.
+- **Divine Acts.** `MiracleScale.DivineAct` miracles leave the miracle bar
+  (`HudReadout.AvailableMiracles`) for the Domains panel, which selects them for the targeting ring.
+  `MiracleEffects` hallows regions and calls `DivineActs` to wake the volcano or still every
+  disaster; `DivineActDone` reaches the alerts and the history. `BeliefSystem` keeps a hallowed
+  region's blessing at least its `Hallowed`.
+- **Not modelled:** acts that change the terrain, carried offerings, Creatures above level 10 and
+  the AI using the hand.
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -1708,11 +1765,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 21 (current)
+    alt version 22 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 20
+    else versions 1 to 21
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 21, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life)
+        Mig-->>Save: JsonObject at version 22, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

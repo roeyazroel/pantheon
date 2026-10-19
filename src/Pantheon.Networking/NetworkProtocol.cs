@@ -10,9 +10,10 @@ public static class NetworkProtocol
     /// Divine Council, version 6 (part 6) war goals, veiled miracles, proxy acts and holy wars,
     /// version 7 (part 7) the world's victories and how a victory was won, version 8 (part 8) the
     /// seasons, snow, the land's life and hurricanes, version 9 (part 9) the hazards: tsunamis,
-    /// landslides, the volcano, tornadoes, meteors, blight and locusts.
+    /// landslides, the volcano, tornadoes, meteors, blight and locusts, version 10 (part 10) the
+    /// Divine Hand, Creatures' paths and the Divine Acts.
     /// </summary>
-    public const int Version = 9;
+    public const int Version = 10;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

@@ -123,6 +123,10 @@ public static class DivineText
                     return "no rival Creature there";
                 case Pantheon.Domain.Miracles.MiracleEffectKind.Teach:
                     return "your Creature is not there";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Awaken:
+                    return "no sleeping volcano on this island";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Still:
+                    return "no disaster to still";
             }
         }
 

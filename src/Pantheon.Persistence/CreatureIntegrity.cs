@@ -89,6 +89,16 @@ internal static class CreatureIntegrity
             errors.Add($"{prefix} has a preference outside 0..1.");
         }
 
+        var paths = creature.Specialisations;
+        var callings = creature.Callings;
+        if (paths is null || callings is null || paths.Exists(p => !Enum.IsDefined(p)) || new HashSet<CreatureSpecialisation>(paths).Count != paths.Count
+            || !(callings.Guardian >= 0f && callings.Warrior >= 0f && callings.Destroyer >= 0f && callings.Healer >= 0f && callings.NatureKeeper >= 0f
+                && callings.Missionary >= 0f && callings.Trickster >= 0f && callings.Commander >= 0f)
+            || !float.IsFinite(callings.Guardian + callings.Warrior + callings.Destroyer + callings.Healer + callings.NatureKeeper + callings.Missionary + callings.Trickster + callings.Commander))
+        {
+            errors.Add($"{prefix} has paths that are unknown or taken twice, or callings that are negative or not numbers (ADR-030).");
+        }
+
         if (!float.IsFinite(creature.Position.X) || !float.IsFinite(creature.Position.Z) || !float.IsFinite(creature.Heading))
         {
             errors.Add($"{prefix} has a position or heading that is not a number.");
