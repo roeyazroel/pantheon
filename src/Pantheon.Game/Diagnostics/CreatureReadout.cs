@@ -59,6 +59,8 @@ internal static class CreatureReadout
                 activity.Path.Count,
                 activity.TicksLeft));
             lines.Add(Format("  mind: {0}; tree: {1}", Simulation.Creatures.CreatureModes.Describe(world, creature), Simulation.Creatures.CreatureTree.Describe(creature)));
+            var face = Presentation.CreatureExpression.FaceOf(creature, world.Tick);
+            lines.Add(Format("  face: {0} (joy {1:+0.00;-0.00;0.00}, anger {2:0.00}, fear {3:0.00}, sleep {4:0.00}); nature {5:+0.00;-0.00;0.00}", Presentation.CreatureExpression.MoodOf(face).ToString().ToLowerInvariant(), face.Joy, face.Anger, face.Fear, face.Sleep, creature.Morality));
             lines.Add(Format(
                 "  needs: hunger {0:0.00} fatigue {1:0.00} boredom {2:0.00}   personality: {3} ({4})",
                 n.Hunger,

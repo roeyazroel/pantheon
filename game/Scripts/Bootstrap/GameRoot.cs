@@ -151,6 +151,7 @@ public partial class GameRoot : Node3D
         ApplyDivineOptions(options);
         if (options.FocusCreature && _session.LocalCreature is { } creature)
         {
+            _camera.Model.FaceFront(creature.Heading);
             _camera.FocusOn(creature.Position, options.CameraDistance ?? CreatureFocusDistance, snap: true);
         }
         else if (options.CameraDistance is { } distance)
@@ -387,6 +388,7 @@ public partial class GameRoot : Node3D
     {
         if (_session.LocalCreature is { } creature)
         {
+            _camera.Model.FaceFront(creature.Heading);
             _camera.FocusOn(creature.Position, CreatureFocusDistance, snap: false);
             SetStatus($"Looking at {creature.Name}");
         }

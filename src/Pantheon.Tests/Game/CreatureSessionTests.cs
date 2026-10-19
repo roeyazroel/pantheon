@@ -10,6 +10,7 @@ using Pantheon.Game.Camera;
 using Pantheon.Game.Creatures;
 using Pantheon.Game.Diagnostics;
 using Pantheon.Game.Hud;
+using Pantheon.Game.Presentation;
 using Pantheon.Persistence;
 using Pantheon.Tests.Support;
 using Xunit;
@@ -140,6 +141,8 @@ public sealed class CreatureSessionTests
 
         Assert.Contains(lines, line => line.StartsWith($"Creature {creature.Name} (Mossback) Lv ", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.StartsWith("  doing: ", StringComparison.Ordinal));
+        var mood = CreatureExpression.MoodOf(CreatureExpression.FaceOf(creature, _session.World.Tick)).ToString().ToLowerInvariant();
+        Assert.Contains(lines, line => line.StartsWith($"  face: {mood} (joy ", StringComparison.Ordinal) && line.Contains("; nature ", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.StartsWith("  needs: hunger ", StringComparison.Ordinal) && line.Contains("personality: kind", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.StartsWith("  options: ", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.StartsWith("  learned: VillageInNeed: Feed 0.40", StringComparison.Ordinal));

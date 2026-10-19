@@ -870,7 +870,11 @@ keep it in 0..1. A missing,
 - `Presentation/Divine/DivinePresenter`: the targeting ring (a decal with a procedural ring
   texture), the map overlay (one decal over the world with one pixel per region) and miracle
   effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a
-  glow, freed when done).
+  glow, freed when done). Since ADR-055 each miracle has a signature look: rain from a cloud, a
+  golden harvest pillar, a healing spiral under a dome, flames and smoke, a quake's dust, a
+  shield's dome, a fountain, a pillar of holy light, a dark swirl, a wheeling storm or a god's
+  strike. `MiracleLayers` builds them: pillars and domes in `Shaders/miracle_glow.gdshader` (bright
+  at the rim, fading towards a pillar's top), and clouds and the rest as GPU particles.
 - Settlement labels show the main god's share and take its colour once it holds the majority.
 - `Bootstrap/FaithController` (ADR-021) owns the Domains panel (`UI/DomainPanel`, G) and the holy
   sites in the world (`Presentation/HolySites/`: an obelisk, a great tree, a pool or a ring of
@@ -1439,6 +1443,12 @@ running for every settlement either way.
   taking their shares first so they stay put), never in water, on bare rock, on a road, by a house,
   on a field or on a village's square (`BareGround`). `ChunkStreamer` looks only at the chunks
   within its load radius, so small chunks over a large island cost nothing far away.
+- `CreatureExpression` (ADR-055) derives a Creature's face from its state (what it is doing, its
+  needs, health, nature and its god's last word, or one the client has just seen given): joy,
+  anger, fear, sleep and a wag, and the mood they show most. `CreatureBody.Express` moves its brows,
+  lids, cheeks, pupils, mouth and tail to match. `CreatureBody.Align` shows its nature: a kind
+  Creature warm and softly glowing, a cruel one dark, red-eyed and long-horned. Looking at the
+  Creature turns the camera to its face (`GodCameraModel.FaceFront`).
 - `Wildlife` (ADR-054) places the herds and flocks near the camera from each region's wildlife
   and biome, closed-form in the crowds' time (a herd grazes, then walks on to the next spot; a
   flock wheels round its point), never on water or a village's bare ground. `AnimalMesh` builds a

@@ -83,13 +83,23 @@ internal sealed class CreatureView
     /// <summary>Height of the Creature's head above its feet at its current size.</summary>
     public float HeadHeight => 6.8f * _height * _root.Scale.Y;
 
-    /// <summary>Flashes the Creature's colour briefly, for a reward (warm) or a punishment (red).</summary>
+    /// <summary>
+    /// Flashes the Creature's colour briefly, for a reward (warm) or a punishment (red), and its face
+    /// shows the god's word for a few seconds, even for a deed it has not finished (ADR-055).
+    /// </summary>
     /// <param name="color">Flash colour.</param>
-    public void Flash(Color color)
+    /// <param name="feedback">The reward or punishment.</param>
+    public void Flash(Color color, Pantheon.Domain.Creatures.CreatureFeedback feedback)
     {
         _flash = 1f;
         _flashColor = color;
+        (_judged, _judgedSeconds) = (feedback, JudgedSeconds);
     }
+
+    // How long the face shows the god's word after a reward or punishment, in seconds.
+    private const float JudgedSeconds = 4f;
+    private Pantheon.Domain.Creatures.CreatureFeedback _judged;
+    private float _judgedSeconds;
 
     /// <summary>Moves and poses the Creature for this frame.</summary>
     /// <param name="creature">Its state.</param>
@@ -129,6 +139,9 @@ internal sealed class CreatureView
         // The label keeps its on-screen size whatever the Creature's size.
         _label.Scale = new Vector3(1f / scale, 1f / scale, 1f / scale);
         Pose(creature.Activity, moved / Math.Max(delta, 1e-3f));
+        _body.Align(creature.Morality);
+        _judgedSeconds = Mathf.Max(0f, _judgedSeconds - delta);
+        _body.Express(Pantheon.Game.Presentation.CreatureExpression.FaceOf(creature, world.Tick, _judgedSeconds > 0f ? _judged : null), _clock);
         UpdateFlash(delta);
         _body.ShowScars(creature.Scars);
         var title = _owner.Length > 0 ? $"{creature.Name} ({_owner})" : creature.Name;
@@ -230,6 +243,11 @@ internal sealed class CreatureView
             material.EmissionEnabled = true;
             material.Emission = _flashColor;
             material.EmissionEnergyMultiplier = _flash * 1.5f;
+        }
+
+        if (_flash <= 0f)
+        {
+            _body.RestoreGlow();
         }
     }
 

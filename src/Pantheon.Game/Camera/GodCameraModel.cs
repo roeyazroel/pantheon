@@ -17,6 +17,9 @@ public sealed class GodCameraModel
     // The world extent the settings' maximum distance was chosen for, in metres.
     private const float ReferenceExtent = 2048f;
 
+    // How far to one side of straight ahead the camera looks at a face from, in radians: a three-quarter view.
+    private const float ThreeQuarter = 0.55f;
+
     private readonly GodCameraSettings _settings;
     private Vector2 _targetFocus;
     private float _targetYaw;
@@ -134,6 +137,14 @@ public sealed class GodCameraModel
     /// <summary>Rotates the view around the focus point.</summary>
     /// <param name="radians">Yaw change; positive turns the camera counter-clockwise seen from above.</param>
     public void Rotate(float radians) => _targetYaw += radians;
+
+    /// <summary>
+    /// Turns the view, the short way round, to look at the front of something facing a heading from
+    /// a little to one side (ADR-055: so a Creature's face shows).
+    /// </summary>
+    /// <param name="heading">The heading it faces, in radians about the vertical: 0 faces +Z.</param>
+    public void FaceFront(float heading) =>
+        _targetYaw += MathF.IEEERemainder(heading + ThreeQuarter - _targetYaw, MathF.Tau);
 
     /// <summary>Zooms by a number of steps; positive steps zoom in.</summary>
     /// <param name="steps">Zoom steps (one mouse-wheel notch is one step).</param>

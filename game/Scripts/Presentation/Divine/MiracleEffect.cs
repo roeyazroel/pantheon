@@ -6,24 +6,16 @@ namespace Pantheon.Client.Presentation.Divine;
 
 /// <summary>
 /// One miracle's visual effect (presentation only): motes falling or rising, a spreading ring or a
-/// lightning bolt, with a glow that fades out. It frees itself when it is over.
+/// lightning bolt, or a signature look (ADR-055): rain from a gathering cloud, a golden pillar with
+/// falling grain, a healing spiral under a dome, flames and smoke, a quake's dust, a shield's dome, a
+/// fountain, a pillar of holy light, a dark swirl, a wheeling storm. A glow swells and fades, and so
+/// do its translucent layers. It frees itself when it is over.
 /// </summary>
 internal sealed partial class MiracleEffect : Node3D
 {
     private const float ShowerHeight = 45f;
     private const float BoltHeight = 160f;
     private const int BoltSegments = 9;
-
-    // A soft round glow for the motes.
-    private static readonly GradientTexture2D MoteTexture = new()
-    {
-        Width = 32,
-        Height = 32,
-        Fill = GradientTexture2D.FillEnum.Radial,
-        FillFrom = new Vector2(0.5f, 0.5f),
-        FillTo = new Vector2(1f, 0.5f),
-        Gradient = new Gradient { Colors = [Colors.White, new Color(1f, 1f, 1f, 0f)], Offsets = [0f, 1f] },
-    };
 
     private float _age;
     private float _seconds;
@@ -34,6 +26,8 @@ internal sealed partial class MiracleEffect : Node3D
     private Decal? _ring;
     private Node3D? _bolt;
     private CpuParticles3D? _motes;
+    private readonly System.Collections.Generic.List<Action<float>> _fades = [];
+    private Node3D? _grows;
 
     /// <summary>Creates an effect at a ground point.</summary>
     /// <param name="view">The miracle's look.</param>
@@ -63,6 +57,61 @@ internal sealed partial class MiracleEffect : Node3D
             case MiracleEffectStyle.Bolt:
                 effect.AddBolt(color);
                 effect.AddLight(color, energy: 16f, height: 12f);
+                break;
+            case MiracleEffectStyle.Strike:
+                effect.AddBolt(color);
+                effect.AddLight(color, energy: 16f, height: 12f);
+                effect.AddRing(color);
+                effect.AddChild(MiracleLayers.Sparks(color));
+                break;
+            case MiracleEffectStyle.Rain:
+                effect.AddChild(MiracleLayers.Cloud(new Color(0.35f, 0.38f, 0.45f), effect._radius * 0.9f, 48f, effect._seconds));
+                effect.AddChild(MiracleLayers.Rain(color, effect._radius * 0.9f, 44f));
+                effect.AddLight(color, energy: 1.5f, height: 20f);
+                break;
+            case MiracleEffectStyle.Harvest:
+                effect.Fade(MiracleLayers.Pillar(color, MathF.Max(3f, effect._radius * 0.25f), 90f));
+                effect.AddChild(MiracleLayers.Fall(color, effect._radius, ShowerHeight, 0.6f));
+                effect.AddLight(color, energy: 6f, height: 14f);
+                break;
+            case MiracleEffectStyle.Healing:
+                effect.AddChild(MiracleLayers.Spiral(color, effect._radius));
+                effect.Grow(MiracleLayers.Dome(color, effect._radius));
+                effect.AddLight(color, energy: 4f, height: 8f);
+                break;
+            case MiracleEffectStyle.Flames:
+                effect.AddChild(MiracleLayers.Flames(effect._radius));
+                effect.AddChild(MiracleLayers.Smoke(effect._radius));
+                effect.AddLight(new Color(1f, 0.5f, 0.15f), energy: 12f, height: 6f);
+                break;
+            case MiracleEffectStyle.Quake:
+                effect.AddRing(color);
+                effect.AddChild(MiracleLayers.Dust(effect._radius));
+                break;
+            case MiracleEffectStyle.Shield:
+                effect.Grow(MiracleLayers.Dome(color, effect._radius));
+                effect.AddMotes(color, falling: false);
+                effect.AddLight(color, energy: 3f, height: 10f);
+                break;
+            case MiracleEffectStyle.Fountain:
+                effect.AddChild(MiracleLayers.Fountain(color, effect._radius));
+                effect.AddRing(color);
+                break;
+            case MiracleEffectStyle.Holy:
+                effect.Fade(MiracleLayers.Pillar(color, MathF.Max(4f, effect._radius * 0.35f), 220f));
+                effect.AddMotes(color, falling: false);
+                effect.AddLight(color, energy: 8f, height: 16f);
+                break;
+            case MiracleEffectStyle.Shadow:
+                effect.AddChild(MiracleLayers.Spiral(color.Darkened(0.4f), effect._radius, additive: false));
+                effect.AddRing(color);
+                effect.AddLight(color, energy: 2f, height: 6f);
+                break;
+            case MiracleEffectStyle.Storm:
+                var storm = MiracleLayers.Cloud(new Color(0.3f, 0.32f, 0.4f), effect._radius * 0.8f, 48f, effect._seconds);
+                effect.AddChild(storm);
+                effect._grows = storm;
+                effect.AddChild(MiracleLayers.Rain(color, effect._radius * 0.6f, 44f));
                 break;
         }
 
@@ -100,10 +149,49 @@ internal sealed partial class MiracleEffect : Node3D
             _motes.Emitting = false;
         }
 
+        // Translucent layers swell in and fade out; domes rise; a storm's cloud wheels.
+        var envelope = MathF.Min(1f, MathF.Sin(MathF.PI * t) * 1.6f);
+        foreach (var fade in _fades)
+        {
+            fade(envelope);
+        }
+
+        if (_grows is MeshInstance3D dome)
+        {
+            dome.Scale = Vector3.One * MathF.Min(1f, t * 3f);
+        }
+        else if (_grows is not null)
+        {
+            _grows.Rotation = new Vector3(0f, _age * 0.6f, 0f);
+        }
+
+        foreach (var child in GetChildren())
+        {
+            if (child is GpuParticles3D { OneShot: false } particles && t > 0.7f)
+            {
+                particles.Emitting = false;
+            }
+        }
+
         if (_age >= _seconds)
         {
             QueueFree();
         }
+    }
+
+    /// <summary>Adds a translucent layer that swells in and fades out over the effect's life.</summary>
+    private void Fade((Node3D Node, Action<float> Fade) layer)
+    {
+        _fades.Add(layer.Fade);
+        AddChild(layer.Node);
+    }
+
+    /// <summary>Adds a dome that rises over the radius and fades.</summary>
+    private void Grow((Node3D Node, Action<float> Fade) layer)
+    {
+        Fade(layer);
+        _grows = layer.Node;
+        layer.Node.Scale = Vector3.One * 0.01f;
     }
 
     /// <summary>Glowing motes over the radius, falling from the sky or rising from the ground.</summary>
@@ -115,7 +203,7 @@ internal sealed partial class MiracleEffect : Node3D
             BillboardMode = BaseMaterial3D.BillboardModeEnum.Particles,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
             BlendMode = BaseMaterial3D.BlendModeEnum.Add,
-            AlbedoTexture = MoteTexture,
+            AlbedoTexture = MiracleLayers.Soft,
             VertexColorUseAsAlbedo = true,
         };
         var ramp = new Gradient();

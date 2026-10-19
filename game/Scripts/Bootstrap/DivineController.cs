@@ -138,12 +138,12 @@ internal sealed class DivineController
         if (status.StartsWith("You reward", StringComparison.Ordinal))
         {
             _hand.Pat(shown.Position, shown.HeadHeight);
-            _creatures.Flash(creature.Id, new Color(1f, 0.85f, 0.4f));
+            _creatures.Flash(creature.Id, new Color(1f, 0.85f, 0.4f), Pantheon.Domain.Creatures.CreatureFeedback.Rewarded);
         }
         else if (status.StartsWith("You punish", StringComparison.Ordinal))
         {
             _hand.Swat(shown.Position, shown.HeadHeight);
-            _creatures.Flash(creature.Id, new Color(1f, 0.15f, 0.1f));
+            _creatures.Flash(creature.Id, new Color(1f, 0.15f, 0.1f), Pantheon.Domain.Creatures.CreatureFeedback.Punished);
         }
     }
 

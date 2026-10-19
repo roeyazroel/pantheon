@@ -64,14 +64,15 @@ public sealed class CreaturePresenter
     public (Vector3 Position, float HeadHeight)? Find(int creatureId) =>
         _views.TryGetValue(creatureId, out var view) ? (view.ShownPosition, view.HeadHeight) : null;
 
-    /// <summary>Flashes a Creature's colour.</summary>
+    /// <summary>Flashes a Creature's colour, and its face shows the god's word a while.</summary>
     /// <param name="creatureId">The Creature.</param>
     /// <param name="color">Flash colour.</param>
-    public void Flash(int creatureId, Color color)
+    /// <param name="feedback">The reward or punishment.</param>
+    public void Flash(int creatureId, Color color, Pantheon.Domain.Creatures.CreatureFeedback feedback)
     {
         if (_views.TryGetValue(creatureId, out var view))
         {
-            view.Flash(color);
+            view.Flash(color, feedback);
         }
     }
 }

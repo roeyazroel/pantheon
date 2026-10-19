@@ -97,7 +97,7 @@ public sealed class DisasterPresenter
         {
             if (_seenQuakes.Add(quake.Id))
             {
-                var look = new MiracleEffectView { MiracleId = "earthquake", Style = MiracleEffectStyle.Wave, Color = RgbColor.ParseHex("#c08a55"), Seconds = 3f };
+                var look = new MiracleEffectView { MiracleId = "earthquake", Style = MiracleEffectStyle.Quake, Color = RgbColor.ParseHex("#c08a55"), Seconds = 3f };
                 _waves.AddChild(MiracleEffect.Create(look, Ground(quake.X, quake.Z), quake.Radius));
             }
         }

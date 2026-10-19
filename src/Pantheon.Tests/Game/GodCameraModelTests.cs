@@ -174,4 +174,20 @@ public sealed class GodCameraModelTests
 
         Assert.Throws<ArgumentException>(() => new GodCameraModel(settings));
     }
+
+    [Fact]
+    public void GodCameraModel_FaceFront_TurnsTheShortWayToLookAtAFace()
+    {
+        var camera = new GodCameraModel(Settings);
+        camera.Rotate(0.2f);
+
+        camera.FaceFront(MathF.PI);
+        camera.SnapToTarget();
+        var pose = camera.ComputePose(FlatGround);
+        var side = Vector3.Normalize(new Vector3(pose.Position.X - pose.Target.X, 0f, pose.Position.Z - pose.Target.Z));
+        var facing = new Vector3(MathF.Sin(MathF.PI), 0f, MathF.Cos(MathF.PI));
+
+        Assert.True(Vector3.Dot(side, facing) > 0.8f, "the camera stands in front, a little to one side");
+        Assert.True(MathF.Abs(camera.TargetYaw - 0.2f) <= MathF.PI, "it turned the short way");
+    }
 }

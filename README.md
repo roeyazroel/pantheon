@@ -363,7 +363,7 @@ covers:
 | Let the villager you follow go | Shift+/ |
 | The whole island from afar, and back | ` (backtick) |
 | Look at the next settlement | F or Home |
-| Look at your Creature | C, or Look on its card |
+| Look at your Creature (the camera turns to its face) | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
 | Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
@@ -429,6 +429,17 @@ and ×16 speed it up. Each step:
   vegetation, bushes, stones and reeds in swamps, but not by houses, on fields or on a village's
   square. Trees and grass sway in the wind and bend hard in a storm. The species, colours and
   sway are in `Trees`, and the ground cover in `GroundCover`, in `game/Data/settlement_view.json`.
+- **Expressive Creatures and miracle looks (spec §61, ADR-055).** Your Creature's face shows how
+  it feels: it scowls in a fight, widens its eyes in flight, grins at play, shuts its eyes at rest,
+  looks glum when hungry and bored, and beams after a reward or cowers after a slap. Its tail wags,
+  lashes or tucks. Its nature shows in its body: a kind Creature grows warm and softly glowing, a
+  cruel one dark and red-eyed, with longer horns. Looking at it (C) turns the camera to its face,
+  and the debug panel's Creature lines show its face and nature. Every miracle has its own look:
+  rain pours from a gathering cloud, Food raises a golden pillar with grain falling about it,
+  healing rises in a spiral under a soft dome, fire bursts with embers and smoke, an earthquake
+  throws up dust, a shield raises a dome, Water springs up in a fountain, Enlighten and Hallow
+  bring down a pillar of light, Dread and Sow Discord swirl dark, and a god's lightning strikes
+  with a shock ring and sparks. The looks are in `game/Data/divine_view.json`.
 - **Wildlife (spec §61, ADR-054).** Near the camera, herds of deer graze and walk on to fresh
   pasture, stags among them, and flocks of birds wheel over forests, rivers and coasts. There are
   as many as the land's wildlife allows, so hunted, burnt or cleared land is empty of them. They
@@ -1471,7 +1482,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature\|population\|risk\|politics\|navigation\|authority` | Start with a map overlay shown. |
 | `--book=world\|religion\|miracles\|creature\|villager` | Open the Book of the World on a page at the start. |
 | `--overview=on\|off` | Start with the camera over the whole island. |
-| `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
+| `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature's face or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--roads=on\|off` | Every road the villages would plan is built at the start (for captures). |
 | `--stores=full\|empty` | Every village's wood and stone start full or empty. |
