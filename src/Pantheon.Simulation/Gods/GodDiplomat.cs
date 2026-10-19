@@ -135,7 +135,12 @@ public sealed class GodDiplomat
         var peace = (profile.Cooperation * (weariness + Math.Max(0f, -advantage) + threat)) + view.Fear - (0.5f * grudge) - 0.3f;
         if (DiplomacyAuthority.FindProposal(world, other.Id, god.Id) is { } proposal)
         {
-            var accept = proposal.Kind == ProposalKind.Alliance ? alliance + 0.2f : peace + 0.3f;
+            var accept = proposal.Kind switch
+            {
+                ProposalKind.Alliance => alliance + 0.2f,
+                ProposalKind.Peace => peace + 0.3f,
+                ProposalKind.Treaty or ProposalKind.Request => TreatyAdvisor.AnswerUtility(_rules, world, god, proposal, profile, view),
+            };
             candidates.Add(new DiplomacyCandidate(accept > 0f ? DiplomaticCommandKind.Accept : DiplomaticCommandKind.Decline, other.Id, Math.Abs(accept), why));
         }
 
@@ -156,7 +161,8 @@ public sealed class GodDiplomat
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.OfferAlliance, other.Id, alliance, why));
                 // A fresh peace or past help holds a god back until the memory fades.
                 var war = (profile.Aggression * (view.Rivalry + grudge + Math.Max(0f, advantage) + otherLeads + (status == DiplomaticStatus.Hostile ? 0.3f : 0f)))
-                    + (theyDominate ? 0.6f : 0f) - (0.5f * view.Trust) - view.Fear - goodwill - (0.3f * profile.Cooperation) - (0.8f * threat) - 0.4f;
+                    + (theyDominate ? 0.6f : 0f) + (Politics.CouncilModel.IsCondemned(world, other.Id) ? 0.3f : 0f)
+                    - (0.5f * view.Trust) - view.Fear - goodwill - (0.3f * profile.Cooperation) - (0.8f * threat) - 0.4f;
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.DeclareWar, other.Id, war, why));
                 break;
         }

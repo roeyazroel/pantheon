@@ -31,5 +31,43 @@
 
   // Pairs neither allied nor at war turn Friendly when both feel warmer than this, Hostile when either
   // feels colder than minus this.
-  "HostilityThreshold": 0.35
+  "HostilityThreshold": 0.35,
+
+  // Treaties, favours and the Divine Council (spec sections 38-42 and 54, ADR-025). Times are in seconds.
+  "Politics": {
+    // Treaties last at most MaxTreatySeconds (0 holds until broken); a tribute pays at most MaxTribute Divine Power
+    // a minute; a god may ask at most MaxPowerAsk Divine Power. Each secret treaty comes to light with
+    // SecretLeakPerSecond chance a second. Breaking a treaty costs TreatyBetrayalShare of an alliance's betrayal.
+    "MaxTreatySeconds": 1200.0,
+    "MaxTribute": 60.0,
+    "MaxPowerAsk": 500.0,
+    "SecretLeakPerSecond": 0.002,
+    "TreatyBetrayalShare": 0.6,
+
+    // A god whose followers another saved in great need owes it a favour, up to MaxFavours. A promise of
+    // assistance must be kept within AssistSeconds; a broken promise or a refused favour costs BrokenPromiseTrustLoss.
+    "MaxFavours": 3.0,
+    "AssistSeconds": 120.0,
+    "BrokenPromiseTrustLoss": 0.2,
+
+    // The council first sits after FirstCouncilSeconds, then every CouncilIntervalSeconds on a tabled motion;
+    // betrayals, new dominance and disasters summon it, no sooner than CouncilCooldownSeconds after the last.
+    // Votes stay open VoteSeconds; decrees hold DecreeSeconds.
+    "FirstCouncilSeconds": 300.0,
+    "CouncilIntervalSeconds": 300.0,
+    "CouncilCooldownSeconds": 180.0,
+    "VoteSeconds": 60.0,
+    "DecreeSeconds": 480.0,
+
+    // A condemned god loses CondemnTrustLoss of every god's trust and its followers gain CondemnDoubt; defying a
+    // decree costs DefianceTrustLoss. Under a coordinated disaster response, help where disaster struck within
+    // StruckSeconds costs CoordinatedCostFactor. Absorbing an ally turns AbsorbShare of its followers where the
+    // absorbing god leads.
+    "CondemnTrustLoss": 0.15,
+    "CondemnDoubt": 0.08,
+    "DefianceTrustLoss": 0.15,
+    "CoordinatedCostFactor": 0.5,
+    "StruckSeconds": 180.0,
+    "AbsorbShare": 0.4
+  }
 }

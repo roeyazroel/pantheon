@@ -121,6 +121,9 @@ public partial class GameRoot : Node3D
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);
         faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);
+        var politics = new PoliticsController { Name = "Politics" };
+        AddChild(politics);
+        politics.Setup(_session, _camera, _diplomacy, SetStatus, options);
         var society = new SocietyController { Name = "Society" };
         AddChild(society);
         society.Setup(_session, _camera, SetStatus, options);
@@ -180,7 +183,7 @@ public partial class GameRoot : Node3D
         _divine.Process(delta, cursor, _camera.Model.Distance);
         if (_diplomacy.PanelVisible)
         {
-            _diplomacy.ShowEntries(Pantheon.Game.Diplomacy.DiplomacyReadout.Build(_session), _session.LocalGod?.RefugeePolicy);
+            _diplomacy.ShowEntries(Pantheon.Game.Diplomacy.DiplomacyReadout.Build(_session, _diplomacy.Choice), _session.LocalGod?.RefugeePolicy);
         }
 
         var cursorRegion = RegionAt(cursor);

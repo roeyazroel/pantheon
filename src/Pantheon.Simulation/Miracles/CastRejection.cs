@@ -35,4 +35,7 @@ public enum CastRejection
 
     /// <summary>The god lacks the Divine Power.</summary>
     NotEnoughPower,
+
+    /// <summary>A territorial agreement keeps the god out of the land where it would cast (ADR-025).</summary>
+    TreatyForbids,
 }

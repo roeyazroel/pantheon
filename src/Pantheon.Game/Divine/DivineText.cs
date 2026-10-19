@@ -106,6 +106,7 @@ public static class DivineText
                 name,
                 check.Miracle?.InfluenceRequirement ?? 0f),
             CastRejection.NotEnoughPower => Format("Not enough Divine Power: {0} costs {1:0} here, you have {2:0}", name, check.Cost, power),
+            CastRejection.TreatyForbids => Format("{0}: a territorial agreement keeps you out of this land (break it in P)", name),
         };
     }
 

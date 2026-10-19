@@ -30,9 +30,10 @@ public static class WorldSaveSerializer
     /// part 2) added rivers and lakes, regions' fresh water and floods, and settlements' water;
     /// version 15 (part 3) added settlements' society: safety, happiness, wealth, education,
     /// stability, technology, buildings and priority; version 16 (part 4) added beliefs' dependency
-    /// and resentment, settlements' culture, and gods' conduct and traits.
+    /// and resentment, settlements' culture, and gods' conduct and traits; version 17 (part 5) added
+    /// treaties, favours, promises and the Divine Council.
     /// </summary>
-    public const int CurrentSaveVersion = 16;
+    public const int CurrentSaveVersion = 17;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

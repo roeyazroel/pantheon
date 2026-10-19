@@ -34,6 +34,10 @@ public static class DiplomacyText
         DiplomaticCommandKind.RequestPeace => "Request peace",
         DiplomaticCommandKind.Accept => "Accept",
         DiplomaticCommandKind.Decline => "Decline",
+        DiplomaticCommandKind.ProposeTreaty => "Propose a treaty",
+        DiplomaticCommandKind.BreakTreaty => "Break the treaty",
+        DiplomaticCommandKind.Request => "Ask",
+        DiplomaticCommandKind.Absorb => "Absorb its followers",
     };
 
     /// <summary>How one god feels about another, in a few words.</summary>
@@ -180,6 +184,10 @@ public static class DiplomacyText
         DiplomacyRejection.AlreadyProposed => Format("A proposal between you and {0} is already waiting", other),
         DiplomacyRejection.NoProposal => Format("{0} has proposed nothing", other),
         DiplomacyRejection.TooSoon => Format("Your standing with {0} changed too recently", other),
+        DiplomacyRejection.TreatyForbids => Format("A treaty with {0} forbids it: break the treaty first", other),
+        DiplomacyRejection.InvalidTerms => "Those terms are not valid",
+        DiplomacyRejection.NoTreaty => Format("There is no such treaty with {0}", other),
+        DiplomacyRejection.CannotGrant => "You cannot grant that now",
     };
 
     /// <summary>One act, with the places it concerned.</summary>
@@ -202,6 +210,14 @@ public static class DiplomacyText
             DiplomaticAct.TurnedAway => "turned its followers away" + (where.Length > 0 ? " from" + where : string.Empty),
             DiplomaticAct.CreatureDefeated => "let your Creature beat its Creature",
             DiplomaticAct.TookHolySite => "took its holy site",
+            DiplomaticAct.Rescued => "saved its followers in great need" + (where.Length > 0 ? " in" + where : string.Empty),
+            DiplomaticAct.BrokeTreaty => "broke a treaty with it",
+            DiplomaticAct.BrokePromise => "broke a promise to it",
+            DiplomaticAct.VotedAgainst => "voted against it in the council",
+            DiplomaticAct.DefiedCouncil => "defied the council",
+            DiplomaticAct.KeptWord => "kept your word to it",
+            DiplomaticAct.SignedTreaty => "signed a treaty with it",
+            DiplomaticAct.PlottedAgainst => "plotted against it in secret",
         };
     }
 

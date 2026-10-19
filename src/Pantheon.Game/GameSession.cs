@@ -235,6 +235,15 @@ public sealed class GameSession
     /// <returns>The verdict.</returns>
     public T Command<T>(Func<Simulation.Systems.Authorities, ICollection<Domain.Events.WorldEvent>, T> command) => Chronicled(() => command(_authorities, _queue.Pending));
 
+    /// <summary>Asks the authorities without changing the world, for readouts (ADR-025).</summary>
+    /// <typeparam name="T">The answer.</typeparam>
+    /// <param name="query">The question, given the authorities.</param>
+    /// <returns>The answer.</returns>
+    public T Inspect<T>(Func<Simulation.Systems.Authorities, T> query) => query(_authorities);
+
+    /// <summary>The politics system (ADR-025), for the debug tool that summons the council.</summary>
+    internal Simulation.Politics.PoliticsSystem? Politics => _engine.Politics;
+
     /// <summary>Whether the local player's god may take up a domain now.</summary>
     /// <param name="domain">The domain.</param>
     /// <returns>Why it would be refused, or <see cref="Simulation.Domains.DomainRejection.None"/>.</returns>

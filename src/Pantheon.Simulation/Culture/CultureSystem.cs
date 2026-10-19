@@ -157,15 +157,22 @@ public sealed class CultureSystem : ISimulationSystem
             }
 
             var zeal = SimMath.Clamp01(faithful.Adherence) * SimMath.Clamp01(faithful.Faith);
-            foreach (var target in Neighbours(world, home, _rules.MissionRange))
+            var reached = Neighbours(world, home, _rules.MissionRange);
+            reached.AddRange(world.Settlements.FindAll(s => s.Id != home.Id && s.Population > 0 && !reached.Contains(s) && Politics.TreatyModel.HasAccess(world, godId, s)));
+            foreach (var target in reached)
             {
+                if (Politics.CouncilModel.IsNeutral(world, target.Id))
+                {
+                    continue;
+                }
+
                 var free = 1f - BeliefModel.TotalAdherence(target.Beliefs) - (target.OldFaith?.Share ?? 0f);
                 if (free <= 0f)
                 {
                     continue;
                 }
 
-                var isMain = CultureModel.Main(target)?.GodId == godId;
+                var isMain = CultureModel.Main(target)?.GodId == godId || Politics.TreatyModel.HasAccess(world, godId, target);
                 var won = Math.Min(free, _rules.MissionPerSecond * zeal * free * CultureModel.PullFactor(_rules, target.Culture, isMain) * seconds);
                 if (won <= 0f)
                 {

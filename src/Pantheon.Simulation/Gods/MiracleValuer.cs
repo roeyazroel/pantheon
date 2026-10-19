@@ -17,6 +17,9 @@ namespace Pantheon.Simulation.Gods;
 /// </summary>
 internal sealed class MiracleValuer
 {
+    // A partner's settlement counts as struck by disaster for this many ticks (three minutes).
+    private const long StruckTicks = 1800;
+
     private const float MaxPopulationFactor = 2f;
 
     // A village whose own region lies this low is within a wave's reach.
@@ -44,6 +47,14 @@ internal sealed class MiracleValuer
         {
             if (belief.GodId == god.Id)
             {
+                continue;
+            }
+
+            if (Politics.TreatyModel.Assists(world, god.Id, belief.GodId) && Politics.CouncilModel.Struck(world, settlement, world.Tick - StruckTicks))
+            {
+                // A pact to answer disasters among the partner's people (ADR-025): their need counts half as its own.
+                mine += 0.5f * belief.Adherence;
+                allies += 0.5f * belief.Adherence;
                 continue;
             }
 

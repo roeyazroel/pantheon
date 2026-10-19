@@ -252,7 +252,8 @@ public sealed class MigrationSystem : ISimulationSystem
             return;
         }
 
-        var policy = hostGod is { } godId && godId != theirs && GodStanding.Find(world, godId) is { } god ? god.RefugeePolicy : RefugeePolicy.Welcome;
+        var policy = hostGod is { } godId && godId != theirs && GodStanding.Find(world, godId) is { } god
+            && !(theirs is { } migrants && Politics.TreatyModel.WelcomesMigrants(world, godId, migrants)) ? god.RefugeePolicy : RefugeePolicy.Welcome;
         switch (policy)
         {
             case RefugeePolicy.TurnAway:

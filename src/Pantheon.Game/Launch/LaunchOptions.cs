@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Migration;
 using Pantheon.Domain.World;
@@ -14,7 +15,7 @@ namespace Pantheon.Game.Launch;
 /// <c>godot --path game -- --seed=1234 --terrain=fallback</c>. Both <c>--name=value</c> and
 /// <c>--name value</c> are accepted. Invalid input produces a warning rather than an error.
 /// </summary>
-public sealed record LaunchOptions
+public sealed partial record LaunchOptions
 {
     /// <summary>Option names (without the leading <c>--</c>) that <see cref="Parse"/> understands.</summary>
     public static IReadOnlySet<string> KnownOptions { get; } = new HashSet<string>(StringComparer.Ordinal)
@@ -54,10 +55,7 @@ public sealed record LaunchOptions
         "domains",
         "domains-panel",
         "settings-page",
-        "priority",
-        "settlement-panel",
-        "doctrine",
-    };
+    }.Union(ExpansionOptions()).ToHashSet(StringComparer.Ordinal);
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
     public static WorldSeed DefaultSeed { get; } = new(1234);
@@ -176,14 +174,6 @@ public sealed record LaunchOptions
     /// <summary>Whether the settings page is open from the start, for captures.</summary>
     public bool SettingsPage { get; init; }
 
-    /// <summary>A priority the player's god asks of the focused settlement at the start (ADR-023).</summary>
-    public Domain.Society.SettlementPriority? Priority { get; init; }
-
-    /// <summary>Whether the Settlements panel is open at the start, on the focused settlement.</summary>
-    public bool SettlementPanel { get; init; }
-
-    /// <summary>A doctrine, or secularism, the focused settlement holds at the start (ADR-024).</summary>
-    public CultureAtStart? Doctrine { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -237,6 +227,11 @@ public sealed record LaunchOptions
         if (string.IsNullOrWhiteSpace(value))
         {
             return Warn(options, warnings, $"Option '--{name}' needs a value.");
+        }
+
+        if (ApplyExpansion(options, name, value, warnings) is { } expanded)
+        {
+            return expanded;
         }
 
         switch (name)
@@ -367,16 +362,6 @@ public sealed record LaunchOptions
                 return OnOff(value) is { } panel ? options with { DomainsPanel = panel } : Warn(options, warnings, $"'--domains-panel' needs on or off, got '{value}'.");
             case "settings-page":
                 return OnOff(value) is { } settings ? options with { SettingsPage = settings } : Warn(options, warnings, $"'--settings-page' needs on or off, got '{value}'.");
-            case "priority":
-                return Enum.TryParse<Domain.Society.SettlementPriority>(value.Trim(), ignoreCase: true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(value.Trim(), out _)
-                    ? options with { Priority = priority }
-                    : Warn(options, warnings, $"'--priority' needs a priority such as Temple or Preparation, got '{value}'.");
-            case "doctrine":
-                return Enum.TryParse<CultureAtStart>(value.Trim(), ignoreCase: true, out var doctrine) && Enum.IsDefined(doctrine) && !int.TryParse(value.Trim(), out _)
-                    ? options with { Doctrine = doctrine }
-                    : Warn(options, warnings, $"'--doctrine' needs a doctrine such as Charity or Militarism, or Secular, got '{value}'.");
-            case "settlement-panel":
-                return OnOff(value) is { } open ? options with { SettlementPanel = open } : Warn(options, warnings, $"'--settlement-panel' needs on or off, got '{value}'.");
             case "guide":
                 return OnOff(value) is { } guide ? options with { Guide = guide } : Warn(options, warnings, $"'--guide' needs on or off, got '{value}'.");
             case "upnp":

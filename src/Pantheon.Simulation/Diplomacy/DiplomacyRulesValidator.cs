@@ -41,6 +41,50 @@ public static class DiplomacyRulesValidator
             errors.RequireShare(value, name);
         }
 
+        ValidatePolitics(rules.Politics, errors);
         errors.ThrowIfAny("diplomacy rules", nameof(rules));
+    }
+
+    /// <summary>Checks treaties, favours and the council (ADR-025).</summary>
+    private static void ValidatePolitics(Domain.Politics.PoliticsRules? politics, RuleErrors errors)
+    {
+        if (politics is null)
+        {
+            errors.Add("Politics is required.");
+            return;
+        }
+
+        foreach (var (value, name) in new[]
+        {
+            (politics.MaxTreatySeconds, nameof(politics.MaxTreatySeconds)),
+            (politics.MaxTribute, nameof(politics.MaxTribute)),
+            (politics.MaxPowerAsk, nameof(politics.MaxPowerAsk)),
+            (politics.MaxFavours, nameof(politics.MaxFavours)),
+            (politics.AssistSeconds, nameof(politics.AssistSeconds)),
+            (politics.FirstCouncilSeconds, nameof(politics.FirstCouncilSeconds)),
+            (politics.CouncilIntervalSeconds, nameof(politics.CouncilIntervalSeconds)),
+            (politics.CouncilCooldownSeconds, nameof(politics.CouncilCooldownSeconds)),
+            (politics.VoteSeconds, nameof(politics.VoteSeconds)),
+            (politics.DecreeSeconds, nameof(politics.DecreeSeconds)),
+            (politics.StruckSeconds, nameof(politics.StruckSeconds)),
+        })
+        {
+            errors.RequirePositive(value, $"Politics.{name}");
+        }
+
+        foreach (var (value, name) in new[]
+        {
+            (politics.SecretLeakPerSecond, nameof(politics.SecretLeakPerSecond)),
+            (politics.TreatyBetrayalShare, nameof(politics.TreatyBetrayalShare)),
+            (politics.BrokenPromiseTrustLoss, nameof(politics.BrokenPromiseTrustLoss)),
+            (politics.CondemnTrustLoss, nameof(politics.CondemnTrustLoss)),
+            (politics.CondemnDoubt, nameof(politics.CondemnDoubt)),
+            (politics.DefianceTrustLoss, nameof(politics.DefianceTrustLoss)),
+            (politics.CoordinatedCostFactor, nameof(politics.CoordinatedCostFactor)),
+            (politics.AbsorbShare, nameof(politics.AbsorbShare)),
+        })
+        {
+            errors.RequireShare(value, $"Politics.{name}");
+        }
     }
 }

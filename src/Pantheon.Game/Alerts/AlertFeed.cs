@@ -160,6 +160,9 @@ public sealed class AlertFeed
                 return SocietyAlerts.Describe(worldEvent, world, localGodId);
             case Rebellion or SecularismRose or DoctrineEmbraced or TraitEarned:
                 return CultureAlerts.Describe(worldEvent, world, localGodId);
+            case TreatySigned or TreatyEnded or TreatyRevealed or TreatyInvoked or FavourOwed or RequestAnswered or ObligationEnded
+                or CouncilSummoned or CouncilClosed or CouncilDefied or AllyAbsorbed:
+                return PoliticsAlerts.Describe(worldEvent, world, localGodId);
             case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
                 return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             default:
@@ -193,8 +196,11 @@ public sealed class AlertFeed
             DiplomaticCommandKind.RequestPeace => (key, Format("{0} asks for peace (P to answer).", actor), AlertSeverity.Warning, null),
             DiplomaticCommandKind.BreakAlliance => (key, Format("{0} has broken your alliance!", actor), AlertSeverity.Danger, null),
             DiplomaticCommandKind.DeclareWar => (key, change.Betrayal ? Format("{0} betrayed your alliance and declared war!", actor) : Format("{0} has declared war on you!", actor), AlertSeverity.Danger, null),
-            DiplomaticCommandKind.Accept => (key, change.Status == DiplomaticStatus.Alliance ? Format("{0} accepted your alliance.", actor) : Format("{0} accepted peace.", actor), AlertSeverity.Good, null),
-            DiplomaticCommandKind.Decline => (key, Format("{0} declined your proposal.", actor), AlertSeverity.Info, null),
+            DiplomaticCommandKind.Accept => change.Answered is ProposalKind.Treaty or ProposalKind.Request ? null
+                : (key, change.Status == DiplomaticStatus.Alliance ? Format("{0} accepted your alliance.", actor) : Format("{0} accepted peace.", actor), AlertSeverity.Good, null),
+            DiplomaticCommandKind.Decline => change.Answered is ProposalKind.Request ? null : (key, Format("{0} declined your proposal.", actor), AlertSeverity.Info, null),
+            DiplomaticCommandKind.ProposeTreaty or DiplomaticCommandKind.Request => PoliticsAlerts.Proposal(world, change.ActorGodId, localGodId!.Value, key),
+            DiplomaticCommandKind.BreakTreaty or DiplomaticCommandKind.Absorb => null,
         };
     }
 

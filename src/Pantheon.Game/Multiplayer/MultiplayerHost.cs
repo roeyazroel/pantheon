@@ -81,7 +81,7 @@ public sealed class MultiplayerHost : IDisposable
         var events = _session.DrainOutbox();
         if (events.Count > 0 && _seats.Count > 0)
         {
-            Broadcast(new EventBatch(_session.World.Tick, EventCodec.Wrap(events)));
+            SendEvents(events);
         }
 
         Replicate(Math.Max(0.0, realDeltaSeconds));
@@ -166,7 +166,7 @@ public sealed class MultiplayerHost : IDisposable
                 statuses.Add(Format("{0} left; the AI plays {1} again", left.Name, GodName(left.GodId)));
                 _transport.Disconnect(peerId);
                 break;
-            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent or PriorityIntent when seated:
+            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent or PriorityIntent or CouncilIntent when seated:
                 Answer(peerId, seat!.GodId, message);
                 _replicator.Hurry();
                 break;
@@ -200,7 +200,7 @@ public sealed class MultiplayerHost : IDisposable
         _seats[peerId] = new PlayerSeat(peerId, name, god.Id);
         _departed.Remove(name);
         Send(peerId, new Welcome(peerId, god.Id));
-        Send(peerId, CreateSnapshot());
+        Send(peerId, SnapshotFor(peerId));
         _replicator.Add(peerId, _session.World);
         PublishPlayers();
         statuses.Add(Format("{0} joined and plays {1}", name, god.Name));
@@ -213,7 +213,8 @@ public sealed class MultiplayerHost : IDisposable
         {
             CastIntent cast => (cast.RequestId, SessionCommands.CastMiracleAs(_session, godId, cast.MiracleId, cast.Target)),
             CreatureIntent creature => (creature.RequestId, SessionCommands.CommandCreatureAs(_session, godId, creature.Kind, creature.Target)),
-            DiplomacyIntent move => (move.RequestId, SessionCommands.CommandDiplomacyAs(_session, godId, move.OtherGodId, move.Kind)),
+            DiplomacyIntent move => (move.RequestId, Politics.PoliticsCommands.DiplomacyAs(_session, godId, new Domain.Diplomacy.DiplomaticCommand(godId, move.OtherGodId, move.Kind, move.Terms, move.TreatyId, move.Ask))),
+            CouncilIntent council => (council.RequestId, Politics.PoliticsCommands.CouncilAs(_session, godId, council.Motion, council.Choice)),
             RefugeeIntent policy => (policy.RequestId, MigrationCommands.SetPolicyAs(_session, godId, policy.Policy)),
             DomainIntent domain => (domain.RequestId, Domains.DomainCommands.ChooseAs(_session, godId, domain.Domain)),
             PriorityIntent priority => (priority.RequestId, Society.SocietyCommands.SetPriorityAs(_session, godId, priority.SettlementId, priority.Priority)),
@@ -275,7 +276,11 @@ public sealed class MultiplayerHost : IDisposable
         }
 
         PublishPlayers();
-        Broadcast(CreateSnapshot());
+        foreach (var playerId in _seats.Keys)
+        {
+            Send(playerId, SnapshotFor(playerId));
+        }
+
         _replicator.SyncedAll(_session.World);
     }
 
@@ -288,27 +293,48 @@ public sealed class MultiplayerHost : IDisposable
         }
 
         var (snapshots, updates) = _replicator.Due(_session.World, seconds);
+        var secrets = SecretFilter.HasSecrets(_session.World);
         if (snapshots.Count > 0)
         {
-            var packet = MessageCodec.Encode(CreateSnapshot());
+            var snapshot = CreateSnapshot();
+            var packet = MessageCodec.Encode(snapshot);
             foreach (var playerId in snapshots)
             {
-                _transport.Send(playerId, packet, Delivery.Reliable);
+                _transport.Send(playerId, secrets ? MessageCodec.Encode(snapshot with { World = SecretFilter.World(snapshot.World, GodOf(playerId)) }) : packet, Delivery.Reliable);
             }
         }
 
-        // The same part goes to several players as one encoded packet.
+        // The same part goes to several players as one encoded packet; diplomacy with secrets is filtered for each.
         var encoded = new Dictionary<(WorldSection, string), byte[]>();
         foreach (var (playerId, update) in updates)
         {
-            if (!encoded.TryGetValue((update.Section, update.Data), out var packet))
+            var mine = secrets && update.Section == WorldSection.Diplomacy ? update with { Data = SecretFilter.Diplomacy(update.Data, GodOf(playerId)) } : update;
+            if (!encoded.TryGetValue((mine.Section, mine.Data), out var packet))
             {
-                packet = encoded[(update.Section, update.Data)] = MessageCodec.Encode(update);
+                packet = encoded[(mine.Section, mine.Data)] = MessageCodec.Encode(mine);
             }
 
-            _transport.Send(playerId, packet, update.Section == WorldSection.CreatureMotion ? Delivery.Unreliable : Delivery.Reliable);
+            _transport.Send(playerId, packet, mine.Section == WorldSection.CreatureMotion ? Delivery.Unreliable : Delivery.Reliable);
         }
     }
+
+    /// <summary>Sends the events to every player; the events of a secret treaty only to its parties (ADR-025).</summary>
+    private void SendEvents(IReadOnlyList<Domain.Events.WorldEvent> events)
+    {
+        if (!SecretFilter.HasSecrets(events))
+        {
+            Broadcast(new EventBatch(_session.World.Tick, EventCodec.Wrap(events)));
+            return;
+        }
+
+        foreach (var seat in _seats.Values)
+        {
+            Send(seat.PlayerId, new EventBatch(_session.World.Tick, EventCodec.Wrap(SecretFilter.Events(events, seat.GodId))));
+        }
+    }
+
+    /// <summary>The god a player plays; 0 for an unseated one, which is party to nothing.</summary>
+    private int GodOf(int playerId) => _seats.TryGetValue(playerId, out var seat) ? seat.GodId : 0;
 
     /// <summary>Tells the session and every player who plays which god.</summary>
     private void PublishPlayers()
@@ -332,6 +358,13 @@ public sealed class MultiplayerHost : IDisposable
 
         seats.AddRange(_seats.Values.OrderBy(s => s.PlayerId));
         return seats;
+    }
+
+    /// <summary>The whole world now as one player may see it: without secret treaties it is not party to.</summary>
+    private Snapshot SnapshotFor(int playerId)
+    {
+        var snapshot = CreateSnapshot();
+        return SecretFilter.HasSecrets(_session.World) ? snapshot with { World = SecretFilter.World(snapshot.World, GodOf(playerId)) } : snapshot;
     }
 
     /// <summary>The whole world now, with the host's clock.</summary>

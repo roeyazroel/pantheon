@@ -136,6 +136,19 @@ domains:
 - **Reputation.** What you do earns traits: compassionate, cruel, vengeful, merciful, generous,
   deceptive, honest, chaotic or ambitious. Villages read their god by them.
 
+**Milestone 15, part 5 (Treaties and the Divine Council)** gives the gods politics beyond
+alliance and war:
+
+- **Treaties.** Non-aggression, defensive and mutual defence pacts, joint wars, shared influence,
+  religious access, Creature truces, disaster assistance, territorial agreements, tributes and
+  migration agreements, for a term or until broken. They may be signed in secret.
+- **Betrayal.** Breaking a treaty costs the partner's trust and your reputation.
+- **Favours.** Save another god's people in great need and it owes you. Call the favour in for
+  power, war, its vote, its absence or its help.
+- **The Divine Council (U).** Betrayals, a rising god and disasters summon it. It votes, in public
+  or in secret, to condemn a god, protect a holy site, prohibit a practice, coordinate disaster
+  response, make war together or declare a village neutral.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -208,6 +221,10 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- treaties and the council: each treaty's effect, terms, breaking, secrets and their leaks,
+  defensive pacts, tributes, favours, requests and promises, absorbing an ally, what summons the
+  council, public and secret ballots, decrees and defiance, the AI's offers, answers and votes,
+  the panels, alerts, history, and secrets kept from other players;
 - culture: doctrines and what they follow, secularism and its stages, dependency and resentment,
   missionaries, charity, revolts, the traits gods earn by their acts, what witnesses take from a
   miracle, and how culture is shown (panel, HUD, diplomacy panel, alerts, history, overlay);
@@ -252,6 +269,7 @@ covers:
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
 | Show or hide the diplomacy panel | P |
+| Show or hide the Divine Council: the vote in session, decrees, and motions to table | U |
 | Toggle region boundaries | B |
 | Toggle the debug overlay | F1 |
 | Next region debug map layer, then off | F3 |
@@ -271,6 +289,7 @@ covers:
 | Flood the nearest river, or send a wave over the land at the cursor (debug) | L |
 | Send 20 people out of the village under the cursor (debug) | M |
 | Bring the nearest other Creature to yours, so they meet (debug) | K |
+| Summon the Divine Council now, on the oldest tabled motion or to condemn your strongest rival (debug) | J |
 | Pause menu: resume, save, load, main menu, quit (when no miracle is selected) | Esc |
 | The world's history | H |
 
@@ -413,6 +432,64 @@ each move you can make now. Your status also ends the rival's line on the HUD.
 
 The rules are in `game/Data/diplomacy.json`, and each personality's diplomatic weights are in
 `game/Data/god_ai.json`.
+
+### Treaties
+
+Under "Treaties and requests" on a god's card, propose any treaty the god could accept now. The
+row at the top of the panel chooses how long your treaties last (two minutes up to "until
+broken") and whether you sign them in secret.
+
+| Treaty | What it does |
+| --- | --- |
+| Non-aggression pact | Neither may declare war on the other until the pact is broken. Signing it in war makes peace. |
+| Defensive pact | You defend the other god: when its enemy (or anyone) declares war on it, you join the war. |
+| Mutual defence pact | Each joins the other's wars against any aggressor. |
+| Joint war | Both make war on a god you name, and neither may make a separate peace. |
+| Shared influence | Each casts in the other's influence as an ally would. |
+| Religious access | Your temples' missionaries reach every village the other leads, and its people are open to you. |
+| Creature truce | Your Creatures never fight. |
+| Disaster assistance | Each answers disasters among the other's people. |
+| Territorial agreement | Neither casts miracles on the villages the other leads. |
+| Tribute | One pays the other Divine Power every minute; a payer that cannot pay breaks it. |
+| Migration agreement | Each welcomes the other's migrants, whatever its refugee policy. |
+
+- **Secret treaties** are known only to the two gods until they are invoked or leak. The god a
+  secret pact was aimed at remembers the plot; if it was your ally, you betrayed it.
+- **Breaking a treaty** (Break, on your treaty) is a betrayal. The partner trusts you much less,
+  and so does every god that knew of it. Your word counts for less in every later treaty.
+- **Favours.** When you save another god's followers in great need, it owes you a favour. Its
+  card then offers to call it in: Divine Power, war on your enemy, its vote at the council, a
+  territorial agreement, or help for your people. A god that refuses what it owes is remembered
+  for it. You may owe favours too.
+- **Absorbing an ally.** You may break an alliance and take a share of your ally's followers
+  wherever you are followed more than it is. It is a betrayal, and the alternative to sharing a
+  victory.
+
+### The Divine Council
+
+Press U for the council.
+
+- **What summons it:**
+  - a betrayal summons it to condemn the betrayer;
+  - a god rising to dominate summons it to make war on that god together;
+  - a disaster summons it to coordinate the response;
+  - otherwise a regular session every five minutes takes up a motion a god has tabled.
+- **Voting:** the vote lasts a minute. A motion passes with more votes for than against and at
+  least two for. Under a public ballot the gods remember who voted against them; a secret ballot
+  shows only the count. A god that promised you its vote must vote as you do.
+- **Decrees:**
+
+  | Decree | Effect, for eight minutes |
+  | --- | --- |
+  | Condemn a god | Every god trusts it less, its followers doubt it, and AI gods turn on it more readily. |
+  | Protect a holy site | No harmful miracle may fall there. |
+  | Prohibit smiting, cataclysms or terror | Lightning and judgement, fire, quakes and floods, or terror, everywhere. |
+  | Coordinate the response to disasters | Help for a village struck lately costs half. |
+  | Pantheon-wide war | Every god that voted for it goes to war with the god named. |
+  | Neutral territory | No god may convert or strike in the village. |
+
+- **Defiance:** decrees bind by reputation. Defying one is possible, but every god trusts you
+  less.
 
 ## Weather
 
@@ -831,6 +908,9 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--priority=<priority>` | Ask the focused settlement to put something first (Food, Health, Growth, Worship, Defence, Preparation, Expansion, Temple). |
 | `--settlement-panel=on\|off` | Open the Settlements panel (N) on the focused settlement at the start. |
 | `--doctrine=<doctrine>\|secular` | Give the focused settlement a doctrine in full (Pacifism, Militarism, Sacrifice, Charity, NatureWorship, KnowledgeSeeking, Expansionism, Isolationism), or turn it against the gods. |
+| `--treaty=<treaty>` | Sign a treaty with your strongest rival at the start (NonAggression, DefensivePact, JointWar, SharedInfluence, ReligiousAccess, CreatureNonAggression, DisasterAssistance, MutualDefense, TerritorialAgreement, Tribute, MigrationAgreement). |
+| `--council-panel=on\|off` | Open the council panel (U) at the start. |
+| `--summon-council=on\|off` | Summon the Divine Council at the start. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
 | `--menu=on\|off` | Start on the start screen (the default without options) or not. |

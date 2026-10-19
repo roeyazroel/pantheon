@@ -28,8 +28,10 @@ namespace Pantheon.Simulation.Miracles;
 /// </summary>
 public sealed class MiracleCaster
 {
-    // A miracle counts as help to a rival's followers only when their food, health or water need is at least this.
+    // A miracle counts as help to a rival's followers only when their food, health or water need is at least this,
+    // and as a rescue that makes their god owe a favour from MajorNeed (spec §41).
     private const float NeedForHelp = 0.5f;
+    private const float MajorNeed = 0.75f;
 
     private readonly DivineRules _rules;
     private readonly SettlementRules _settlementRules;
@@ -38,6 +40,7 @@ public sealed class MiracleCaster
     private readonly DisasterRules? _disasters;
     private readonly DomainRules? _domains;
     private readonly HolySiteRules? _holySites;
+    private readonly Domain.Politics.PoliticsRules? _politics;
     private readonly MiracleEffects _effects;
 
     /// <summary>Creates a caster over validated content.</summary>
@@ -50,8 +53,10 @@ public sealed class MiracleCaster
     /// <param name="creatures">Creature rules, for the miracles that reach Creatures (ADR-021); <c>null</c> where there are no Creatures.</param>
     /// <param name="domains">Domain rules, for domain costs and boons (ADR-021); <c>null</c> for none. A signature miracle always needs its domain.</param>
     /// <param name="holySites">Holy site rules, for the cheaper miracles of a site's keeper (ADR-021); <c>null</c> for none.</param>
-    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null)
+    /// <param name="politics">Politics rules, for the council's decrees and favours (ADR-025); <c>null</c> for none.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null, Domain.Politics.PoliticsRules? politics = null)
     {
+        _politics = politics;
         _ledger = ledger;
         _disasters = disasters;
         _domains = domains;
@@ -97,7 +102,7 @@ public sealed class MiracleCaster
         var strongest = 0f;
         foreach (var rival in world.Gods)
         {
-            if (rival.Id != godId && !DiplomacyModel.AreAllied(world, godId, rival.Id))
+            if (rival.Id != godId && !Politics.TreatyModel.SharesInfluence(world, godId, rival.Id))
             {
                 strongest = Math.Max(strongest, InfluenceField.Build(_rules, world, rival.Id).At(target));
             }
@@ -129,7 +134,9 @@ public sealed class MiracleCaster
         var inWorld = IsInsideWorld(world.Regions, request.Target);
         var influence = inWorld ? InfluenceField.Build(_rules, world, god.Id).At(request.Target) : 0f;
         var rivals = inWorld ? RivalInfluence(world, god.Id, request.Target) : 0f;
-        var cost = ComputeCost(_rules, miracle, influence, rivals) * DomainModel.CostFactor(_domains, god, miracle) * HolySiteModel.CostFactor(_holySites, world, god.Id);
+        var reach = Reach(miracle);
+        var cost = ComputeCost(_rules, miracle, influence, rivals) * DomainModel.CostFactor(_domains, god, miracle) * HolySiteModel.CostFactor(_holySites, world, god.Id)
+            * Politics.CouncilModel.CostFactor(_politics, world, miracle, request.Target, reach);
         var rejection =
             issuerGodId is { } issuer && issuer != god.Id ? CastRejection.NotAuthorized
             : miracle.RequiresDomain && !DomainModel.Holds(god, miracle.Domain) ? CastRejection.DomainRequired
@@ -138,6 +145,7 @@ public sealed class MiracleCaster
             : !inWorld ? CastRejection.OutsideWorld
             : influence < miracle.InfluenceRequirement ? CastRejection.OutsideInfluence
             : !_effects.HasTarget(world, god.Id, miracle, request.Target) ? CastRejection.NothingThere
+            : Politics.TreatyModel.ForbiddenLand(world, god.Id, request.Target, reach) is not null ? CastRejection.TreatyForbids
             : god.DivinePower < cost ? CastRejection.NotEnoughPower
             : CastRejection.None;
         return new CastCheck(rejection, miracle, influence, cost, cooldown);
@@ -187,7 +195,8 @@ public sealed class MiracleCaster
 
         if (!unseen)
         {
-            NoteByRivals(world, miracle, god.Id, affected, needs);
+            NoteByRivals(world, miracle, god.Id, affected, needs, events);
+            Politics.Defiance.Note(_ledger, world, god.Id, miracle, request.Target, reach, affected, events);
         }
 
         if (deaths > 0 && _domains is not null && DomainModel.Holds(god, GodDomain.Death))
@@ -341,7 +350,7 @@ public sealed class MiracleCaster
     /// Every other god whose followers the miracle reached notes it once: harm when it struck them,
     /// help when they were in real need (spec §41), and courting otherwise (ADR-012).
     /// </summary>
-    private void NoteByRivals(WorldState world, MiracleDefinition miracle, int godId, List<int> affected, Dictionary<int, float> needs)
+    private void NoteByRivals(WorldState world, MiracleDefinition miracle, int godId, List<int> affected, Dictionary<int, float> needs, ICollection<WorldEvent> events)
     {
         if (_ledger is null || affected.Count == 0)
         {
@@ -368,8 +377,14 @@ public sealed class MiracleCaster
                     continue;
                 }
 
-                var act = harms ? DiplomaticAct.Harmed : needs.GetValueOrDefault(id) >= NeedForHelp ? DiplomaticAct.Helped : DiplomaticAct.Courted;
+                var need = needs.GetValueOrDefault(id);
+                var act = harms ? DiplomaticAct.Harmed : need >= MajorNeed && settlement.Population > 0 ? DiplomaticAct.Rescued : need >= NeedForHelp ? DiplomaticAct.Helped : DiplomaticAct.Courted;
                 _ledger.Record(world, rival.Id, godId, act, id);
+                if (act == DiplomaticAct.Rescued)
+                {
+                    events.Add(new FavourOwed { Tick = world.Tick, CreditorGodId = godId, DebtorGodId = rival.Id, SettlementId = id });
+                }
+
                 break;
             }
         }

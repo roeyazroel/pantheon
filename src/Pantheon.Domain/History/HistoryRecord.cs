@@ -83,6 +83,22 @@ public enum HistoryKind
 
     /// <summary>A settlement embraced a doctrine; <see cref="HistoryRecord.Count"/> is the doctrine's number (ADR-024).</summary>
     Doctrine,
+
+    /// <summary>Two gods signed a public treaty; <see cref="HistoryRecord.Count"/> is the treaty kind's number (ADR-025).</summary>
+    Treaty,
+
+    /// <summary>A secret treaty between two gods came to light; <see cref="HistoryRecord.Count"/> is its kind's number (ADR-025).</summary>
+    Revelation,
+
+    /// <summary>
+    /// The Divine Council passed a motion (ADR-025). <see cref="HistoryRecord.GodId"/> is the god it
+    /// names and <see cref="HistoryRecord.SettlementId"/> the settlement; <see cref="HistoryRecord.Count"/>
+    /// is the motion kind's number times 1000 plus the holy site's id or the practice's number.
+    /// </summary>
+    Decree,
+
+    /// <summary>A god absorbed its ally's followers; <see cref="HistoryRecord.Count"/> is how many turned (ADR-025).</summary>
+    Absorption,
 }
 
 /// <summary>

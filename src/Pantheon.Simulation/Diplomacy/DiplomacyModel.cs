@@ -27,6 +27,14 @@ public static class DiplomacyModel
         DiplomaticAct.TurnedAway => 0.3f,
         DiplomaticAct.CreatureDefeated => 0.4f,
         DiplomaticAct.TookHolySite => 0.5f,
+        DiplomaticAct.Rescued => 0.6f,
+        DiplomaticAct.BrokeTreaty => 0.8f,
+        DiplomaticAct.BrokePromise => 0.5f,
+        DiplomaticAct.VotedAgainst => 0.3f,
+        DiplomaticAct.DefiedCouncil => 0.4f,
+        DiplomaticAct.KeptWord => 0.4f,
+        DiplomaticAct.SignedTreaty => 0.4f,
+        DiplomaticAct.PlottedAgainst => 0.7f,
     };
 
     /// <summary>Whether an act is hostile.</summary>
@@ -34,8 +42,9 @@ public static class DiplomacyModel
     /// <returns><c>true</c> for acts that build a grudge.</returns>
     public static bool IsHostile(DiplomaticAct act) => act switch
     {
-        DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.CreatureDefeated or DiplomaticAct.TookHolySite => true,
-        DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace or DiplomaticAct.Sheltered => false,
+        DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.CreatureDefeated or DiplomaticAct.TookHolySite
+            or DiplomaticAct.BrokeTreaty or DiplomaticAct.BrokePromise or DiplomaticAct.VotedAgainst or DiplomaticAct.DefiedCouncil or DiplomaticAct.PlottedAgainst => true,
+        DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace or DiplomaticAct.Sheltered or DiplomaticAct.Rescued or DiplomaticAct.KeptWord or DiplomaticAct.SignedTreaty => false,
     };
 
     /// <summary>A new relation with the starting values.</summary>

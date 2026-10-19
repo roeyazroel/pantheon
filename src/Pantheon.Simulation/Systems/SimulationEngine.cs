@@ -94,18 +94,23 @@ public sealed class SimulationEngine
         var ledger = new DiplomacyLedger(diplomacyRules);
         Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger, domainRules);
         Authorities = new Authorities(
-            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules, creatureRules, domainRules, holySiteRules),
+            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules, creatureRules, domainRules, holySiteRules, diplomacyRules.Politics),
             new CreatureAuthority(creatureRules, Creatures.Brain, domainRules),
             new DiplomacyAuthority(diplomacyRules, ledger),
             new MigrationAuthority(),
             domainRules is null ? null : new Domains.DomainAuthority(domainRules),
-            societyRules is null ? null : new Society.SocietyAuthority(societyRules));
+            societyRules is null ? null : new Society.SocietyAuthority(societyRules),
+            new Politics.CouncilAuthority());
+        Politics = new Politics.PoliticsSystem(diplomacyRules, ledger, Authorities.Diplomacy);
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
+        var ai = new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains);
         Gods = new GodAiSystem(
-            new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains),
+            ai,
             godAiRules.EvaluationIntervalTicks,
             new RefugeeAdvisor(migrationRules, Authorities.Migration),
-            societyRules is null ? null : new Society.PriorityAdvisor(societyRules, settlementRules, divineRules, Authorities.Society!));
+            societyRules is null ? null : new Society.PriorityAdvisor(societyRules, settlementRules, divineRules, Authorities.Society!),
+            new TreatyAdvisor(diplomacyRules, Authorities.Diplomacy, ai.ProfileOf),
+            new CouncilAdvisor(diplomacyRules.Politics, Authorities.Council!));
         Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger);
         HolySites = holySiteRules is null ? null : new HolySites.HolySiteSystem(holySiteRules, divineRules, creatureRules, ledger);
         var systems = new List<ISimulationSystem>
@@ -143,6 +148,7 @@ public sealed class SimulationEngine
         [
             new IntervalSystem(new VictorySystem(divineRules), divineRules.StepIntervalTicks),
             new IntervalSystem(new DiplomacySystem(diplomacyRules), diplomacyRules.StepIntervalTicks),
+            new IntervalSystem(Politics, diplomacyRules.StepIntervalTicks),
             new IntervalSystem(Migration, migrationRules.StepIntervalTicks),
             Creatures,
             Gods,
@@ -164,6 +170,9 @@ public sealed class SimulationEngine
 
     /// <summary>The world's chronicler (ADR-020), or <c>null</c> when the engine keeps no history.</summary>
     public History.HistoryRecorder? History { get; }
+
+    /// <summary>The politics system (ADR-025), or <c>null</c> when the engine has none.</summary>
+    public Politics.PoliticsSystem? Politics { get; }
 
     /// <summary>The holy sites' system (ADR-021), or <c>null</c> when the world has none.</summary>
     public HolySites.HolySiteSystem? HolySites { get; }

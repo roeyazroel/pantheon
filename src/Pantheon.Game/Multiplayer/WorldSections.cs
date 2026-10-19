@@ -135,6 +135,14 @@ public static class WorldSections
                 Replace(world.Diplomacy.Relations, diplomacy.Relations);
                 Replace(world.Diplomacy.Stances, diplomacy.Stances);
                 Replace(world.Diplomacy.Proposals, diplomacy.Proposals);
+                Replace(world.Diplomacy.Treaties, diplomacy.Treaties);
+                Replace(world.Diplomacy.Favours, diplomacy.Favours);
+                Replace(world.Diplomacy.Obligations, diplomacy.Obligations);
+                world.Diplomacy.NextTreatyId = diplomacy.NextTreatyId;
+                var council = world.Diplomacy.Council;
+                (council.NextSessionTick, council.LastClosedTick, council.Session) = (diplomacy.Council.NextSessionTick, diplomacy.Council.LastClosedTick, diplomacy.Council.Session);
+                Replace(council.Tabled, diplomacy.Council.Tabled);
+                Replace(council.Decrees, diplomacy.Council.Decrees);
                 return null;
             case WorldSection.History:
                 Replace(world.History, Read<List<Domain.History.HistoryRecord>>(data));

@@ -51,6 +51,7 @@ internal static class SaveIntegrity
         HistoryIntegrity.Validate(world, godIds, errors);
         HolySiteIntegrity.Validate(world, godIds, errors);
         WaterIntegrity.Validate(world, errors);
+        PoliticsIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {

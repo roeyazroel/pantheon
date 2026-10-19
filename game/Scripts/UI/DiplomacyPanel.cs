@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Migration;
 using Pantheon.Game.Diplomacy;
 using Pantheon.Game.Migration;
+using Pantheon.Game.Politics;
 
 namespace Pantheon.Client.UI;
 
 /// <summary>
 /// The diplomacy panel (spec §57: Diplomacy; P toggles it): one card per other god with your
 /// status, how it feels about you and why (spec §49), what it has proposed, and buttons for the
-/// moves the authority would accept now, and your refugee policy (ADR-016). It shows what
+/// moves the authority would accept now, and your refugee policy (ADR-016); the treaties in force,
+/// favours owed, and the treaties and requests you could put to it (ADR-025). It shows what
 /// <see cref="DiplomacyReadout"/> builds and reports clicks; it holds no game state.
 /// </summary>
 public partial class DiplomacyPanel : CanvasLayer
@@ -28,10 +31,19 @@ public partial class DiplomacyPanel : CanvasLayer
         [DiplomaticStatus.War] = new Color(1f, 0.45f, 0.35f),
     };
 
+    private readonly HashSet<int> _expanded = [];
     private PanelContainer _panel = null!;
     private HBoxContainer _refugees = null!;
+    private HBoxContainer _terms = null!;
     private VBoxContainer _cards = null!;
     private string _shown = string.Empty;
+    private int _duration = 1;
+
+    /// <summary>The player clicked a treaty, request or break (ADR-025).</summary>
+    public event Action<PoliticsAction>? ActionClicked;
+
+    /// <summary>How the player will sign the treaties it proposes (panel state, not game state).</summary>
+    public TreatyChoice Choice { get; private set; } = TreatyChoice.Default;
 
     /// <summary>The player clicked a move towards a god.</summary>
     public event Action<int, DiplomaticCommandKind>? CommandClicked;
@@ -69,9 +81,14 @@ public partial class DiplomacyPanel : CanvasLayer
         _refugees = new HBoxContainer();
         _refugees.AddThemeConstantOverride("separation", 8);
         column.AddChild(_refugees);
-        _cards = new VBoxContainer();
+        _terms = new HBoxContainer();
+        _terms.AddThemeConstantOverride("separation", 8);
+        column.AddChild(_terms);
+        _cards = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         _cards.AddThemeConstantOverride("separation", 12);
-        column.AddChild(_cards);
+        var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(540, 640), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+        scroll.AddChild(_cards);
+        column.AddChild(scroll);
     }
 
     /// <summary>Shows the entries and your refugee policy; the cards are rebuilt only when something changed.</summary>
@@ -80,7 +97,7 @@ public partial class DiplomacyPanel : CanvasLayer
     public void ShowEntries(IReadOnlyList<DiplomacyEntry> entries, RefugeePolicy? policy)
     {
         ArgumentNullException.ThrowIfNull(entries);
-        var key = policy + "#" + string.Join("|", Describe(entries));
+        var key = policy + "#" + Choice + "#" + string.Join(",", _expanded) + "#" + string.Join("|", Describe(entries));
         if (key == _shown)
         {
             return;
@@ -88,6 +105,7 @@ public partial class DiplomacyPanel : CanvasLayer
 
         _shown = key;
         BuildRefugeeRow(policy);
+        BuildTermsRow();
         foreach (var child in _cards.GetChildren())
         {
             child.QueueFree();
@@ -138,9 +156,35 @@ public partial class DiplomacyPanel : CanvasLayer
             card.AddChild(grievances);
         }
 
-        if (entry.Proposal is { } proposal)
+        var politics = entry.Politics;
+        foreach (var treaty in politics.Treaties)
         {
-            card.AddChild(Text(proposal == ProposalKind.Alliance ? "It proposes an alliance." : "It asks for peace.", 15, new Color(1f, 0.85f, 0.4f)));
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 8);
+            row.AddChild(Text(treaty.Text, 14, new Color(0.75f, 0.9f, 0.75f)));
+            row.AddChild(ActionButton(treaty.Break));
+            card.AddChild(row);
+        }
+
+        if (politics.Others.Length > 0)
+        {
+            var others = Text(politics.Others, 13, Muted);
+            others.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            others.CustomMinimumSize = new Vector2(480, 0);
+            card.AddChild(others);
+        }
+
+        if (politics.Favours.Length > 0)
+        {
+            card.AddChild(Text(politics.Favours, 14, new Color(0.9f, 0.8f, 1f)));
+        }
+
+        if (politics.Proposal.Length > 0)
+        {
+            var proposal = Text(politics.Proposal, 15, new Color(1f, 0.85f, 0.4f));
+            proposal.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            proposal.CustomMinimumSize = new Vector2(480, 0);
+            card.AddChild(proposal);
         }
 
         var buttons = new HBoxContainer();
@@ -153,8 +197,84 @@ public partial class DiplomacyPanel : CanvasLayer
             buttons.AddChild(button);
         }
 
+        var cardGod = entry.GodId;
+        var open = _expanded.Contains(cardGod);
+        var more = new Button { Text = open ? "Treaties and requests ▾" : "Treaties and requests ▸", FocusMode = Control.FocusModeEnum.None };
+        more.Pressed += () =>
+        {
+            if (!_expanded.Remove(cardGod))
+            {
+                _expanded.Add(cardGod);
+            }
+
+            _shown = string.Empty;
+        };
+        buttons.AddChild(more);
         card.AddChild(buttons);
+        if (open)
+        {
+            card.AddChild(Grid(politics.Offers, "No treaty is possible with it now."));
+            if (politics.Requests.Count > 0)
+            {
+                card.AddChild(Grid(politics.Requests, string.Empty));
+            }
+        }
+
         return card;
+    }
+
+    /// <summary>The row choosing how long treaties last and whether they are secret.</summary>
+    private void BuildTermsRow()
+    {
+        foreach (var child in _terms.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        _terms.AddChild(Text("Treaties you propose last", 14, Muted));
+        var seconds = TreatyChoice.Durations[_duration];
+        var term = new Button { Text = seconds > 0f ? PoliticsText.Duration(seconds) : "until broken", FocusMode = Control.FocusModeEnum.None };
+        term.Pressed += () =>
+        {
+            _duration = (_duration + 1) % TreatyChoice.Durations.Count;
+            Choice = Choice with { DurationSeconds = TreatyChoice.Durations[_duration] };
+            _shown = string.Empty;
+        };
+        _terms.AddChild(term);
+        var secret = new Button { Text = Choice.Secret ? "in secret" : "in public", FocusMode = Control.FocusModeEnum.None };
+        secret.Pressed += () =>
+        {
+            Choice = Choice with { Secret = !Choice.Secret };
+            _shown = string.Empty;
+        };
+        _terms.AddChild(secret);
+    }
+
+    /// <summary>Buttons in three columns, or a note when there are none.</summary>
+    private Control Grid(IReadOnlyList<PoliticsAction> actions, string none)
+    {
+        if (actions.Count == 0)
+        {
+            return Text(none, 13, Muted);
+        }
+
+        var grid = new GridContainer { Columns = 3 };
+        grid.AddThemeConstantOverride("h_separation", 6);
+        grid.AddThemeConstantOverride("v_separation", 4);
+        foreach (var action in actions)
+        {
+            grid.AddChild(ActionButton(action));
+        }
+
+        return grid;
+    }
+
+    /// <summary>A button that reports a politics action.</summary>
+    private Button ActionButton(PoliticsAction action)
+    {
+        var button = new Button { Text = action.Label, FocusMode = Control.FocusModeEnum.None };
+        button.Pressed += () => ActionClicked?.Invoke(action);
+        return button;
     }
 
     /// <summary>The row of refugee policies, the current one shown pressed.</summary>
@@ -191,7 +311,9 @@ public partial class DiplomacyPanel : CanvasLayer
     {
         foreach (var entry in entries)
         {
-            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Creatures}:{entry.Proposal}:{string.Join(",", entry.Available)}";
+            var politics = entry.Politics;
+            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Creatures}:{entry.Proposal}:{string.Join(",", entry.Available)}"
+                + $":{string.Join(",", politics.Treaties.Select(t => t.Text))}:{politics.Others}:{politics.Favours}:{politics.Proposal}:{string.Join(",", politics.Offers.Select(o => o.Label))}:{string.Join(",", politics.Requests.Select(r => r.Label))}";
         }
     }
 }

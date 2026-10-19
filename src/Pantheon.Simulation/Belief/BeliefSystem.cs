@@ -124,16 +124,19 @@ public sealed class BeliefSystem : ISimulationSystem
 
     /// <summary>
     /// Pull factors for a settlement's gods: a people at war resists the enemy, and a secular or
-    /// isolationist culture resists every god, or every god but its own (ADR-024).
+    /// isolationist culture resists every god, or every god but its own and those its god gave
+    /// religious access (ADR-024, ADR-025). In neutral territory no god pulls at all.
     /// </summary>
     private float[] PullFactors(WorldState world, SettlementState settlement)
     {
         var beliefs = settlement.Beliefs;
         var factors = WarResistance(world, beliefs) ?? NoResistance(beliefs.Count);
         var main = Culture.CultureModel.Main(settlement);
+        var neutral = Politics.CouncilModel.IsNeutral(world, settlement.Id);
         for (var i = 0; i < beliefs.Count; i++)
         {
-            factors[i] *= Culture.CultureModel.PullFactor(_rules.Culture, settlement.Culture, beliefs[i] == main);
+            var open = beliefs[i] == main || Politics.TreatyModel.HasAccess(world, beliefs[i].GodId, settlement);
+            factors[i] *= neutral ? 0f : Culture.CultureModel.PullFactor(_rules.Culture, settlement.Culture, open);
         }
 
         return factors;

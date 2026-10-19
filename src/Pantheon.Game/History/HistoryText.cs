@@ -64,6 +64,10 @@ public static class HistoryText
             HistoryKind.Revolt => Format("The Revolt of {0} against {1}", place, god),
             HistoryKind.Renunciation => Format("{0} renounces the gods", place),
             HistoryKind.Doctrine => Format("{0} embraces {1}", place, Culture.CultureText.Name((Domain.Culture.Doctrine)record.Count)),
+            HistoryKind.Treaty => Format("{0} and {1} sign a {2}", god, other, Politics.PoliticsText.Name((Domain.Politics.TreatyKind)record.Count)),
+            HistoryKind.Revelation => Format("The secret {0} of {1} and {2} comes to light", Politics.PoliticsText.Name((Domain.Politics.TreatyKind)record.Count), god, other),
+            HistoryKind.Decree => DecreeTitle(record, world, god, place),
+            HistoryKind.Absorption => Format("{0} absorbs the followers of {1}", god, other),
         };
     }
 
@@ -82,6 +86,7 @@ public static class HistoryText
             HistoryKind.Flood => record.Count > 0 ? Format("{0} houses lost", record.Count) : "people drowned",
             HistoryKind.Founding => Format("{0} settlers", record.Count),
             HistoryKind.Revolt => Format("{0} renounced their god", record.Count),
+            HistoryKind.Absorption => Format("{0} turned", record.Count),
             HistoryKind.Exodus => Format("{0} people left", record.Count),
             HistoryKind.Battle => Format("{0} prevailed", CreatureName(world, record.CreatureId)),
             HistoryKind.Betrayal => Format("broken by {0}", GodName(world, record.GodId)),
@@ -89,7 +94,8 @@ public static class HistoryText
             HistoryKind.Claimed => record.OtherGodId is null ? string.Empty : Format("taken from {0}", GodName(world, record.OtherGodId)),
             HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
-                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine => string.Empty,
+                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine
+                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree => string.Empty,
         };
     }
 
@@ -126,6 +132,21 @@ public static class HistoryText
 
     /// <summary>A god's name, or "a forgotten god".</summary>
     private static string GodName(WorldState world, int? godId) => world.Gods.Find(g => g.Id == godId)?.Name ?? "a forgotten god";
+
+    /// <summary>A decree's title: what the council passed, from the record's packed motion.</summary>
+    private static string DecreeTitle(HistoryRecord record, WorldState world, string god, string place)
+    {
+        var detail = record.Count % 1000;
+        return (Domain.Politics.CouncilMotionKind)(record.Count / 1000) switch
+        {
+            Domain.Politics.CouncilMotionKind.Condemn => Format("The Council condemns {0}", god),
+            Domain.Politics.CouncilMotionKind.ProtectSacredLand => Format("The Council protects {0}", world.HolySites.Find(site => site.Id == detail)?.Name ?? "a holy site"),
+            Domain.Politics.CouncilMotionKind.ProhibitPractice => Format("The Council prohibits {0}", Politics.PoliticsText.Practice((Domain.Politics.Practice)detail)),
+            Domain.Politics.CouncilMotionKind.CoordinateDisasterResponse => "The Council unites against disaster",
+            Domain.Politics.CouncilMotionKind.PantheonWar => Format("The Pantheon makes war on {0}", god),
+            Domain.Politics.CouncilMotionKind.NeutralTerritory => Format("The Council makes {0} neutral ground", place),
+        };
+    }
 
     /// <summary>A Creature's name, or "a forgotten Creature".</summary>
     private static string CreatureName(WorldState world, int? creatureId) => world.Creatures.Find(c => c.Id == creatureId)?.Name ?? "a forgotten Creature";

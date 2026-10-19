@@ -111,13 +111,19 @@ followed or the target has been measured.
   - people depend on gods that help them and resent gods they fear, and may revolt;
   - temples send missionaries, and charitable villages feed their hungry neighbours;
   - gods earn traits (compassionate, cruel, vengeful and others) from what they do.
+- Gods make treaties and sit in council (part 5):
+  - eleven kinds of treaty for a term, public or secret, whose breaking is a betrayal;
+  - favours owed for rescues, called in for power, war, votes, territory or help;
+  - a Divine Council, summoned by betrayals, dominance and disasters, that condemns, protects,
+    prohibits, coordinates, wars together and declares neutral ground;
+  - absorbing an ally.
 - Four holy sites are found in every world and kept by the god whose influence holds them;
   Creatures claim and defend them.
 - Doubting followers break away in schisms to keep their god's Old Faith, and return or fade.
 - Creatures come in four species.
 - Every sound and the music are synthesized by the game, and the settings are kept between runs.
 - Not built: Steam networking, larger worlds and picking things up with the hand.
-- 965 xUnit tests pass headless (927 at the end of part 3, 853 at the end of Milestone 15).
+- 1011 xUnit tests pass headless (965 at the end of part 4, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -145,6 +151,7 @@ followed or the target has been measured.
 | 15.2 | Water and Law (§130, with §5, §12, §15, §19, §30, §110) | Implemented, on `main`: rivers, lakes, floods, drinking water, the Water miracle, and the Ocean and Justice domains |
 | 15.3 | Society (§21, §29, §30, §36, with §6 and §9) | Implemented, on `main`: safety, happiness, order, wealth, learning, priorities, buildings, technology and expansion |
 | 15.4 | Culture (§7, §8, §11, §32–35, with §3.2) | Implemented, on `main`: doctrines, secularism, dependency, resentment, missionaries, charity, revolts and gods' traits |
+| 15.5 | Treaties and the Divine Council (§37–42, §54) | Implemented, on `main`: eleven treaties, secret agreements, betrayal of treaties, favours, requests and promises, the council and its decrees, absorbing an ally |
 
 ADR-004 and ADR-008 cite an earlier working roadmap with different milestone numbers;
 [GAME_SPEC.md](GAME_SPEC.md#earlier-working-roadmap-superseded) maps them. Every other document
@@ -434,7 +441,7 @@ Measured:
 | Domains | Implemented (all 13 of §12) | Nature, Life, Storm, Fire, War, Death, Prosperity, Protection, Knowledge, Trickery and Chaos (ADR-021), and Ocean and Justice since part 2 (ADR-022). One domain per rank tier, up to three: Minor Spirit, Lesser God, God. Each gives cheaper miracles, a boon and a signature miracle. |
 | Doctrines | Implemented (part 4) | §33's eight doctrines held by every village, drawn from what it lives through and the god it follows, each with its effect (ADR-024). The Old Faith answers §34's "behaviour contradicts history", and a god known for mercy that harms its own shocks them more. |
 | Holy sites | Implemented | The Sacred Peak, the Ancient Grove, the Holy Spring and the Standing Stones. They are claimed by influence, kept for power, influence and a gift, and fought over by Creatures; gods remember who took them. |
-| Advanced politics | Partial | Holy sites are new grounds for grievance, and Sow Discord lets a Trickster set two rivals against each other. No treaties beyond alliance and peace. |
+| Advanced politics | Partial | Eleven treaties, secret agreements, favours and the Divine Council (part 5, ADR-025); holy sites are grounds for grievance, and Sow Discord sets two rivals against each other. War goals, intelligence, proxy wars and mortal holy wars come in part 6. |
 | Schisms | Implemented | Doubting followers keep the Old Faith, which cannot be converted, returns when the god is loved again and otherwise fades. Sanctuary prevents a schism for a minute. |
 | Larger worlds | Not started | The island is still 2 km; larger worlds have not been measured. |
 | More miracles | Implemented | Thirteen signature miracles, and with the Water miracle (part 2) twenty-three miracles in all. |
@@ -520,6 +527,28 @@ The plan is [.docs/milestone-15-part-3-society.md](../.docs/milestone-15-part-3-
 
 The plan is [.docs/milestone-15-part-4-culture.md](../.docs/milestone-15-part-4-culture.md).
 
+### Milestone 15, part 5: Treaties and the Divine Council
+
+- **Treaties (§38):** eleven kinds besides alliance, each for a term or until broken, each with
+  its effect (ADR-025):
+  - war forbidden or joined;
+  - shared influence, religious access, Creature truces, disaster assistance;
+  - territory kept, tribute paid, migrants welcomed.
+- **Secret agreements (§39):** known only to their parties (also in multiplayer) until invoked or
+  leaked; the god they were aimed at remembers the plot.
+- **Betrayal (§40):** breaking any treaty costs the partner's and the world's trust and the
+  breaker's word.
+- **Favours (§41):** rescues put gods in debt; favours are called in for power, war support,
+  backing, territory or assistance, and refusals and broken promises are remembered.
+- **The Divine Council (§42):** summoned by betrayals, new dominance and disasters, or a tabled
+  motion. It votes in public or secret ballots, with votes traded by promises, on six kinds of
+  motion. Decrees last eight minutes, and defiance costs trust.
+- **Alliance endgame (§54):** absorbing an ally's believers is a move of its own.
+- **Balance:** 37 of 40 passive games found a winner, with a median of 28.6 and a mean of 31.2
+  minutes (part 4: 37, 28.1 and 27.5).
+
+The plan is [.docs/milestone-15-part-5-politics.md](../.docs/milestone-15-part-5-politics.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -600,17 +629,18 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 37 | Divine politics | Implemented | Directional, multi-dimensional relations: a god may respect, fear and resent another while allied with it. |
-| 38 | Diplomacy | Partial | Alliance, peace and war. Non-aggression, trade, shared territory, tribute and the other treaties are not built. |
-| 39 | Secret agreements | Not started | |
-| 40 | Betrayal | Implemented | Any alliance can be broken; it costs the victim's trust, every god's trust and future goodwill, and is long remembered. |
-| 41 | Favours | Partial | Help to another god's followers in need is remembered as gratitude. Asking for and owing favours are not built. |
-| 42–43, 45–46 | Divine Council, information and deception, proxy wars, mortal holy wars | Not started | |
+| 38 | Diplomacy | Implemented | Alliance, peace and war, and all eleven of §38's treaties with terms and conditions (a target, a payer and an amount), each with its effect (ADR-025). |
+| 39 | Secret agreements | Implemented | Treaties may be secret: known to their parties only, kept from other players by the host, revealed when invoked or by leaks; the god they were aimed at remembers the plot (ADR-025). |
+| 40 | Betrayal | Implemented | Any alliance or treaty can be broken; it costs the victim's trust, every knowing god's trust and the breaker's word in future treaties, and is long remembered; secret plots against an ally count as betrayal. |
+| 41 | Favours | Implemented | Rescuing another god's followers in great need makes it owe a favour, called in for Divine Power, war support, political backing, territory or miracle assistance (a promise to keep); refusals and broken promises are remembered (ADR-025). |
+| 42 | Divine Council | Implemented | Summoned by betrayals, dominance and disasters, and every five minutes on a tabled motion; votes to condemn, protect sacred land, prohibit a practice, coordinate disaster response, declare pantheon-wide war or establish neutral territory, in public or secret ballots, traded through backing promises (ADR-025). |
+| 43, 45–46 | Information and deception, proxy wars, mortal holy wars | Partial | Secret treaties are hidden from those not party to them (§43); the rest comes in part 6. |
 | 44 | War between gods | Partial | Declared war makes the enemy's followers resist conversion, draws Creatures and AI miracles to the enemy, sets the gods' Creatures against each other and lasts until peace is agreed. War goals and their outcomes are not modelled. |
 | 113 | MVP diplomacy | Implemented | The five statuses and the four actions, plus accepting and declining; the AI remembers betrayal. |
 | 50 | World history | Implemented | The world records its significant moments as "Year 12 — The Shaking of Elar" (ADR-020); a year is a simulated minute. Civilizations do not refer to them yet. |
 | 51–52 | Sacred locations, world events | Partial | Four holy sites found in every world (a peak, a grove, a spring, standing stones): kept by influence, giving power, influence and a gift, fought over and remembered (ADR-021). Scripted world events are not built (§52). |
 | 53 | Victory conditions | Partial | Divine Ascendancy (§115's MVP form) and Pantheon Victory: a god counts its strongest direct ally's followers with its own and wins with it, at most `PantheonMaxGods` (2) gods (ADR-015, ADR-020). Conquest and cultural victories and a sandbox switch are not built. |
-| 54 | Alliance endgame | Partial | Near a joint victory each AI ally weighs staying loyal to share the win against breaking away to seek personal ascendancy, by its `Treachery` and its lead over its ally. Absorbing an ally's believers is not a move of its own. |
+| 54 | Alliance endgame | Partial | Near a joint victory each AI ally weighs staying loyal to share the win against breaking away to seek personal ascendancy, by its `Treachery` and its lead over its ally. Absorbing an ally's believers is a move of its own for players: a betrayal that turns a share of the ally's followers where the god leads (ADR-025); AI gods break away rather than absorb. |
 | 91 | Event architecture | Partial | Systems and the authorities raise transient domain events (among them §91's refugees created, as `MigrationStarted`); alerts and effects read them. |
 | 92 | History system | Implemented | `HistoryRecorder` weighs every event and keeps only the significant ones by `history.json`'s thresholds, without repeats, up to a capacity; saved and replicated (ADR-020). |
 
@@ -712,43 +742,45 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-022](ADR/ADR-022-rivers-lakes-floods-water-ocean-and-justice.md) | Rivers, lakes, floods and drinking water, with the Ocean and Justice domains (Milestone 15, part 2) | Accepted |
 | [ADR-023](ADR/ADR-023-settlement-society-priorities-buildings-and-technology.md) | Settlements' society: safety, happiness, order, wealth, learning, priorities, buildings, technology and expansion (Milestone 15, part 3) | Accepted |
 | [ADR-024](ADR/ADR-024-doctrines-secularism-dependency-resentment-and-traits.md) | Culture: doctrines, secularism, dependency, resentment, missionaries, revolts and gods' traits (Milestone 15, part 4) | Accepted; amends ADR-019 |
+| [ADR-025](ADR/ADR-025-treaties-secrets-favours-and-the-divine-council.md) | Treaties, secret agreements, favours and the Divine Council (Milestone 15, part 5) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 965 tests, and they all pass headless in about twelve
+The xUnit suite in `src/Pantheon.Tests` has 1011 tests, and they all pass headless in about twelve
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | Now |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
-| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
-| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
-| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
-| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
-| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 |
-| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 |
-| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 |
-| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
-| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
-| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 |
-| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 |
-| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 |
-| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 |
-| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V15Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
-| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** |
+| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | Now |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
+| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
+| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
+| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
+| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 |
+| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 |
+| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 |
+| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 |
+| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
+| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
+| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 |
+| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 |
+| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 |
+| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V16Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
+| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -890,12 +922,12 @@ The [README](../README.md) lists every control and option.
 
 ### Diplomacy
 
-- Statuses only: no treaties beyond alliance and peace, no secret agreements, favours, tribute or
-  council (§38–42).
+- Treaties carry a term, a target, a payer and an amount; richer conditions are not modelled, and
+  votes are traded only through promises of backing.
+- AI gods seldom sign secret treaties among themselves, and favours are rare between them; both
+  are open to the player.
 - A god forms no view of another until the first act between them; the panel says so.
-- Alliances are pairwise. A bloc of allies of allies wins together, but there are no shared
-  treaties, shared enemies or council votes (§38, §42), and absorbing an ally's believers is not a
-  move of its own (§54).
+- Alliances are pairwise. A bloc of allies of allies wins together.
 
 ### Multiplayer
 
@@ -935,8 +967,7 @@ order of the validation priorities (§132) and what playing showed:
    the probes only cover bots.
 3. **Larger worlds (§6, §84)**: measure a 4 km island with sixteen villages, and stream it if
    needed.
-4. **More of §57's panels** (World, Religion, Miracles) and §38–42's treaties,
-   favours and council.
+4. **More of §57's panels** (World, Religion, Miracles).
 5. **Steam networking (§69)** as a second `INetworkTransport`, only if the game ships on Steam.
 6. **Recorded or composed audio** in place of the synthesized sounds, through the same director.
 7. Report the Terrain3D shader defects upstream.

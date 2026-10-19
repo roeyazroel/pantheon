@@ -8,6 +8,12 @@ public enum ProposalKind
 
     /// <summary>Peace, ending a war (spec §113: request peace).</summary>
     Peace,
+
+    /// <summary>A treaty, on the proposal's terms (spec §38, ADR-025).</summary>
+    Treaty,
+
+    /// <summary>A request, which calls in a favour when one is owed (spec §41).</summary>
+    Request,
 }
 
 /// <summary>A proposal waiting for an answer.</summary>
@@ -24,4 +30,10 @@ public sealed class DiplomaticProposal
 
     /// <summary>Tick after which the proposal lapses unanswered.</summary>
     public required long ExpiresAtTick { get; init; }
+
+    /// <summary>The treaty's terms, for <see cref="ProposalKind.Treaty"/>.</summary>
+    public Politics.TreatyTerms? Terms { get; init; }
+
+    /// <summary>What is asked, for <see cref="ProposalKind.Request"/>.</summary>
+    public Politics.RequestAsk? Ask { get; init; }
 }

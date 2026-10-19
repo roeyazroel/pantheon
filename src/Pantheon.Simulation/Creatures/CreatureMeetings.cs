@@ -80,6 +80,12 @@ public sealed class CreatureMeetings
         viewB.LastMetTick = tick;
         var answerA = _brain.Respond(world, a, b, random);
         var answerB = _brain.Respond(world, b, a, random);
+        if (Politics.TreatyModel.SparesCreatures(world, a.GodId, b.GodId))
+        {
+            // Their gods bound them never to fight (ADR-025).
+            answerA = answerA == CreatureAction.Fight ? CreatureAction.Ignore : answerA;
+            answerB = answerB == CreatureAction.Fight ? CreatureAction.Ignore : answerB;
+        }
         var (outcome, actor, betrayal) = (answerA, answerB) switch
         {
             (CreatureAction.Fight, _) => Attack(world, a, b, answerB, random),

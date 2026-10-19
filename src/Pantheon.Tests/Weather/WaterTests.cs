@@ -119,7 +119,8 @@ public sealed class WaterTests
 
         caster.Cast(world, new CastMiracleRequest(DivineWorlds.GodId, "rain", world.Settlements[0].Position), DivineWorlds.GodId, new List<WorldEvent>());
 
-        Assert.Equal([DiplomaticAct.Helped], DiplomacyModel.FindRelation(world, RivalWorlds.RivalId, DivineWorlds.GodId)!.Memories.Select(m => m.Act));
+        // Parched land is great need: the rain is a rescue (ADR-025).
+        Assert.Equal([DiplomaticAct.Rescued], DiplomacyModel.FindRelation(world, RivalWorlds.RivalId, DivineWorlds.GodId)!.Memories.Select(m => m.Act));
     }
 
     [Fact]

@@ -19,6 +19,7 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(CastIntent), "Cast")]
 [JsonDerivedType(typeof(CreatureIntent), "Creature")]
 [JsonDerivedType(typeof(DiplomacyIntent), "Diplomacy")]
+[JsonDerivedType(typeof(CouncilIntent), "Council")]
 [JsonDerivedType(typeof(RefugeeIntent), "Refugees")]
 [JsonDerivedType(typeof(DomainIntent), "Domain")]
 [JsonDerivedType(typeof(PriorityIntent), "Priority")]
@@ -87,7 +88,16 @@ public sealed record CreatureIntent(int RequestId, CreatureCommandKind Kind, Gro
 /// <param name="RequestId">The player's number for the request.</param>
 /// <param name="OtherGodId">The other god.</param>
 /// <param name="Kind">The move.</param>
-public sealed record DiplomacyIntent(int RequestId, int OtherGodId, DiplomaticCommandKind Kind) : NetMessage;
+/// <param name="Terms">A treaty's terms, for a proposal (ADR-025).</param>
+/// <param name="TreatyId">The treaty, to break it.</param>
+/// <param name="Ask">What is asked, for a request.</param>
+public sealed record DiplomacyIntent(int RequestId, int OtherGodId, DiplomaticCommandKind Kind, Pantheon.Domain.Politics.TreatyTerms? Terms = null, int? TreatyId = null, Pantheon.Domain.Politics.RequestAsk? Ask = null) : NetMessage;
+
+/// <summary>A player tables a motion before the Divine Council, or votes on the one in session (ADR-025).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="Motion">The motion to table; <c>null</c> to vote.</param>
+/// <param name="Choice">The vote; <c>null</c> to table.</param>
+public sealed record CouncilIntent(int RequestId, Pantheon.Domain.Politics.CouncilMotion? Motion, Pantheon.Domain.Politics.VoteChoice? Choice) : NetMessage;
 
 /// <summary>A player's refugee policy.</summary>
 /// <param name="RequestId">The player's number for the request.</param>

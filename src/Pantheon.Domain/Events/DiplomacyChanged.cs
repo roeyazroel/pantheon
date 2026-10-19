@@ -19,4 +19,7 @@ public sealed record DiplomacyChanged : WorldEvent
 
     /// <summary>Whether the act betrayed an ally.</summary>
     public required bool Betrayal { get; init; }
+
+    /// <summary>What kind of proposal an accept or decline answered; <c>null</c> for other moves (ADR-025).</summary>
+    public Diplomacy.ProposalKind? Answered { get; init; }
 }

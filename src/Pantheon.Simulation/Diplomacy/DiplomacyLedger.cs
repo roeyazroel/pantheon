@@ -65,13 +65,36 @@ public sealed class DiplomacyLedger : IActRecorder
             case DiplomaticAct.WrongedAlly:
             case DiplomaticAct.TurnedAway:
             case DiplomaticAct.CreatureDefeated:
+            case DiplomaticAct.VotedAgainst:
                 relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
                 relation.Rivalry = SimMath.Clamp01(relation.Rivalry + (_rules.HarmRivalry / 2f));
+                break;
+            case DiplomaticAct.Rescued:
+                relation.Gratitude = SimMath.Clamp01(relation.Gratitude + (2f * _rules.HelpGratitude));
+                Politics.FavourBook.Owe(_rules.Politics, world, actorGodId, observerGodId, settlementId);
+                break;
+            case DiplomaticAct.BrokeTreaty:
+                relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.BetrayalTrustLoss * _rules.Politics.TreatyBetrayalShare));
+                relation.Suspicion = SimMath.Clamp01(relation.Suspicion + (_rules.BetrayalTrustLoss * _rules.Politics.TreatyBetrayalShare));
+                break;
+            case DiplomaticAct.BrokePromise:
+                relation.Trust = SimMath.Clamp01(relation.Trust - _rules.Politics.BrokenPromiseTrustLoss);
+                break;
+            case DiplomaticAct.DefiedCouncil:
+                relation.Trust = SimMath.Clamp01(relation.Trust - _rules.Politics.DefianceTrustLoss);
+                break;
+            case DiplomaticAct.KeptWord:
+            case DiplomaticAct.SignedTreaty:
+                relation.Trust = SimMath.Clamp01(relation.Trust + (_rules.HelpGratitude / 2f));
+                break;
+            case DiplomaticAct.PlottedAgainst:
+                relation.Trust = SimMath.Clamp01(relation.Trust - _rules.HarmTrustLoss);
+                relation.Suspicion = SimMath.Clamp01(relation.Suspicion + (_rules.BetrayalTrustLoss / 2f));
                 break;
         }
 
         Remember(relation, world.Tick, act, settlementId);
-        if (act is DiplomaticAct.Harmed or DiplomaticAct.CreatureAttacked or DiplomaticAct.Converted or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar)
+        if (act is DiplomaticAct.Harmed or DiplomaticAct.CreatureAttacked or DiplomaticAct.Converted or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.BrokeTreaty)
         {
             TellAllies(world, observerGodId, actorGodId, settlementId);
         }

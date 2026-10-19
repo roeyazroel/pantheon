@@ -162,7 +162,7 @@ internal static class DivineWorlds
             Settlements = settlements,
             Gods = [God(GodId, "Testa", GodController.Human, GodPersonality.None, power)],
             Creatures = [],
-            Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
+            Diplomacy = Pantheon.Domain.Diplomacy.DiplomacyState.Empty(),
             Weather = WeatherWorlds.Calm(),
             Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },

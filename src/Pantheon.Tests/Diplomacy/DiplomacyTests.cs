@@ -239,7 +239,9 @@ public sealed class DiplomacyTests
         world.Tick += 1000;
         caster.Cast(world, new CastMiracleRequest(Me, "food", world.Settlements[1].Position), Me, new List<WorldEvent>());
 
-        Assert.Equal([DiplomaticAct.Helped, DiplomaticAct.Courted], DiplomacyModel.FindRelation(world, Rival, Me)!.Memories.Select(m => m.Act));
+        // Starving followers fed are saved in great need: a rescue, and the rival owes a favour (ADR-025).
+        Assert.Equal([DiplomaticAct.Rescued, DiplomaticAct.Courted], DiplomacyModel.FindRelation(world, Rival, Me)!.Memories.Select(m => m.Act));
+        Assert.Equal(1f, Pantheon.Simulation.Politics.FavourBook.Find(world, Me, Rival)!.Weight);
     }
 
     [Fact]

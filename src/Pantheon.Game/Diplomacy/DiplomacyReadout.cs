@@ -41,6 +41,9 @@ public sealed record DiplomacyEntry
 
     /// <summary>The commands you could give towards it now.</summary>
     public required IReadOnlyList<DiplomaticCommandKind> Available { get; init; }
+
+    /// <summary>Treaties, favours, its proposal and what you could propose or ask (ADR-025).</summary>
+    public required Politics.PoliticsEntry Politics { get; init; }
 }
 
 /// <summary>Builds the diplomacy panel from the session. Pure.</summary>
@@ -58,8 +61,9 @@ public static class DiplomacyReadout
 
     /// <summary>One entry per other god.</summary>
     /// <param name="session">Game session.</param>
+    /// <param name="choice">How the player will sign treaties (panel state); five minutes in public when <c>null</c>.</param>
     /// <returns>The entries; none without a local god.</returns>
-    public static IReadOnlyList<DiplomacyEntry> Build(GameSession session)
+    public static IReadOnlyList<DiplomacyEntry> Build(GameSession session, Politics.TreatyChoice? choice = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         if (session.LocalGodId is not { } me)
@@ -100,6 +104,7 @@ public static class DiplomacyReadout
                 Creatures = CreaturesOf(session, god),
                 Proposal = DiplomacyAuthority.FindProposal(world, god.Id, me)?.Kind,
                 Available = available,
+                Politics = Politics.PoliticsReadout.ForGod(session, god.Id, choice ?? Politics.TreatyChoice.Default),
             });
         }
 

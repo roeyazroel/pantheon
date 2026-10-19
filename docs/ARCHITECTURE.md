@@ -169,9 +169,14 @@ files and compiled assemblies and fails when either rule is broken.
 - `DiplomacyState` (ADR-012): `Relations` (one `GodRelation` per observer and subject: trust,
   fear, respect, rivalry, gratitude, suspicion and the `DiplomaticMemory` of acts), `Stances`
   (one `GodStance` per pair: `DiplomaticStatus` Alliance, Friendly, Neutral, Hostile or War, since
-  when, and the last proposal) and `Proposals` (alliance or peace, waiting for an answer).
-  `DiplomaticCommand` (offer alliance, break alliance, declare war, request peace, accept,
-  decline) is the intent the diplomacy authority checks.
+  when, and the last proposal), `Proposals` (alliance, peace, a treaty with its `TreatyTerms` or
+  a request with its `RequestAsk`, waiting for an answer), and since ADR-025 `Treaties` (`Treaty`:
+  kind, parties, target, payer and amount, secrecy, term), `Favours`, `Obligations` (promises of
+  assistance or backing) and the `Council` (`CouncilState`: the session in progress with its
+  `CouncilMotion` and votes, tabled motions, decrees in force). `DiplomaticCommand` (offer alliance,
+  break alliance, declare war, request peace, accept, decline, propose or break a treaty, ask,
+  absorb) is the intent the diplomacy authority checks; `DiplomacyRules.Politics` tunes treaties,
+  favours and the council.
 - `DisasterState` (ADR-014): the `Earthquakes` under way (epicentre, magnitude, peak intensity,
   radius, end and the god who caused it) and `NextEarthquakeId`.
 - `WeatherState` (ADR-013): `Cells` (`WeatherCell`: position, velocity, radius, pressure,
@@ -256,6 +261,13 @@ files and compiled assemblies and fails when either rule is broken.
   `DiplomacyLedger` (the `IActRecorder` that miracles, Creature deeds and conversions report
   acts to), `DiplomacySystem` (the diplomacy step) and `DiplomacyAuthority` (diplomatic commands,
   checked). See [Diplomacy](#diplomacy).
+- `Politics/`: `TreatyModel` and `CouncilModel` (what treaties and decrees allow and forbid, asked
+  by each system they change), `PoliticsChecks`, `TreatyBook` (signing, ending, breaking and
+  revealing treaties), `FavourBook`, `PoliticsActions` (treaties, requests and absorption for the
+  authority), `CouncilChamber` (sessions, votes and decrees), `CouncilAuthority` (tabling and
+  voting, checked), `Defiance` and `PoliticsSystem` (the politics step: terms, tributes, leaks,
+  promises, the council). `Gods/TreatyAdvisor` and `Gods/CouncilAdvisor` are the AI's side
+  (ADR-025). See [Treaties and the Divine Council](#treaties-and-the-divine-council).
 - `Weather/`: `WeatherModel` (cells' rain, wind and lightning, coverage, the weather at a point,
   soil water, summoned rain) and `WeatherSystem` (the weather step). See [Weather](#weather).
 - `Disasters/`: `DisasterModel` (quakes, shaking, flammability, ignition, fire threat, danger,
@@ -288,11 +300,11 @@ files and compiled assemblies and fails when either rule is broken.
   and `HolySiteModel`. `Belief/Schisms` splits off and evolves Old Faiths within the belief step.
   See [Domains, holy sites and schisms](#domains-holy-sites-and-schisms).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-  `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration and domain
-  authorities; the first three, the migration step and the holy sites share one ledger.
+  `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration, domain, society and
+  council authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
   water step, the disaster step, the settlement step, the belief step, the society step, the culture step, the domains' boons, the holy sites, the
-  victory check, the diplomacy step and the migration step, each in an
+  victory check, the diplomacy step, the politics step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
@@ -305,8 +317,8 @@ files and compiled assemblies and fails when either rule is broken.
   most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
-  `ViewFocus`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent`, `RefugeeIntent`,
-  `DomainIntent`),
+  `ViewFocus`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent` with a treaty's
+  terms, a treaty or an ask, `RefugeeIntent`, `DomainIntent`, `PriorityIntent`, `CouncilIntent`),
   `Verdict` and `Goodbye`. `MessageCodec` writes them as JSON tagged with their type, gzipped from
   512 bytes; `EventCodec` carries any `WorldEvent` by its type name.
 - `Transport/INetworkTransport`: connect, receive, send reliably or not, disconnect, round trip.
@@ -341,7 +353,9 @@ files and compiled assemblies and fails when either rule is broken.
   generation settings have no hydrology, so its land regenerates unchanged. Version 14 → 15
   (`SocietySaveMigration`) gives every settlement a newly founded society. Version 15 → 16 gives
 every settlement a culture with no doctrine and no secularism, every belief (a settlement's or a
-migration group's) no dependency or resentment, and every god no conduct or traits. A missing,
+migration group's) no dependency or resentment, and every god no conduct or traits. Version 16 → 17
+(`PoliticsSaveMigration`) gives the world no treaties, favours or promises and a council that has
+not met. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -358,6 +372,9 @@ migration group's) no dependency or resentment, and every god no conduct or trai
   water and flood in 0..1, water not negative, societies (`SocietyIntegrity`: values in range,
   each building once, temples to known gods, known priorities), culture (`CultureIntegrity`:
   doctrines, secularism, dependency and resentment in 0..1, conduct not negative, each trait once),
+  politics (`PoliticsIntegrity`: unique treaty ids below the next, known gods as parties, payers
+  and targets, terms that fit the kind, favours and promises between known gods, valid motions,
+  decrees and votes),
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
@@ -524,7 +541,11 @@ migration group's) no dependency or resentment, and every god no conduct or trai
   end, says goodbye and saves a host's world.
 - `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
   buttons send the moves through `SessionCommands.CommandDiplomacy`, and its refugee row sets the
-  player's policy through `MigrationCommands.SetPolicy`.
+  player's policy through `MigrationCommands.SetPolicy`. Each card lists the player's treaties with
+  that god (with Break), its other treaties, favours and its proposal; "Treaties and requests"
+  opens the treaties and requests the authority would accept, on the term and secrecy the panel
+  row chooses. `UI/CouncilPanel` (U) shows `CouncilReadout`. `Bootstrap/PoliticsController` runs
+  both panels' actions through `PoliticsCommands`, J and the politics launch options (ADR-025).
 - `Bootstrap/DivineController`: the player's divine interface. It selects miracles (keys 1–9 or
   the bar), casts at the cursor on a left click, rewards, punishes and sends the Creature (Z, X, V
   or the card), drives the hand's gestures, drains the session's events into effects and alerts,
@@ -580,6 +601,7 @@ sequenceDiagram
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
             Engine->>State: belief step (drift, conversion, power, ranks, blessings)
             Engine->>State: victory check, diplomacy step (drift, fading, status, lapsed proposals)
+            Engine->>State: politics step (treaty terms, tributes, leaks, promises, the council)
             Engine->>State: migration step (wish to leave, departures, the road, arrivals)
         end
         Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds, meetings at 5 Hz, fights, views fade at 1 Hz)
@@ -752,6 +774,36 @@ flowchart LR
 - `MiracleCaster` and `DiplomacyAuthority` note acts in `GodState.Conduct`; traits are derived from
   it each step, and doctrines read a god only through its traits and domains.
 
+## Treaties and the Divine Council
+
+ADR-025 records the decisions, and the plan
+([.docs/milestone-15-part-5-politics.md](../.docs/milestone-15-part-5-politics.md)) the numbers.
+
+```mermaid
+flowchart LR
+    command[DiplomaticCommand: propose, break, ask, absorb] --> authority[DiplomacyAuthority]
+    authority --> book[TreatyBook: sign, end, reveal]
+    authority --> actions[PoliticsActions: grant, refuse, absorb]
+    war[DeclareWar] --> pacts[TreatyModel.Defenders: pacts called]
+    book --> model[TreatyModel]
+    model --> systems[Caster, belief, culture, migration, Creatures, AI valuer]
+    caster[MiracleCaster: rescue] --> ledger[Ledger: favour owed]
+    step[PoliticsSystem] --> book
+    step --> chamber[CouncilChamber]
+    tabled[CouncilAuthority: table, vote] --> chamber
+    chamber --> decrees[CouncilModel: decrees]
+    decrees --> caster
+```
+
+- Every treaty's effect is a query on `TreatyModel`, and every decree's on `CouncilModel`, made
+  by the system it changes, so the systems stay independent of each other.
+- Wars declared by treaties (joint wars, invoked pacts, war support, pantheon wars) go through
+  the authority's one declaration of war, so betrayal of an ally, the victim's memory and broken
+  treaties follow the same rules. Only a player's or AI's own declaration calls the victim's
+  pacts.
+- AI gods act through the same authorities as players: `TreatyAdvisor` and `CouncilAdvisor` run
+  with the refugee and priority advisors at each AI evaluation.
+
 ## Sound and settings
 
 ```mermaid
@@ -790,9 +842,13 @@ has the measured run.
   - Creature motion at 5 Hz near the player's view (`ViewFocus`) and 1 Hz elsewhere;
   - gods at 4 Hz;
   - migration at 2 Hz;
-  - settlements (with their society, ADR-023), weather, disasters and the rivers (ADR-022) at 1 Hz;
-  - whole Creatures, changed regions, the history and the holy sites every 2 s;
+  - weather, disasters and the rivers (ADR-022) at 1 Hz;
+  - settlements (with their society and culture, ADR-023 and ADR-024), whole Creatures, changed
+    regions, the history and the holy sites every 2 s;
   - diplomacy when a status, proposal or memory changes.
+
+  Secret treaties reach only their parties: while one exists the host strips the others' from the
+  snapshot, the diplomacy section and the events it sends each player (`SecretFilter`, ADR-025).
 
   Every event goes out as it is raised, and the list of players when it changes. After an intent
   the sections it can change go out with the verdict. `WorldSections` writes a section in compact

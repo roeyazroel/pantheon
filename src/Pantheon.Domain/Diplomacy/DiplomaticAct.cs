@@ -44,4 +44,28 @@ public enum DiplomaticAct
 
     /// <summary>It took a holy site the remembering god kept (ADR-021).</summary>
     TookHolySite,
+
+    /// <summary>It saved the remembering god's followers in great need, so a favour is owed (spec §41, ADR-025).</summary>
+    Rescued,
+
+    /// <summary>It broke a treaty with the remembering god (spec §40).</summary>
+    BrokeTreaty,
+
+    /// <summary>It broke a promise to the remembering god, or refused a favour it owed.</summary>
+    BrokePromise,
+
+    /// <summary>It voted in the council against the remembering god (a public ballot).</summary>
+    VotedAgainst,
+
+    /// <summary>It defied a decree of the Divine Council.</summary>
+    DefiedCouncil,
+
+    /// <summary>It kept its word: it granted a request or kept a promise.</summary>
+    KeptWord,
+
+    /// <summary>It signed a treaty with the remembering god.</summary>
+    SignedTreaty,
+
+    /// <summary>It plotted against the remembering god in a secret treaty that came to light (spec §39).</summary>
+    PlottedAgainst,
 }

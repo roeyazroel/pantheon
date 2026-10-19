@@ -130,6 +130,23 @@ public sealed class HistoryRecorder
             case SchismEnded { Reconciled: true } reunion:
                 Add(world, HistoryKind.Reunion, god: reunion.GodId, settlement: reunion.SettlementId);
                 break;
+            case TreatySigned { Secret: false } signed when signed.Kind is Domain.Politics.TreatyKind.NonAggression or Domain.Politics.TreatyKind.MutualDefense
+                or Domain.Politics.TreatyKind.JointWar or Domain.Politics.TreatyKind.Tribute or Domain.Politics.TreatyKind.DefensivePact:
+                Add(world, HistoryKind.Treaty, god: signed.FirstGodId, other: signed.SecondGodId, count: (int)signed.Kind);
+                break;
+            case TreatyEnded { Secret: false, BrokenByGodId: { } breaker } broken:
+                Add(world, HistoryKind.Betrayal, god: breaker, other: breaker == broken.FirstGodId ? broken.SecondGodId : broken.FirstGodId);
+                break;
+            case TreatyRevealed revealed:
+                Add(world, HistoryKind.Revelation, god: revealed.FirstGodId, other: revealed.SecondGodId, count: (int)revealed.Kind);
+                break;
+            case CouncilClosed { Passed: true } decree:
+                var motion = decree.Motion;
+                Add(world, HistoryKind.Decree, god: motion.TargetGodId, settlement: motion.SettlementId, count: ((int)motion.Kind * 1000) + (motion.SiteId ?? (int)(motion.Practice ?? 0)));
+                break;
+            case AllyAbsorbed absorbed:
+                Add(world, HistoryKind.Absorption, god: absorbed.GodId, other: absorbed.AllyGodId, count: absorbed.People);
+                break;
             case Rebellion revolt:
                 Add(world, HistoryKind.Revolt, god: revolt.GodId, settlement: revolt.SettlementId, count: revolt.People);
                 break;

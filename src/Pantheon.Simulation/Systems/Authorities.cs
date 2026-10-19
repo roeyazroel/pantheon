@@ -15,4 +15,5 @@ namespace Pantheon.Simulation.Systems;
 /// <param name="Migration">Refugee policies.</param>
 /// <param name="Domains">Domains taken up (ADR-021), or <c>null</c> where gods have none.</param>
 /// <param name="Society">Settlements' priorities (ADR-023), or <c>null</c> where settlements have no society rules.</param>
-public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null, Society.SocietyAuthority? Society = null);
+/// <param name="Council">The Divine Council's motions and votes (ADR-025), or <c>null</c> without one.</param>
+public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null, Society.SocietyAuthority? Society = null, Politics.CouncilAuthority? Council = null);

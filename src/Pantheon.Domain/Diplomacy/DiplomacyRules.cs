@@ -65,4 +65,7 @@ public sealed record DiplomacyRules
 
     /// <summary>Rivalry and lack of trust at which relations sour to hostile, and above which (inverted) they warm to friendly.</summary>
     public required float HostilityThreshold { get; init; }
+
+    /// <summary>Treaties, favours and the Divine Council (ADR-025).</summary>
+    public required Politics.PoliticsRules Politics { get; init; }
 }

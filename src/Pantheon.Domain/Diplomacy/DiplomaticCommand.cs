@@ -20,10 +20,25 @@ public enum DiplomaticCommandKind
 
     /// <summary>Decline the other's proposal.</summary>
     Decline,
+
+    /// <summary>Propose a treaty on the command's terms (spec §38).</summary>
+    ProposeTreaty,
+
+    /// <summary>Break a treaty: a betrayal (spec §40).</summary>
+    BreakTreaty,
+
+    /// <summary>Ask something of the other, calling in a favour it owes (spec §41).</summary>
+    Request,
+
+    /// <summary>Break an alliance and take a share of the ally's followers where the god leads (spec §54).</summary>
+    Absorb,
 }
 
 /// <summary>A god's diplomatic intent towards another god, checked by the authority (spec §73).</summary>
 /// <param name="GodId">The acting god.</param>
 /// <param name="OtherGodId">The god it acts towards.</param>
 /// <param name="Kind">What it does.</param>
-public sealed record DiplomaticCommand(int GodId, int OtherGodId, DiplomaticCommandKind Kind);
+/// <param name="Terms">A treaty's terms, for <see cref="DiplomaticCommandKind.ProposeTreaty"/>.</param>
+/// <param name="TreatyId">The treaty, for <see cref="DiplomaticCommandKind.BreakTreaty"/>.</param>
+/// <param name="Ask">What is asked, for <see cref="DiplomaticCommandKind.Request"/>.</param>
+public sealed record DiplomaticCommand(int GodId, int OtherGodId, DiplomaticCommandKind Kind, Politics.TreatyTerms? Terms = null, int? TreatyId = null, Politics.RequestAsk? Ask = null);
