@@ -80,12 +80,15 @@ internal sealed class SettlementView
     /// <summary>Updates the label and, when housing or construction changed, the houses, building site and fields.</summary>
     /// <param name="settlement">Current settlement state.</param>
     /// <param name="world">The world, for god names.</param>
-    public void Sync(SettlementState settlement, WorldState world)
+    /// <param name="fell">Collects the houses that fell since the last sync, for the debris (ADR-048).</param>
+    public void Sync(SettlementState settlement, WorldState world, List<HutPlacement> fell)
     {
         UpdateLabel(settlement, world);
         if ((settlement.Housing, settlement.ConstructionProgress, settlement.Ruins) != _siteInputs)
         {
+            var before = Site;
             ShowSite(settlement);
+            fell.AddRange(DebrisLayout.Fallen(before, Site));
         }
 
         var temple = settlement.Society.Buildings.Find(b => b.Kind == Domain.Society.BuildingKind.Temple);

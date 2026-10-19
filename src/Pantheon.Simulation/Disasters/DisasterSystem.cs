@@ -71,6 +71,7 @@ public sealed class DisasterSystem : ISimulationSystem
         _fires.Step(world, random, seconds, context.Events);
         BurnSettlements(world, random, seconds, context.Events);
         Hurricanes(world, random, seconds, context.Events);
+        _damage.Mend(world, seconds);
     }
 
     /// <summary>Every earthquake under way harms the life of the land it shakes, by its shaking (ADR-028).</summary>

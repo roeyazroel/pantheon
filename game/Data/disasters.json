@@ -51,6 +51,11 @@
   // Buildings (spec 94): the share of the damage houses escape. A Shield leaves ShieldedDamage of it.
   "HouseQuakeResistance": 0.3,
   "HouseFireResistance": 0.5,
+  "HouseFloodResistance": 0.25,
+  // Structural integrity (spec 94, ADR-048): each blow takes CrackPerShare of a village's integrity per
+  // share of its houses it would destroy; houses fall 1 + Weakness x (1 - integrity) times as easily;
+  // villages mend RepairPerSecond a second.
+  "Structure": { "CrackPerShare": 2.0, "Weakness": 1.0, "RepairPerSecond": 0.002 },
   "ShieldedDamage": 0.1,
 
   // Preparation (spec 21, ADR-023): architecture and engineering (per level) and a settlement's shelters,

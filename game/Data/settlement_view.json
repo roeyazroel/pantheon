@@ -82,5 +82,29 @@
     "Obelisk": "#2e2a30",
     "Flame": "#ff8a2a",
     "Column": "#ece6da"
+  },
+
+  // Debris (spec sections 94 and 55, ADR-048): when the simulation brings a house down, HousePlanks
+  // planks, HouseStones stones and HouseShards shards of thatch fly off; a thrown thing or a falling
+  // star throws up StrikeStones stones. Pieces fly out at up to Impulse m/s and up at Lift m/s,
+  // spinning up to Spin rad/s, land on a patch of ground GroundPatch metres across, and last Lifetime
+  // seconds, fading over the last FadeSeconds; at most MaxBodies at once, and none further than Reach
+  // metres from the camera.
+  "Debris": {
+    "Lifetime": 9.0,
+    "FadeSeconds": 2.0,
+    "MaxBodies": 240,
+    "HousePlanks": 6,
+    "HouseStones": 4,
+    "HouseShards": 3,
+    "StrikeStones": 7,
+    "Impulse": 5.0,
+    "Lift": 5.0,
+    "Spin": 6.0,
+    "Reach": 700.0,
+    "GroundPatch": 28.0,
+    "Wood": "#8a6440",
+    "Stone": "#8f8a82",
+    "Thatch": "#c9a24f"
   }
 }

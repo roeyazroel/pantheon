@@ -115,7 +115,7 @@ rule is followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
-- Current tools: the F1 debug panel (the performance metrics and the world's load, gods, the god AI's goal and top candidates with reasons,
+- Current tools: the F1 debug panel (the performance metrics, the debris and the world's load, gods, the god AI's goal and top candidates with reasons,
   its plans, the goals it is weighing and the gods it knows, and its diplomatic moves with their factors, influence, the Creature's behaviour, its state and behaviour tree, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
   others, and how yours would meet the nearest one, its attributes, paths and callings, the climate (the season and what it and a heat
@@ -126,7 +126,7 @@ rule is followed by the conventions that meet it in this repository.
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second, who decides and the sections a player received and how fresh they are, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier and local navigation,
-  water, society and technology, culture, dangers, pressure to leave, belief, Old Faith,
+  water, society and technology, culture, dangers and the houses' integrity, pressure to leave, belief, Old Faith,
   sanctuary and religious style, every followed villager with their needs, options and danger, the land's reshapings, every prophet's walk, last deed and time left, with the selected village's elder,
   the forest standing and the roads, with the selected village's stores, land and roads, and the
   great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the

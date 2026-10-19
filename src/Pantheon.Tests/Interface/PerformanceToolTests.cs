@@ -62,13 +62,15 @@ public sealed class PerformanceToolTests
         {
             FramesPerSecond = 118, FrameMilliseconds = 8.46, WorstFrameMilliseconds = 23.5, SimulationMilliseconds = 1.234, WorstSimulationMilliseconds = 4.4,
             TickMilliseconds = 0.31, TicksPerSecond = 160, ManagedMegabytes = 212.4, EngineMegabytes = 640.2, Objects = 23456, Nodes = 812, DrawCalls = 340,
-            Primitives = 1_234_000, CitizensShown = 4321, Save = new SaveTiming(10.3, 165, 240),
+            Primitives = 1_234_000, CitizensShown = 4321, Debris = 37, DebrisMoving = 12, Save = new SaveTiming(10.3, 165, 240),
         };
 
         var lines = DebugReadout.Build(Snapshot(session, sample)).Lines;
 
         Assert.Contains("Performance: 118 FPS, frame 8.5 ms (worst 23.5); simulation 1.23 ms a frame (worst 4.4), 0.31 ms a tick, 160 ticks/s", lines);
         Assert.Contains("  memory 212 MB managed, 640 MB engine; 23456 objects, 812 nodes; 340 draw calls, 1234.0k primitives; 4321 citizens shown", lines);
+        Assert.Contains("  physics: 37 debris pieces, 12 still moving", lines);
+        Assert.DoesNotContain(PerformanceReadout.Describe(sample with { Debris = 0 }), l => l.Contains("physics", StringComparison.Ordinal));
         Assert.Contains("  save: 10.3 MB written in 165 ms, read back in 240 ms", lines);
         Assert.Contains(PerformanceReadout.Census(session.World), lines);
         var world = session.World;

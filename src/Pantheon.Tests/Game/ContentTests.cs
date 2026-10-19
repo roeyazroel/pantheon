@@ -62,6 +62,8 @@ public sealed class ContentTests
     [InlineData("worldgen.json", "\"PatchStrength\": 0.6", "\"PatchStrength\": 1.6", "Resources.PatchStrength")]
     [InlineData("society.json", "\"Wood\": 25.0, \"Stone\": 15.0", "\"Wood\": 25.0, \"Stone\": 15.0, \"Iron\": 3", "Iron")]
     [InlineData("disasters.json", "\"Transmission\": 0.05", "\"Transmission\": 1.5", "GreatEvents.Plague.Transmission")]
+    [InlineData("disasters.json", "\"HouseFloodResistance\": 0.25", "\"HouseFloodResistance\": 1.25", "HouseFloodResistance")]
+    [InlineData("disasters.json", "\"Weakness\": 1.0", "\"Weakness\": -1.0", "Structure.Weakness")]
     [InlineData("disasters.json", "\"FirstMaxSeconds\": 2100.0", "\"FirstMaxSeconds\": 600.0", "longest waits must be at least its shortest")]
     [InlineData("disasters.json", "{ \"Kind\": \"Eclipse\", \"Names\"", "{ \"Kind\": \"Plague\", \"Names\"", "GreatEvents.Names must list known kinds, each once")]
     [InlineData("worldgen.json", "\"CoastMetres\": 32.0", "\"CoastMetres\": -4.0", "Landforms areas, distances and heights")]

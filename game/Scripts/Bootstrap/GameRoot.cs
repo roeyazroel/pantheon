@@ -117,6 +117,7 @@ public partial class GameRoot : Node3D
         AddChild(audio);
         audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
         _divine.EventsHandled += audio.Hear;
+        _divine.EventsHandled += _presenter.React;
         SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true);
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);

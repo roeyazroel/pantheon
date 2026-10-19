@@ -406,8 +406,11 @@ files and compiled assemblies and fails when either rule is broken.
   carries a settlement's drought, danger and thirst into its conditions. Since ADR-029
   `HazardModel` (the volcano, lava, waves, slides, impacts, spawning), `HazardSystem` (the hazard
   step) and `LivingHazards` (tornadoes, locusts, blight) run the rest of §19's hazards, and
-  `DisasterDamage.Strike` applies any of them to a settlement. See [Disasters](#disasters) and
-  [Hazards](#hazards).
+  `DisasterDamage.Strike` applies any of them to a settlement. Since ADR-048 `DisasterDamage.Destroy`
+  weakens cracked houses and cracks those left standing (`SettlementState.Integrity`,
+  `DisasterRules.Structure`), `Mend` repairs them, and `FloodStanding` spares houses a share of a
+  flood; `HazardModel.FallingStar` is a falling star's whole blow, for the hazard step and the debug
+  tools. See [Disasters](#disasters) and [Hazards](#hazards).
 - `Society/`: `SocietyModel` (targets of safety, happiness and stability, wealth, learning,
   focus, the next building), `SocietySystem` (the society step), `Expansion` (settlers founding
   villages), `SocietyAuthority` (priorities, checked) and `PriorityAdvisor` (AI gods' priorities).
@@ -446,7 +449,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (20 since ADR-045, for `WorldSection.Land`; 19 since
+- `NetworkProtocol`: the protocol version (21 since ADR-048, whose settlements carry their houses'
+  integrity; 20 since ADR-045, for `WorldSection.Land`; 19 since
   ADR-043, for `VillagerIntent` and the followed
   villagers sent with the notables; 18 since ADR-039, for the hand's offering and its
   action; 17 since ADR-038, whose regions and generation carry the
@@ -520,7 +524,9 @@ landforms, so the terrain grows as it was. Version 29 → 30 (`OfferingSaveMigra
 whatever a hand holds no stores. Version 30 → 31 (`VillagerSaveMigration`) gives the world no
 followed villagers; `VillagerIntegrity` checks them (one for each god, known villages and gods,
 needs and faith in 0..1, a life longer than their age). Version 31 → 32 (`LandSaveMigration`)
-gives the land no reshapings, and `LandIntegrity` checks them. A missing,
+gives the land no reshapings, and `LandIntegrity` checks them. Version 32 → 33
+(`StructureSaveMigration`) gives every settlement sound houses (integrity 1), and the save checks
+keep it in 0..1. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -773,6 +779,14 @@ gives the land no reshapings, and `LandIntegrity` checks them. A missing,
   rubble (`HazardCover`) over the land, keeps a funnel per tornado and a cloud per swarm
   (`HazardViews`), raises the volcano's plume while it rumbles or erupts, and lays a fading decal
   for each crack, slide and crater.
+- `Presentation/Disasters/DebrisPresenter` (ADR-048) throws debris as Jolt rigid bodies: box
+  planks, stones and thatch from `DebrisLayout.Burst` where houses fell (each `SettlementView`
+  hands its fallen houses, `DebrisLayout.Fallen` of its old and new layouts, to the
+  `WorldPresenter`) and where a thrown thing or a falling star struck, with the thrown rock or tree
+  itself (`DebrisLayout.Thrown`). Each burst lands on a `HeightMapShape3D` patch of the terrain
+  under it. Pieces fade and go after `Lifetime`, the oldest first beyond `MaxBodies`, and none are
+  thrown beyond `Reach` of the camera; `DebrisSettings` is in `settlement_view.json`. The pieces
+  are only shown and never saved.
 - `Presentation/GreatEvents/GreatEventPresenter` draws the beast (the Creature body with the
   "Beast" look, half-buried asleep, walking awake, on its side fallen, with its label) and the
   anomaly's column of light (ADR-035).
@@ -1390,7 +1404,9 @@ running for every settlement either way.
 - `LocalNavGrid` is a village's local navigation (§85, ADR-046), baked from its layout:
   - cells of `NavCellSize` metres; huts, ruins, the building site, the shrine, a built temple and
     water are blocked, with `NavClearance` of room;
-  - a way is straight when clear, else A* over the cells pulled taut, cached by its two ends.
+  - a way is straight when clear, else A* over the cells pulled taut, cached by its two ends;
+  - since ADR-048 the grid numbers its connected areas when baked, so a way between two areas is
+    known to be missing without a search, and A* runs on arrays kept for the grid's searches.
 
   `RepresentativeRoster` moves work spots that fall inside a hut just outside its wall.
 - `SettlementCrowd` keeps the roster in step with the aggregates. It rebuilds the roster only
@@ -1760,6 +1776,9 @@ numbers and the measured fires and earthquakes.
   regrows.
 - **Earthquakes** are processes: a few seconds of shaking, fading with distance from the
   epicentre, that collapse houses into ruins, kill, spill stores and start fires.
+- **Houses crack** (ADR-048): every blow that leaves houses standing lowers the village's
+  integrity, cracked houses fall more easily in the next, and villages mend them over minutes.
+  Houses resist quakes, fires and floods each by their own share.
 - **Settlements respond**: they fight fires in their region and rebuild ruins at half the work;
   the homeless fall ill. Survivors fear their gods and doubt that the gods care, and danger counts
   as hardship.
@@ -1773,7 +1792,11 @@ flowchart LR
     Fire --> Scorch["Scorch: smaller harvests"]
     Fire --> Damage["Houses, people, stores"]
     Quake["Earthquake"] --> Damage
+    Damage --> Cracks["Cracked houses (integrity)"]
+    Cracks --> Damage
+    Mending["Mending"] --> Cracks
     Damage --> Ruins["Ruins, the homeless"]
+    Ruins --> Debris["Debris (shown only)"]
     Ruins --> Rebuild["Rebuilding"]
     Damage --> Belief["Fear and doubt"]
     Shield["Shield"] --> Damage
@@ -2261,11 +2284,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 32 (current)
+    alt version 33 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 31
+    else versions 1 to 32
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 32, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings)
+        Mig-->>Save: JsonObject at version 33, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings, 32→33: the houses' integrity)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

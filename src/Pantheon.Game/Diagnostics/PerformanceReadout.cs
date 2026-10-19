@@ -57,6 +57,12 @@ public sealed record PerformanceSample
     /// <summary>Representative citizens drawn.</summary>
     public required int CitizensShown { get; init; }
 
+    /// <summary>Pieces of debris flying or lying (ADR-048).</summary>
+    public int Debris { get; init; }
+
+    /// <summary>Pieces of debris still moving: the rest have come to rest and sleep.</summary>
+    public int DebrisMoving { get; init; }
+
     /// <summary>The last save measured, if any.</summary>
     public SaveTiming? Save { get; init; }
 }
@@ -94,6 +100,11 @@ public static class PerformanceReadout
                 "  memory {0:0} MB managed, {1:0} MB engine; {2} objects, {3} nodes; {4} draw calls, {5:0.0}k primitives; {6} citizens shown",
                 sample.ManagedMegabytes, sample.EngineMegabytes, sample.Objects, sample.Nodes, sample.DrawCalls, sample.Primitives / 1000.0, sample.CitizensShown),
         };
+        if (sample.Debris > 0)
+        {
+            lines.Add(Format("  physics: {0} debris pieces, {1} still moving", sample.Debris, sample.DebrisMoving));
+        }
+
         if (sample.Save is { } save)
         {
             lines.Add(Format("  save: {0:0.0} MB written in {1:0} ms, read back in {2:0} ms", save.Megabytes, save.WriteMilliseconds, save.ReadMilliseconds));

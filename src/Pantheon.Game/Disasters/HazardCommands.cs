@@ -75,7 +75,8 @@ public static class HazardCommands
         {
             HazardKind.Tornado => Tornado(world, hazards, target),
             HazardKind.Landslide => Landslide(world, hazards, regionId),
-            HazardKind.Meteor => Format("A falling star strikes at ({0:0}, {1:0}): magnitude {2:0.0}", target.X, target.Z, HazardModel.Impact(rules, world, target).Magnitude),
+            HazardKind.Meteor => Format("A falling star strikes at ({0:0}, {1:0}): magnitude {2:0.0}", target.X, target.Z, session.Command((_, events) =>
+                HazardModel.FallingStar(rules, session.Content.SettlementRules, session.Content.DivineRules, session.Content.Domains, session.Content.Creatures.Callings, world, target, events)).Magnitude),
             HazardKind.Blight => Blight(world, regionId),
             HazardKind.Locusts => Locusts(world, hazards, target),
             HazardKind.Tsunami => HazardModel.RaiseTsunami(hazards.Tsunami with { MinMagnitude = 0f, CoastDistance = float.MaxValue }, world, target, 7f) is { } wave

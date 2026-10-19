@@ -52,8 +52,9 @@ internal sealed class PerformanceMonitor
 
     /// <summary>The measurements over the last frames.</summary>
     /// <param name="crowds">Each settlement's crowd, for the citizens drawn.</param>
+    /// <param name="debris">Pieces of debris in the world, and those still moving.</param>
     /// <returns>The sample.</returns>
-    public PerformanceSample Sample(IReadOnlyList<CrowdStatus> crowds)
+    public PerformanceSample Sample(IReadOnlyList<CrowdStatus> crowds, (int Pieces, int Moving) debris)
     {
         var frames = _frames.Count > 0 ? _frames.ToList() : [(0.0, 0.0, 0L)];
         var seconds = frames.Sum(f => f.Frame) / 1000.0;
@@ -75,6 +76,8 @@ internal sealed class PerformanceMonitor
             DrawCalls = (long)Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame),
             Primitives = (long)Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame),
             CitizensShown = crowds.Sum(c => c.Representatives),
+            Debris = debris.Pieces,
+            DebrisMoving = debris.Moving,
             Save = _save,
         };
     }

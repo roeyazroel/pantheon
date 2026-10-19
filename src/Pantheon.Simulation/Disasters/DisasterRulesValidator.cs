@@ -52,6 +52,10 @@ public static class DisasterRulesValidator
         errors.RequireShare(rules.QuakeFireChance, nameof(rules.QuakeFireChance));
         errors.RequireShare(rules.HouseQuakeResistance, nameof(rules.HouseQuakeResistance));
         errors.RequireShare(rules.HouseFireResistance, nameof(rules.HouseFireResistance));
+        errors.RequireShare(rules.HouseFloodResistance, nameof(rules.HouseFloodResistance));
+        errors.RequireNonNegative(rules.Structure.CrackPerShare, "Structure.CrackPerShare");
+        errors.RequireNonNegative(rules.Structure.Weakness, "Structure.Weakness");
+        errors.RequireShare(rules.Structure.RepairPerSecond, "Structure.RepairPerSecond");
         errors.RequireShare(rules.ShieldedDamage, nameof(rules.ShieldedDamage));
         HazardRulesValidator.Check(errors, rules);
         GreatEvents.GreatEventRulesValidator.Check(errors, rules.GreatEvents);

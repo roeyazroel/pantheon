@@ -19,6 +19,11 @@ internal static class GreatEventIntegrity
             {
                 errors.Add($"Settlement {settlement.Id} has plague or immunity outside 0..1.");
             }
+
+            if (settlement.Integrity is not (>= 0f and <= 1f))
+            {
+                errors.Add($"Settlement {settlement.Id} has its houses' integrity outside 0..1 (ADR-048).");
+            }
         }
 
         var state = world.GreatEvents;

@@ -36,6 +36,9 @@ public sealed class SettlementPresenter
     /// <summary>Tier and representatives of every settlement after the latest <see cref="UpdateCitizens"/>.</summary>
     public IReadOnlyList<CrowdStatus> CrowdStatuses { get; private set; } = [];
 
+    /// <summary>The houses that fell during the latest <see cref="Sync"/>, for the debris (ADR-048).</summary>
+    public List<HutPlacement> Fell { get; } = [];
+
     /// <summary>Replaces all settlement visuals with ones built from the world.</summary>
     /// <param name="world">World whose settlements are shown.</param>
     /// <param name="terrain">Terrain they stand on.</param>
@@ -58,11 +61,12 @@ public sealed class SettlementPresenter
             return;
         }
 
+        Fell.Clear();
         foreach (var settlement in world.Settlements)
         {
             if (_views.TryGetValue(settlement.Id, out var view))
             {
-                view.Sync(settlement, world);
+                view.Sync(settlement, world, Fell);
             }
             else
             {

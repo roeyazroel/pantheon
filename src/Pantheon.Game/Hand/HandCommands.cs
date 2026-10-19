@@ -31,6 +31,40 @@ public static class HandCommands
             : UseAs(session, session.LocalGodId ?? 0, action, target).Text;
     }
 
+    /// <summary>
+    /// Lifts a rock or a tree from just beyond the hand's reach of a village and throws it at the
+    /// village, for captures (<c>--hand=throw</c>, ADR-048). Anything else lifted on the way is set down
+    /// again where it was.
+    /// </summary>
+    /// <param name="session">The session; a joined player cannot.</param>
+    /// <param name="target">The village's place.</param>
+    /// <returns>Status line.</returns>
+    public static string ThrowAt(GameSession session, GroundPosition target)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (session.Client is not null || session.LocalGodId is not { } god)
+        {
+            return "Only a world of your own can throw at the start";
+        }
+
+        var away = session.Content.DivineRules.Hand.Reach + 20f;
+        foreach (var (dx, dz) in new[] { (1f, 0f), (-1f, 0f), (0f, 1f), (0f, -1f) })
+        {
+            var from = new GroundPosition(target.X + (dx * away), target.Z + (dz * away));
+            UseAs(session, god, HandAction.PickUp, from);
+            switch (session.LocalGod?.Held?.Kind)
+            {
+                case HeldKind.Rock or HeldKind.Tree:
+                    return UseAs(session, god, HandAction.Throw, target).Text;
+                case not null:
+                    UseAs(session, god, HandAction.SetDown, from);
+                    break;
+            }
+        }
+
+        return "There is no rock or tree to throw near here";
+    }
+
     /// <summary>A god's use of its hand, as its player's intent.</summary>
     /// <param name="session">The session.</param>
     /// <param name="godId">The god.</param>

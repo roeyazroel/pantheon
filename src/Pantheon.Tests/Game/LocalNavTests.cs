@@ -126,6 +126,20 @@ public sealed class LocalNavTests
         Assert.NotSame(baked, crowd.Navigation);
     }
 
+    [Fact]
+    public void AGoalSealedOffByWater_HasNoWay_WhileWaysOutsideStillGoRoundAHut()
+    {
+        var hut = new HutPlacement(new Vector3(100f, 5f, 100f), 0f, 1f);
+        var terrain = FlatTerrain((x, z) => Vector2.Distance(new Vector2(x, z), new Vector2(70f, 60f)) is > 6f and < 10f ? -2f : 5f);
+        var grid = LocalNavGrid.Build(Site([hut]), Village(), terrain, Citizens);
+
+        Assert.True(grid.IsBlocked(new Vector2(78f, 60f)) && !grid.IsBlocked(new Vector2(70f, 60f)));
+        Assert.Null(grid.Way(new Vector2(70f, 60f), new Vector2(50f, 60f)));
+        Assert.Null(grid.Way(new Vector2(50f, 60f), new Vector2(70f, 60f)));
+        Assert.NotNull(grid.Way(new Vector2(90f, 100f), new Vector2(110f, 100f)));
+        Assert.Equal((3, 1), (grid.Searches, grid.Detours));
+    }
+
     /// <summary>Whether a point lies inside a hut's walls.</summary>
     private static bool InAHut(SettlementSite site, Vector2 point) =>
         site.Houses.Any(h => Vector2.Distance(new Vector2(h.Position.X, h.Position.Z), point) < (LocalNavGrid.HutRadius * h.Scale) - 0.15f);
@@ -153,11 +167,12 @@ public sealed class LocalNavTests
     /// <summary>A village with no buildings.</summary>
     private static Domain.Settlements.SettlementState Village() => SettlementWorlds.Settlement(SettlementWorlds.Create(100, 120, 400f, 0.6f));
 
-    /// <summary>Flat dry ground 5 m above the sea, 256 m across.</summary>
-    private static TerrainField FlatTerrain()
+    /// <summary>Flat dry ground 5 m above the sea, 256 m across, or ground of the given heights.</summary>
+    private static TerrainField FlatTerrain(Func<float, float, float>? height = null)
     {
         const int side = 129;
         var count = side * side;
-        return new TerrainField(side, 2f, Enumerable.Repeat(5f, count).ToArray(), new float[count], new float[count], Enumerable.Repeat(Biome.Grassland, count).ToArray());
+        var heights = Enumerable.Range(0, count).Select(i => height?.Invoke(i % side * 2f, i / side * 2f) ?? 5f).ToArray();
+        return new TerrainField(side, 2f, heights, new float[count], new float[count], Enumerable.Repeat(Biome.Grassland, count).ToArray());
     }
 }

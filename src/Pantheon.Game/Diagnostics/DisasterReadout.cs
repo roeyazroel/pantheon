@@ -115,7 +115,7 @@ public static class DisasterReadout
             : string.Empty;
         var farmland = SettlementEconomy.SurveyFarmland(world.Regions, settlement.RegionId, snapshot.SettlementRules.FarmlandRadius);
         return Format(
-            "  dangers: fire threat {0:0.00}, shaking {1:0.00}; {2} in ruins, {3:0%} homeless, scorched land {4:0.00}, blight {5:0.00}, rubble {6:0.00}{7}",
+            "  dangers: fire threat {0:0.00}, shaking {1:0.00}; {2} in ruins, houses' integrity {8:0.00}, {3:0%} homeless, scorched land {4:0.00}, blight {5:0.00}, rubble {6:0.00}{7}",
             DisasterModel.FireThreat(snapshot.SettlementRules, world.Regions, settlement),
             DisasterModel.ShakingAt(world.Disasters, settlement.Position),
             settlement.Ruins,
@@ -123,7 +123,8 @@ public static class DisasterReadout
             farmland.MeanScorch,
             farmland.MeanBlight,
             world.Regions.Cells[settlement.RegionId].Rubble,
-            shield);
+            shield,
+            settlement.Integrity);
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

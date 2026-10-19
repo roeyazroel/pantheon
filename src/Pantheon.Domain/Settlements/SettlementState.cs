@@ -73,6 +73,9 @@ public sealed class SettlementState
     /// <summary>Stone in store (ADR-033): quarried from the land around, spent on buildings and roads.</summary>
     public float Stone { get; set; }
 
+    /// <summary>The structural integrity of its houses (0..1, spec §94, ADR-048): disasters crack them, and the village mends them.</summary>
+    public float Integrity { get; set; } = 1f;
+
     /// <summary>The share of its people sick with the plague (0..1, ADR-034).</summary>
     public float Plague { get; set; }
 

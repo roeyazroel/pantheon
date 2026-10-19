@@ -36,6 +36,23 @@ internal sealed class DisasterDamage
         _callings = callings;
     }
 
+    /// <summary>Share of a flood's damage to houses that stands (spec §94: FloodResistance, ADR-048).</summary>
+    public float FloodStanding => 1f - _rules.HouseFloodResistance;
+
+    /// <summary>Villages mend their cracked houses (ADR-048).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="seconds">Seconds since the last step.</param>
+    public void Mend(WorldState world, float seconds)
+    {
+        foreach (var settlement in world.Settlements)
+        {
+            if (settlement.Population > 0 && settlement.Integrity < 1f)
+            {
+                settlement.Integrity = SimMath.Clamp01(settlement.Integrity + (_rules.Structure.RepairPerSecond * seconds));
+            }
+        }
+    }
+
     /// <summary>Share of disaster damage a settlement takes: all of it, a little under a Shield, and less with a Guardian Creature of its god near (ADR-030).</summary>
     public float Protection(WorldState world, SettlementState settlement) =>
         (DisasterModel.IsShielded(settlement, world.Tick) ? _rules.ShieldedDamage : 1f) * (_callings is null ? 1f : Creatures.CallingEffects.Shield(_callings, world, settlement));
@@ -106,12 +123,18 @@ internal sealed class DisasterDamage
     // Preparations never spare more than this share of a disaster.
     private const float MaxPrepared = 0.9f;
 
-    /// <summary>Destroys a Poisson draw of the settlement's houses; their housing is lost and they become ruins.</summary>
+    /// <summary>
+    /// Destroys a Poisson draw of the settlement's houses; their housing is lost and they become ruins.
+    /// Cracked houses fall more easily, and every blow cracks those left standing (ADR-048).
+    /// </summary>
     /// <returns>Houses destroyed.</returns>
     public int Destroy(SettlementState settlement, SimulationRandom random, float share)
     {
         var houses = SettlementEconomy.ComputeHouseCount(_settlementRules, settlement.Housing);
-        var lost = Math.Min(houses, random.NextPoisson(houses * Math.Max(0f, share)));
+        var structure = _rules.Structure;
+        var weakened = Math.Max(0f, share) * (1f + (structure.Weakness * (1f - SimMath.Clamp01(settlement.Integrity))));
+        settlement.Integrity = SimMath.Clamp01(settlement.Integrity - (structure.CrackPerShare * Math.Max(0f, share)));
+        var lost = Math.Min(houses, random.NextPoisson(houses * weakened));
         settlement.Housing = Math.Max(0, settlement.Housing - (lost * _settlementRules.HousingPerHouse));
         settlement.Ruins += lost;
         return lost;

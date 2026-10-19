@@ -2,7 +2,13 @@ using System;
 using System.Collections.Generic;
 using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Ecology;
+using Pantheon.Domain.Belief;
+using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Events;
+using Pantheon.Domain.Gods;
+using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
+using Pantheon.Simulation.Randomness;
 
 namespace Pantheon.Simulation.Disasters;
 
@@ -144,6 +150,45 @@ public static class HazardModel
         slid.Damage = SimMath.Clamp01(slid.Damage + rules.Damage);
         buried.Damage = SimMath.Clamp01(buried.Damage + rules.Damage);
         AddMark(world, TerrainMarkKind.Slide, grid.GetRegionCenter(belowId), grid.RegionSize);
+    }
+
+    /// <summary>
+    /// A falling star called down by the debug tools (ADR-048): what a falling star does when one falls
+    /// of itself, with the stream drawn from the seed and the tick.
+    /// </summary>
+    /// <param name="rules">Disaster rules.</param>
+    /// <param name="settlementRules">Settlement rules, for the houses.</param>
+    /// <param name="divine">Divine rules, for the protection of the gods.</param>
+    /// <param name="domains">The domains, for their boons.</param>
+    /// <param name="callings">The Creatures' callings, for a Protector's shelter.</param>
+    /// <param name="world">World state.</param>
+    /// <param name="point">Where it strikes.</param>
+    /// <param name="events">Receives the news of it.</param>
+    /// <returns>The earthquake it sets off.</returns>
+    public static Earthquake FallingStar(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, DomainRules? domains, CallingRules? callings, WorldState world, GroundPosition point, ICollection<WorldEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(events);
+        var raised = new List<WorldEvent>();
+        var random = new SimulationRandom(SeedMixer.Derive(world.Seed, "falling-star", world.Tick));
+        var quake = FallingStar(rules, new DisasterDamage(rules, settlementRules, divine, domains, callings), world, point, random, raised);
+        raised.ForEach(events.Add);
+        return quake;
+    }
+
+    /// <summary>A falling star: its crater and quake, the news of it, and the ruin it brings to the villages around it.</summary>
+    internal static Earthquake FallingStar(DisasterRules rules, DisasterDamage damage, WorldState world, GroundPosition point, SimulationRandom random, List<WorldEvent> events)
+    {
+        var meteor = rules.Hazards.Meteor;
+        var quake = Impact(rules, world, point);
+        events.Add(new MeteorStruck { Tick = world.Tick, Position = point });
+        events.Add(new EarthquakeStruck { Tick = world.Tick, QuakeId = quake.Id, Epicentre = point, Magnitude = quake.Magnitude, GodId = null });
+        foreach (var settlement in world.Settlements)
+        {
+            damage.Strike(world, settlement, DisasterKind.Meteor, meteor.HousingLoss, meteor.Deaths, Falloff(settlement.Position, point, meteor.Radius), random, events);
+        }
+
+        return quake;
     }
 
     /// <summary>A meteor strikes: the land around it is harmed and scarred, the impact sets it alight and leaves a crater.</summary>

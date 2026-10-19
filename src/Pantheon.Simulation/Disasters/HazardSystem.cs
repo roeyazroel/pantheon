@@ -243,12 +243,6 @@ public sealed class HazardSystem : ISimulationSystem
 
         var centre = world.Regions.GetRegionCenter(land[random.NextInt(land.Count)].Id);
         var point = new GroundPosition(centre.X + ((random.NextFloat() - 0.5f) * world.Regions.RegionSize), centre.Z + ((random.NextFloat() - 0.5f) * world.Regions.RegionSize));
-        var quake = HazardModel.Impact(_rules, world, point);
-        events.Add(new MeteorStruck { Tick = world.Tick, Position = point });
-        events.Add(new EarthquakeStruck { Tick = world.Tick, QuakeId = quake.Id, Epicentre = point, Magnitude = quake.Magnitude, GodId = null });
-        foreach (var settlement in world.Settlements)
-        {
-            _damage.Strike(world, settlement, DisasterKind.Meteor, rules.HousingLoss, rules.Deaths, HazardModel.Falloff(settlement.Position, point, rules.Radius), random, events);
-        }
+        HazardModel.FallingStar(_rules, _damage, world, point, random, events);
     }
 }

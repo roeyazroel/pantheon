@@ -160,6 +160,9 @@ internal static class SaveMigrations
             case 31:
                 LandSaveMigration.UpgradeFrom31(root);
                 break;
+            case 32:
+                StructureSaveMigration.UpgradeFrom32(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

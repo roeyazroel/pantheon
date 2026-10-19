@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
+using Pantheon.Client.Presentation.Disasters;
 using Pantheon.Client.Presentation.Land;
 using Pantheon.Client.Presentation.Regions;
 using Pantheon.Client.Presentation.Settlements;
 using Pantheon.Client.Presentation.Terrain;
 using Pantheon.Client.Presentation.Water;
+using Pantheon.Domain.Events;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Launch;
@@ -30,6 +32,9 @@ public sealed class WorldPresenter
     private readonly RoadPresenter _roads;
     private readonly GreatEvents.GreatEventPresenter _greatEvents;
     private readonly RegionBoundaryOverlay _regions;
+    private readonly DebrisPresenter _debris;
+    private readonly Camera3D _camera;
+    private TerrainField? _terrainField;
 
     /// <summary>Creates one child layer per kind of visual under <paramref name="root"/>.</summary>
     /// <param name="root">Node that holds the world visuals.</param>
@@ -48,11 +53,16 @@ public sealed class WorldPresenter
         _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
         _greatEvents = new GreatEvents.GreatEventPresenter(root.AddLayer("GreatEvents"), content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
+        _debris = new DebrisPresenter(root.AddLayer("Debris"), content.SettlementView.Debris, () => _terrainField!);
+        _camera = camera;
         Style = content.SettlementView.Style;
     }
 
     /// <summary>How religion shows in villages (ADR-042), for the debug view.</summary>
     public Pantheon.Game.Presentation.StyleSettings Style { get; }
+
+    /// <summary>Pieces of debris flying or lying, and those still moving (ADR-048).</summary>
+    public (int Pieces, int Moving) Debris => (_debris.Count, _debris.Moving);
 
     /// <summary>Name of the active terrain renderer.</summary>
     public string TerrainBackend => _terrain.BackendName;
@@ -81,6 +91,8 @@ public sealed class WorldPresenter
         _roads.Rebuild(world, terrain);
         _greatEvents.Rebuild(terrain);
         _regions.Build(world.Regions, terrain);
+        _debris.Clear();
+        _terrainField = terrain;
         GD.Print($"World visuals for seed {world.Seed} built in {stopwatch.ElapsedMilliseconds} ms ({TerrainBackend}).");
     }
 
@@ -93,10 +105,22 @@ public sealed class WorldPresenter
     public void Sync(WorldState world, double delta)
     {
         _settlements.Sync(world);
+        _debris.Houses(_settlements.Fell, _camera.GlobalPosition);
+        _debris.Sync(delta);
         _freshWater.Sync(world);
         _forests.Sync(world, delta);
         _roads.Sync(world);
         _greatEvents.Sync(world, delta);
+    }
+
+    /// <summary>Throws up stones where the hand's thrown things or falling stars struck (ADR-048).</summary>
+    /// <param name="events">The events handled this frame.</param>
+    public void React(IReadOnlyList<WorldEvent> events)
+    {
+        if (_terrainField is not null)
+        {
+            _debris.React(events, _camera.GlobalPosition);
+        }
     }
 
     /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens near it.</summary>

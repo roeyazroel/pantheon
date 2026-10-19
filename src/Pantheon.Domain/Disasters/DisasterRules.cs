@@ -102,6 +102,12 @@ public sealed record DisasterRules
     /// <summary>How well houses stand up to fire (spec §94: FireResistance): the share of the damage they escape.</summary>
     public required float HouseFireResistance { get; init; }
 
+    /// <summary>How well houses stand up to floods (spec §94: FloodResistance, ADR-048): the share of the damage they escape; none when absent.</summary>
+    public float HouseFloodResistance { get; init; }
+
+    /// <summary>How disasters crack the houses left standing and villages mend them (spec §94: StructuralIntegrity, ADR-048); none when absent.</summary>
+    public StructureRules Structure { get; init; } = StructureRules.None;
+
     /// <summary>Share of disaster damage a shielded settlement still takes.</summary>
     public required float ShieldedDamage { get; init; }
 
@@ -153,4 +159,24 @@ public sealed record Preparedness
     {
         ArchitecturePerLevel = 0f, EngineeringPerLevel = 0f, ShelterDeaths = 0f, FirebreakDamage = 0f, LeveeDamage = 0f, GranaryFood = 0f,
     };
+}
+
+/// <summary>
+/// The structural integrity of a village's houses (spec §94, ADR-048): every disaster that reaches it
+/// cracks the houses it leaves standing, cracked houses fall more easily in the next, and the village
+/// mends them over time. <see cref="None"/> leaves houses whole.
+/// </summary>
+public sealed record StructureRules
+{
+    /// <summary>Houses never crack.</summary>
+    public static StructureRules None { get; } = new();
+
+    /// <summary>How much integrity a disaster takes, per share of the houses it would destroy.</summary>
+    public float CrackPerShare { get; init; }
+
+    /// <summary>How much more easily houses fall at no integrity: the damage is 1 + this times the integrity lost.</summary>
+    public float Weakness { get; init; }
+
+    /// <summary>Integrity mended per second.</summary>
+    public float RepairPerSecond { get; init; }
 }

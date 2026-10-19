@@ -80,7 +80,7 @@ internal sealed class DebugView
     public string Report()
     {
         Performance.MeasureSave(_session);
-        return string.Join("\n", PerformanceReadout.Describe(Performance.Sample(_presenter.CrowdStatuses)).Append(PerformanceReadout.Census(_session.World)));
+        return string.Join("\n", PerformanceReadout.Describe(Performance.Sample(_presenter.CrowdStatuses, _presenter.Debris)).Append(PerformanceReadout.Census(_session.World)));
     }
 
     /// <summary>Redraws the region debug map when its layer, the cursor region, the tick or the world changed.</summary>
@@ -124,7 +124,7 @@ internal sealed class DebugView
         CreatureOptions = _session.PreviewCreatureOptions(),
         CreatureResponses = Pantheon.Game.Creatures.CreatureCommands.PreviewResponses(_session),
         NetworkLines = _network.Lines(_session),
-        Performance = Performance.Sample(_presenter.CrowdStatuses),
+        Performance = Performance.Sample(_presenter.CrowdStatuses, _presenter.Debris),
         GodDiplomacyCandidates = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodDiplomacy(god)))],
         GodAiCandidates = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodAi(god)))],
         GodGoalOptions = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodGoals(god)))],

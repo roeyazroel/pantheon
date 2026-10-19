@@ -810,6 +810,15 @@ go hungry. The line under your HUD names the season and the time left in it ("Wi
 - **Earthquakes.** Now and then the ground shakes for a few seconds. Houses collapse, people die,
   stores spill and fires may break out, worst near the epicentre; the camera shakes with the
   ground.
+- **Cracked houses (spec §94, ADR-048).** Every disaster that strikes a village's houses (a quake, a
+  fire, a flood, a storm, a falling star and the rest) cracks those it leaves standing. A village whose houses are cracked loses more of them in the next
+  disaster, so two quakes close together do far more harm than one; its people mend the cracks
+  over a few minutes. Houses stand up to floods better than to the other disasters, and a flood
+  takes a quarter fewer of them.
+- **Debris.** When houses fall near the camera, their planks, stones and thatch fly and tumble to
+  the ground, and the stones a falling star or a thrown rock throws up do the same; a thrown rock
+  or tree lands and rolls where it struck. The pieces settle and fade after nine seconds. The
+  simulation decides what falls; the debris is only shown.
 - **Afterwards.** Fallen houses stay as rubble until the village rebuilds them, which takes half
   the work of a new house. People without a roof fall ill. Survivors fear their gods and doubt that
   the gods care; a god who shields or helps them in danger earns their love.
@@ -1385,6 +1394,10 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
   Unattended runs end by logging one summary line per settlement, with its tier and the
   citizens shown, then the performance lines with a save timed, and the world's load.
+- The selected settlement's dangers line in the debug panel shows its houses' integrity (1 is
+  sound), and the performance lines count the debris pieces and those still moving.
+  `--disaster=meteor` and the I key's falling star strike villages as a natural one does, and
+  `--hand=throw` throws a rock or a tree at the focused settlement.
 - **Stress testing (spec §104, ADR-044).** `--stress=on` makes the stress scenario: the vast island
   with 50 villages of 2,000 people (100,000 in all), 8 gods and their Creatures, 20 weather cells,
   and an earthquake, a fire and a flood at once, the camera over the busiest villages and thousands
@@ -1426,7 +1439,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
 | `--villager=on\|off` | You follow one of the focused settlement's people at the start, the camera on them (ADR-043). |
 | `--reshape=island\|gorge\|river` | Raise an island, split a mountain or turn a river near the focused settlement at the start, as the Divine Act would, and look at it (ADR-045; without `--camera-distance`, which looks at the settlement). |
-| `--hand=villagers\|creature\|offering` | Your hand lifts villagers of the focused settlement, your Creature, or an offering from the focused settlement's stores, at the start (for captures). |
+| `--hand=villagers\|creature\|offering\|throw` | Your hand lifts villagers of the focused settlement, your Creature, or an offering from the focused settlement's stores, or throws a rock or a tree from beside the focused settlement at it, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm\|heatwave\|coldwave\|hurricane` | Start in a weather spell, or with a storm or a hurricane over the focused settlement. |

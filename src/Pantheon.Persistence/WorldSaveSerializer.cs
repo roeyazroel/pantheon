@@ -41,9 +41,10 @@ public static class WorldSaveSerializer
     /// (part 17) added Creatures' courage, protectiveness, jealousy and playfulness; version 29
     /// (part 18) added the generation's landforms; version 30 (part 19) added the stores of an
     /// offering in a god's hand; version 31 (part 22) added the villagers the gods follow; version 32
-    /// (part 24) added the land's reshapings by Divine Acts.
+    /// (part 24) added the land's reshapings by Divine Acts; version 33 (part 27) added the structural
+    /// integrity of every settlement's houses.
     /// </summary>
-    public const int CurrentSaveVersion = 32;
+    public const int CurrentSaveVersion = 33;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;
