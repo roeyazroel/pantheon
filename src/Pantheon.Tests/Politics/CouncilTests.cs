@@ -113,7 +113,7 @@ public sealed class CouncilTests
         DivineWorlds.Believe(village, adherence: 0.6f, faith: 0.6f);
         village.Ruins = 3;
         world.History.Add(new HistoryRecord { Tick = world.Tick, Kind = HistoryKind.Earthquake, SettlementId = village.Id, GodId = null, OtherGodId = null, CreatureId = null, OtherCreatureId = null, Count = 12 });
-        var caster = new MiracleCaster(DivineWorlds.Rules, SettlementWorlds.Rules, DivineWorlds.Miracles, politics: Rules);
+        var caster = new MiracleCaster(DivineWorlds.Rules, SettlementWorlds.Rules, DivineWorlds.Miracles, diplomacy: DiplomacyWorlds.Rules);
         var before = caster.Check(world, new CastMiracleRequest(Me, "food", village.Position), Me).Cost;
         var events = new List<WorldEvent>();
 
@@ -134,7 +134,7 @@ public sealed class CouncilTests
         var village = world.Settlements[0];
         DivineWorlds.Believe(village, adherence: 0.6f, faith: 0.6f);
         world.Diplomacy.Council.Decrees.Add(new CouncilDecree { Motion = new CouncilMotion { Kind = CouncilMotionKind.ProhibitPractice, Practice = Practice.Smiting, Secret = false }, PassedTick = world.Tick, EndsTick = world.Tick + 5000 });
-        var caster = new MiracleCaster(DivineWorlds.Rules, SettlementWorlds.Rules, DivineWorlds.Miracles, new DiplomacyLedger(DiplomacyWorlds.Rules), politics: Rules);
+        var caster = new MiracleCaster(DivineWorlds.Rules, SettlementWorlds.Rules, DivineWorlds.Miracles, new DiplomacyLedger(DiplomacyWorlds.Rules), diplomacy: DiplomacyWorlds.Rules);
         var events = new List<WorldEvent>();
 
         caster.Cast(world, new CastMiracleRequest(Me, "food", village.Position), Me, events);

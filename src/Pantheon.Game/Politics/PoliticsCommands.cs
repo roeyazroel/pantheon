@@ -7,11 +7,13 @@ using Pantheon.Simulation.Politics;
 
 namespace Pantheon.Game.Politics;
 
-/// <summary>A button in the diplomacy or council panel: a label and the command it gives.</summary>
+/// <summary>A button in the diplomacy, council or settlements panel: a label and the command it gives.</summary>
 /// <param name="Label">What the button says.</param>
 /// <param name="Diplomacy">The diplomatic command, if it is one.</param>
 /// <param name="Council">The council command, if it is one.</param>
-public sealed record PoliticsAction(string Label, DiplomaticCommand? Diplomacy = null, CouncilCommand? Council = null);
+/// <param name="Proxy">The proxy act, if it is one (ADR-026).</param>
+/// <param name="HolyWar">The word to a holy war, if it is one (ADR-026).</param>
+public sealed record PoliticsAction(string Label, DiplomaticCommand? Diplomacy = null, CouncilCommand? Council = null, Domain.Conflict.ProxyCommand? Proxy = null, Simulation.Conflict.HolyWarCommand? HolyWar = null);
 
 /// <summary>The player's treaties, requests and council business (spec §38–42, ADR-025). Each command returns a status line.</summary>
 public static class PoliticsCommands
@@ -29,6 +31,11 @@ public static class PoliticsCommands
             return session.Client is { } client
                 ? client.Request(id => new Networking.Protocol.DiplomacyIntent(id, move.OtherGodId, move.Kind, move.Terms, move.TreatyId, move.Ask))
                 : DiplomacyAs(session, session.LocalGodId ?? 0, move).Text;
+        }
+
+        if (action.Proxy is not null || action.HolyWar is not null)
+        {
+            return Conflict.ConflictCommands.Run(session, action);
         }
 
         if (action.Council is { } council)
@@ -179,6 +186,7 @@ public static class PoliticsCommands
         {
             DiplomaticCommandKind.BreakTreaty => PoliticsText.Format("You broke your treaty with {0}", other),
             DiplomaticCommandKind.Absorb => PoliticsText.Format("You absorbed {0}'s followers where you lead", other),
+            DiplomaticCommandKind.DemandSurrender => PoliticsText.Format("You demand {0}'s surrender", other),
             DiplomaticCommandKind.OfferAlliance or DiplomaticCommandKind.BreakAlliance or DiplomaticCommandKind.DeclareWar or DiplomaticCommandKind.RequestPeace
                 or DiplomaticCommandKind.Accept or DiplomaticCommandKind.Decline or DiplomaticCommandKind.ProposeTreaty or DiplomaticCommandKind.Request
                 => PoliticsText.Format("{0}: {1}", DiplomacyText.Command(command.Kind), other),

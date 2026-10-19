@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Game.Divine;
 using Pantheon.Simulation.Diplomacy;
@@ -44,6 +45,12 @@ public sealed record DiplomacyEntry
 
     /// <summary>Treaties, favours, its proposal and what you could propose or ask (ADR-025).</summary>
     public required Politics.PoliticsEntry Politics { get; init; }
+
+    /// <summary>The war between you, with its goal and score (ADR-026); empty when at peace.</summary>
+    public required string War { get; init; }
+
+    /// <summary>What you know of it (ADR-026): how well informed you are, and what that shows.</summary>
+    public required string Intelligence { get; init; }
 }
 
 /// <summary>Builds the diplomacy panel from the session. Pure.</summary>
@@ -57,6 +64,7 @@ public static class DiplomacyReadout
         DiplomaticCommandKind.RequestPeace,
         DiplomaticCommandKind.Accept,
         DiplomaticCommandKind.Decline,
+        DiplomaticCommandKind.DemandSurrender,
     ];
 
     /// <summary>One entry per other god.</summary>
@@ -105,10 +113,31 @@ public static class DiplomacyReadout
                 Proposal = DiplomacyAuthority.FindProposal(world, god.Id, me)?.Kind,
                 Available = available,
                 Politics = Politics.PoliticsReadout.ForGod(session, god.Id, choice ?? Politics.TreatyChoice.Default),
+                War = Simulation.Conflict.WarBook.Find(world, me, god.Id) is { } war ? Conflict.ConflictText.War(session.Content.Diplomacy.Conflict, world, war, me) : string.Empty,
+                Intelligence = Intelligence(session, me, god),
             });
         }
 
         return entries;
+    }
+
+    /// <summary>
+    /// What the player knows of a god (spec §43): well informed, it sees its Divine Power and, of an
+    /// ally, whether it is weighing betrayal; partly informed, a rough count; in the dark, little.
+    /// </summary>
+    private static string Intelligence(GameSession session, int me, Domain.Gods.GodState god)
+    {
+        var intel = Simulation.Conflict.IntelModel.Level(session.Content.Diplomacy.Conflict, session.World, me, god.Id);
+        var line = "You are " + Conflict.ConflictText.Intel(intel) + " of it";
+        if (intel < 0.6f)
+        {
+            return line + ".";
+        }
+
+        line += Conflict.ConflictText.Format(": its Divine Power is {0:0}", god.DivinePower);
+        var plotting = DiplomacyModel.AreAllied(session.World, me, god.Id)
+            && session.PreviewGodDiplomacy(god).Any(c => c.Kind is DiplomaticCommandKind.BreakAlliance or DiplomaticCommandKind.Absorb && c.OtherGodId == me && c.Utility > 0f);
+        return line + (plotting ? "; it is weighing betrayal." : ".");
     }
 
     /// <summary>How the world sees the god (ADR-024), for example " (seen as cruel, vengeful)", or empty.</summary>

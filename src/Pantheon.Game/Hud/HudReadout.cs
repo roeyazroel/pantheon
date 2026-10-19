@@ -99,7 +99,7 @@ public static class HudReadout
             TargetValid = valid,
             TargetRadius = selected?.Radius ?? 0f,
             Creature = BuildCreatureCard(session),
-            Rivals = BuildRivals(session.World, god.Id, session.Players),
+            Rivals = BuildRivals(session.Content.Diplomacy.Conflict, session.World, god.Id, session.Players),
             Contest = DescribeContest(session, god, out var favours),
             ContestFavoursPlayer = favours,
             Weather = DescribeWeather(session, god.Id, out var warning),
@@ -224,7 +224,7 @@ public static class HudReadout
     }
 
     /// <summary>One line per other god: its player's name when a player plays it (ADR-018), else its personality.</summary>
-    private static IReadOnlyList<string> BuildRivals(WorldState world, int localGodId, IReadOnlyDictionary<int, string> players)
+    private static IReadOnlyList<string> BuildRivals(Domain.Conflict.ConflictRules conflict, WorldState world, int localGodId, IReadOnlyDictionary<int, string> players)
     {
         var lines = new List<string>();
         foreach (var rival in world.Gods)
@@ -237,12 +237,13 @@ public static class HudReadout
             var personality = DivineText.Personality(rival.Personality);
             var who = players.TryGetValue(rival.Id, out var player) && rival.Controller != GodController.Ai ? " (" + player + ")"
                 : personality.Length > 0 ? " the " + personality : string.Empty;
+            // What the player knows of a rival's following depends on its intelligence (spec §43, ADR-026).
+            var intel = Simulation.Conflict.IntelModel.Level(conflict, world, localGodId, rival.Id);
             lines.Add(Format(
-                "{0}{1}: {2} followers ({3:0%}), {4}",
+                "{0}{1}: {2}, {3}",
                 rival.Name,
                 who,
-                GodStanding.CountFollowers(world, rival.Id),
-                VictorySystem.ShareOf(world, rival.Id),
+                Conflict.ConflictText.Following(intel, GodStanding.CountFollowers(world, rival.Id), VictorySystem.ShareOf(world, rival.Id)),
                 Diplomacy.DiplomacyText.Status(Simulation.Diplomacy.DiplomacyModel.StatusOf(world, localGodId, rival.Id))));
         }
 
@@ -343,14 +344,15 @@ public static class HudReadout
             return (null, false);
         }
 
+        var veil = session.Veiled ? "Veiled (T): " : string.Empty;
         if (target is not { } point)
         {
-            return (Format("{0}: point at the ground to cast", selected.Name), false);
+            return (Format("{0}{1}: point at the ground to cast", veil, selected.Name), false);
         }
 
         var check = session.CheckCast(selected.Id, point);
         var reached = string.Join(", ", session.FindReached(selected.Id, point).Select(s => s.Name));
-        return (DivineText.DescribeCheck(check, selected.Id, power, session.Scheduler.TicksPerSecond, reached), check.IsAccepted);
+        return (veil + DivineText.DescribeCheck(check, selected.Id, power, session.Scheduler.TicksPerSecond, reached), check.IsAccepted);
     }
 
     /// <summary>Tooltip text of a miracle.</summary>

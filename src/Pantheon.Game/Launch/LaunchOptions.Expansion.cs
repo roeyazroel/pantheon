@@ -25,8 +25,17 @@ public sealed partial record LaunchOptions
     /// <summary>A treaty the player's god signs with its strongest rival at the start (ADR-025).</summary>
     public TreatyKind? Treaty { get; init; }
 
+    /// <summary>A war the player's god declares on its strongest rival at the start, for this goal (ADR-026).</summary>
+    public Domain.Conflict.WarGoal? WarGoal { get; init; }
+
+    /// <summary>Whether the focused settlement goes to holy war on a neighbour at the start (ADR-026).</summary>
+    public bool HolyWar { get; init; }
+
+    /// <summary>Whether the player casts veiled miracles from the start (ADR-026).</summary>
+    public bool Veil { get; init; }
+
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil"];
 
     /// <summary>Applies one of this part's options; <c>null</c> when the option is not one of them.</summary>
     private static LaunchOptions? ApplyExpansion(LaunchOptions options, string name, string value, List<string> warnings)
@@ -52,6 +61,14 @@ public sealed partial record LaunchOptions
                 return Enum.TryParse<TreatyKind>(trimmed, ignoreCase: true, out var treaty) && Enum.IsDefined(treaty) && !int.TryParse(trimmed, out _)
                     ? options with { Treaty = treaty }
                     : Warn(options, warnings, $"'--treaty' needs a treaty such as NonAggression or MutualDefense, got '{value}'.");
+            case "war-goal":
+                return Enum.TryParse<Domain.Conflict.WarGoal>(trimmed, ignoreCase: true, out var goal) && Enum.IsDefined(goal) && !int.TryParse(trimmed, out _)
+                    ? options with { WarGoal = goal }
+                    : Warn(options, warnings, $"'--war-goal' needs Conquest, HolySite, Tribute or Humiliation, got '{value}'.");
+            case "holy-war":
+                return OnOff(value) is { } holy ? options with { HolyWar = holy } : Warn(options, warnings, $"'--holy-war' needs on or off, got '{value}'.");
+            case "veil":
+                return OnOff(value) is { } veil ? options with { Veil = veil } : Warn(options, warnings, $"'--veil' needs on or off, got '{value}'.");
             default:
                 return null;
         }

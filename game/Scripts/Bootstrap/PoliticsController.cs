@@ -11,10 +11,11 @@ using Pantheon.Game.Presentation;
 namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
-/// Treaties and the Divine Council in the client (ADR-025): the council panel (U), the debug key
-/// that summons the council (J), the diplomacy panel's treaty and request buttons, and the launch
-/// options that try them out (<c>--council-panel</c>, <c>--summon-council</c>, <c>--treaty</c>).
-/// It reads the session and sends the player's choices to it.
+/// Treaties, the Divine Council and conflict in the client (ADR-025, ADR-026): the council panel
+/// (U), the debug key that summons the council (J), veiled casting (T), the diplomacy panel's
+/// treaty, request and war buttons, and the launch options that try them out
+/// (<c>--council-panel</c>, <c>--summon-council</c>, <c>--treaty</c>, <c>--war-goal</c>,
+/// <c>--holy-war</c>, <c>--veil</c>). It reads the session and sends the player's choices to it.
 /// </summary>
 internal sealed partial class PoliticsController : Node
 {
@@ -40,6 +41,7 @@ internal sealed partial class PoliticsController : Node
         _panel.ActionClicked += action => _setStatus(PoliticsCommands.Run(_session, action));
         diplomacy.ActionClicked += action => _setStatus(PoliticsCommands.Run(_session, action));
         CallDeferred(nameof(ApplyOptions), options.Treaty is { } treaty ? (int)treaty : -1, options.SummonCouncil, options.CouncilPanel);
+        CallDeferred(nameof(ApplyConflictOptions), options.WarGoal is { } goal ? (int)goal : -1, options.HolyWar, options.Veil);
     }
 
     /// <inheritdoc />
@@ -69,6 +71,12 @@ internal sealed partial class PoliticsController : Node
             _setStatus(PoliticsCommands.Summon(_session));
             GetViewport().SetInputAsHandled();
         }
+        else if (@event.IsActionPressed(InputActions.ToggleVeil))
+        {
+            _session.Veiled = !_session.Veiled;
+            _setStatus(_session.Veiled ? "Your miracles are veiled: dearer, and unattributed unless traced (T)" : "Your miracles are seen as yours (T)");
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     /// <summary>Signs a treaty, summons the council and opens its panel, as the launch options ask.</summary>
@@ -85,6 +93,22 @@ internal sealed partial class PoliticsController : Node
         }
 
         _panel.PanelVisible = open;
+    }
+
+    /// <summary>Declares a war, starts a holy war at the focused village and veils the player's miracles, as the launch options ask.</summary>
+    private void ApplyConflictOptions(int goal, bool holyWar, bool veil)
+    {
+        if (goal >= 0)
+        {
+            _setStatus(Game.Conflict.ConflictCommands.DeclareWar(_session, (Domain.Conflict.WarGoal)goal));
+        }
+
+        if (holyWar && Focused() is { } settlement)
+        {
+            _setStatus(Game.Conflict.ConflictCommands.StartHolyWar(_session, settlement));
+        }
+
+        _session.Veiled = veil;
     }
 
     /// <summary>The settlement nearest the camera's focus.</summary>

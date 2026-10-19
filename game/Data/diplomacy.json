@@ -69,5 +69,57 @@
     "CoordinatedCostFactor": 0.5,
     "StruckSeconds": 180.0,
     "AbsorbShare": 0.4
+  },
+
+  // War goals, intelligence, proxy wars and mortal holy wars (spec sections 43-46, ADR-026). Times are in seconds.
+  "Conflict": {
+    // War score for what a side wins from its enemy: villages converted, strikes on its followers (little, so
+    // destruction is not the best road), its Creature defeated, its holy site taken, its people sheltered, holy-war
+    // raids. A side may dictate peace with GoalScore and half as much lead (or its goal's site or Creature defeated).
+    "ConversionScore": 3.0,
+    "HarmScore": 0.5,
+    "CreatureScore": 4.0,
+    "SiteScore": 5.0,
+    "RefugeeScore": 0.5,
+    "RaidScore": 1.0,
+    "GoalScore": 10.0,
+    // Dictated peace: a tribute of DictatedTribute a minute, or a territorial agreement, for DictatedSeconds; a ceded
+    // village turns CededShare of the loser's followers there.
+    "DictatedTribute": 30.0,
+    "DictatedSeconds": 600.0,
+    "CededShare": 0.5,
+    // What a god knows of another: an ally's share, a treaty's, its own followers among the other's people (per share),
+    // its Creature's visits within ScoutSeconds, and a Knowledge god's learning. Capped at 1.
+    "AllyIntel": 0.5,
+    "TreatyIntel": 0.2,
+    "PresenceIntel": 1.5,
+    "ScoutIntel": 0.3,
+    "ScoutSeconds": 180.0,
+    "KnowledgeIntel": 0.3,
+    // Veiled miracles cost VeilCostFactor; a covert act is exposed with ExposureChance at the wronged god's full
+    // knowledge of its author (a quarter of it with none). A veiled strike plants VeiledDoubt in the people's own god.
+    "VeilCostFactor": 2.0,
+    "ExposureChance": 0.4,
+    "VeiledDoubt": 0.03,
+    // Proxy acts: inciting costs IncitePower and stirs InciteResentment (and half as much fear and unrest);
+    // propaganda costs PropagandaPower and plants PropagandaDoubt. They need ProxyInfluence where they are done, and
+    // ProxyCooldownSeconds between them.
+    "IncitePower": 60.0,
+    "InciteResentment": 0.2,
+    "PropagandaPower": 40.0,
+    "PropagandaDoubt": 0.1,
+    "ProxyInfluence": 0.1,
+    "ProxyCooldownSeconds": 240.0,
+    // Holy wars: a settlement holding militarism from HolyWarMilitarism declares one with HolyWarPerSecond chance a
+    // second (twice at war, scaled by its militarism); it lasts up to HolyWarSeconds (half if discouraged) and rests
+    // HolyWarCooldownSeconds after. Raids kill and convert their shares a second at even strength. Discouraging costs
+    // the attackers DiscourageLoveLoss of their love.
+    "HolyWarMilitarism": 0.35,
+    "HolyWarPerSecond": 0.01,
+    "HolyWarSeconds": 240.0,
+    "HolyWarCooldownSeconds": 600.0,
+    "RaidDeathsPerSecond": 0.002,
+    "RaidConversionPerSecond": 0.004,
+    "DiscourageLoveLoss": 0.1
   }
 }

@@ -156,6 +156,15 @@ public partial class DiplomacyPanel : CanvasLayer
             card.AddChild(grievances);
         }
 
+        if (entry.War.Length > 0)
+        {
+            var war = Text(entry.War, 14, new Color(1f, 0.55f, 0.45f));
+            war.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            war.CustomMinimumSize = new Vector2(480, 0);
+            card.AddChild(war);
+        }
+
+        card.AddChild(Text(entry.Intelligence, 13, new Color(0.7f, 0.8f, 0.9f)));
         var politics = entry.Politics;
         foreach (var treaty in politics.Treaties)
         {
@@ -217,6 +226,11 @@ public partial class DiplomacyPanel : CanvasLayer
             if (politics.Requests.Count > 0)
             {
                 card.AddChild(Grid(politics.Requests, string.Empty));
+            }
+
+            if (politics.Aims.Count > 0)
+            {
+                card.AddChild(Grid(politics.Aims, string.Empty));
             }
         }
 
@@ -313,6 +327,7 @@ public partial class DiplomacyPanel : CanvasLayer
         {
             var politics = entry.Politics;
             yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Creatures}:{entry.Proposal}:{string.Join(",", entry.Available)}"
+                + $":{entry.War}:{entry.Intelligence}:{string.Join(",", politics.Aims.Select(a => a.Label))}"
                 + $":{string.Join(",", politics.Treaties.Select(t => t.Text))}:{politics.Others}:{politics.Favours}:{politics.Proposal}:{string.Join(",", politics.Offers.Select(o => o.Label))}:{string.Join(",", politics.Requests.Select(r => r.Label))}";
         }
     }

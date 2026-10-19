@@ -32,6 +32,9 @@ public enum DiplomaticCommandKind
 
     /// <summary>Break an alliance and take a share of the ally's followers where the god leads (spec §54).</summary>
     Absorb,
+
+    /// <summary>Demand the enemy's surrender on the terms of the war's goal (spec §44, ADR-026).</summary>
+    DemandSurrender,
 }
 
 /// <summary>A god's diplomatic intent towards another god, checked by the authority (spec §73).</summary>
@@ -41,4 +44,5 @@ public enum DiplomaticCommandKind
 /// <param name="Terms">A treaty's terms, for <see cref="DiplomaticCommandKind.ProposeTreaty"/>.</param>
 /// <param name="TreatyId">The treaty, for <see cref="DiplomaticCommandKind.BreakTreaty"/>.</param>
 /// <param name="Ask">What is asked, for <see cref="DiplomaticCommandKind.Request"/>.</param>
-public sealed record DiplomaticCommand(int GodId, int OtherGodId, DiplomaticCommandKind Kind, Politics.TreatyTerms? Terms = null, int? TreatyId = null, Politics.RequestAsk? Ask = null);
+/// <param name="Aim">What a declared war is for (ADR-026); conquest when <c>null</c>.</param>
+public sealed record DiplomaticCommand(int GodId, int OtherGodId, DiplomaticCommandKind Kind, Politics.TreatyTerms? Terms = null, int? TreatyId = null, Politics.RequestAsk? Ask = null, Conflict.WarAim? Aim = null);

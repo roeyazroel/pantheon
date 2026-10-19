@@ -99,6 +99,15 @@ public enum HistoryKind
 
     /// <summary>A god absorbed its ally's followers; <see cref="HistoryRecord.Count"/> is how many turned (ADR-025).</summary>
     Absorption,
+
+    /// <summary>A settlement waged holy war on another; the record names the attacked settlement and the attackers' god, and <see cref="HistoryRecord.Count"/> how many died (ADR-026).</summary>
+    HolyWar,
+
+    /// <summary>A god dictated peace to another; <see cref="HistoryRecord.Count"/> is the war goal's number (ADR-026).</summary>
+    DictatedPeace,
+
+    /// <summary>A god was caught working in secret against another (ADR-026).</summary>
+    Exposure,
 }
 
 /// <summary>

@@ -175,8 +175,11 @@ files and compiled assemblies and fails when either rule is broken.
   assistance or backing) and the `Council` (`CouncilState`: the session in progress with its
   `CouncilMotion` and votes, tabled motions, decrees in force). `DiplomaticCommand` (offer alliance,
   break alliance, declare war, request peace, accept, decline, propose or break a treaty, ask,
-  absorb) is the intent the diplomacy authority checks; `DiplomacyRules.Politics` tunes treaties,
-  favours and the council.
+  absorb, demand surrender) is the intent the diplomacy authority checks, with a `WarAim` for a
+  declaration; `DiplomacyRules.Politics` tunes treaties, favours and the council. Since ADR-026,
+  `Wars` keeps each war's `WarRecord` (aggressor, defender, `WarGoal`, site, start, scores), and
+  `DiplomacyRules.Conflict` tunes war goals, intelligence, proxy acts and holy wars. A settlement's
+  society holds the `HolyWarState` it wages, if any.
 - `DisasterState` (ADR-014): the `Earthquakes` under way (epicentre, magnitude, peak intensity,
   radius, end and the god who caused it) and `NextEarthquakeId`.
 - `WeatherState` (ADR-013): `Cells` (`WeatherCell`: position, velocity, radius, pressure,
@@ -268,6 +271,11 @@ files and compiled assemblies and fails when either rule is broken.
   voting, checked), `Defiance` and `PoliticsSystem` (the politics step: terms, tributes, leaks,
   promises, the council). `Gods/TreatyAdvisor` and `Gods/CouncilAdvisor` are the AI's side
   (ADR-025). See [Treaties and the Divine Council](#treaties-and-the-divine-council).
+- `Conflict/`: `IntelModel` (what each god knows of another, derived), `WarBook` (war records,
+  scores, goals met), `WarAims` (the AI's aims and answers to surrender), `Covert` and `Veil`
+  (veiled miracles and the tracing of covert acts), `ConflictAuthority` (proxy acts and words to
+  holy wars, checked) and `HolyWarSystem` (mortal holy wars). `Gods/CovertAdvisor` is the AI's
+  side (ADR-026). See [War, intrigue and holy wars](#war-intrigue-and-holy-wars).
 - `Weather/`: `WeatherModel` (cells' rain, wind and lightning, coverage, the weather at a point,
   soil water, summoned rain) and `WeatherSystem` (the weather step). See [Weather](#weather).
 - `Disasters/`: `DisasterModel` (quakes, shaking, flammability, ignition, fire threat, danger,
@@ -300,10 +308,10 @@ files and compiled assemblies and fails when either rule is broken.
   and `HolySiteModel`. `Belief/Schisms` splits off and evolves Old Faiths within the belief step.
   See [Domains, holy sites and schisms](#domains-holy-sites-and-schisms).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-  `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration, domain, society and
-  council authorities; the first three, the migration step and the holy sites share one ledger.
+  `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration, domain, society,
+  council and conflict authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  water step, the disaster step, the settlement step, the belief step, the society step, the culture step, the domains' boons, the holy sites, the
+  water step, the disaster step, the settlement step, the belief step, the society step, the culture step, the holy war step, the domains' boons, the holy sites, the
   victory check, the diplomacy step, the politics step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
@@ -317,8 +325,9 @@ files and compiled assemblies and fails when either rule is broken.
   most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
-  `ViewFocus`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent` with a treaty's
-  terms, a treaty or an ask, `RefugeeIntent`, `DomainIntent`, `PriorityIntent`, `CouncilIntent`),
+  `ViewFocus`, the intents (`CastIntent`, veiled or not, `CreatureIntent`, `DiplomacyIntent` with a
+  treaty's terms, a treaty, an ask or a war aim, `RefugeeIntent`, `DomainIntent`, `PriorityIntent`,
+  `CouncilIntent`, `ProxyIntent`, `HolyWarIntent`),
   `Verdict` and `Goodbye`. `MessageCodec` writes them as JSON tagged with their type, gzipped from
   512 bytes; `EventCodec` carries any `WorldEvent` by its type name.
 - `Transport/INetworkTransport`: connect, receive, send reliably or not, disconnect, round trip.
@@ -355,7 +364,7 @@ files and compiled assemblies and fails when either rule is broken.
 every settlement a culture with no doctrine and no secularism, every belief (a settlement's or a
 migration group's) no dependency or resentment, and every god no conduct or traits. Version 16 → 17
 (`PoliticsSaveMigration`) gives the world no treaties, favours or promises and a council that has
-not met. A missing,
+not met. Version 17 → 18 gives the world no war records and every settlement no holy war. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -374,7 +383,8 @@ not met. A missing,
   doctrines, secularism, dependency and resentment in 0..1, conduct not negative, each trait once),
   politics (`PoliticsIntegrity`: unique treaty ids below the next, known gods as parties, payers
   and targets, terms that fit the kind, favours and promises between known gods, valid motions,
-  decrees and votes),
+  decrees and votes), conflict (`ConflictIntegrity`: wars between two known gods with a known goal
+  and finite scores, holy wars on another existing settlement for known gods),
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
@@ -470,6 +480,13 @@ not met. A missing,
   `--doctrine`; `Alerts/CultureAlerts` adds revolts, godless villages, doctrines and traits, and
   `Presentation/CultureOverlay` paints the Culture overlay (ADR-024). The HUD's god line and the
   diplomacy panel say how the world sees each god.
+- `Conflict/ConflictText`, `ConflictCommands` and `SettlementConflict` word wars, intelligence,
+  proxy acts and holy wars, carry out proxy acts and words to holy wars (asking the host in a
+  shared world) and build the Settlements panel's holy war lines and actions; the diplomacy entry
+  adds each god's war, the player's intelligence of it and war aims; the HUD blurs rivals'
+  followings by intelligence and marks veiled casting; `Alerts/ConflictAlerts` and
+  `Diagnostics/ConflictReadout` add their alerts and debug lines (ADR-026). `SessionPreviews` holds
+  the debug previews of what the AI weighs.
 - `Domains/DomainText`, `DomainCommands` and `DomainReadout` word domains, sites and Old Faiths,
   take up a domain for the player (asking the host in a shared world) and build the Domains
   panel; `Alerts/FaithAlerts` and `Diagnostics/FaithReadout` add their alerts and debug lines
@@ -804,6 +821,33 @@ flowchart LR
 - AI gods act through the same authorities as players: `TreatyAdvisor` and `CouncilAdvisor` run
   with the refugee and priority advisors at each AI evaluation.
 
+## War, intrigue and holy wars
+
+ADR-026 records the decisions, and the plan
+([.docs/milestone-15-part-6-conflict.md](../.docs/milestone-15-part-6-conflict.md)) the numbers.
+
+```mermaid
+flowchart LR
+    declare[DeclareWar with WarAim] --> book[WarBook.Start]
+    ledger[DiplomacyLedger.Record] --> score[WarBook.Score]
+    score --> achieved[WarBook.Achieved]
+    achieved --> surrender[DemandSurrender]
+    surrender --> dictate[PoliticsActions.Dictate]
+    intel[IntelModel] --> hud[HUD and diplomacy panel]
+    intel --> covert[Covert: exposure]
+    cast[MiracleCaster: veiled] --> covert
+    proxy[ConflictAuthority: incite, propaganda] --> covert
+    culture[Militarism] --> holy[HolyWarSystem]
+    stance[ConflictAuthority: stance] --> holy
+    holy --> ledger
+```
+
+- War scores come from the ledger, so a war's score and the gods' memories never disagree.
+- Intelligence is derived each time it is asked, never saved; the simulation and the AI see
+  everything, and intelligence limits only what a player is shown and what is traced.
+- Every random draw (holy war declarations, raid casualties, covert exposure, leaks) comes from a
+  stream derived from the seed and the tick, so replays and saves stay deterministic.
+
 ## Sound and settings
 
 ```mermaid
@@ -849,6 +893,8 @@ has the measured run.
 
   Secret treaties reach only their parties: while one exists the host strips the others' from the
   snapshot, the diplomacy section and the events it sends each player (`SecretFilter`, ADR-025).
+  A proxy act's event reaches only its author, and a veiled miracle reaches the others without its
+  caster (ADR-026).
 
   Every event goes out as it is raised, and the list of players when it changes. After an intent
   the sections it can change go out with the verdict. `WorldSections` writes a section in compact

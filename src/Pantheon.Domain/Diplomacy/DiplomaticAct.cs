@@ -68,4 +68,13 @@ public enum DiplomaticAct
 
     /// <summary>It plotted against the remembering god in a secret treaty that came to light (spec §39).</summary>
     PlottedAgainst,
+
+    /// <summary>Its people waged holy war on the remembering god's people (spec §46, ADR-026).</summary>
+    HolyWar,
+
+    /// <summary>It worked against the remembering god's people in secret and was found out (spec §45, ADR-026).</summary>
+    CovertAct,
+
+    /// <summary>It dictated peace to the remembering god.</summary>
+    Dictated,
 }

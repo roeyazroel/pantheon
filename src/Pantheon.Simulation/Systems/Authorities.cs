@@ -16,4 +16,5 @@ namespace Pantheon.Simulation.Systems;
 /// <param name="Domains">Domains taken up (ADR-021), or <c>null</c> where gods have none.</param>
 /// <param name="Society">Settlements' priorities (ADR-023), or <c>null</c> where settlements have no society rules.</param>
 /// <param name="Council">The Divine Council's motions and votes (ADR-025), or <c>null</c> without one.</param>
-public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null, Society.SocietyAuthority? Society = null, Politics.CouncilAuthority? Council = null);
+/// <param name="Conflict">Proxy acts and holy war stances (ADR-026), or <c>null</c> without them.</param>
+public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null, Society.SocietyAuthority? Society = null, Politics.CouncilAuthority? Council = null, Conflict.ConflictAuthority? Conflict = null);

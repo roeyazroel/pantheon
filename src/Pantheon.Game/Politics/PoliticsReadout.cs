@@ -32,7 +32,8 @@ public sealed record TreatyLine(string Text, PoliticsAction Break);
 /// <param name="Proposal">Its treaty or request waiting for the player's answer; empty when none.</param>
 /// <param name="Offers">The treaties the player could propose to it now.</param>
 /// <param name="Requests">What the player could ask of it now.</param>
-public sealed record PoliticsEntry(IReadOnlyList<TreatyLine> Treaties, string Others, string Favours, string Proposal, IReadOnlyList<PoliticsAction> Offers, IReadOnlyList<PoliticsAction> Requests);
+/// <param name="Aims">The wars the player could declare on it, by goal (ADR-026).</param>
+public sealed record PoliticsEntry(IReadOnlyList<TreatyLine> Treaties, string Others, string Favours, string Proposal, IReadOnlyList<PoliticsAction> Offers, IReadOnlyList<PoliticsAction> Requests, IReadOnlyList<PoliticsAction> Aims);
 
 /// <summary>Builds the diplomacy panel's politics for each god (spec §38–41, §54, ADR-025). Pure.</summary>
 public static class PoliticsReadout
@@ -58,7 +59,35 @@ public static class PoliticsReadout
             .ToList();
         var others = known.Where(t => !t.Binds(me)).Select(t => Other(t, world, otherGodId)).ToList();
         var othersLine = others.Count == 0 ? string.Empty : "Its other treaties: " + string.Join("; ", others) + ".";
-        return new PoliticsEntry(treaties, othersLine, Favours(session, me, otherGodId), Proposal(session, me, otherGodId), Offers(session, me, otherGodId, choice), Requests(session, me, otherGodId));
+        return new PoliticsEntry(treaties, othersLine, Favours(session, me, otherGodId), Proposal(session, me, otherGodId), Offers(session, me, otherGodId, choice), Requests(session, me, otherGodId), Aims(session, me, otherGodId));
+    }
+
+    /// <summary>The wars the player could declare on the god now, one per goal (spec §44).</summary>
+    private static List<PoliticsAction> Aims(GameSession session, int me, int other)
+    {
+        var world = session.World;
+        var war = new DiplomaticCommand(me, other, DiplomaticCommandKind.DeclareWar);
+        if (session.Inspect(a => a.Diplomacy.Check(world, war, me)) != DiplomacyRejection.None)
+        {
+            return [];
+        }
+
+        var aims = new List<PoliticsAction>
+        {
+            new("War for conquest", war with { Aim = new Domain.Conflict.WarAim(Domain.Conflict.WarGoal.Conquest) }),
+            new("War for tribute", war with { Aim = new Domain.Conflict.WarAim(Domain.Conflict.WarGoal.Tribute) }),
+        };
+        if (world.Creatures.Exists(c => c.GodId == me) && world.Creatures.Exists(c => c.GodId == other))
+        {
+            aims.Add(new("War to humble its Creature", war with { Aim = new Domain.Conflict.WarAim(Domain.Conflict.WarGoal.Humiliation) }));
+        }
+
+        foreach (var site in world.HolySites.Where(s => s.KeeperGodId == other))
+        {
+            aims.Add(new("War for " + site.Name, war with { Aim = new Domain.Conflict.WarAim(Domain.Conflict.WarGoal.HolySite, site.Id) }));
+        }
+
+        return aims;
     }
 
     /// <summary>A treaty between the god and a third, in a few words: "joint war with Seren against Kaio".</summary>
@@ -110,6 +139,7 @@ public static class PoliticsReadout
             { Kind: ProposalKind.Treaty, Terms: { } terms } => "It proposes " + PoliticsText.Terms(terms, world, me) + ".",
             { Kind: ProposalKind.Request, Ask: { } ask } => (FavourBook.Find(world, other, me) is not null ? "It calls in the favour you owe it: " : "It asks you for ") + PoliticsText.Ask(ask, world) + ".",
             { Kind: ProposalKind.Alliance } => "It proposes an alliance.",
+            { Kind: ProposalKind.Surrender } => "It demands your surrender: " + Conflict.ConflictText.SurrenderTerms(world, other, me) + ".",
             _ => "It asks for peace.",
         };
     }

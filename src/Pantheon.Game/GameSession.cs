@@ -244,6 +244,12 @@ public sealed class GameSession
     /// <summary>The politics system (ADR-025), for the debug tool that summons the council.</summary>
     internal Simulation.Politics.PoliticsSystem? Politics => _engine.Politics;
 
+    /// <summary>The engine, for the debug previews of <see cref="SessionPreviews"/>.</summary>
+    internal SimulationEngine Engine => _engine;
+
+    /// <summary>Whether the local player casts in secret (ADR-026): a preference, not game state.</summary>
+    public bool Veiled { get; set; }
+
     /// <summary>Whether the local player's god may take up a domain now.</summary>
     /// <param name="domain">The domain.</param>
     /// <returns>Why it would be refused, or <see cref="Simulation.Domains.DomainRejection.None"/>.</returns>
@@ -255,15 +261,16 @@ public sealed class GameSession
     /// <param name="target">Where it would be cast.</param>
     /// <returns>The verdict, with the influence and cost at the target.</returns>
     public CastCheck CheckCast(string miracleId, GroundPosition target) =>
-        _authorities.Miracles.Check(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0);
+        _authorities.Miracles.Check(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target, Veiled), LocalGodId ?? 0);
 
     /// <summary>Casts a miracle for a god, as its player's intent (spec §73): checked as any issuer's is.</summary>
     /// <param name="godId">The issuing god: the local player's, or a connected player's on the host.</param>
     /// <param name="miracleId">The miracle.</param>
     /// <param name="target">Where to cast it.</param>
+    /// <param name="veiled">Whether it is cast in secret (ADR-026).</param>
     /// <returns>The verdict.</returns>
-    public CastCheck CastMiracleAs(int godId, string miracleId, GroundPosition target) =>
-        Chronicled(() => _authorities.Miracles.Cast(World, new CastMiracleRequest(godId, miracleId, target), godId, _queue.Pending));
+    public CastCheck CastMiracleAs(int godId, string miracleId, GroundPosition target, bool veiled = false) =>
+        Chronicled(() => _authorities.Miracles.Cast(World, new CastMiracleRequest(godId, miracleId, target, veiled), godId, _queue.Pending));
 
     /// <summary>The settlements a miracle cast at a target would reach.</summary>
     /// <param name="miracleId">The miracle.</param>
@@ -315,11 +322,6 @@ public sealed class GameSession
             : (judged.Situation, judged.Action, creature.Activity.TargetSettlementId, creature.Activity.TargetCreatureId);
     }
 
-    /// <summary>The local Creature's options now, best first, for the debug view.</summary>
-    /// <returns>The options; none without a Creature.</returns>
-    public IReadOnlyList<CreatureOption> PreviewCreatureOptions() =>
-        LocalCreature is { } creature ? _engine.Creatures!.Brain.ListOptions(World, creature) : [];
-
     /// <summary>The Creatures' brain, for previews of their options and answers.</summary>
     internal CreatureBrain CreatureBrain => _engine.Creatures!.Brain;
 
@@ -347,18 +349,6 @@ public sealed class GameSession
     public DiplomacyRejection CheckDiplomacy(int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) =>
         _authorities.Diplomacy.Check(World, new Domain.Diplomacy.DiplomaticCommand(LocalGodId ?? 0, otherGodId, kind), LocalGodId ?? 0);
 
-    /// <summary>The diplomatic moves an AI god is weighing now, best first, for the debug view.</summary>
-    /// <param name="god">The god.</param>
-    /// <returns>Its candidates; none for a player's god.</returns>
-    public IReadOnlyList<Simulation.Gods.DiplomacyCandidate> PreviewGodDiplomacy(GodState god) =>
-        god.Controller == GodController.Ai ? _engine.Gods!.Ai.EvaluateDiplomacy(World, god) : [];
-
-    /// <summary>What an AI god is weighing now, best first, for the debug view (spec §106).</summary>
-    /// <param name="god">The god.</param>
-    /// <returns>Its candidate actions; none for a god without an AI personality.</returns>
-    public IReadOnlyList<Simulation.Gods.AiCandidate> PreviewGodAi(GodState god) =>
-        god.Controller == GodController.Ai ? _engine.Gods!.Ai.Evaluate(World, god) : [];
-
     /// <summary>Sets the local player's god's refugee policy (spec §31, ADR-016); the authority checks it first.</summary>
     /// <param name="policy">The policy.</param>
     /// <returns>Why it was refused, or <see cref="Simulation.Migration.RefugeePolicyRejection.None"/>.</returns>
@@ -371,26 +361,12 @@ public sealed class GameSession
     public Simulation.Migration.RefugeePolicyRejection SetRefugeePolicyAs(int godId, Domain.Migration.RefugeePolicy policy) =>
         _authorities.Migration.SetPolicy(World, godId, policy, godId, _queue.Pending);
 
-    /// <summary>The pressure on a settlement's people to leave now (ADR-016).</summary>
-    /// <param name="settlement">The settlement.</param>
-    /// <returns>The pressure and its main cause.</returns>
-    public Simulation.Migration.MigrationPressure MigrationPressureOn(Domain.Settlements.SettlementState settlement) =>
-        _engine.Migration!.PressureOn(World, settlement);
-
     /// <summary>Sends a group out of a settlement now (the debug tools' forced migration, ADR-016).</summary>
     /// <param name="settlement">The settlement.</param>
     /// <param name="people">How many leave.</param>
     /// <returns>The group, or <c>null</c> when nobody could leave or there is nowhere to go.</returns>
     public Domain.Migration.MigrationGroup? SendMigrants(Domain.Settlements.SettlementState settlement, int people) =>
         Chronicled(() => _engine.Migration!.SendOut(World, settlement, people, _queue.Pending));
-
-    /// <summary>The refugee policy an AI god wants now and why, for the debug view.</summary>
-    /// <param name="god">The god.</param>
-    /// <returns>The policy and reason; <c>null</c> for a player's god.</returns>
-    public (Domain.Migration.RefugeePolicy Policy, string Reason)? PreviewRefugeePolicy(GodState god) =>
-        god.Controller == GodController.Ai && _engine.Gods!.Ai.ProfileOf(god.Personality) is { } profile && _engine.Gods.Refugees is { } advisor
-            ? advisor.Choose(World, god, profile)
-            : null;
 
     /// <summary>The latest miracle cast still waiting to be drained, if any.</summary>
     /// <returns>The event, or <c>null</c>.</returns>

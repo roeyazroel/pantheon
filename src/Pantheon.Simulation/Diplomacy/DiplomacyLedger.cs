@@ -87,6 +87,12 @@ public sealed class DiplomacyLedger : IActRecorder
             case DiplomaticAct.SignedTreaty:
                 relation.Trust = SimMath.Clamp01(relation.Trust + (_rules.HelpGratitude / 2f));
                 break;
+            case DiplomaticAct.HolyWar:
+            case DiplomaticAct.Dictated:
+                relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
+                relation.Rivalry = SimMath.Clamp01(relation.Rivalry + _rules.HarmRivalry);
+                break;
+            case DiplomaticAct.CovertAct:
             case DiplomaticAct.PlottedAgainst:
                 relation.Trust = SimMath.Clamp01(relation.Trust - _rules.HarmTrustLoss);
                 relation.Suspicion = SimMath.Clamp01(relation.Suspicion + (_rules.BetrayalTrustLoss / 2f));
@@ -94,6 +100,7 @@ public sealed class DiplomacyLedger : IActRecorder
         }
 
         Remember(relation, world.Tick, act, settlementId);
+        Conflict.WarBook.Score(_rules.Conflict, world, actorGodId, observerGodId, act);
         if (act is DiplomaticAct.Harmed or DiplomaticAct.CreatureAttacked or DiplomaticAct.Converted or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.BrokeTreaty)
         {
             TellAllies(world, observerGodId, actorGodId, settlementId);

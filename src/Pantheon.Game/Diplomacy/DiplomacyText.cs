@@ -38,6 +38,7 @@ public static class DiplomacyText
         DiplomaticCommandKind.BreakTreaty => "Break the treaty",
         DiplomaticCommandKind.Request => "Ask",
         DiplomaticCommandKind.Absorb => "Absorb its followers",
+        DiplomaticCommandKind.DemandSurrender => "Demand surrender",
     };
 
     /// <summary>How one god feels about another, in a few words.</summary>
@@ -218,6 +219,9 @@ public static class DiplomacyText
             DiplomaticAct.KeptWord => "kept your word to it",
             DiplomaticAct.SignedTreaty => "signed a treaty with it",
             DiplomaticAct.PlottedAgainst => "plotted against it in secret",
+            DiplomaticAct.HolyWar => "let your people wage holy war on its people" + (where.Length > 0 ? " in" + where : string.Empty),
+            DiplomaticAct.CovertAct => "worked against its people in secret" + (where.Length > 0 ? " in" + where : string.Empty),
+            DiplomaticAct.Dictated => "dictated peace to it",
         };
     }
 

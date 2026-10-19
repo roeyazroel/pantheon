@@ -48,6 +48,12 @@ public sealed class SocietyState
     /// <summary>Tick the settlement last sent settlers to found a village (0 when never).</summary>
     public required long LastFoundingTick { get; set; }
 
+    /// <summary>The holy war the settlement wages, if any (spec §46, ADR-026).</summary>
+    public Conflict.HolyWarState? HolyWar { get; set; }
+
+    /// <summary>Tick its last holy war ended, so it rests before another.</summary>
+    public long HolyWarEndedTick { get; set; }
+
     /// <summary>A newly founded settlement's society: safe, fairly content and settled, poor and unlearned.</summary>
     /// <returns>The society.</returns>
     public static SocietyState Founded() => new()

@@ -32,6 +32,18 @@ internal static class DiplomacyWorlds
         AbsorbShare = 0.4f,
     };
 
+    /// <summary>The conflict rules shipped with Milestone 15, part 6 (ADR-026), pinned.</summary>
+    public static Pantheon.Domain.Conflict.ConflictRules ConflictRules { get; } = new()
+    {
+        ConversionScore = 3f, HarmScore = 0.5f, CreatureScore = 4f, SiteScore = 5f, RefugeeScore = 0.5f, RaidScore = 1f, GoalScore = 10f,
+        DictatedTribute = 30f, DictatedSeconds = 600f, CededShare = 0.5f,
+        AllyIntel = 0.5f, TreatyIntel = 0.2f, PresenceIntel = 1.5f, ScoutIntel = 0.3f, ScoutSeconds = 180f, KnowledgeIntel = 0.3f,
+        VeilCostFactor = 2f, ExposureChance = 0.4f, VeiledDoubt = 0.03f,
+        IncitePower = 60f, InciteResentment = 0.2f, PropagandaPower = 40f, PropagandaDoubt = 0.1f, ProxyInfluence = 0.1f, ProxyCooldownSeconds = 240f,
+        HolyWarMilitarism = 0.35f, HolyWarPerSecond = 0.01f, HolyWarSeconds = 240f, HolyWarCooldownSeconds = 600f,
+        RaidDeathsPerSecond = 0.002f, RaidConversionPerSecond = 0.004f, DiscourageLoveLoss = 0.1f,
+    };
+
     /// <summary>Diplomacy rules with fixed values (the balance shipped with Milestone 6).</summary>
     public static DiplomacyRules Rules { get; } = new()
     {
@@ -56,6 +68,7 @@ internal static class DiplomacyWorlds
         WarCreatureAggression = 0.6f,
         HostilityThreshold = 0.35f,
         Politics = PoliticsRules,
+        Conflict = ConflictRules,
     };
 
 

@@ -179,8 +179,8 @@ public static class SessionCommands
     {
         ArgumentNullException.ThrowIfNull(session);
         return session.Client is { } client
-            ? client.Request(id => new Networking.Protocol.CastIntent(id, miracleId, target))
-            : CastMiracleAs(session, session.LocalGodId ?? 0, miracleId, target).Text;
+            ? client.Request(id => new Networking.Protocol.CastIntent(id, miracleId, target, session.Veiled))
+            : CastMiracleAs(session, session.LocalGodId ?? 0, miracleId, target, session.Veiled).Text;
     }
 
     /// <summary>Casts a miracle for a god, as its player's intent: the local player's, or a joined player's on the host.</summary>
@@ -188,12 +188,13 @@ public static class SessionCommands
     /// <param name="godId">The issuing god.</param>
     /// <param name="miracleId">The miracle.</param>
     /// <param name="target">Where to cast it.</param>
+    /// <param name="veiled">Whether it is cast in secret (ADR-026).</param>
     /// <returns>Whether it was cast, and the status line: the result, or why it was refused.</returns>
-    public static CommandOutcome CastMiracleAs(GameSession session, int godId, string miracleId, GroundPosition target)
+    public static CommandOutcome CastMiracleAs(GameSession session, int godId, string miracleId, GroundPosition target, bool veiled = false)
     {
         ArgumentNullException.ThrowIfNull(session);
         var power = session.World.Gods.Find(g => g.Id == godId)?.DivinePower ?? 0f;
-        var check = session.CastMiracleAs(godId, miracleId, target);
+        var check = session.CastMiracleAs(godId, miracleId, target, veiled);
         if (!check.IsAccepted || check.Miracle is not { } miracle)
         {
             return new CommandOutcome(false, DivineText.DescribeCheck(check, miracleId, power, session.Scheduler.TicksPerSecond));

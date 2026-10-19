@@ -54,6 +54,21 @@ public sealed class PoliticsSystem : ISimulationSystem
         Leaks(world, seconds, context.Events);
         Promises(world, context.Events);
         _chamber.Step(world, context.Events);
+        Wars(world, context.Events);
+    }
+
+    /// <summary>Wars that ended are forgotten; an aggressor that met its goal is told it may dictate peace (ADR-026).</summary>
+    private void Wars(WorldState world, List<WorldEvent> events)
+    {
+        Conflict.WarBook.Prune(world);
+        foreach (var war in world.Diplomacy.Wars)
+        {
+            if (!war.GoalAnnounced && Conflict.WarBook.Achieved(_rules.Conflict, world, war, war.AggressorGodId))
+            {
+                war.GoalAnnounced = true;
+                events.Add(new WarGoalAchieved { Tick = world.Tick, GodId = war.AggressorGodId, EnemyGodId = war.DefenderGodId, Goal = war.Goal });
+            }
+        }
     }
 
     /// <summary>Treaties past their term end; tributes are paid, and a payer that cannot pay breaks its treaty.</summary>
@@ -98,11 +113,29 @@ public sealed class PoliticsSystem : ISimulationSystem
         var chance = _rules.Politics.SecretLeakPerSecond * seconds;
         foreach (var treaty in world.Diplomacy.Treaties.FindAll(t => t.Secret))
         {
-            if (random.NextFloat() < chance)
+            // Every god that knows much of a party sees more (spec §43): spies and allies speed the leak.
+            if (random.NextFloat() < chance * (1f + (2f * Watched(world, treaty))))
             {
                 _authority.Treaties.Reveal(world, treaty, events);
             }
         }
+    }
+
+    /// <summary>The most any god not party to a treaty knows of either party (0..1).</summary>
+    private float Watched(WorldState world, Treaty treaty)
+    {
+        var most = 0f;
+        foreach (var god in world.Gods)
+        {
+            if (!treaty.Binds(god.Id))
+            {
+                most = Math.Max(most, Math.Max(
+                    Conflict.IntelModel.Level(_rules.Conflict, world, god.Id, treaty.FirstGodId),
+                    Conflict.IntelModel.Level(_rules.Conflict, world, god.Id, treaty.SecondGodId)));
+            }
+        }
+
+        return most;
     }
 
     /// <summary>A promise of assistance is kept once the debtor helps the creditor's people, and broken when its time runs out.</summary>

@@ -68,4 +68,7 @@ public sealed record DiplomacyRules
 
     /// <summary>Treaties, favours and the Divine Council (ADR-025).</summary>
     public required Politics.PoliticsRules Politics { get; init; }
+
+    /// <summary>War goals, intelligence, proxy wars and holy wars (ADR-026).</summary>
+    public required Conflict.ConflictRules Conflict { get; init; }
 }

@@ -47,6 +47,7 @@ public static class DebugReadout
         BeliefReadout.AppendGods(lines, snapshot);
         GodAiReadout.Append(lines, snapshot);
         PoliticsReadout.Append(lines, snapshot);
+        ConflictReadout.Append(lines, snapshot, snapshot.ConflictRules);
         CreatureReadout.Append(lines, snapshot);
         WeatherReadout.Append(lines, snapshot);
         WaterReadout.Append(lines, snapshot);

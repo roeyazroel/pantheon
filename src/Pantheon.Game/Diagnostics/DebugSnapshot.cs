@@ -45,6 +45,9 @@ public sealed record DebugSnapshot
     /// <summary>Migration rules, for the migration lines; none without them.</summary>
     public MigrationRules? MigrationRules { get; init; }
 
+    /// <summary>Conflict rules, for what each god knows of the others (ADR-026); <c>null</c> to leave it out.</summary>
+    public Domain.Conflict.ConflictRules? ConflictRules { get; init; }
+
     /// <summary>The pressure on the selected settlement's people to leave, if measured.</summary>
     public MigrationPressure? MigrationPressure { get; init; }
 

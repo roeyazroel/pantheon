@@ -35,6 +35,9 @@ public static class DiplomacyModel
         DiplomaticAct.KeptWord => 0.4f,
         DiplomaticAct.SignedTreaty => 0.4f,
         DiplomaticAct.PlottedAgainst => 0.7f,
+        DiplomaticAct.HolyWar => 0.5f,
+        DiplomaticAct.CovertAct => 0.6f,
+        DiplomaticAct.Dictated => 0.7f,
     };
 
     /// <summary>Whether an act is hostile.</summary>
@@ -43,7 +46,8 @@ public static class DiplomacyModel
     public static bool IsHostile(DiplomaticAct act) => act switch
     {
         DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.CreatureDefeated or DiplomaticAct.TookHolySite
-            or DiplomaticAct.BrokeTreaty or DiplomaticAct.BrokePromise or DiplomaticAct.VotedAgainst or DiplomaticAct.DefiedCouncil or DiplomaticAct.PlottedAgainst => true,
+            or DiplomaticAct.BrokeTreaty or DiplomaticAct.BrokePromise or DiplomaticAct.VotedAgainst or DiplomaticAct.DefiedCouncil or DiplomaticAct.PlottedAgainst
+            or DiplomaticAct.HolyWar or DiplomaticAct.CovertAct or DiplomaticAct.Dictated => true,
         DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace or DiplomaticAct.Sheltered or DiplomaticAct.Rescued or DiplomaticAct.KeptWord or DiplomaticAct.SignedTreaty => false,
     };
 

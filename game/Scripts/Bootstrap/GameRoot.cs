@@ -414,6 +414,7 @@ public partial class GameRoot : Node3D
         WeatherRules = _session.Content.Weather,
         DisasterRules = _session.Content.Disasters,
         MigrationRules = _session.Content.Migration,
+        ConflictRules = _session.Content.Diplomacy.Conflict,
         MigrationPressure = PressureUnder(cursor),
         RefugeeChoices = [.. _session.World.Gods.Select(god => (god.Id, _session.PreviewRefugeePolicy(god))).Where(c => c.Item2 is not null).Select(c => (c.Id, c.Item2!.Value.Policy, c.Item2.Value.Reason))],
         LocalGodId = _session.LocalGodId,

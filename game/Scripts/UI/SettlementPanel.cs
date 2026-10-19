@@ -21,7 +21,11 @@ public partial class SettlementPanel : CanvasLayer
     private Label _priority = null!;
     private Label _note = null!;
     private GridContainer _options = null!;
+    private HBoxContainer _actions = null!;
     private string _shown = string.Empty;
+
+    /// <summary>The player clicked a word to a holy war or a proxy act (ADR-026).</summary>
+    public event Action<Pantheon.Game.Politics.PoliticsAction>? ActionClicked;
 
     /// <summary>The player chose a priority for the settlement shown.</summary>
     public event Action<int, SettlementPriority>? PriorityChosen;
@@ -57,6 +61,9 @@ public partial class SettlementPanel : CanvasLayer
         _options.AddThemeConstantOverride("h_separation", 8);
         _options.AddThemeConstantOverride("v_separation", 8);
         column.AddChild(_options);
+        _actions = new HBoxContainer();
+        _actions.AddThemeConstantOverride("separation", 8);
+        column.AddChild(_actions);
         column.AddChild(UiKit.Text("N closes this panel; point at another village and press N to see it.", 12, UiKit.Muted));
     }
 
@@ -65,7 +72,7 @@ public partial class SettlementPanel : CanvasLayer
     public void ShowModel(SettlementPanelModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        var signature = model.Title + string.Concat(model.Lines) + model.Priority + model.Note + string.Concat(model.Options.Select(o => $"{o.Priority}{o.Current}{o.Enabled}"));
+        var signature = model.Title + string.Concat(model.Lines) + model.Priority + model.Note + string.Concat(model.Options.Select(o => $"{o.Priority}{o.Current}{o.Enabled}")) + string.Concat(model.Actions.Select(a => a.Label));
         if (signature == _shown)
         {
             return;
@@ -94,6 +101,12 @@ public partial class SettlementPanel : CanvasLayer
             button.Disabled = !option.Enabled;
             button.CustomMinimumSize = new Vector2(280, 34);
             _options.AddChild(button);
+        }
+
+        UiKit.Clear(_actions);
+        foreach (var action in model.Actions)
+        {
+            _actions.AddChild(UiKit.Button(action.Label, () => ActionClicked?.Invoke(action)));
         }
     }
 }

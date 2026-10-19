@@ -39,6 +39,7 @@ internal sealed partial class SocietyController : Node
         _panel = new SettlementPanel { Name = "Settlements" };
         AddChild(_panel);
         _panel.PriorityChosen += (settlement, priority) => _setStatus(SocietyCommands.SetPriority(_session, settlement, priority));
+        _panel.ActionClicked += action => _setStatus(Game.Politics.PoliticsCommands.Run(_session, action));
         CallDeferred(nameof(ApplyOptions), options.Priority is { } priority ? (int)priority : -1, options.SettlementPanel, options.Doctrine is { } doctrine ? (int)doctrine : -1);
     }
 

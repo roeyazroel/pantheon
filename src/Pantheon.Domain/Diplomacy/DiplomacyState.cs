@@ -29,6 +29,9 @@ public sealed class DiplomacyState
     /// <summary>The Divine Council (spec §42).</summary>
     public required Politics.CouncilState Council { get; init; }
 
+    /// <summary>The wars being fought, with their goals and scores (spec §44, ADR-026).</summary>
+    public required List<Conflict.WarRecord> Wars { get; init; }
+
     /// <summary>Relations before any god has met another: no views, statuses, proposals, treaties, favours or promises, and a council yet to meet.</summary>
     /// <returns>The state.</returns>
     public static DiplomacyState Empty() => new()
@@ -41,5 +44,6 @@ public sealed class DiplomacyState
         Favours = [],
         Obligations = [],
         Council = Politics.CouncilState.Founded(),
+        Wars = [],
     };
 }

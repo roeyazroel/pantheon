@@ -14,6 +14,9 @@ public enum ProposalKind
 
     /// <summary>A request, which calls in a favour when one is owed (spec §41).</summary>
     Request,
+
+    /// <summary>The victor's terms of peace, by its war's goal (spec §44, ADR-026).</summary>
+    Surrender,
 }
 
 /// <summary>A proposal waiting for an answer.</summary>

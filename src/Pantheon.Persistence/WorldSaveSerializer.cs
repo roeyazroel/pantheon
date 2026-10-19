@@ -31,9 +31,10 @@ public static class WorldSaveSerializer
     /// version 15 (part 3) added settlements' society: safety, happiness, wealth, education,
     /// stability, technology, buildings and priority; version 16 (part 4) added beliefs' dependency
     /// and resentment, settlements' culture, and gods' conduct and traits; version 17 (part 5) added
-    /// treaties, favours, promises and the Divine Council.
+    /// treaties, favours, promises and the Divine Council; version 18 (part 6) added wars' goals and
+    /// scores and settlements' holy wars.
     /// </summary>
-    public const int CurrentSaveVersion = 17;
+    public const int CurrentSaveVersion = 18;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

@@ -23,4 +23,7 @@ public sealed record MiracleCast : WorldEvent
 
     /// <summary>People it killed.</summary>
     public required int Deaths { get; init; }
+
+    /// <summary>Whether it was cast in secret and not traced: others see a miracle, not who worked it (ADR-026).</summary>
+    public bool Veiled { get; init; }
 }

@@ -91,7 +91,8 @@ public sealed class GodDiplomat
                 continue;
             }
 
-            if (_authority.Execute(world, new DiplomaticCommand(god.Id, move.OtherGodId, move.Kind), god.Id, events) == DiplomacyRejection.None)
+            var aim = move.Kind == DiplomaticCommandKind.DeclareWar ? Conflict.WarAims.For(world, god, move.OtherGodId, profile) : null;
+            if (_authority.Execute(world, new DiplomaticCommand(god.Id, move.OtherGodId, move.Kind, Aim: aim), god.Id, events) == DiplomacyRejection.None)
             {
                 return;
             }
@@ -140,6 +141,7 @@ public sealed class GodDiplomat
                 ProposalKind.Alliance => alliance + 0.2f,
                 ProposalKind.Peace => peace + 0.3f,
                 ProposalKind.Treaty or ProposalKind.Request => TreatyAdvisor.AnswerUtility(_rules, world, god, proposal, profile, view),
+                ProposalKind.Surrender => Conflict.WarAims.SurrenderUtility(_rules.Conflict, world, god.Id, other.Id, view, profile),
             };
             candidates.Add(new DiplomacyCandidate(accept > 0f ? DiplomaticCommandKind.Accept : DiplomaticCommandKind.Decline, other.Id, Math.Abs(accept), why));
         }
@@ -154,6 +156,12 @@ public sealed class GodDiplomat
                 break;
             case DiplomaticStatus.War:
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.RequestPeace, other.Id, peace, why));
+                if (_authority.Check(world, new DiplomaticCommand(god.Id, other.Id, DiplomaticCommandKind.DemandSurrender), god.Id) == DiplomacyRejection.None)
+                {
+                    // A war won is ended on the victor's terms (spec §44).
+                    candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.DemandSurrender, other.Id, 0.9f, why + ", goal achieved"));
+                }
+
                 break;
             case DiplomaticStatus.Friendly:
             case DiplomaticStatus.Neutral:

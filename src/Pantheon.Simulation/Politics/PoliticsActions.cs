@@ -154,6 +154,79 @@ internal sealed class PoliticsActions
         return (int)MathF.Round(people);
     }
 
+    /// <summary>
+    /// A loser accepts the victor's terms (spec §44): by the war's goal, a village's believers turn
+    /// to the victor, a holy site changes keeper, a tribute is paid, or the loser keeps out of the
+    /// victor's lands. A defender that repelled the attack exacts a tribute. Peace follows.
+    /// </summary>
+    public void Dictate(WorldState world, int winner, int loser, ICollection<WorldEvent> events, Action<int, int, DiplomaticStatus> setStatus)
+    {
+        var conflict = _rules.Conflict;
+        var war = Conflict.WarBook.Find(world, winner, loser);
+        var goal = war is not null && war.AggressorGodId == winner ? war.Goal : Domain.Conflict.WarGoal.Tribute;
+        int? settlementId = null, siteId = null;
+        var people = 0;
+        switch (goal)
+        {
+            case Domain.Conflict.WarGoal.Conquest when Ceded(world, winner, loser) is { } village:
+                settlementId = village.Id;
+                var theirs = BeliefModel.Find(village, loser)!;
+                var moved = theirs.Adherence * conflict.CededShare;
+                theirs.Adherence -= moved;
+                if (BeliefModel.Find(village, winner) is { } mine)
+                {
+                    mine.Adherence = SimMath.Clamp01(mine.Adherence + moved);
+                }
+                else
+                {
+                    village.Beliefs.Add(new Domain.Belief.GodBelief { GodId = winner, Adherence = moved, Faith = theirs.Faith, Love = 0f, Fear = 0f, Doubt = 0f });
+                }
+
+                people = (int)MathF.Round(moved * village.Population);
+                break;
+            case Domain.Conflict.WarGoal.HolySite when world.HolySites.Find(s => s.Id == war!.SiteId) is { } site:
+                siteId = site.Id;
+                (site.KeeperGodId, site.ClaimantGodId, site.ClaimTicks) = (winner, null, 0);
+                break;
+            case Domain.Conflict.WarGoal.Humiliation:
+                _book.Add(world, winner, loser, new TreatyTerms { Kind = TreatyKind.TerritorialAgreement, DurationSeconds = conflict.DictatedSeconds, Secret = false }, events);
+                break;
+            default:
+                _book.Add(world, winner, loser, new TreatyTerms { Kind = TreatyKind.Tribute, PayerGodId = loser, Amount = conflict.DictatedTribute, DurationSeconds = conflict.DictatedSeconds, Secret = false }, events);
+                break;
+        }
+
+        setStatus(winner, loser, DiplomaticStatus.Neutral);
+        _ledger.Record(world, winner, loser, DiplomaticAct.MadePeace, null);
+        _ledger.Record(world, loser, winner, DiplomaticAct.Dictated, null);
+        if (war is not null)
+        {
+            world.Diplomacy.Wars.Remove(war);
+        }
+
+        events.Add(new PeaceDictated { Tick = world.Tick, WinnerGodId = winner, LoserGodId = loser, Goal = goal, SettlementId = settlementId, SiteId = siteId, People = people });
+    }
+
+    /// <summary>The village a conquered god cedes: the one it leads where the victor is followed most.</summary>
+    private static Domain.Settlements.SettlementState? Ceded(WorldState world, int winner, int loser)
+    {
+        Domain.Settlements.SettlementState? best = null;
+        var most = -1f;
+        foreach (var settlement in world.Settlements)
+        {
+            if (settlement.Population > 0 && TreatyModel.Leader(settlement) == loser)
+            {
+                var share = BeliefModel.Find(settlement, winner)?.Adherence ?? 0f;
+                if (share > most)
+                {
+                    (best, most) = (settlement, share);
+                }
+            }
+        }
+
+        return best;
+    }
+
     /// <summary>Adds a promise due in a number of seconds.</summary>
     private static void Promise(WorldState world, int debtor, int creditor, ObligationKind kind, float seconds) =>
         world.Diplomacy.Obligations.Add(new Obligation

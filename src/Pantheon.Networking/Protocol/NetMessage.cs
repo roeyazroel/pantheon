@@ -20,6 +20,8 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(CreatureIntent), "Creature")]
 [JsonDerivedType(typeof(DiplomacyIntent), "Diplomacy")]
 [JsonDerivedType(typeof(CouncilIntent), "Council")]
+[JsonDerivedType(typeof(ProxyIntent), "Proxy")]
+[JsonDerivedType(typeof(HolyWarIntent), "HolyWar")]
 [JsonDerivedType(typeof(RefugeeIntent), "Refugees")]
 [JsonDerivedType(typeof(DomainIntent), "Domain")]
 [JsonDerivedType(typeof(PriorityIntent), "Priority")]
@@ -76,7 +78,21 @@ public sealed record PlayerSeat(int PlayerId, string Name, int GodId);
 /// <param name="RequestId">The player's number for the request, echoed in the <see cref="Verdict"/>.</param>
 /// <param name="MiracleId">The miracle.</param>
 /// <param name="Target">Where to cast it.</param>
-public sealed record CastIntent(int RequestId, string MiracleId, GroundPosition Target) : NetMessage;
+/// <param name="Veiled">Whether it is cast in secret (ADR-026).</param>
+public sealed record CastIntent(int RequestId, string MiracleId, GroundPosition Target, bool Veiled = false) : NetMessage;
+
+/// <summary>A player acts in secret through mortals against another god (ADR-026).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="SettlementId">The settlement.</param>
+/// <param name="TargetGodId">The god worked against.</param>
+/// <param name="Kind">What it does.</param>
+public sealed record ProxyIntent(int RequestId, int SettlementId, int TargetGodId, Pantheon.Domain.Conflict.ProxyKind Kind) : NetMessage;
+
+/// <summary>A player speaks to its people's holy war (ADR-026).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="SettlementId">The settlement waging it.</param>
+/// <param name="Stance">Encourage, discourage or ignore.</param>
+public sealed record HolyWarIntent(int RequestId, int SettlementId, Pantheon.Domain.Conflict.HolyWarStance Stance) : NetMessage;
 
 /// <summary>A player's intent towards its Creature: reward, punish or send it.</summary>
 /// <param name="RequestId">The player's number for the request.</param>

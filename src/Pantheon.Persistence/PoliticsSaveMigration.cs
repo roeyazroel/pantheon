@@ -3,7 +3,7 @@ using static Pantheon.Persistence.SaveJson;
 
 namespace Pantheon.Persistence;
 
-/// <summary>The save migration of Milestone 15, part 5 (ADR-025), run by <see cref="SaveMigrations"/>.</summary>
+/// <summary>The save migrations of Milestone 15, parts 5 and 6 (ADR-025, ADR-026), run by <see cref="SaveMigrations"/>.</summary>
 internal static class PoliticsSaveMigration
 {
     /// <summary>
@@ -27,5 +27,39 @@ internal static class PoliticsSaveMigration
             "Council",
             new JsonObject { ["NextSessionTick"] = -1, ["LastClosedTick"] = 0, ["Session"] = null, ["Tabled"] = new JsonArray(), ["Decrees"] = new JsonArray() },
             fromVersion: 16);
+    }
+
+    /// <summary>
+    /// Version 17 to 18 (ADR-026): diplomacy gains the wars' records, and settlements their holy
+    /// wars. Version 17 kept neither, so wars under way have no goal or score yet (the politics
+    /// step forgets nothing it has not recorded) and no settlement wages a holy war.
+    /// </summary>
+    internal static void UpgradeFrom17(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        if (world["Diplomacy"] is JsonObject diplomacy)
+        {
+            AddNode(diplomacy, "Wars", new JsonArray(), fromVersion: 17);
+        }
+
+        if (world["Settlements"] is JsonArray settlements)
+        {
+            foreach (var node in settlements)
+            {
+                if (node is JsonObject settlement && settlement["Society"] is JsonObject society)
+                {
+                    if (!society.ContainsKey("HolyWar"))
+                    {
+                        society["HolyWar"] = null;
+                    }
+
+                    AddNode(society, "HolyWarEndedTick", JsonValue.Create(0L), fromVersion: 17);
+                }
+            }
+        }
     }
 }

@@ -66,7 +66,7 @@ public sealed class DiplomacyAuthority
         ArgumentNullException.ThrowIfNull(ledger);
         _rules = rules;
         _ledger = ledger;
-        _politics = new Politics.PoliticsActions(rules, ledger, War);
+        _politics = new Politics.PoliticsActions(rules, ledger, (w, aggressor, victim, events, pacts) => War(w, aggressor, victim, events, pacts));
     }
 
     /// <summary>The treaty book, for the politics step.</summary>
@@ -139,6 +139,10 @@ public sealed class DiplomacyAuthority
             DiplomaticCommandKind.Absorb => status != DiplomaticStatus.Alliance ? DiplomacyRejection.WrongStatus
                 : !settled ? DiplomacyRejection.TooSoon
                 : DiplomacyRejection.None,
+            DiplomaticCommandKind.DemandSurrender => status != DiplomaticStatus.War || Conflict.WarBook.Find(world, command.GodId, command.OtherGodId) is not { } war
+                || !Conflict.WarBook.Achieved(_rules.Conflict, world, war, command.GodId) ? DiplomacyRejection.WrongStatus
+                : PendingBetween(world, command.GodId, command.OtherGodId) is not null || proposedLately ? DiplomacyRejection.AlreadyProposed
+                : DiplomacyRejection.None,
         };
     }
 
@@ -163,8 +167,11 @@ public sealed class DiplomacyAuthority
         switch (command.Kind)
         {
             case DiplomaticCommandKind.DeclareWar:
-                War(world, me, other, events, invokePacts: true);
+                War(world, me, other, events, invokePacts: true, command.Aim);
                 return DiplomacyRejection.None;
+            case DiplomaticCommandKind.DemandSurrender:
+                Propose(world, me, other, ProposalKind.Surrender, null, null);
+                break;
             case DiplomaticCommandKind.ProposeTreaty:
                 Propose(world, me, other, ProposalKind.Treaty, command.Terms, null);
                 break;
@@ -275,6 +282,12 @@ public sealed class DiplomacyAuthority
             return;
         }
 
+        if (proposal.Kind == ProposalKind.Surrender && accepted)
+        {
+            _politics.Dictate(world, proposer, me, events, (a, b, status) => SetStatus(world, a, b, status));
+            return;
+        }
+
         if (proposal.Kind == ProposalKind.Treaty && proposal.Terms is { } terms && accepted)
         {
             _politics.Sign(world, proposer, me, terms, events, (a, b, status) => SetStatus(world, a, b, status));
@@ -291,7 +304,7 @@ public sealed class DiplomacyAuthority
         var (status, act) = proposal.Kind switch
         {
             ProposalKind.Alliance => (DiplomaticStatus.Alliance, DiplomaticAct.Allied),
-            ProposalKind.Peace or ProposalKind.Treaty or ProposalKind.Request => (DiplomaticStatus.Neutral, DiplomaticAct.MadePeace),
+            ProposalKind.Peace or ProposalKind.Treaty or ProposalKind.Request or ProposalKind.Surrender => (DiplomaticStatus.Neutral, DiplomaticAct.MadePeace),
         };
         SetStatus(world, me, proposer, status);
         _ledger.Record(world, me, proposer, act, null);
@@ -306,10 +319,11 @@ public sealed class DiplomacyAuthority
     /// of an ally, the treaties between them broken and, unless a treaty invoked this war, every
     /// partner bound to defend the victim (spec §38–39).
     /// </summary>
-    private void War(WorldState world, int me, int other, ICollection<WorldEvent> events, bool invokePacts)
+    private void War(WorldState world, int me, int other, ICollection<WorldEvent> events, bool invokePacts, Domain.Conflict.WarAim? aim = null)
     {
         var betrayal = DiplomacyModel.AreAllied(world, me, other);
         SetStatus(world, me, other, DiplomaticStatus.War);
+        Conflict.WarBook.Start(world, me, other, aim);
         _ledger.Record(world, other, me, DiplomaticAct.DeclaredWar, null);
         Culture.ConductModel.Note(world, me, Culture.ConductModel.Act.Aggression, 2f);
         if (betrayal)

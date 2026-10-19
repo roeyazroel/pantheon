@@ -149,6 +149,17 @@ alliance and war:
   or in secret, to condemn a god, protect a holy site, prohibit a practice, coordinate disaster
   response, make war together or declare a village neutral.
 
+**Milestone 15, part 6 (War and intrigue)** gives wars a purpose and gods hidden hands:
+
+- **War goals.** Go to war for conquest, a holy site, tribute or to humble a rival's Creature.
+  Win your goal and dictate the peace.
+- **Intelligence.** You know rivals only as far as your allies, treaties, spies among their
+  people and your Creature's travels tell you.
+- **Proxy wars.** Veil your miracles (T), incite rebels and spread propaganda; the god you wrong
+  may trace it to you.
+- **Holy wars.** Militarist villages attack neighbours of another faith of their own will. Urge
+  them on or hold them back.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -221,6 +232,9 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- war and intrigue: war aims, scores, goals and dictated peace, what gods know of each other,
+  veiled miracles and their tracing, proxy acts, holy wars and their gods' word, the panels,
+  alerts, history and secrets kept from other players;
 - treaties and the council: each treaty's effect, terms, breaking, secrets and their leaks,
   defensive pacts, tributes, favours, requests and promises, absorbing an ally, what summons the
   council, public and secret ballots, decrees and defiance, the AI's offers, answers and votes,
@@ -290,6 +304,7 @@ covers:
 | Send 20 people out of the village under the cursor (debug) | M |
 | Bring the nearest other Creature to yours, so they meet (debug) | K |
 | Summon the Divine Council now, on the oldest tabled motion or to condemn your strongest rival (debug) | J |
+| Cast your miracles veiled (dearer, and unattributed unless traced), or in the open | T |
 | Pause menu: resume, save, load, main menu, quit (when no miracle is selected) | Esc |
 | The world's history | H |
 
@@ -490,6 +505,43 @@ Press U for the council.
 
 - **Defiance:** decrees bind by reputation. Defying one is possible, but every god trusts you
   less.
+
+### War and intrigue
+
+- **War goals.** Under "Treaties and requests", declare war for conquest, tribute, a holy site the
+  god keeps, or to humble its Creature ("Declare war" alone means conquest).
+  - The war's line shows its score. Converting the enemy's villages counts most, then defeating
+    its Creature and taking its sites. Striking its people counts least, so slaughter is not the
+    road to victory.
+  - With your goal met and a lead, "Demand surrender": a conquest cedes half the enemy's
+    believers in one of its villages, a site war hands you the site, a tribute war brings ten
+    minutes of tribute, and humbling keeps the enemy out of your villages.
+  - Repel an attack well enough and you may demand tribute yourself.
+- **What you know.** The HUD shows a rival's following exactly only if you are well informed;
+  partly informed, roughly; in the dark, not at all. You learn of a god through:
+  - an alliance or any treaty with it;
+  - your own followers living among its people;
+  - your Creature's visits to its villages;
+  - the Knowledge domain.
+
+  Well informed, the diplomacy panel shows its Divine Power and whether an ally is weighing
+  betrayal.
+- **Veiled miracles (T).** A veiled miracle costs twice as much and nobody knows it was you:
+  kindness earns no faith or love, and a strike makes the people doubt their own god for not
+  protecting them. The god whose people it reached may trace it, the more surely the more it
+  knows of you.
+- **Proxy acts.** In the Settlements panel of a village another god leads, where your influence
+  reaches:
+  - incite rebels against that god: resentment, fear and unrest, perhaps a revolt;
+  - or spread propaganda: doubt.
+
+  Your agents then rest four minutes, and the god may trace them to you.
+- **Holy wars.** A militarist village may go to holy war, of its own will, on a neighbour that
+  follows another god: raids kill and convert.
+  - If its people follow you, the Settlements panel lets you urge them on (fiercer raids) or hold
+    them back (an earlier end, but they love you less).
+  - It ends after four minutes, when the zeal fades, when the gods make peace pacts, or when the
+    attacked village turns.
 
 ## Weather
 
@@ -911,6 +963,9 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--treaty=<treaty>` | Sign a treaty with your strongest rival at the start (NonAggression, DefensivePact, JointWar, SharedInfluence, ReligiousAccess, CreatureNonAggression, DisasterAssistance, MutualDefense, TerritorialAgreement, Tribute, MigrationAgreement). |
 | `--council-panel=on\|off` | Open the council panel (U) at the start. |
 | `--summon-council=on\|off` | Summon the Divine Council at the start. |
+| `--war-goal=conquest\|holysite\|tribute\|humiliation` | Declare war on your strongest rival at the start, for that goal. |
+| `--holy-war=on\|off` | Send the settlement the camera looks at to holy war on its nearest neighbour of another faith at the start. |
+| `--veil=on\|off` | Cast veiled miracles from the start. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
 | `--menu=on\|off` | Start on the start screen (the default without options) or not. |

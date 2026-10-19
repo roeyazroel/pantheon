@@ -40,7 +40,7 @@ public sealed class MiracleCaster
     private readonly DisasterRules? _disasters;
     private readonly DomainRules? _domains;
     private readonly HolySiteRules? _holySites;
-    private readonly Domain.Politics.PoliticsRules? _politics;
+    private readonly DiplomacyRules? _diplomacy;
     private readonly MiracleEffects _effects;
 
     /// <summary>Creates a caster over validated content.</summary>
@@ -53,10 +53,10 @@ public sealed class MiracleCaster
     /// <param name="creatures">Creature rules, for the miracles that reach Creatures (ADR-021); <c>null</c> where there are no Creatures.</param>
     /// <param name="domains">Domain rules, for domain costs and boons (ADR-021); <c>null</c> for none. A signature miracle always needs its domain.</param>
     /// <param name="holySites">Holy site rules, for the cheaper miracles of a site's keeper (ADR-021); <c>null</c> for none.</param>
-    /// <param name="politics">Politics rules, for the council's decrees and favours (ADR-025); <c>null</c> for none.</param>
-    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null, Domain.Politics.PoliticsRules? politics = null)
+    /// <param name="diplomacy">Diplomacy rules, for the council's decrees (ADR-025) and veiled miracles (ADR-026); <c>null</c> for none, and miracles cannot be veiled.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null, DiplomacyRules? diplomacy = null)
     {
-        _politics = politics;
+        _diplomacy = diplomacy;
         _ledger = ledger;
         _disasters = disasters;
         _domains = domains;
@@ -136,7 +136,8 @@ public sealed class MiracleCaster
         var rivals = inWorld ? RivalInfluence(world, god.Id, request.Target) : 0f;
         var reach = Reach(miracle);
         var cost = ComputeCost(_rules, miracle, influence, rivals) * DomainModel.CostFactor(_domains, god, miracle) * HolySiteModel.CostFactor(_holySites, world, god.Id)
-            * Politics.CouncilModel.CostFactor(_politics, world, miracle, request.Target, reach);
+            * Politics.CouncilModel.CostFactor(_diplomacy?.Politics, world, miracle, request.Target, reach)
+            * (request.Veiled && _diplomacy is not null ? _diplomacy.Conflict.VeilCostFactor : 1f);
         var rejection =
             issuerGodId is { } issuer && issuer != god.Id ? CastRejection.NotAuthorized
             : miracle.RequiresDomain && !DomainModel.Holds(god, miracle.Domain) ? CastRejection.DomainRequired
@@ -172,6 +173,8 @@ public sealed class MiracleCaster
 
         var reach = Reach(miracle);
         var unseen = IsUnseen(miracle);
+        var veiled = request.Veiled && _diplomacy is not null;
+        var seen = !unseen && !veiled;
         var affected = new List<int>();
         var needs = new Dictionary<int, float>();
         var deaths = 0;
@@ -187,13 +190,18 @@ public sealed class MiracleCaster
             }
 
             var closeness = distance <= reach ? 1f : SimMath.Clamp01(1f - ((distance - reach) / Math.Max(1f, _rules.WitnessRadius)));
-            if (closeness > 0f && settlement.Population > 0 && !unseen)
+            if (closeness > 0f && settlement.Population > 0 && seen)
             {
                 Witness(world, miracle, settlement, god.Id, closeness, conditions);
             }
+            else if (veiled && distance <= reach && settlement.Population > 0)
+            {
+                Conflict.Veil.Witnessed(_diplomacy!.Conflict, settlement, god.Id, miracle);
+            }
         }
 
-        if (!unseen)
+        var exposed = veiled && !unseen && Conflict.Veil.Exposed(_diplomacy!.Conflict, world, god.Id, miracle, affected);
+        if (seen || exposed)
         {
             NoteByRivals(world, miracle, god.Id, affected, needs, events);
             Politics.Defiance.Note(_ledger, world, god.Id, miracle, request.Target, reach, affected, events);
@@ -204,9 +212,14 @@ public sealed class MiracleCaster
             god.DivinePower += deaths * _domains.Boons.DeathPowerPerDeath;
         }
 
-        if (!unseen)
+        if (seen || exposed)
         {
             Culture.WitnessCulture.NoteCast(world, god.Id, miracle, affected, needs, deaths, other => _effects.IsGuilty(world, god.Id, other));
+        }
+
+        if (exposed && Conflict.Veil.Victim(world, god.Id, affected) is { } victim)
+        {
+            Conflict.Covert.Expose(_ledger, world, god.Id, victim, miracle.Id, affected[0], events);
         }
 
         MiracleEffects.ApplyToRegions(miracle, world.Regions, request.Target);
@@ -220,6 +233,7 @@ public sealed class MiracleCaster
             Cost = check.Cost,
             AffectedSettlementIds = affected,
             Deaths = deaths,
+            Veiled = veiled && !exposed,
         });
         return check;
     }

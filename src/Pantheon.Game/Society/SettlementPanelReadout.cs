@@ -16,7 +16,8 @@ namespace Pantheon.Game.Society;
 /// <param name="Priority">What it puts first, and who asked.</param>
 /// <param name="Options">The priorities the player may choose from.</param>
 /// <param name="Note">Why the player may not set its course, or how to.</param>
-public sealed record SettlementPanelModel(int SettlementId, string Title, IReadOnlyList<string> Lines, string Priority, IReadOnlyList<PriorityOption> Options, string Note);
+/// <param name="Actions">The player's word to its holy war and its proxy acts here (ADR-026).</param>
+public sealed record SettlementPanelModel(int SettlementId, string Title, IReadOnlyList<string> Lines, string Priority, IReadOnlyList<PriorityOption> Options, string Note, IReadOnlyList<Politics.PoliticsAction> Actions);
 
 /// <summary>One priority the player may set.</summary>
 /// <param name="Priority">The priority.</param>
@@ -60,6 +61,7 @@ public static class SettlementPanelReadout
             Culture.CultureReadout.Doctrines(content.DivineRules.Culture, settlement),
             Culture.CultureReadout.Feelings(session, settlement),
         };
+        lines.AddRange(Conflict.SettlementConflict.Lines(session, settlement));
 
         var setter = society.PriorityGodId is { } god ? GodStanding.Find(world, god)?.Name : null;
         var priority = society.Priority == SettlementPriority.None
@@ -74,7 +76,7 @@ public static class SettlementPanelReadout
         var note = allowed
             ? "Choose what its people put first. A course holds at least a minute."
             : SocietyText.Describe(check, SettlementPriority.Food, settlement.Name) + ".";
-        return new SettlementPanelModel(settlement.Id, SocietyText.Format("{0}: {1} people", settlement.Name, settlement.Population), lines, priority, options, note);
+        return new SettlementPanelModel(settlement.Id, SocietyText.Format("{0}: {1} people", settlement.Name, settlement.Population), lines, priority, options, note, Conflict.SettlementConflict.Actions(session, settlement));
     }
 
     /// <summary>Who the people follow, largest first.</summary>

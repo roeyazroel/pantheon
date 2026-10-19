@@ -87,6 +87,8 @@ internal static class PoliticsChecks
             ProposalKind.Peace => TreatyModel.ForbidsPeace(world, me, proposal.FromGodId) ? DiplomacyRejection.TreatyForbids : DiplomacyRejection.None,
             ProposalKind.Treaty => Treaty(rules.Politics, world, proposal.FromGodId, me, proposal.Terms),
             ProposalKind.Request => Grantable(world, proposal, me, settled),
+            ProposalKind.Surrender => DiplomacyModel.AreAtWar(world, me, proposal.FromGodId) && Conflict.WarBook.Find(world, me, proposal.FromGodId) is not null
+                ? DiplomacyRejection.None : DiplomacyRejection.WrongStatus,
         };
     }
 

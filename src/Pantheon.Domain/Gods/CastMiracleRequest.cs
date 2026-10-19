@@ -9,4 +9,5 @@ namespace Pantheon.Domain.Gods;
 /// <param name="GodId">The casting god.</param>
 /// <param name="MiracleId">Id of the miracle (<c>miracles.json</c>).</param>
 /// <param name="Target">Ground position the miracle is aimed at.</param>
-public sealed record CastMiracleRequest(int GodId, string MiracleId, GroundPosition Target);
+/// <param name="Veiled">Whether it is cast in secret: dearer, unattributed unless exposed (spec §45, ADR-026).</param>
+public sealed record CastMiracleRequest(int GodId, string MiracleId, GroundPosition Target, bool Veiled = false);

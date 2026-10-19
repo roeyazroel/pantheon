@@ -166,7 +166,7 @@ public sealed class MultiplayerHost : IDisposable
                 statuses.Add(Format("{0} left; the AI plays {1} again", left.Name, GodName(left.GodId)));
                 _transport.Disconnect(peerId);
                 break;
-            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent or PriorityIntent or CouncilIntent when seated:
+            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent or PriorityIntent or CouncilIntent or ProxyIntent or HolyWarIntent when seated:
                 Answer(peerId, seat!.GodId, message);
                 _replicator.Hurry();
                 break;
@@ -211,7 +211,9 @@ public sealed class MultiplayerHost : IDisposable
     {
         var (requestId, outcome) = intent switch
         {
-            CastIntent cast => (cast.RequestId, SessionCommands.CastMiracleAs(_session, godId, cast.MiracleId, cast.Target)),
+            CastIntent cast => (cast.RequestId, SessionCommands.CastMiracleAs(_session, godId, cast.MiracleId, cast.Target, cast.Veiled)),
+            ProxyIntent proxy => (proxy.RequestId, Conflict.ConflictCommands.ProxyAs(_session, godId, new Domain.Conflict.ProxyCommand(godId, proxy.SettlementId, proxy.TargetGodId, proxy.Kind))),
+            HolyWarIntent holyWar => (holyWar.RequestId, Conflict.ConflictCommands.HolyWarAs(_session, godId, new Simulation.Conflict.HolyWarCommand(godId, holyWar.SettlementId, holyWar.Stance))),
             CreatureIntent creature => (creature.RequestId, SessionCommands.CommandCreatureAs(_session, godId, creature.Kind, creature.Target)),
             DiplomacyIntent move => (move.RequestId, Politics.PoliticsCommands.DiplomacyAs(_session, godId, new Domain.Diplomacy.DiplomaticCommand(godId, move.OtherGodId, move.Kind, move.Terms, move.TreatyId, move.Ask))),
             CouncilIntent council => (council.RequestId, Politics.PoliticsCommands.CouncilAs(_session, godId, council.Motion, council.Choice)),

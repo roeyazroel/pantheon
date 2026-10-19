@@ -144,6 +144,15 @@ public sealed class HistoryRecorder
                 var motion = decree.Motion;
                 Add(world, HistoryKind.Decree, god: motion.TargetGodId, settlement: motion.SettlementId, count: ((int)motion.Kind * 1000) + (motion.SiteId ?? (int)(motion.Practice ?? 0)));
                 break;
+            case HolyWarEnded holyWar when holyWar.Killed + holyWar.Converted >= _rules.SchismPeople:
+                Add(world, HistoryKind.HolyWar, god: holyWar.GodId, settlement: holyWar.DefenderSettlementId, count: holyWar.Killed);
+                break;
+            case PeaceDictated peace:
+                Add(world, HistoryKind.DictatedPeace, god: peace.WinnerGodId, other: peace.LoserGodId, count: (int)peace.Goal);
+                break;
+            case CovertActExposed exposed when !Recent(world, HistoryKind.Exposure, r => r.GodId == exposed.GodId && r.OtherGodId == exposed.VictimGodId):
+                Add(world, HistoryKind.Exposure, god: exposed.GodId, other: exposed.VictimGodId, settlement: exposed.SettlementId);
+                break;
             case AllyAbsorbed absorbed:
                 Add(world, HistoryKind.Absorption, god: absorbed.GodId, other: absorbed.AllyGodId, count: absorbed.People);
                 break;

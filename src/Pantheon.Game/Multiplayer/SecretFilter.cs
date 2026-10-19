@@ -8,8 +8,9 @@ using Pantheon.Domain.World;
 namespace Pantheon.Game.Multiplayer;
 
 /// <summary>
-/// Keeps secret treaties from the players who are not party to them (spec §39, §43, ADR-025): the
-/// host strips them from the world and diplomacy it sends each player, and from the events.
+/// Keeps secrets from the players who should not know them (spec §39, §43, §45, ADR-025, ADR-026):
+/// the host strips others' secret treaties from the world and diplomacy it sends each player, and
+/// from the events, along with others' proxy acts and the casters of veiled miracles.
 /// </summary>
 public static class SecretFilter
 {
@@ -52,7 +53,10 @@ public static class SecretFilter
         return root.ToJsonString();
     }
 
-    /// <summary>The events a god may see: those of a secret treaty only for its parties.</summary>
+    /// <summary>
+    /// The events a god may see: those of a secret treaty only for its parties, a proxy act only for
+    /// its author, and a veiled miracle without its caster (ADR-026).
+    /// </summary>
     /// <param name="events">The events.</param>
     /// <param name="godId">The player's god.</param>
     /// <returns>The events it may see.</returns>
@@ -63,17 +67,18 @@ public static class SecretFilter
         {
             TreatySigned { Secret: true } signed => signed.FirstGodId == godId || signed.SecondGodId == godId,
             TreatyEnded { Secret: true } ended => ended.FirstGodId == godId || ended.SecondGodId == godId,
+            ProxyActed proxy => proxy.GodId == godId,
             _ => true,
-        }).ToList();
+        }).Select(e => e is MiracleCast { Veiled: true } cast && cast.GodId != godId ? cast with { GodId = 0 } : e).ToList();
     }
 
-    /// <summary>Whether any event belongs to a secret treaty.</summary>
+    /// <summary>Whether any event must be filtered per player.</summary>
     /// <param name="events">The events.</param>
     /// <returns><c>true</c> when the events must be filtered per player.</returns>
     public static bool HasSecrets(IReadOnlyList<WorldEvent> events)
     {
         ArgumentNullException.ThrowIfNull(events);
-        return events.Any(e => e is TreatySigned { Secret: true } or TreatyEnded { Secret: true });
+        return events.Any(e => e is TreatySigned { Secret: true } or TreatyEnded { Secret: true } or ProxyActed or MiracleCast { Veiled: true });
     }
 
     /// <summary>Removes the secret treaties a god is not party to.</summary>

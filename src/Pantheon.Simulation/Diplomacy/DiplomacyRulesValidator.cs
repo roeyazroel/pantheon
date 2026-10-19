@@ -42,7 +42,65 @@ public static class DiplomacyRulesValidator
         }
 
         ValidatePolitics(rules.Politics, errors);
+        ValidateConflict(rules.Conflict, errors);
         errors.ThrowIfAny("diplomacy rules", nameof(rules));
+    }
+
+    /// <summary>Checks war goals, intelligence, proxy wars and holy wars (ADR-026).</summary>
+    private static void ValidateConflict(Domain.Conflict.ConflictRules? conflict, RuleErrors errors)
+    {
+        if (conflict is null)
+        {
+            errors.Add("Conflict is required.");
+            return;
+        }
+
+        foreach (var (value, name) in new[]
+        {
+            (conflict.ConversionScore, nameof(conflict.ConversionScore)),
+            (conflict.CreatureScore, nameof(conflict.CreatureScore)),
+            (conflict.SiteScore, nameof(conflict.SiteScore)),
+            (conflict.GoalScore, nameof(conflict.GoalScore)),
+            (conflict.DictatedTribute, nameof(conflict.DictatedTribute)),
+            (conflict.DictatedSeconds, nameof(conflict.DictatedSeconds)),
+            (conflict.ScoutSeconds, nameof(conflict.ScoutSeconds)),
+            (conflict.VeilCostFactor, nameof(conflict.VeilCostFactor)),
+            (conflict.IncitePower, nameof(conflict.IncitePower)),
+            (conflict.PropagandaPower, nameof(conflict.PropagandaPower)),
+            (conflict.ProxyCooldownSeconds, nameof(conflict.ProxyCooldownSeconds)),
+            (conflict.HolyWarSeconds, nameof(conflict.HolyWarSeconds)),
+            (conflict.HolyWarCooldownSeconds, nameof(conflict.HolyWarCooldownSeconds)),
+        })
+        {
+            errors.RequirePositive(value, $"Conflict.{name}");
+        }
+
+        errors.RequireNonNegative(conflict.HarmScore, "Conflict.HarmScore");
+        errors.RequireNonNegative(conflict.RefugeeScore, "Conflict.RefugeeScore");
+        errors.RequireNonNegative(conflict.RaidScore, "Conflict.RaidScore");
+        foreach (var (value, name) in new[]
+        {
+            (conflict.CededShare, nameof(conflict.CededShare)),
+            (conflict.AllyIntel, nameof(conflict.AllyIntel)),
+            (conflict.TreatyIntel, nameof(conflict.TreatyIntel)),
+            (conflict.ScoutIntel, nameof(conflict.ScoutIntel)),
+            (conflict.KnowledgeIntel, nameof(conflict.KnowledgeIntel)),
+            (conflict.ExposureChance, nameof(conflict.ExposureChance)),
+            (conflict.VeiledDoubt, nameof(conflict.VeiledDoubt)),
+            (conflict.InciteResentment, nameof(conflict.InciteResentment)),
+            (conflict.PropagandaDoubt, nameof(conflict.PropagandaDoubt)),
+            (conflict.ProxyInfluence, nameof(conflict.ProxyInfluence)),
+            (conflict.HolyWarMilitarism, nameof(conflict.HolyWarMilitarism)),
+            (conflict.HolyWarPerSecond, nameof(conflict.HolyWarPerSecond)),
+            (conflict.RaidDeathsPerSecond, nameof(conflict.RaidDeathsPerSecond)),
+            (conflict.RaidConversionPerSecond, nameof(conflict.RaidConversionPerSecond)),
+            (conflict.DiscourageLoveLoss, nameof(conflict.DiscourageLoveLoss)),
+        })
+        {
+            errors.RequireShare(value, $"Conflict.{name}");
+        }
+
+        errors.RequireNonNegative(conflict.PresenceIntel, "Conflict.PresenceIntel");
     }
 
     /// <summary>Checks treaties, favours and the council (ADR-025).</summary>

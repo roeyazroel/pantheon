@@ -68,6 +68,9 @@ public static class HistoryText
             HistoryKind.Revelation => Format("The secret {0} of {1} and {2} comes to light", Politics.PoliticsText.Name((Domain.Politics.TreatyKind)record.Count), god, other),
             HistoryKind.Decree => DecreeTitle(record, world, god, place),
             HistoryKind.Absorption => Format("{0} absorbs the followers of {1}", god, other),
+            HistoryKind.HolyWar => Format("The Holy War against {0}, for {1}", place, god),
+            HistoryKind.DictatedPeace => Format("{0} dictates peace to {1}", god, other),
+            HistoryKind.Exposure => Format("The Plot of {0} against {1} is uncovered", god, other),
         };
     }
 
@@ -87,6 +90,7 @@ public static class HistoryText
             HistoryKind.Founding => Format("{0} settlers", record.Count),
             HistoryKind.Revolt => Format("{0} renounced their god", record.Count),
             HistoryKind.Absorption => Format("{0} turned", record.Count),
+            HistoryKind.HolyWar => Format("{0} killed", record.Count),
             HistoryKind.Exodus => Format("{0} people left", record.Count),
             HistoryKind.Battle => Format("{0} prevailed", CreatureName(world, record.CreatureId)),
             HistoryKind.Betrayal => Format("broken by {0}", GodName(world, record.GodId)),
@@ -95,7 +99,7 @@ public static class HistoryText
             HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
                 or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine
-                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree => string.Empty,
+                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure => string.Empty,
         };
     }
 

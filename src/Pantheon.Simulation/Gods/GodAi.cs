@@ -143,13 +143,32 @@ public sealed class GodAi
     public List<DiplomacyCandidate> EvaluateDiplomacy(WorldState world, GodState god) =>
         _diplomat is not null && ProfileOf(god.Personality) is { } profile ? _diplomat.Evaluate(world, god, profile) : [];
 
+    /// <summary>Whether a treacherous god veils a harsh miracle on a people it is not openly at war with.</summary>
+    private bool Veils(WorldState world, GodState god, AiCandidate candidate)
+    {
+        if (ProfileOf(god.Personality) is not { Treachery: >= 0.8f } || _book.Find(candidate.MiracleId!) is not { } miracle || !Culture.CultureModel.Harms(miracle)
+            || candidate.SettlementId is not { } id || world.Settlements.Find(s => s.Id == id) is not { } settlement)
+        {
+            return false;
+        }
+
+        return Politics.TreatyModel.Leader(settlement) is { } leader && leader != god.Id && !Diplomacy.DiplomacyModel.AreAtWar(world, god.Id, leader)
+            && Diplomacy.DiplomacyModel.FindRelation(world, god.Id, leader) is { Rivalry: >= 0.4f };
+    }
+
     /// <summary>Carries out an action through the authorities, as the god itself (the host may act for any god).</summary>
     private void Execute(WorldState world, GodState god, AiCandidate candidate, List<WorldEvent> events)
     {
         switch (candidate.Kind)
         {
             case AiActionKind.CastMiracle:
-                _caster.Cast(world, new CastMiracleRequest(god.Id, candidate.MiracleId!, candidate.Target), god.Id, events);
+                // A treacherous god strikes its rivals' people in secret when it can afford to (spec §45).
+                var veiled = Veils(world, god, candidate);
+                if (!veiled || !_caster.Cast(world, new CastMiracleRequest(god.Id, candidate.MiracleId!, candidate.Target, Veiled: true), god.Id, events).IsAccepted)
+                {
+                    _caster.Cast(world, new CastMiracleRequest(god.Id, candidate.MiracleId!, candidate.Target), god.Id, events);
+                }
+
                 break;
             case AiActionKind.SendCreature when _creatures is not null && god.CreatureId is { } creature:
                 _creatures.Execute(world, new CreatureCommand(god.Id, creature, CreatureCommandKind.GoTo, candidate.Target), god.Id, events);
