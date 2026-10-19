@@ -12,9 +12,10 @@ using Pantheon.Simulation.Systems;
 namespace Pantheon.Simulation.Creatures;
 
 /// <summary>
-/// Simulates every Creature each tick (spec §80 Tier 3, §89, ADR-010): its needs and health, its
-/// state machine (deciding, travelling, performing, banished), its walk along its path, and the
-/// effects of what it finishes. It decides at most once every <c>DecisionIntervalTicks</c> ticks.
+/// Simulates every Creature each tick (spec §80 Tier 3, §86, §89, ADR-010, ADR-047): its needs and
+/// health, its hierarchical state machine (<see cref="CreatureModes"/>: free, engaged, held,
+/// banished), the brain's choices and the behaviour tree (<see cref="CreatureTree"/>) that carries
+/// them out. It decides at most once every <c>DecisionIntervalTicks</c> ticks.
 /// </summary>
 public sealed class CreatureSystem : ISimulationSystem
 {
@@ -22,17 +23,12 @@ public sealed class CreatureSystem : ISimulationSystem
     private const float ReturnHealth = 0.5f;
     private const float ReturnHunger = 0.3f;
 
-    // A need this pressing makes a waiting Creature give up the wait.
-    private const float DesperateNeed = 0.9f;
-
-    // Metres within which a waypoint counts as reached.
-    private const float ArrivalTolerance = 1e-3f;
-
     private readonly CreatureRules _rules;
     private readonly CreatureBrain _brain;
     private readonly CreatureDeeds _deeds;
     private readonly CreatureMeetings _meetings;
     private readonly CreatureCombat _combat;
+    private readonly CreatureTree _tree;
 
     /// <summary>Creates the system over validated rules.</summary>
     /// <param name="rules">Creature rules.</param>
@@ -51,10 +47,14 @@ public sealed class CreatureSystem : ISimulationSystem
         _deeds = new CreatureDeeds(rules, divine, settlementRules, ledger);
         _meetings = new CreatureMeetings(rules, _brain);
         _combat = new CreatureCombat(rules, ledger, domains);
+        _tree = new CreatureTree(rules, divine, settlementRules, _brain, _deeds);
     }
 
     /// <summary>The brain, for previews and commands.</summary>
     public CreatureBrain Brain => _brain;
+
+    /// <summary>The behaviour trees that carry out the brain's choices (ADR-047), for debug tools.</summary>
+    public CreatureTree Tree => _tree;
 
     /// <summary>The meetings between Creatures, for debug tools.</summary>
     public CreatureMeetings Meetings => _meetings;
@@ -118,75 +118,28 @@ public sealed class CreatureSystem : ISimulationSystem
             return;
         }
 
-        switch (activity.Phase)
+        // The hierarchical state machine (ADR-047): a fight is the combat's to play out; otherwise the
+        // brain decides, and the behaviour tree carries out what it chose, playing included.
+        if (CreatureModes.ModeOf(world, creature) == CreatureMode.Engaged && CreatureCombat.IsFighting(creature))
         {
-            case CreaturePhase.Deciding:
-                if (decides)
-                {
-                    _brain.Decide(world, creature, context.Random);
-                }
+            return;
+        }
 
-                break;
-            case CreaturePhase.Travelling:
-                if (activity.Action == CreatureAction.GoTo && IsDesperate(creature))
-                {
-                    activity.Path.Clear();
-                    activity.Phase = CreaturePhase.Deciding;
-                    break;
-                }
+        if (activity.Phase == CreaturePhase.Deciding)
+        {
+            if (decides)
+            {
+                _brain.Decide(world, creature, context.Random);
+            }
 
-                if (activity.TargetCreatureId is { } sought && !IsAround(world, sought))
-                {
-                    activity.Path.Clear();
-                    activity.Phase = CreaturePhase.Deciding;
-                    break;
-                }
+            return;
+        }
 
-                Walk(creature);
-                if (activity.Path.Count == 0)
-                {
-                    // A Creature that went looking for another thinks again when it gets there; meeting it is up to the meetings.
-                    var seeking = activity.Action is CreatureAction.Fight or CreatureAction.Befriend;
-                    activity.Phase = seeking ? CreaturePhase.Deciding : CreaturePhase.Performing;
-                    activity.TicksLeft = seeking ? 0 : _brain.PerformTicks(creature, activity.Action);
-                }
-
-                break;
-            case CreaturePhase.Performing when CreatureCombat.IsFighting(creature):
-                // The combat plays the fight out.
-                break;
-            case CreaturePhase.Performing when activity.Action == CreatureAction.Befriend && activity.TicksLeft > 1 && !IsPlayingWith(world, activity.TargetCreatureId, creature.Id):
-                // Its playmate went off before the game was over (both finish on the same tick otherwise).
-                activity.Phase = CreaturePhase.Deciding;
-                break;
-            case CreaturePhase.Performing:
-                if (activity.Action == CreatureAction.GoTo && IsDesperate(creature))
-                {
-                    activity.TicksLeft = 0;
-                }
-
-                if (--activity.TicksLeft <= 0)
-                {
-                    _deeds.Complete(world, creature, context.Events);
-                    activity.Phase = CreaturePhase.Deciding;
-                }
-
-                break;
-            case CreaturePhase.Banished:
-                break;
+        if (_tree.Tick(world, creature, context.Events) != TreeStatus.Running)
+        {
+            activity.Phase = CreaturePhase.Deciding;
         }
     }
-
-    /// <summary>Whether a Creature is playing with the given one.</summary>
-    private static bool IsPlayingWith(WorldState world, int? playmateId, int creatureId) =>
-        world.Creatures.Find(c => c.Id == playmateId) is { Activity: { Phase: CreaturePhase.Performing, Action: CreatureAction.Befriend } activity } && activity.TargetCreatureId == creatureId;
-
-    /// <summary>Whether another Creature is in the world and not banished.</summary>
-    private static bool IsAround(WorldState world, int creatureId) =>
-        world.Creatures.Find(c => c.Id == creatureId) is { } other && other.Activity.Phase != CreaturePhase.Banished;
-
-    /// <summary>Whether a need is so pressing that the Creature gives up walking to, or waiting at, where it was sent.</summary>
-    private static bool IsDesperate(CreatureState creature) => creature.Needs.Hunger >= DesperateNeed || creature.Needs.Fatigue >= DesperateNeed;
 
     /// <summary>Starvation wears health down; resting restores it.</summary>
     private void UpdateHealth(CreatureState creature)
@@ -203,37 +156,6 @@ public sealed class CreatureSystem : ISimulationSystem
         }
 
         creature.Health = SimMath.Clamp01(creature.Health);
-    }
-
-    /// <summary>Moves the Creature along its path at its speed, carrying any leftover distance to the next waypoint.</summary>
-    private void Walk(CreatureState creature)
-    {
-        var path = creature.Activity.Path;
-        var step = CreatureModel.Speed(_rules, creature) * SimulationTime.SecondsPerTick;
-        while (step > 0f && path.Count > 0)
-        {
-            var next = path[0];
-            var dx = next.X - creature.Position.X;
-            var dz = next.Z - creature.Position.Z;
-            var distance = MathF.Sqrt((dx * dx) + (dz * dz));
-            if (distance > 1e-4f)
-            {
-                creature.Heading = MathF.Atan2(dx, dz);
-            }
-
-            // A hair of tolerance, so rounding never leaves the Creature a millimetre short for a tick.
-            if (distance <= step + ArrivalTolerance)
-            {
-                creature.Position = next;
-                path.RemoveAt(0);
-                step -= distance;
-            }
-            else
-            {
-                creature.Position = new GroundPosition(creature.Position.X + (dx / distance * step), creature.Position.Z + (dz / distance * step));
-                step = 0f;
-            }
-        }
     }
 
     /// <summary>Starvation (spec §28): the Creature leaves for a while.</summary>

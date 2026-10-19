@@ -27,6 +27,9 @@ internal static class CreatureAlerts
         CreatureDefending defending when Find(world, defending.CreatureId) is { } guard && guard.GodId == localGodId
             && world.Settlements.Find(s => s.Id == defending.SettlementId) is { } village =>
             (Key("defend", defending.CreatureId), Format("{0} goes by itself to defend {1} from {2}.", guard.Name, village.Name, world.GreatEvents.Beast?.Name ?? "the beast"), AlertSeverity.Good, village.Position),
+        CreatureGaveUp given when Find(world, given.CreatureId) is { } quitter && quitter.GodId == localGodId =>
+            (Key("gave-up", given.CreatureId), Format("{0} gives up {1}: {2}.", quitter.Name, Creatures.CreatureText.Doing(given.Action, Creatures.CreatureText.Concerning(world, given.SettlementId, null)), Creatures.CreatureText.GaveUp(given.Reason)),
+                AlertSeverity.Info, world.Settlements.Find(s => s.Id == given.SettlementId)?.Position),
         _ => null,
     };
 

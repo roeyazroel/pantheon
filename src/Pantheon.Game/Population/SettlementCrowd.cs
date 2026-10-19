@@ -33,7 +33,7 @@ public sealed class SettlementCrowd : ICitizenWays
     private double? _lastSeconds;
     private SettlementState? _settlement;
     private SettlementSite? _site;
-    private (SettlementSite Site, bool Temple)? _gridFor;
+    private (int Houses, HutPlacement? Construction, int Ruins, bool Temple)? _gridFor;
 
     /// <summary>Creates the crowd of a settlement, in Tier 1 with nobody shown.</summary>
     /// <param name="seed">World seed, for the roster hashes.</param>
@@ -133,7 +133,11 @@ public sealed class SettlementCrowd : ICitizenWays
     /// <inheritdoc />
     public IReadOnlyList<Vector2>? Way(int index, CitizenLeg leg, Vector2 from, Vector2 to) => Navigation?.Way(from, to);
 
-    /// <summary>Bakes the village's local navigation again when its layout or its temple changed, while figures are shown.</summary>
+    /// <summary>
+    /// Bakes the village's local navigation again when what stands in the way changed (its huts, the
+    /// building site's place, its ruins or its temple), while figures are shown. The layout itself is
+    /// laid out again as building goes on, which moves nothing.
+    /// </summary>
     private void Bake(TerrainField terrain)
     {
         if (_roster.Count == 0 || _site is not { } site || _settlement is not { } settlement)
@@ -141,14 +145,14 @@ public sealed class SettlementCrowd : ICitizenWays
             return;
         }
 
-        var temple = Simulation.Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Temple);
-        if (_gridFor is { } baked && ReferenceEquals(baked.Site, site) && baked.Temple == temple)
+        var key = (site.Houses.Count, site.Construction?.House, site.Ruins.Count, Simulation.Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Temple));
+        if (_gridFor == key)
         {
             return;
         }
 
         Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens);
-        _gridFor = (site, temple);
+        _gridFor = key;
     }
 
     /// <summary>

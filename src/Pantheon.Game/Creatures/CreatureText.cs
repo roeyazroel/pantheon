@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Events;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Creatures;
 
@@ -58,6 +59,20 @@ public static class CreatureText
         CreatureAction.Fight => With("fighting", place),
         CreatureAction.Befriend => With("playing with", place),
         CreatureAction.Flee => With("running from", place),
+    };
+
+    /// <summary>Why a Creature gave up what it was doing (ADR-047).</summary>
+    /// <param name="reason">The reason.</param>
+    /// <returns>For example "the village no longer needs it".</returns>
+    public static string GaveUp(GiveUpReason reason) => reason switch
+    {
+        GiveUpReason.NoLongerInNeed => "the village no longer needs it",
+        GiveUpReason.NothingToBuild => "there is nothing left to build",
+        GiveUpReason.StoresEmpty => "the stores are empty",
+        GiveUpReason.NowAnAlly => "the village follows an ally now",
+        GiveUpReason.VillageGone => "the village is gone",
+        GiveUpReason.Desperate => "it is too hungry or tired to go on",
+        GiveUpReason.OtherGone => "the other Creature is gone",
     };
 
     /// <summary>The name of what an activity or memory concerns: its settlement, or the other Creature.</summary>

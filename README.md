@@ -1066,6 +1066,9 @@ now.
 - **It decides for itself.** Its hunger, tiredness and boredom grow. It sees the villages within
   500 m and whether each is in need, building or doing well. It picks what it wants most, weighing
   what it has learned to like, its personality and how far it must walk.
+- **It gives up a pointless errand** (ADR-047): when the village it went to feed no longer needs
+  food, the house it went to help build is done, the stores it went to raid are empty or the
+  village it went to attack now follows an ally. You are told, and it decides again.
 - **What it does matters.**
   - Feeding a hungry village fills its stores and wins you love.
   - Helping a village build raises its houses.
@@ -1315,7 +1318,8 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   disasters (earthquakes and the fiercest fires), hazards (the volcano, tornadoes, swarms, blighted
   and buried regions, and marks on the land), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
-  view (level, health, loyalty, morality, attributes, paths and callings, activity, needs, personality, its best options with
+  view (level, health, loyalty, morality, attributes, paths and callings, activity, its state and
+  behaviour tree, needs, personality, its best options with
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
   view of every Creature it has met with their latest encounters, its learned preferences by
   situation and its latest memories), every followed villager with what they do and their faith,

@@ -327,7 +327,8 @@ files and compiled assemblies and fails when either rule is broken.
   `CreatureTemperament` (the traits behind each action, judgement, guarding, envy, defending and
   wounds, ADR-037), `CreatureBrain`
   (options and utilities, decisions, planned routes), `CreatureDeeds` (what a finished action does
-  to the world), `CreatureSystem` (the per-tick state machine), `CreatureAuthority` (rewards,
+  to the world), `CreatureSystem` (the per-tick step), `CreatureModes` (the hierarchical state
+  machine, ADR-047), `CreatureTree` (the behaviour trees that carry out actions), `CreatureAuthority` (rewards,
   punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
   `CreatureBonds` (views and urges), `CreatureMeetings` and `CreatureCombat` are the Creatures'
   dealings with each other (see [Creature relationships](#creature-relationships)).
@@ -1396,8 +1397,8 @@ running for every settlement either way.
   when the role counts or the layout change, and bumps `RosterVersion` so the view recolours.
   Rerouted figures walk to their new routine at `CatchUpSpeed` instead of jumping; newcomers
   step out of their door; on promotion everyone appears in place. It bakes the village's
-  `LocalNavGrid` (`Navigation`) while figures are shown, again when the layout or the temple
-  changes, and supplies the ways; `CrowdStatus.Navigation` gives F1 the grid's figures.
+  `LocalNavGrid` (`Navigation`) while figures are shown, and again only when what stands in the
+  way changes (the huts, the building site's place, the ruins or the temple), and supplies the ways; `CrowdStatus.Navigation` gives F1 the grid's figures.
 - Representatives have no effects of their own: they show the work the aggregates already
   account for. Demotion has nothing to fold back, and saves, loads and new worlds rebuild them.
 
@@ -1489,9 +1490,20 @@ ADR-010 records the decisions, and the Milestone 4 plan
 deeds.
 
 - **State machine** (`CreatureSystem`, every tick). Needs grow and health follows hunger and rest.
-  Deciding picks an option at most every `DecisionIntervalTicks` (5 Hz). Travelling walks the
-  path at the level's speed. Performing counts down and then applies the deed. Banished counts
-  down to the Creature's return home.
+  `CreatureModes` (ADR-047) is the hierarchical state machine:
+  - Free, with Deciding, Travelling and Performing within it;
+  - Engaged, fighting or playing with another Creature;
+  - Held, in its god's hand;
+  - Banished, which counts down to the Creature's return home.
+
+  Deciding picks an option at most every `DecisionIntervalTicks` (5 Hz).
+- **Behaviour trees** (`CreatureTree`, ADR-047). They carry out the chosen action:
+  - an interrupt: a pressing need ends a commanded walk;
+  - a guard: the reason the action was chosen must still hold, or the Creature gives up
+    (`CreatureGaveUp`) and decides again;
+  - a sequence: travel at the level's speed, perform for the action's time, then the deed.
+
+  The sequence's place is the activity's phase, so the trees keep no state.
 - **Brain** (`CreatureBrain`). Options come from the Creature's needs and from each settlement
   within `PerceptionRadius`, classified as in need, building or thriving. Utility is learned
   preference × drive × personality × closeness, plus seeded jitter; the best reachable option

@@ -148,8 +148,10 @@ public sealed class CreatureBehaviourTests
         Assert.Equal(-CreatureModel.RuleFor(CreatureWorlds.Rules, CreatureAction.EatFromStores).Amount, eaten.Food, 2);
         Assert.True(creature.Needs.Hunger < 0.2f);
 
-        Perform(world, creature, CreatureAction.HelpBuild, CreatureSituation.VillageBuilding, village.Id);
-        Assert.Equal(CreatureModel.RuleFor(CreatureWorlds.Rules, CreatureAction.HelpBuild).Amount, village.ConstructionProgress, 2);
+        village.Population = village.Housing;
+        var built = Perform(world, creature, CreatureAction.HelpBuild, CreatureSituation.VillageBuilding, village.Id).OfType<CreatureActed>().Single();
+        Assert.Equal(CreatureAction.HelpBuild, built.Action);
+        Assert.True(village.ConstructionProgress >= CreatureModel.RuleFor(CreatureWorlds.Rules, CreatureAction.HelpBuild).Amount);
     }
 
     [Fact]
@@ -157,6 +159,7 @@ public sealed class CreatureBehaviourTests
     {
         var (world, creature) = CreatureWorlds.Create(200f);
         creature.Experience = CreatureWorlds.Rules.LevelExperience[0] - 0.5f;
+        world.Settlements[0].Food = 0f;
 
         var events = Perform(world, creature, CreatureAction.Feed, CreatureSituation.VillageInNeed, world.Settlements[0].Id);
 

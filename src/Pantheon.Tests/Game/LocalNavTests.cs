@@ -98,6 +98,34 @@ public sealed class LocalNavTests
         Assert.Equal((crowd.Navigation.Cells, crowd.Navigation.Detours), (status.Navigation!.Value.Cells, status.Navigation.Value.Detours));
     }
 
+    [Fact]
+    public void TheGrid_IsBakedAgain_OnlyWhenWhatStandsInTheWayChanges_NotAsBuildingGoesOn()
+    {
+        var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(1234));
+        var village = session.World.Settlements.OrderByDescending(s => s.Population).First();
+        var rules = session.Content.SettlementRules;
+        var crowd = new SettlementCrowd(session.World.Seed, village.Id, TestContent.SettlementView);
+        crowd.SelectTier(10f);
+        void Show()
+        {
+            var site = SettlementLayout.ComputeSite(village, rules, session.Terrain, TestContent.SettlementView.Layout);
+            crowd.Refresh(village, SettlementEconomy.AllocateLabour(rules, village), site);
+            crowd.Advance(0.0, session.Terrain);
+        }
+
+        village.ConstructionProgress = 10f;
+        Show();
+        var baked = crowd.Navigation;
+        village.ConstructionProgress += 5f;
+        Show();
+        var building = crowd.Navigation;
+        village.Housing += rules.HousingPerHouse;
+        Show();
+
+        Assert.Same(baked, building);
+        Assert.NotSame(baked, crowd.Navigation);
+    }
+
     /// <summary>Whether a point lies inside a hut's walls.</summary>
     private static bool InAHut(SettlementSite site, Vector2 point) =>
         site.Houses.Any(h => Vector2.Distance(new Vector2(h.Position.X, h.Position.Z), point) < (LocalNavGrid.HutRadius * h.Scale) - 0.15f);

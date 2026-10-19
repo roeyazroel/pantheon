@@ -154,7 +154,7 @@ public sealed class AlertFeed
                 return (Key("damage" + damage.Cause, settlement.Id), Format("{0} struck {1}: {2} destroyed, {3} dead.", Capitalize(DisasterText.Kind(damage.Cause)), settlement.Name, Count(damage.HousesLost, "house", "houses"), damage.Deaths), AlertSeverity.Danger, settlement.Position);
             case MigrationStarted or MigrationEnded or MigrantsTurnedAway or RefugeePolicyChanged:
                 return MigrationAlerts.Describe(worldEvent, world, localGodId);
-            case CreaturesMet or CreatureFightEnded or CreatureDefending:
+            case CreaturesMet or CreatureFightEnded or CreatureDefending or CreatureGaveUp:
                 return CreatureAlerts.Describe(worldEvent, world, localGodId);
             case DomainChosen or HolySiteClaimed or HolySiteContested or SchismStarted or SchismEnded:
                 return FaithAlerts.Describe(worldEvent, world, localGodId);

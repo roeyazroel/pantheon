@@ -62,6 +62,7 @@ silently:
 | [ADR-044](ADR-044-stress-scenario-and-debug-overlays.md) | The stress scenario and the last debug overlays | Accepted |
 | [ADR-045](ADR-045-divine-acts-that-reshape-the-land.md) | Divine Acts that reshape the land | Accepted |
 | [ADR-046](ADR-046-local-navigation.md) | Local navigation | Accepted |
+| [ADR-047](ADR-047-creature-state-machine-and-behaviour-trees.md) | The Creature's state machine and behaviour trees | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

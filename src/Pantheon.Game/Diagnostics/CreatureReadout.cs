@@ -58,6 +58,7 @@ internal static class CreatureReadout
                 activity.Situation,
                 activity.Path.Count,
                 activity.TicksLeft));
+            lines.Add(Format("  mind: {0}; tree: {1}", Simulation.Creatures.CreatureModes.Describe(world, creature), Simulation.Creatures.CreatureTree.Describe(creature)));
             lines.Add(Format(
                 "  needs: hunger {0:0.00} fatigue {1:0.00} boredom {2:0.00}   personality: {3} ({4})",
                 n.Hunger,
