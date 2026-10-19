@@ -8,14 +8,29 @@ using Pantheon.Simulation.Terrain;
 
 namespace Pantheon.Game.Presentation;
 
-/// <summary>The shape of a tree drawn (ADR-033).</summary>
+/// <summary>The species of a tree drawn (ADR-033, ADR-053).</summary>
 public enum TreeKind
 {
-    /// <summary>A conifer: tiers of cones, mostly in forests and on the heights.</summary>
-    Conifer,
+    /// <summary>A pine: tiers of broad cones.</summary>
+    Pine,
 
-    /// <summary>A broadleaf: a round crown, mostly on grassland.</summary>
-    Broadleaf,
+    /// <summary>A fir: a narrow spire of tiers, on the heights and in the tundra.</summary>
+    Fir,
+
+    /// <summary>An oak: a thick trunk under a broad, clumped crown.</summary>
+    Oak,
+
+    /// <summary>A birch: a slender white trunk with small clumps of leaves.</summary>
+    Birch,
+
+    /// <summary>A palm: a leaning trunk under a crown of fronds, on islands and in oases.</summary>
+    Palm,
+
+    /// <summary>A willow: a dome of leaves falling to the ground, by rivers and in swamps.</summary>
+    Willow,
+
+    /// <summary>A bare, dead snag, on volcanic land and in swamps.</summary>
+    Snag,
 }
 
 /// <summary>One tree drawn (ADR-033).</summary>
@@ -87,8 +102,10 @@ public static class ForestLayout
     /// <param name="region">The region.</param>
     /// <param name="clearings">The villages' clearings.</param>
     /// <param name="into">Receives the trees.</param>
-    public static void Place(WorldState world, TerrainField terrain, RegionState region, IReadOnlyList<Clearing> clearings, List<TreePlacement> into)
+    /// <param name="species">Which species grow on each biome, and in what shares (ADR-053).</param>
+    public static void Place(WorldState world, TerrainField terrain, RegionState region, IReadOnlyList<Clearing> clearings, List<TreePlacement> into, TreeSettings species)
     {
+        ArgumentNullException.ThrowIfNull(species);
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(terrain);
         ArgumentNullException.ThrowIfNull(region);
@@ -98,7 +115,6 @@ public static class ForestLayout
         var (column, row) = grid.GetCoordinates(region.Id);
         var size = grid.RegionSize;
         var seed = world.Seed.Value;
-        var conifers = region.Biome is Biome.Forest or Biome.Highland or Biome.Tundra ? 0.8f : region.Biome is Biome.Volcanic ? 0.5f : 0.2f;
         var count = TreeCount(grid, region);
         for (var slot = 0; slot < count; slot++)
         {
@@ -111,7 +127,7 @@ public static class ForestLayout
                 continue;
             }
 
-            var kind = PresentationHash.Unit(seed, key, (ulong)slot, 3) < conifers ? TreeKind.Conifer : TreeKind.Broadleaf;
+            var kind = species.Pick(region.Biome, PresentationHash.Unit(seed, key, (ulong)slot, 3));
             into.Add(new TreePlacement(
                 new Vector3(x, height, z),
                 0.8f + (0.55f * PresentationHash.Unit(seed, key, (ulong)slot, 4)),
@@ -122,7 +138,11 @@ public static class ForestLayout
     }
 
     /// <summary>Whether a point lies in a village's clearing.</summary>
-    private static bool InClearing(IReadOnlyList<Clearing> clearings, float x, float z)
+    /// <param name="clearings">The clearings.</param>
+    /// <param name="x">East-west, in metres.</param>
+    /// <param name="z">North-south, in metres.</param>
+    /// <returns><c>true</c> when it does.</returns>
+    public static bool InClearing(IReadOnlyList<Clearing> clearings, float x, float z)
     {
         foreach (var clearing in clearings)
         {
@@ -136,7 +156,11 @@ public static class ForestLayout
     }
 
     /// <summary>Whether a point lies on a road, built or being built.</summary>
-    private static bool OnRoad(List<RoadState> roads, float x, float z)
+    /// <param name="roads">The roads.</param>
+    /// <param name="x">East-west, in metres.</param>
+    /// <param name="z">North-south, in metres.</param>
+    /// <returns><c>true</c> when it does.</returns>
+    public static bool OnRoad(List<RoadState> roads, float x, float z)
     {
         var point = new Vector2(x, z);
         foreach (var road in roads)

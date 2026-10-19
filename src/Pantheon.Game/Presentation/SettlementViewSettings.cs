@@ -23,6 +23,12 @@ public sealed record SettlementViewSettings
     /// <summary>How people look (ADR-049).</summary>
     public required PeopleSettings People { get; init; }
 
+    /// <summary>The ground cover near the camera (ADR-053).</summary>
+    public required GroundCoverSettings GroundCover { get; init; }
+
+    /// <summary>The trees' species, colours and sway (ADR-053).</summary>
+    public required TreeSettings Trees { get; init; }
+
     /// <summary>How villages build (ADR-052).</summary>
     public required ArchitectureSettings Architecture { get; init; }
 
@@ -64,6 +70,8 @@ public sealed record SettlementViewSettings
         Collect(errors, nameof(People), People.Validate);
         Collect(errors, nameof(Style), Style.Validate);
         Collect(errors, nameof(Architecture), Architecture.Validate);
+        Collect(errors, nameof(Trees), Trees.Validate);
+        Collect(errors, nameof(GroundCover), GroundCover.Validate);
         Collect(errors, nameof(Debris), Debris.Validate);
         Collect(errors, nameof(Streaming), Streaming.Validate);
         if (errors.Count > 0)

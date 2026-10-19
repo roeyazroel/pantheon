@@ -23,8 +23,6 @@ public sealed class ForestPresenter
     private const float HideDistance = 1600f;
     private const float FadeMargin = 300f;
 
-    private static readonly Color ConiferLeaves = new(0.17f, 0.34f, 0.2f);
-    private static readonly Color BroadLeaves = new(0.33f, 0.52f, 0.24f);
     private static readonly Color Snowy = new(0.9f, 0.92f, 0.95f);
 
     private readonly Node3D _parent;
@@ -32,13 +30,13 @@ public sealed class ForestPresenter
     private readonly SettlementLayoutSettings _layout;
     private readonly ShaderMaterial _material;
     private readonly StreamingSettings _streaming;
-    private readonly ArrayMesh _conifer = TreeMeshes.Conifer();
-    private readonly ArrayMesh _broadleaf = TreeMeshes.Broadleaf();
+    private readonly TreeSettings _species;
+    private readonly Dictionary<TreeKind, ArrayMesh> _meshes = [];
     private readonly List<TreePlacement> _trees = [];
     private readonly HashSet<int> _dirty = [];
     private readonly Dictionary<int, int> _housesShown = [];
     private readonly HashSet<int> _roadsShown = [];
-    private (MultiMeshInstance3D Conifers, MultiMeshInstance3D Broadleaves)?[] _chunks = [];
+    private Dictionary<TreeKind, MultiMeshInstance3D>?[] _chunks = [];
     private ChunkStreamer? _streamer;
     private bool _firstStream;
     private int[] _shown = [];
@@ -53,14 +51,24 @@ public sealed class ForestPresenter
     /// <param name="rules">Settlement rules, for the villages' houses.</param>
     /// <param name="layout">Settlement layout, for the villages' clearings.</param>
     /// <param name="streaming">How near the camera forests are planted.</param>
-    public ForestPresenter(Node3D parent, SettlementRules rules, SettlementLayoutSettings layout, StreamingSettings streaming)
+    /// <param name="species">The trees' species, colours and sway (ADR-053).</param>
+    public ForestPresenter(Node3D parent, SettlementRules rules, SettlementLayoutSettings layout, StreamingSettings streaming, TreeSettings species)
     {
+        _species = species;
+        foreach (var kind in Enum.GetValues<TreeKind>())
+        {
+            _meshes[kind] = Meshes.ToArrayMesh(TreeMesh.Build(kind, detailed: true));
+        }
+
         _parent = parent;
         _rules = rules;
         _layout = layout;
         _streaming = streaming;
         _material = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
     }
+
+    /// <summary>The wind's sway at the camera, on the ground, in metres: for the ground cover too.</summary>
+    public Vector2 Wind { get; private set; }
 
     /// <summary>Planted chunks and all chunks, for the debug panel.</summary>
     public (int Loaded, int Chunks) Streaming => (_streamer?.Loaded.Count ?? 0, _streamer?.Count ?? 0);
@@ -75,7 +83,7 @@ public sealed class ForestPresenter
         var grid = world.Regions;
         _regionsPerChunk = Math.Max(1, (int)MathF.Round(ChunkMetres / grid.RegionSize));
         _chunksPerSide = (grid.Columns + _regionsPerChunk - 1) / _regionsPerChunk;
-        _chunks = new (MultiMeshInstance3D, MultiMeshInstance3D)?[_chunksPerSide * _chunksPerSide];
+        _chunks = new Dictionary<TreeKind, MultiMeshInstance3D>?[_chunksPerSide * _chunksPerSide];
         _streamer = new ChunkStreamer(_chunksPerSide, _regionsPerChunk * grid.RegionSize, _streaming.ForestLoadRadius, _streaming.ForestUnloadRadius);
         _firstStream = true;
         _shown = new int[grid.Cells.Count];
@@ -103,17 +111,26 @@ public sealed class ForestPresenter
         {
             if (_chunks[chunk] is { } nodes)
             {
-                nodes.Conifers.QueueFree();
-                nodes.Broadleaves.QueueFree();
+                foreach (var node in nodes.Values)
+                {
+                    node.QueueFree();
+                }
+
                 _chunks[chunk] = null;
             }
 
             _dirty.Remove(chunk);
         }
 
+        // Trees bend with the weather's wind over the camera's ground (ADR-053).
+        var (strength, windX, windZ) = Breeze.At(world.Weather, new GroundPosition(camera.X, camera.Z));
+        var sway = _species.Sway + (_species.StormSway * strength);
+        Wind = new Vector2(windX, windZ) * sway;
+        _material.SetShaderParameter("wind", Wind);
+
         foreach (var chunk in step.Load)
         {
-            _chunks[chunk] = (Instance(_conifer, "Conifers_" + chunk), Instance(_broadleaf, "Broadleaves_" + chunk));
+            _chunks[chunk] = [];
             _dirty.Remove(chunk);
             Draw(world, chunk);
         }
@@ -184,7 +201,7 @@ public sealed class ForestPresenter
             {
                 var region = grid.Cells[(row * grid.Columns) + column];
                 var before = _trees.Count;
-                ForestLayout.Place(world, _terrain!, region, _clearings, _trees);
+                ForestLayout.Place(world, _terrain!, region, _clearings, _trees, _species);
                 for (var i = before; i < _trees.Count; i++)
                 {
                     snow.Add(Math.Clamp(region.Snow, 0f, 1f));
@@ -199,19 +216,32 @@ public sealed class ForestPresenter
             return;
         }
 
-        Fill(nodes.Conifers.Multimesh, TreeKind.Conifer, ConiferLeaves, snow);
-        Fill(nodes.Broadleaves.Multimesh, TreeKind.Broadleaf, BroadLeaves, snow);
+        foreach (var kind in Enum.GetValues<TreeKind>())
+        {
+            var count = 0;
+            foreach (var tree in _trees)
+            {
+                count += tree.Kind == kind ? 1 : 0;
+            }
+
+            if (count == 0 && !nodes.ContainsKey(kind))
+            {
+                continue;
+            }
+
+            if (!nodes.TryGetValue(kind, out var node))
+            {
+                node = Instance(kind, $"{kind}_{chunk}");
+                nodes[kind] = node;
+            }
+
+            Fill(node.Multimesh, kind, count, _species.Colors[kind].Leaves.ToGodot(), snow);
+        }
     }
 
-    /// <summary>Sets a MultiMesh to the chunk's trees of one shape.</summary>
-    private void Fill(MultiMesh mesh, TreeKind kind, Color leaves, List<float> snow)
+    /// <summary>Sets a MultiMesh to the chunk's trees of one species.</summary>
+    private void Fill(MultiMesh mesh, TreeKind kind, int count, Color leaves, List<float> snow)
     {
-        var count = 0;
-        foreach (var tree in _trees)
-        {
-            count += tree.Kind == kind ? 1 : 0;
-        }
-
         mesh.InstanceCount = count;
         var index = 0;
         for (var i = 0; i < _trees.Count; i++)
@@ -226,24 +256,26 @@ public sealed class ForestPresenter
             mesh.SetInstanceTransform(index, new Transform3D(basis, new Vector3(tree.Position.X, tree.Position.Y, tree.Position.Z)));
             // The shader takes colours as linear.
             var tint = (leaves * tree.Shade).Lerp(Snowy, snow[i] * 0.75f).SrgbToLinear();
-            mesh.SetInstanceCustomData(index, new Color(tint.R, tint.G, tint.B, 1f));
+            mesh.SetInstanceCustomData(index, new Color(tint.R, tint.G, tint.B, (tree.Yaw / Mathf.Tau) % 1f));
             index++;
         }
     }
 
-    /// <summary>A chunk's node for one tree shape.</summary>
-    private MultiMeshInstance3D Instance(ArrayMesh mesh, string name)
+    /// <summary>A chunk's node for one species, its trunk in the species' colour.</summary>
+    private MultiMeshInstance3D Instance(TreeKind kind, string name)
     {
         var instance = new MultiMeshInstance3D
         {
             Name = name,
-            Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseCustomData = true, Mesh = mesh },
+            Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseCustomData = true, Mesh = _meshes[kind] },
             MaterialOverride = _material,
             VisibilityRangeEnd = HideDistance,
             VisibilityRangeEndMargin = FadeMargin,
             VisibilityRangeFadeMode = GeometryInstance3D.VisibilityRangeFadeModeEnum.Self,
         };
         _parent.AddChild(instance);
+        var trunk = _species.Colors[kind].Trunk.ToGodot().SrgbToLinear();
+        instance.SetInstanceShaderParameter("trunk_color", new Vector3(trunk.R, trunk.G, trunk.B));
         return instance;
     }
 

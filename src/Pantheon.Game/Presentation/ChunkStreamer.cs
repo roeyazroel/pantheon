@@ -71,12 +71,19 @@ public sealed class ChunkStreamer
             _loaded.Remove(chunk);
         }
 
+        // Only the chunks within the load radius on the ground can load, so only those are looked at.
         var wanted = new List<(float Distance, int Chunk)>();
-        for (var chunk = 0; chunk < Count; chunk++)
+        var (first, last) = (Cell(camera.X - _loadRadius), Cell(camera.X + _loadRadius));
+        var (top, bottom) = (Cell(camera.Z - _loadRadius), Cell(camera.Z + _loadRadius));
+        for (var row = top; row <= bottom && Math.Abs(camera.Y) <= _loadRadius; row++)
         {
-            if (!_loaded.Contains(chunk) && Distance(chunk, camera) is var distance && distance <= _loadRadius)
+            for (var column = first; column <= last; column++)
             {
-                wanted.Add((distance, chunk));
+                var chunk = (row * _perSide) + column;
+                if (!_loaded.Contains(chunk) && Distance(chunk, camera) is var distance && distance <= _loadRadius)
+                {
+                    wanted.Add((distance, chunk));
+                }
             }
         }
 
@@ -91,6 +98,9 @@ public sealed class ChunkStreamer
         unload.Sort();
         return new StreamingStep(load, unload);
     }
+
+    /// <summary>The chunk column (or row) a ground coordinate falls in, kept on the island.</summary>
+    private int Cell(float metres) => Math.Clamp((int)MathF.Floor(metres / _chunkMetres), 0, Math.Max(0, _perSide - 1));
 
     /// <summary>Lets every chunk go, for a new world.</summary>
     public void Clear() => _loaded.Clear();

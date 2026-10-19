@@ -122,6 +122,63 @@
     "HouseVariation": 0.08
   },
 
+  // Trees (spec sections 61 and 93, ADR-053): the species each biome grows and their shares (a biome
+  // not listed grows Grassland's), each species' trunk and leaves, and how far a tree's top sways:
+  // Sway metres in a light breeze, and StormSway more in the strongest wind of the weather.
+  "Trees": {
+    "Species": {
+      "Grassland": { "Oak": 0.65, "Birch": 0.25, "Pine": 0.1 },
+      "Forest": { "Pine": 0.35, "Oak": 0.35, "Birch": 0.3 },
+      "Highland": { "Fir": 0.6, "Pine": 0.3, "Birch": 0.1 },
+      "Tundra": { "Fir": 0.8, "Birch": 0.2 },
+      "RiverValley": { "Willow": 0.4, "Oak": 0.4, "Birch": 0.2 },
+      "Swamp": { "Willow": 0.7, "Snag": 0.3 },
+      "Coast": { "Pine": 0.4, "Oak": 0.4, "Palm": 0.2 },
+      "Island": { "Palm": 0.7, "Oak": 0.3 },
+      "Desert": { "Palm": 0.6, "Snag": 0.4 },
+      "Volcanic": { "Snag": 0.6, "Pine": 0.4 }
+    },
+    "Colors": {
+      "Pine": { "Trunk": "#5a4130", "Leaves": "#2f5a32" },
+      "Fir": { "Trunk": "#4e3a2c", "Leaves": "#26492f" },
+      "Oak": { "Trunk": "#5c4632", "Leaves": "#4d7a34" },
+      "Birch": { "Trunk": "#d8d2c4", "Leaves": "#7aa23e" },
+      "Palm": { "Trunk": "#8a6e4a", "Leaves": "#4f8a3a" },
+      "Willow": { "Trunk": "#5a4a36", "Leaves": "#6f9a48" },
+      "Snag": { "Trunk": "#4a423c", "Leaves": "#4a423c" }
+    },
+    "Sway": 0.15,
+    "StormSway": 0.9
+  },
+
+  // Ground cover (spec section 61, ADR-053): within Radius metres of the camera, in chunks of
+  // ChunkMetres, each cell of CellMetres may hold one thing, by its biome's chances: grass and
+  // flowers as thick as the land's vegetation, bushes, stones and reeds. Nothing grows in water, on
+  // bare rock, in a village's clearing or on a road; snow pales it. A biome not listed is bare.
+  "GroundCover": {
+    "CellMetres": 1.2,
+    "ChunkMetres": 32.0,
+    "Radius": 100.0,
+    "Biomes": {
+      "Grassland": { "Grass": 0.7, "Flowers": 0.07, "Bush": 0.025, "Rock": 0.01 },
+      "RiverValley": { "Grass": 0.75, "Flowers": 0.08, "Bush": 0.02, "Rock": 0.005 },
+      "Coast": { "Grass": 0.55, "Flowers": 0.04, "Bush": 0.02, "Rock": 0.02 },
+      "Island": { "Grass": 0.6, "Flowers": 0.06, "Bush": 0.03, "Rock": 0.015 },
+      "Forest": { "Grass": 0.3, "Flowers": 0.02, "Bush": 0.12, "Rock": 0.03 },
+      "Highland": { "Grass": 0.3, "Bush": 0.02, "Rock": 0.08 },
+      "Tundra": { "Grass": 0.2, "Rock": 0.08 },
+      "Swamp": { "Grass": 0.2, "Reeds": 0.35, "Bush": 0.03 },
+      "Desert": { "Grass": 0.04, "Bush": 0.04, "Rock": 0.05 },
+      "Volcanic": { "Rock": 0.1, "Grass": 0.05 }
+    },
+    "Grass": ["#5f8f38", "#6c9a3e", "#7aa546", "#8eb052"],
+    "DryGrass": "#b39a5c",
+    "Petals": ["#f2d14c", "#ffffff", "#d96a8a", "#9b7ad9", "#e8893a"],
+    "Bush": "#3f6a2c",
+    "Stone": "#8a857c",
+    "Reeds": "#7f8a4a"
+  },
+
   // Religion's look (spec section 61, ADR-042). The god most of a village follows gives it a motif:
   // gardens (Nature, Life, Prosperity, Ocean; compassion, mercy, generosity; nature worship,
   // pacifism, charity; love), monuments (War, Death, Fire, Storm, Chaos; cruelty, vengeance,

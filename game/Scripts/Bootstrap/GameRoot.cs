@@ -98,7 +98,7 @@ public partial class GameRoot : Node3D
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
         _session = _network.Join(content, options) ?? CreateSession(content, options);
         _network.Host(_session, options);
-        _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette, () => _disasters.Fires, presentation.SettlementView.Streaming);
+        _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette, () => _disasters.Fires, presentation.SettlementView.Streaming, presentation.SettlementView.GroundCover.Radius);
         _nature = new NatureDebug(_session, _camera, SetStatus);
         var hud = new Hud { Name = "Hud" };
         AddChild(hud);

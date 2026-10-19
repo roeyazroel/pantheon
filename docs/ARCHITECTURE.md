@@ -815,10 +815,12 @@ keep it in 0..1. A missing,
 - `Presentation/GreatEvents/GreatEventPresenter` draws the beast (the Creature body with the
   "Beast" look, half-buried asleep, walking awake, on its side fallen, with its label) and the
   anomaly's column of light (ADR-035).
-- `Presentation/Land/`: `ForestPresenter` draws the trees in chunks of MultiMeshes (the low-poly
-  `TreeMeshes` with the `tree.gdshader` tint), planting only the chunks the camera is near and
-  clearing those it leaves (ADR-050), and redraws a planted chunk when its timber, snow, villages
-  or roads change; `RoadPresenter` draws each road's ribbon (ADR-033).
+- `Presentation/Land/`: `ForestPresenter` draws the trees in chunks, one MultiMesh per species
+  present (`TreeMesh`, ADR-053), planting only the chunks the camera is near and clearing those it
+  leaves (ADR-050), and redraws a planted chunk when its timber, snow, villages or roads change.
+  `tree.gdshader` tints each tree's leaves, colours its trunk by species and bends it in the wind
+  `Breeze.At` finds in the weather over the camera. `GroundCoverPresenter` streams the ground cover
+  (`GroundCoverLayout`, `GroundCoverMesh`) in 32 m chunks within 100 m, swaying in the same wind; `RoadPresenter` draws each road's ribbon (ADR-033).
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast
   along the way, and a label that fades out at strategic zoom. It owns the
@@ -1431,6 +1433,12 @@ running for every settlement either way.
   runs with the game but never faster than `PaceCap` times real time, and stops when paused, so
   people keep a human pace at any game speed. It is never saved, and `VillagerCommands.Pick`
   poses the figures by it, as the client draws them.
+- `ForestLayout` picks each tree's species from its biome's shares (`TreeSettings.Pick`, ADR-053).
+  `GroundCoverLayout` lays out the ground cover: at most one thing in each 1.2 m cell, by the
+  biome's chances (grass and flowers thinned by the land's vegetation, stones, bushes and reeds
+  taking their shares first so they stay put), never in water, on bare rock, on a road, by a house,
+  on a field or on a village's square (`BareGround`). `ChunkStreamer` looks only at the chunks
+  within its load radius, so small chunks over a large island cost nothing far away.
 - `VillageArchitecture` (ADR-052) gives a village its look: the style its land builds in
   (`StyleOf`: adobe, stilt houses, stone cottages, timber longhouses, round huts), longhouses and
   an upper storey as it grows, colours from `Architecture` in `settlement_view.json`, and its

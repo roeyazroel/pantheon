@@ -29,6 +29,7 @@ public sealed class WorldPresenter
     private readonly FreshWaterPresenter _freshWater;
     private readonly SettlementPresenter _settlements;
     private readonly ForestPresenter _forests;
+    private readonly GroundCoverPresenter _groundCover;
     private readonly RoadPresenter _roads;
     private readonly GreatEvents.GreatEventPresenter _greatEvents;
     private readonly RegionBoundaryOverlay _regions;
@@ -49,7 +50,8 @@ public sealed class WorldPresenter
         _water = new WaterPresenter(root.AddLayer("Water"));
         _freshWater = new FreshWaterPresenter(root.AddLayer("FreshWater"));
         _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
-        _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout, content.SettlementView.Streaming);
+        _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout, content.SettlementView.Streaming, content.SettlementView.Trees);
+        _groundCover = new GroundCoverPresenter(root.AddLayer("GroundCover"), content.SettlementView, rules, content.Palette.RockSlopeStart);
         _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
         _greatEvents = new GreatEvents.GreatEventPresenter(root.AddLayer("GreatEvents"), content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
@@ -70,6 +72,9 @@ public sealed class WorldPresenter
 
     /// <summary>What streams near the camera now (ADR-050): planted forest chunks, detailed terrain chunks.</summary>
     public ((int Loaded, int Chunks) Forests, (int Detailed, int Chunks)? Terrain) Streaming => (_forests.Streaming, _terrain.Detail);
+
+    /// <summary>Ground-cover chunks planted near the camera and all of them (ADR-053).</summary>
+    public (int Loaded, int Chunks) GroundCover => _groundCover.Streaming;
 
     /// <summary>Name of the active terrain renderer.</summary>
     public string TerrainBackend => _terrain.BackendName;
@@ -95,6 +100,7 @@ public sealed class WorldPresenter
         _freshWater.Build(terrain, world);
         _settlements.Build(world, terrain);
         _forests.Rebuild(world, terrain);
+        _groundCover.Rebuild(world, terrain);
         _roads.Rebuild(world, terrain);
         _greatEvents.Rebuild(terrain);
         _regions.Build(world.Regions, terrain);
@@ -117,6 +123,7 @@ public sealed class WorldPresenter
         _debris.Sync(delta);
         _freshWater.Sync(world);
         _forests.Sync(world, delta, _camera.GlobalPosition);
+        _groundCover.Sync(world, delta, _camera.GlobalPosition, _forests.Wind);
         _roads.Sync(world);
         _greatEvents.Sync(world, delta);
     }

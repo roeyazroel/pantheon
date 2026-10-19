@@ -422,6 +422,13 @@ and ×16 speed it up. Each step:
   stone. A new house takes wood, and every building takes wood and stone. Cut forests grow back
   slowly. Fire burns them, a cleared forest holds fewer animals, and a cleared wet slope slides
   more easily.
+- **Trees and the ground (spec §61, ADR-053).** Each land grows its own trees: oaks and birches
+  on grassland, pines, oaks and birches in forests, firs on the heights and in the tundra, willows
+  by rivers and in swamps, palms on islands and in oases, and bare snags on volcanic land. Near
+  the camera the ground is covered with tufts of grass and flowers as thick as the land's
+  vegetation, bushes, stones and reeds in swamps, but not by houses, on fields or on a village's
+  square. Trees and grass sway in the wind and bend hard in a storm. The species, colours and
+  sway are in `Trees`, and the ground cover in `GroundCover`, in `game/Data/settlement_view.json`.
 - **How villages build (spec §61, ADR-052).** The land picks the houses: round huts of wattle and
   thatch on grassland and by rivers and coasts, timber longhouses in forests and the tundra, stone
   cottages with slate roofs and chimneys in the highlands and on volcanic land, flat-roofed adobe

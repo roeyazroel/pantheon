@@ -145,7 +145,7 @@ public sealed class ResourcePresentationTests
     private static List<TreePlacement> Trees(WorldState world, GameSession session, Pantheon.Domain.World.RegionState region, List<Clearing> clearings)
     {
         var trees = new List<TreePlacement>();
-        ForestLayout.Place(world, session.Terrain, region, clearings, trees);
+        ForestLayout.Place(world, session.Terrain, region, clearings, trees, TestContent.SettlementView.Trees);
         return trees;
     }
 

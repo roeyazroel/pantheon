@@ -45,18 +45,20 @@ internal sealed class DebugView
     /// <param name="palette">Biome colours, for the region map.</param>
     /// <param name="fires">Fires drawn and burning, for the streaming line.</param>
     /// <param name="streaming">Streaming settings, for the streaming line.</param>
-    public DebugView(GameSession session, WorldPresenter presenter, GodCameraController camera, DebugOverlay overlay, NetworkDriver network, BiomePalette palette, Func<(int Shown, int Burning)> fires, Pantheon.Game.Presentation.StreamingSettings streaming)
+    /// <param name="coverRadius">How near the camera the ground cover is planted.</param>
+    public DebugView(GameSession session, WorldPresenter presenter, GodCameraController camera, DebugOverlay overlay, NetworkDriver network, BiomePalette palette, Func<(int Shown, int Burning)> fires, Pantheon.Game.Presentation.StreamingSettings streaming, float coverRadius)
     {
         (_session, _presenter, _camera, _overlay, _network, _palette) = (session, presenter, camera, overlay, network, palette);
-        (_fires, _streaming) = (fires, streaming);
+        (_fires, _streaming, _coverRadius) = (fires, streaming, coverRadius);
     }
 
     private readonly Func<(int Shown, int Burning)> _fires;
 
     /// <summary>What streams near the camera now.</summary>
     private StreamingStatus Streaming() =>
-        new(_presenter.Streaming.Forests.Loaded, _presenter.Streaming.Forests.Chunks, _presenter.Streaming.Terrain, _fires().Shown, _fires().Burning, _streaming);
+        new(_presenter.Streaming.Forests.Loaded, _presenter.Streaming.Forests.Chunks, _presenter.Streaming.Terrain, _fires().Shown, _fires().Burning, _streaming, (_presenter.GroundCover.Loaded, _presenter.GroundCover.Chunks, _coverRadius));
     private readonly Pantheon.Game.Presentation.StreamingSettings _streaming;
+    private readonly float _coverRadius;
 
     /// <summary>The client's performance measurements.</summary>
     public PerformanceMonitor Performance { get; } = new();
