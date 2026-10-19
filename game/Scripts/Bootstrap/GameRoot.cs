@@ -136,6 +136,9 @@ public partial class GameRoot : Node3D
         var society = new SocietyController { Name = "Society" };
         AddChild(society);
         society.Setup(_session, _camera, SetStatus, options);
+        var villagers = new VillagerController { Name = "Villagers" };
+        AddChild(villagers);
+        villagers.Setup(_session, _camera, worldNode.AddLayer("Villagers"), presentation, SetStatus, options);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         _session.Scheduler.TimeScale = options.Speed ?? _session.Scheduler.TimeScale;
         if (options.AdvanceTicks is { } ticks)

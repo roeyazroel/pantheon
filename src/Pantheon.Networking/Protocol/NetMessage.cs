@@ -26,6 +26,7 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(DomainIntent), "Domain")]
 [JsonDerivedType(typeof(PriorityIntent), "Priority")]
 [JsonDerivedType(typeof(HandIntent), "Hand")]
+[JsonDerivedType(typeof(VillagerIntent), "Villager")]
 [JsonDerivedType(typeof(Verdict), "Verdict")]
 [JsonDerivedType(typeof(Goodbye), "Goodbye")]
 [JsonDerivedType(typeof(SectionUpdate), "Section")]
@@ -138,6 +139,11 @@ public sealed record PriorityIntent(int RequestId, int SettlementId, Pantheon.Do
 /// <param name="Target">Where.</param>
 public sealed record HandIntent(int RequestId, Pantheon.Domain.Hand.HandAction Action, GroundPosition Target) : NetMessage;
 
+/// <summary>A player's god follows one of a village's people, or lets them go (ADR-043).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="Follow">The villager to follow; <c>null</c> lets the one followed go.</param>
+public sealed record VillagerIntent(int RequestId, Pantheon.Domain.Villagers.FollowVillager? Follow) : NetMessage;
+
 /// <summary>The host's answer to an intent: whether it was carried out, and what happened or why not.</summary>
 /// <param name="RequestId">The request it answers.</param>
 /// <param name="Accepted">Whether the world changed.</param>
@@ -183,7 +189,7 @@ public enum WorldSection
     /// <summary>The rivers' levels and the lakes (ADR-022): a low rate.</summary>
     Water,
 
-    /// <summary>The prophets and elders (ADR-032): a low rate, when they change.</summary>
+    /// <summary>The prophets and elders (ADR-032) and the villagers the gods follow (ADR-043): a low rate, when they change.</summary>
     Notables,
 
     /// <summary>The roads (ADR-033): the lowest rate, when they change.</summary>

@@ -126,6 +126,9 @@ public sealed record SettlementRules
 
     /// <summary>How villages build roads to their neighbours and what roads do (ADR-033); <see cref="Roads.RoadRules.None"/> when absent.</summary>
     public Roads.RoadRules Roads { get; init; } = Pantheon.Domain.Roads.RoadRules.None;
+
+    /// <summary>The villagers gods follow (spec §80, ADR-043); <see cref="Villagers.VillagerRules.None"/> when absent.</summary>
+    public Villagers.VillagerRules Villagers { get; init; } = Pantheon.Domain.Villagers.VillagerRules.None;
 }
 
 /// <summary>What a settlement's technology (per level) and buildings do for its harvests, health, houses, stores and defence (spec §21, §36, ADR-023).</summary>

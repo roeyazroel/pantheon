@@ -171,13 +171,16 @@ public static class InputActions
     /// <summary>Cast miracles veiled, or in the open (T, ADR-026).</summary>
     public static readonly StringName ToggleVeil = "toggle_veil";
 
+    /// <summary>Follow the villager at the cursor, or look at the one followed; with Shift, let them go (/, ADR-043).</summary>
+    public static readonly StringName VillagerFollow = "villager_follow";
+
     /// <summary>Every action, used to check the input map at start-up.</summary>
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, DebugGreatEvent, HandGrab, ToggleBook, CameraOverview, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, DebugGreatEvent, HandGrab, ToggleBook, CameraOverview, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil, VillagerFollow,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

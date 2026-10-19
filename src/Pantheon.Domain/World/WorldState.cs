@@ -83,6 +83,12 @@ public sealed class WorldState
     /// <summary>Id the next notable will get.</summary>
     public int NextNotableId { get; set; } = 1;
 
+    /// <summary>The villagers the gods follow (spec §80's selected villager, ADR-043), at most one for each god, ordered by id.</summary>
+    public List<Villagers.VillagerState> Villagers { get; init; } = [];
+
+    /// <summary>Id the next followed villager will get.</summary>
+    public int NextVillagerId { get; set; } = 1;
+
     /// <summary>The roads between villages, built and being built (spec §29, ADR-033).</summary>
     public List<Roads.RoadState> Roads { get; init; } = [];
 

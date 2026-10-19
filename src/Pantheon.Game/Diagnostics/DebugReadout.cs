@@ -55,6 +55,7 @@ public static class DebugReadout
         MigrationReadout.Append(lines, snapshot);
         FaithReadout.Append(lines, snapshot);
         NotableReadout.Append(lines, snapshot);
+        VillagerReadout.Append(lines, snapshot);
         ResourceReadout.Append(lines, snapshot);
         GreatEventReadout.Append(lines, snapshot);
         AppendCursor(lines, world, snapshot.CursorWorldPosition);

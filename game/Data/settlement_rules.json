@@ -141,5 +141,65 @@
     "RepairPerSecond": 0.005,
     "CutWear": 0.6,
     "DecayPerSecond": 0.002
+  },
+  // The villagers gods follow (ADR-043): / makes the figure at the cursor an individual, named from
+  // Names, aged MinAge to MaxAge years (a year being SecondsPerYear seconds), who dies of age between
+  // MinLifeYears and MaxLifeYears. They walk Speed metres a second, are in their village within
+  // VillageRadius of its centre, and their home, work and shrine lie within SpotRange of it. Hunger
+  // grows HungerPerSecond a second and eating from the stores takes EatPerSecond away; work tires them
+  // FatiguePerSecond a second (walking half as much) and rest takes RestPerSecond away. They choose
+  // what to do by their hunger, their fatigue, WorkDrive times their strength, and WorshipDrive times
+  // their faith (less within WorshipGapSeconds of praying), with HardshipWorship more for a hardship
+  // in the last HardshipSeconds; work, a meal, rest and prayer last WorkSeconds, EatSeconds,
+  // RestSeconds and WorshipSeconds. Starving costs StarvePerSecond health a second, the plague
+  // PlagueHarmPerSecond times the share sick, and they heal HealPerSecond. They flee at FleeDanger
+  // (WaryFlee of it once they have known danger) to a safe village within FleeRange, else
+  // FleeDistance metres out, and die with chance Mortality a second times the danger. Their faith
+  // follows their village's FaithDrift a second and grows WorshipFaith a second in prayer; a miracle
+  // within WitnessRadius metres, or a prophet, of their god gives WitnessFaith, another god's takes
+  // half as much; below ConvertFaith they turn to the god most of the village follows. They remember
+  // MemoryCapacity things.
+  "Villagers": {
+    "Names": [
+      "Mara", "Tobin", "Ilse", "Corwin", "Neve", "Aldo", "Brin", "Cass", "Doran", "Edda",
+      "Fen", "Greta", "Hale", "Ina", "Jory", "Kestra", "Lio", "Mira", "Nils", "Orla",
+      "Pell", "Quin", "Rhea", "Soren", "Tamsin", "Ulric", "Vesna", "Wren", "Yara", "Zev",
+      "Anouk", "Bram", "Ciel", "Dagny", "Emrys", "Faye", "Gunnar", "Hesper", "Ivo", "Juna"
+    ],
+    "SecondsPerYear": 90.0,
+    "MinAge": 16.0,
+    "MaxAge": 60.0,
+    "MinLifeYears": 58.0,
+    "MaxLifeYears": 86.0,
+    "Speed": 1.4,
+    "VillageRadius": 60.0,
+    "SpotRange": 150.0,
+    "HungerPerSecond": 0.0035,
+    "EatPerSecond": 0.04,
+    "FatiguePerSecond": 0.003,
+    "RestPerSecond": 0.012,
+    "WorkDrive": 0.5,
+    "WorshipDrive": 0.6,
+    "WorshipGapSeconds": 180.0,
+    "HardshipWorship": 0.25,
+    "HardshipSeconds": 300.0,
+    "WorkSeconds": 60.0,
+    "EatSeconds": 15.0,
+    "RestSeconds": 40.0,
+    "WorshipSeconds": 25.0,
+    "StarvePerSecond": 0.004,
+    "HealPerSecond": 0.002,
+    "PlagueHarmPerSecond": 0.004,
+    "FleeDanger": 0.25,
+    "WaryFlee": 0.6,
+    "FleeRange": 800.0,
+    "FleeDistance": 80.0,
+    "Mortality": 0.01,
+    "FaithDrift": 0.01,
+    "WorshipFaith": 0.004,
+    "WitnessRadius": 150.0,
+    "WitnessFaith": 0.05,
+    "ConvertFaith": 0.3,
+    "MemoryCapacity": 24
   }
 }

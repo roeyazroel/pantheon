@@ -45,7 +45,7 @@ public static class WorldSections
             WorldSection.Diplomacy => Json(world.Diplomacy),
             WorldSection.History => Json(world.History),
             WorldSection.HolySites => Json(world.HolySites),
-            WorldSection.Notables => Json(new NotablesPart(world.Notables, world.NextNotableId)),
+            WorldSection.Notables => Json(new NotablesPart(world.Notables, world.NextNotableId, world.Villagers, world.NextVillagerId)),
             WorldSection.Water => Json(world.Water),
             WorldSection.Roads => Json(new RoadsPart(world.Roads, world.NextRoadId)),
             WorldSection.GreatEvents => Json(world.GreatEvents),
@@ -158,7 +158,8 @@ public static class WorldSections
             case WorldSection.Notables:
                 var notables = Read<NotablesPart>(data);
                 Replace(world.Notables, notables.Notables);
-                world.NextNotableId = notables.NextNotableId;
+                Replace(world.Villagers, notables.Villagers);
+                (world.NextNotableId, world.NextVillagerId) = (notables.NextNotableId, notables.NextVillagerId);
                 return null;
             case WorldSection.HolySites:
                 Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
@@ -211,7 +212,7 @@ public static class WorldSections
     private sealed record GodsPart(long Tick, RandomState Random, List<GodState> Gods, List<int> WinnerGodIds);
 
     /// <summary>The prophets and elders, with the id the next one will get (ADR-032).</summary>
-    private sealed record NotablesPart(List<Domain.Notables.NotableState> Notables, int NextNotableId);
+    private sealed record NotablesPart(List<Domain.Notables.NotableState> Notables, int NextNotableId, List<Domain.Villagers.VillagerState> Villagers, int NextVillagerId);
 
     /// <summary>The roads, with the id the next one will get (ADR-033).</summary>
     private sealed record RoadsPart(List<Domain.Roads.RoadState> Roads, int NextRoadId);

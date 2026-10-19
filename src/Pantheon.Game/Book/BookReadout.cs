@@ -18,6 +18,7 @@ public static class BookReadout
             BookTab.Religion => ReligionPage.Build(session),
             BookTab.Miracles => MiraclesPage.Build(session),
             BookTab.Creature => CreaturePage.Build(session),
+            BookTab.Villager => VillagerPage.Build(session),
         };
     }
 
@@ -30,5 +31,6 @@ public static class BookReadout
         BookTab.Religion => "Religion",
         BookTab.Miracles => "Miracles",
         BookTab.Creature => "Creature",
+        BookTab.Villager => "Villager",
     };
 }

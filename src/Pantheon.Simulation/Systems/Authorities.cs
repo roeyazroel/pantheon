@@ -18,4 +18,5 @@ namespace Pantheon.Simulation.Systems;
 /// <param name="Council">The Divine Council's motions and votes (ADR-025), or <c>null</c> without one.</param>
 /// <param name="Conflict">Proxy acts and holy war stances (ADR-026), or <c>null</c> without them.</param>
 /// <param name="Hand">What gods do with their Divine Hands (ADR-030), or <c>null</c> without hands.</param>
-public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null, Society.SocietyAuthority? Society = null, Politics.CouncilAuthority? Council = null, Conflict.ConflictAuthority? Conflict = null, Hand.HandAuthority? Hand = null);
+/// <param name="Villagers">The villagers gods follow (ADR-043), or <c>null</c> where none can be followed.</param>
+public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null, Society.SocietyAuthority? Society = null, Politics.CouncilAuthority? Council = null, Conflict.ConflictAuthority? Conflict = null, Hand.HandAuthority? Hand = null, Villagers.VillagerAuthority? Villagers = null);

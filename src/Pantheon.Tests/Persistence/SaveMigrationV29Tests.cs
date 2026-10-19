@@ -44,6 +44,7 @@ public sealed class SaveMigrationV29Tests
         var expected = WithRock(ReadFixture());
         var source = expected.ToJsonString();
         Version30Expectations.Apply(expected);
+        Version31Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.Deserialize(source)));
 

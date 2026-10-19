@@ -358,7 +358,9 @@ covers:
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
 | Next map overlay (influence, religion, faith, food, weather, danger, migration, culture, nature, population, disaster risk, political control), then off | O |
-| The Book of the World: the world, religion, miracles and your Creature | Tab |
+| The Book of the World: the world, religion, miracles, your Creature and your villager | Tab |
+| Follow the villager at the cursor; with nobody there, keep the camera on the one you follow | / |
+| Let the villager you follow go | Shift+/ |
 | The whole island from afar, and back | ` (backtick) |
 | Look at the next settlement | F or Home |
 | Look at your Creature | C, or Look on its card |
@@ -440,6 +442,30 @@ numbers and never saved. Beyond 550 m the settlement shows only its houses, buil
 fields (Tier 1); the simulation is the same in both tiers. Balance values are in
 `game/Data/settlement_rules.json` and presentation values (layout, colours, tier distances,
 routines) in `game/Data/settlement_view.json`.
+
+**Following a villager (ADR-043).** Point at someone in a village and press **/**: that figure
+becomes one of the world's individuals, simulated in full wherever the camera is.
+
+- **Who they are:** they have a name, an age, their work and a god, and are the same person each
+  time you choose that figure.
+- **Their days:** they eat while the village has food, work, rest and pray as their hunger, weariness
+  and faith move them, walking between their home, their work and the shrine.
+- **Danger and loss:**
+  - a fire, flood or earthquake sends them fleeing to a safe village, where they shelter until it
+    is over;
+  - if their village empties, they seek a new home among their god's people.
+- **Faith:** their faith follows their village's. Your miracles and prophets near them strengthen it,
+  and a rival's shake it; when it fails they turn to the god their village follows.
+- **What they remember:** miracles, disasters, famines, Creatures, buildings and preachers. Hardship
+  drives them to pray, and danger they have known makes them flee it sooner.
+- **The end:** age, hunger, illness or disaster ends their life, and an alert tells you.
+- **Seeing them:**
+  - press **/** with nobody at the cursor to keep the camera on them until you move it;
+  - **Tab** opens their page in the Book: what they do and want, and their life, each memory with
+    the age they were;
+  - **Shift+/** lets them go back to the crowd.
+
+They change nothing the world counts. The numbers are in `settlement_rules.json` (`Villagers`).
 
 ## Being a god
 
@@ -1279,7 +1305,8 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   view (level, health, loyalty, morality, attributes, paths and callings, activity, needs, personality, its best options with
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
   view of every Creature it has met with their latest encounters, its learned preferences by
-  situation and its latest memories), the region
+  situation and its latest memories), every followed villager with what they do and their faith,
+  and for yours their needs, options with their reasons, danger and last memory, the region
   under the cursor with its statistics, soil, rain, wind, snow, wildlife, harm, scar, pollution and
   biodiversity and every god's influence there, one
   line per settlement, and, for the settlement nearest the cursor:
@@ -1353,7 +1380,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
 | `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature\|population\|risk\|politics` | Start with a map overlay shown. |
-| `--book=world\|religion\|miracles\|creature` | Open the Book of the World on a page at the start. |
+| `--book=world\|religion\|miracles\|creature\|villager` | Open the Book of the World on a page at the start. |
 | `--overview=on\|off` | Start with the camera over the whole island. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
@@ -1361,6 +1388,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--stores=full\|empty` | Every village's wood and stone start full or empty. |
 | `--great-event=plague\|eclipse\|reformation\|beast\|anomaly` | Start a great event at the start: the plague in the focused settlement, an eclipse, your faith's reformation, the beast's waking or the anomaly at the focused settlement; the camera looks at the beast or the anomaly. |
 | `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
+| `--villager=on\|off` | You follow one of the focused settlement's people at the start, the camera on them (ADR-043). |
 | `--hand=villagers\|creature\|offering` | Your hand lifts villagers of the focused settlement, your Creature, or an offering from the focused settlement's stores, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
@@ -1476,7 +1504,8 @@ start with nobody sick and no great event, and set their first eclipse when load
 find their beast's lair and set their first anomaly when loaded. In saves from before part 16
 every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
 start with middling courage, protectiveness, jealousy and playfulness. Worlds from before part 18
-keep their four biomes. Hands from before part 19 hold no offering. Saves from before part 13
+keep their four biomes. Hands from before part 19 hold no offering. In saves from before part 22
+no god follows a villager. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.

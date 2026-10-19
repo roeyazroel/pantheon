@@ -16,6 +16,9 @@ public enum BookTab
 
     /// <summary>The player's Creature in full.</summary>
     Creature,
+
+    /// <summary>The villager the player follows, and their life (ADR-043).</summary>
+    Villager,
 }
 
 /// <summary>How a line of the book is shown.</summary>

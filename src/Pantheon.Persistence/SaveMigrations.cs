@@ -154,6 +154,9 @@ internal static class SaveMigrations
             case 29:
                 OfferingSaveMigration.UpgradeFrom29(root);
                 break;
+            case 30:
+                VillagerSaveMigration.UpgradeFrom30(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

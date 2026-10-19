@@ -58,6 +58,7 @@ silently:
 | [ADR-040](ADR-040-ai-gods-absorb-their-allies.md) | AI gods absorb their allies | Accepted |
 | [ADR-041](ADR-041-lightning-fires-and-hurricane-warnings.md) | Lightning's fires and hurricane warnings | Accepted |
 | [ADR-042](ADR-042-religions-look-on-villages.md) | Religion's look on villages | Accepted |
+| [ADR-043](ADR-043-the-selected-villager.md) | The selected villager | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

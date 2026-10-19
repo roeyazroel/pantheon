@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Godot;
@@ -104,8 +105,9 @@ internal sealed class SettlementView
     /// <param name="settlement">Current settlement state.</param>
     /// <param name="simulationSeconds">Simulation time, which drives the citizens' routines.</param>
     /// <param name="camera">Camera position in the world.</param>
+    /// <param name="followed">The villagers the gods follow, whose figures in the crowd they replace (ADR-043).</param>
     /// <returns>The settlement's tier and representatives.</returns>
-    public CrowdStatus UpdateCitizens(SettlementState settlement, double simulationSeconds, Vector3 camera)
+    public CrowdStatus UpdateCitizens(SettlementState settlement, double simulationSeconds, Vector3 camera, IReadOnlyList<Pantheon.Domain.Villagers.VillagerState> followed)
     {
         var distance = camera.DistanceTo(Site.Center.ToGodot());
         _crowd.SelectTier(distance);
@@ -115,7 +117,7 @@ internal sealed class SettlementView
         }
 
         _crowd.Advance(simulationSeconds, _terrain);
-        _citizens.Show(_crowd);
+        _citizens.Show(_crowd, settlement.Id, followed);
         return _crowd.GetStatus(settlement.Population, distance);
     }
 

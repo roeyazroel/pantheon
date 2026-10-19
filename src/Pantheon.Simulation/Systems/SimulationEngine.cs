@@ -31,6 +31,7 @@ namespace Pantheon.Simulation.Systems;
 public sealed class SimulationEngine
 {
     private readonly ISimulationSystem[] _systems;
+    private readonly Villagers.VillagerSystem? _villagers;
 
     /// <summary>
     /// Creates the settlement-only pipeline of Milestone 2: the statistical settlement step, run
@@ -103,7 +104,8 @@ public sealed class SimulationEngine
             societyRules is null ? null : new Society.SocietyAuthority(societyRules),
             new Politics.CouncilAuthority(),
             new Conflict.ConflictAuthority(divineRules, diplomacyRules.Conflict, ledger),
-            new Hand.HandAuthority(divineRules.Hand, divineRules, settlementRules));
+            new Hand.HandAuthority(divineRules.Hand, divineRules, settlementRules),
+            settlementRules.Villagers.Enabled ? new Villagers.VillagerAuthority(settlementRules.Villagers) : null);
         Politics = new Politics.PoliticsSystem(diplomacyRules, ledger, Authorities.Diplomacy);
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy, godAiRules.Planning);
         var ai = new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains);
@@ -150,6 +152,11 @@ public sealed class SimulationEngine
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
             new IntervalSystem(new Notables.NotableSystem(divineRules.Notables, settlementRules, divineRules.StepIntervalTicks), divineRules.StepIntervalTicks),
         ]);
+        if (settlementRules.Villagers.Enabled)
+        {
+            _villagers = new Villagers.VillagerSystem(settlementRules, settlementRules.StepIntervalTicks);
+            systems.Add(new IntervalSystem(_villagers, settlementRules.StepIntervalTicks));
+        }
         if (societyRules is not null)
         {
             systems.Add(new IntervalSystem(new Society.SocietySystem(societyRules, settlementRules, divineRules), societyRules.StepIntervalTicks));
@@ -228,17 +235,25 @@ public sealed class SimulationEngine
             system.Update(context);
         }
 
+        _villagers?.Witness(world, context.Events, first);
         History?.Record(world, context.Events, first);
 
         world.Random = random.GetState();
         world.Tick++;
     }
 
-    /// <summary>Adds the significant events among those a command raised outside a tick to the world's history (ADR-020).</summary>
+    /// <summary>
+    /// Adds the significant events among those a command raised outside a tick to the world's history
+    /// (ADR-020), and lets the followed villagers witness them (ADR-043).
+    /// </summary>
     /// <param name="world">World state.</param>
     /// <param name="events">The events.</param>
     /// <param name="from">The first event the command raised.</param>
-    public void Chronicle(WorldState world, IReadOnlyList<WorldEvent> events, int from) => History?.Record(world, events, from);
+    public void Chronicle(WorldState world, IReadOnlyList<WorldEvent> events, int from)
+    {
+        _villagers?.Witness(world, events, from);
+        History?.Record(world, events, from);
+    }
 
     /// <summary>Advances the world by several ticks.</summary>
     /// <param name="world">World to mutate.</param>

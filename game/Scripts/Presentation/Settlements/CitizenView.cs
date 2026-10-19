@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Godot;
+using Pantheon.Domain.Villagers;
 using Pantheon.Game.Population;
 
 namespace Pantheon.Client.Presentation.Settlements;
@@ -28,7 +30,9 @@ internal sealed class CitizenView
 
     /// <summary>Shows the crowd's current poses; after a roster change it also resizes and recolours the figures.</summary>
     /// <param name="crowd">The settlement's crowd, advanced this frame.</param>
-    public void Show(SettlementCrowd crowd)
+    /// <param name="settlementId">The settlement.</param>
+    /// <param name="followed">The villagers the gods follow: their figures hide, as they are shown in full (ADR-043).</param>
+    public void Show(SettlementCrowd crowd, int settlementId, IReadOnlyList<VillagerState> followed)
     {
         var poses = crowd.Poses;
         _instance.Visible = poses.Count > 0;
@@ -46,7 +50,9 @@ internal sealed class CitizenView
         for (var i = 0; i < poses.Count; i++)
         {
             var pose = poses[i];
-            var basis = (new Basis(Vector3.Up, pose.Yaw) * new Basis(Vector3.Right, pose.Lean)).Scaled(scale);
+            var index = i;
+            var hidden = followed.Count > 0 && System.Linq.Enumerable.Any(followed, v => v.SettlementId == settlementId && v.Slot == index);
+            var basis = (new Basis(Vector3.Up, pose.Yaw) * new Basis(Vector3.Right, pose.Lean)).Scaled(hidden ? Vector3.Zero : scale);
             _multimesh.SetInstanceTransform(i, new Transform3D(basis, pose.Position.ToGodot()));
         }
     }

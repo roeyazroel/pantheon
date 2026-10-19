@@ -16,9 +16,10 @@ public static class NetworkProtocol
     /// events and the plague, version 14 (part 15) the ancient beast and the anomaly, version 15
     /// (part 16) the gods each god knows and its goals, version 16 (part 17) Creatures' courage,
     /// protectiveness, jealousy and playfulness, version 17 (part 18) the biomes of §5 and the landforms,
-    /// version 18 (part 19) offerings in the hand and the hand's new action.
+    /// version 18 (part 19) offerings in the hand and the hand's new action, version 19 (part 22) the
+    /// villagers the gods follow and the intent to follow one.
     /// </summary>
-    public const int Version = 18;
+    public const int Version = 19;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

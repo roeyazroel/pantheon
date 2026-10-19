@@ -185,6 +185,8 @@ public sealed class AlertFeed
                 return GreatEventAlerts.Describe(worldEvent, world, localGodId);
             case GodsMet:
                 return GodAlerts.Describe(worldEvent, world, localGodId);
+            case VillagerFled or VillagerTurned or VillagerDied:
+                return VillagerAlerts.Describe(worldEvent, world, localGodId);
             default:
                 return null;
         }

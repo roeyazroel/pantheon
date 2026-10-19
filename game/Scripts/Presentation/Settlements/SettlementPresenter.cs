@@ -82,7 +82,7 @@ public sealed class SettlementPresenter
         {
             if (_views.TryGetValue(settlement.Id, out var view))
             {
-                statuses.Add(view.UpdateCitizens(settlement, simulationSeconds, camera));
+                statuses.Add(view.UpdateCitizens(settlement, simulationSeconds, camera, world.Villagers));
             }
         }
 

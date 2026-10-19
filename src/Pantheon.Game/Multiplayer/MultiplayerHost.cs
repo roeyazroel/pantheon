@@ -166,7 +166,7 @@ public sealed class MultiplayerHost : IDisposable
                 statuses.Add(Format("{0} left; the AI plays {1} again", left.Name, GodName(left.GodId)));
                 _transport.Disconnect(peerId);
                 break;
-            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent or PriorityIntent or CouncilIntent or ProxyIntent or HolyWarIntent or HandIntent when seated:
+            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent or PriorityIntent or CouncilIntent or ProxyIntent or HolyWarIntent or HandIntent or VillagerIntent when seated:
                 Answer(peerId, seat!.GodId, message);
                 _replicator.Hurry();
                 break;
@@ -221,6 +221,7 @@ public sealed class MultiplayerHost : IDisposable
             DomainIntent domain => (domain.RequestId, Domains.DomainCommands.ChooseAs(_session, godId, domain.Domain)),
             PriorityIntent priority => (priority.RequestId, Society.SocietyCommands.SetPriorityAs(_session, godId, priority.SettlementId, priority.Priority)),
             HandIntent hand => (hand.RequestId, Hand.HandCommands.UseAs(_session, godId, hand.Action, hand.Target)),
+            VillagerIntent villager => (villager.RequestId, Villagers.VillagerCommands.FollowAs(_session, godId, villager.Follow)),
             _ => (0, new CommandOutcome(false, "The host does not know that command")),
         };
         Send(peerId, new Verdict(requestId, outcome.Accepted, outcome.Text));

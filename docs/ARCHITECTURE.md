@@ -197,6 +197,16 @@ files and compiled assemblies and fails when either rule is broken.
   and path, time left to preach, born and death ticks, and `NotableMemory` deeds (rose, preached,
   endured, turned). `NotableRules` (in `DivineRules.Notables`) holds their numbers, and
   `DivineRules.TempleInfluenceStrength` and `TempleInfluenceReach` a temple's influence.
+- `Villagers/VillagerState` (ADR-043): a villager a god follows, a Tier 3 individual saved whole in
+  `WorldState.Villagers` (with `NextVillagerId`):
+  - who they are: name, follower, village, the crowd slot they were chosen as, work, god and faith;
+  - where: home, work place, shrine spot, position and path;
+  - their state: activity and time left, refuge, hunger, fatigue and health;
+  - their life: age when followed, lifespan, the last prayer and `VillagerMemory` deeds.
+
+  `FollowVillager` is the command and `VillagerRejection` its refusals; `VillagerRules` (in
+  `SettlementRules.Villagers`) holds their numbers. The events are `VillagerFollowed`,
+  `VillagerFled`, `VillagerTurned` and `VillagerDied` (with a `VillagerFate`).
 - `CastMiracleRequest` (god, miracle id, target): the intent that the authority checks (§73).
 - `DiplomacyState` (ADR-012): `Relations` (one `GodRelation` per observer and subject: trust,
   fear, respect, rivalry, gratitude, suspicion and the `DiplomaticMemory` of acts), `Stances`
@@ -341,6 +351,11 @@ files and compiled assemblies and fails when either rule is broken.
   sermon, memory) and `NotableSystem` (elders chosen, keeping faith and turning, prophets called,
   walking and preaching, deaths and martyrdom). `MiracleEffects` raises an anointed prophet. See
   [Prophets and elders](#prophets-and-elders).
+- `Villagers/`: `VillagerAuthority` (follow and release), `VillagerSystem` (needs, choosing, danger
+  and flight, homes, faith, death), `VillagerMind` (the scored options, pure), `VillagerModel` (age,
+  memory, danger, walking, ways and new homes), `VillagerWitness` (memories from events, run by the
+  engine after each tick and each command) and `VillagerRulesValidator`. See
+  [The selected villager](#the-selected-villager).
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
   `GodAiSystem`; `Gods/MiracleValuer` weighs what each miracle is worth to it, and
@@ -422,7 +437,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (18 since ADR-039, for the hand's offering and its
+- `NetworkProtocol`: the protocol version (19 since ADR-043, for `VillagerIntent` and the followed
+  villagers sent with the notables; 18 since ADR-039, for the hand's offering and its
   action; 17 since ADR-038, whose regions and generation carry the
   new biomes and landforms; 16 since ADR-037, whose Creatures carry their new traits;
   15 since ADR-036, whose Gods section carries the gods
@@ -491,7 +507,9 @@ every other, hold no goal and plan on its next turn; `PlanIntegrity` checks know
 Version 27 → 28 (`TemperamentSaveMigration`) gives every Creature 0.5 of courage, protectiveness,
 jealousy and playfulness. Version 28 → 29 (`LandformSaveMigration`) gives the generation no
 landforms, so the terrain grows as it was. Version 29 → 30 (`OfferingSaveMigration`) gives
-whatever a hand holds no stores. A missing,
+whatever a hand holds no stores. Version 30 → 31 (`VillagerSaveMigration`) gives the world no
+followed villagers; `VillagerIntegrity` checks them (one for each god, known villages and gods,
+needs and faith in 0..1, a life longer than their age). A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -591,7 +609,7 @@ whatever a hand holds no stores. A missing,
   `Creatures/TemperamentText` its character in §26's words; `CreatureCommands.SetTemperament`
   serves `--temperament` (ADR-037).
 - `Book/BookReadout` builds the Book of the World's pages (`WorldPage`, `ReligionPage`,
-  `MiraclesPage`, `CreaturePage`: `BookPage` of `BookLine`s, ADR-031); `Presentation/StateOverlays`
+  `MiraclesPage`, `CreaturePage`, `VillagerPage`: `BookPage` of `BookLine`s, ADR-031, ADR-043); `Presentation/StateOverlays`
   paints the population, disaster risk and political control overlays; `Camera/GodCameraModel`
   toggles the strategic overview.
 - `GreatEvents/GreatEventText` words the great events and the plague, and the eclipse's darkness
@@ -605,6 +623,11 @@ whatever a hand holds no stores. A missing,
 - `Notables/NotableText` words prophets and elders and `Notables/NotableCommands` raises a prophet
   (`--prophet`); `Alerts/NotableAlerts` tells of them, `Book/NotableSection` lists them on the
   World and Religion pages, and `Diagnostics/NotableReadout` gives their F1 lines (ADR-032).
+- `Villagers/VillagerCommands` picks the crowd figure at the cursor (from the same roster and
+  routines the client draws), follows and releases (/, Shift+/, `VillagerIntent` for a joined
+  player, `--villager`), and `Villagers/VillagerText` words them without assuming pronouns;
+  `Book/VillagerPage` tells their life, `Diagnostics/VillagerReadout` gives their F1 lines and
+  `Alerts/VillagerAlerts` tells of their flight, turning and death (ADR-043).
 - `Hand/HandCommands` uses the player's hand (R, Shift+R, Ctrl+R for an offering, `HandIntent` for a joined player) and
   `Hand/HandText` words it; `Alerts/PowerAlerts` tells of hands, paths and Divine Acts (ADR-030).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
@@ -739,6 +762,11 @@ whatever a hand holds no stores. A missing,
   `Presentation/Notables/NotablePresenter`, which keeps a `NotableView` per prophet and elder: a
   robed figure in the god's colour (a prophet with a staff and a halo) that walks the same roads,
   and a label (ADR-032).
+- `Bootstrap/VillagerController` handles / and Shift+/ and `--villager`, keeps the camera on the
+  followed villager until the player moves it, and keeps a `Presentation/Villagers/VillagerView`
+  per followed villager: a larger figure in their work's colour under a turning marker in the
+  follower's colour, posed for walking, work, prayer and rest, with a label (ADR-043).
+  `CitizenView` hides their crowd double.
 - `Bootstrap/NatureDebug` wires the weather, disaster, migration and Creature debug hotkeys (F8,
   F10, F11, F12, M, K) and the `--weather`, `--disaster`, `--migrate`, `--refugees` and `--meet`
   launch options.
@@ -1259,8 +1287,10 @@ flowchart LR
 Population is simulated statistically everywhere and shown in more detail near the camera
 (ADR-004, amended by ADR-008 and ADR-032). Tier 1 is canonical; Tier 2 is derived from it and
 never saved. Tier 3 is the individuals that matter, kept in `WorldState` everywhere: the
-Creatures, what the hands hold, and prophets and elders (see
-[Prophets and elders](#prophets-and-elders)). No villager is promoted into an agent by the camera.
+Creatures, what the hands hold, prophets and elders (see
+[Prophets and elders](#prophets-and-elders)), and the villagers the gods follow (see
+[The selected villager](#the-selected-villager)). No villager is promoted into an agent by the
+camera; a villager becomes one only when a player chooses them.
 
 ### Tier 1: the statistical settlement step
 
@@ -1963,6 +1993,47 @@ flowchart LR
   `NotableSection` in the book, `NotableReadout` in F1 and `NotableView` in the world.
   `WorldSection.Notables` goes to joined players every second.
 
+## The selected villager
+
+§80's Tier 3 lists a selected villager (ADR-043). Like prophets and elders they live in
+`WorldState`, never promoted by the camera: the player chooses one, and they are simulated in full
+wherever anyone looks.
+
+```mermaid
+flowchart LR
+    crowd[Tier 2 figure at the cursor] -->|"/"| commands[VillagerCommands.Pick]
+    commands --> authority[VillagerAuthority.Follow]
+    authority --> state[WorldState.Villagers]
+    state --> system[VillagerSystem]
+    system --> mind[VillagerMind options]
+    system --> danger[VillagerModel danger and ways]
+    events[Tick and command events] --> witness[VillagerWitness]
+    witness --> state
+    system --> state
+    state --> shown[VillagerView, VillagerPage, VillagerReadout, VillagerAlerts]
+```
+
+- **Choosing.** `VillagerCommands.Pick` rebuilds the village's roster with `RepresentativeRoster`
+  and poses it with `CitizenRoutine` at the session's time, as the client draws it, and takes the
+  figure within 6 m of the cursor. The command carries the figure's home, work and shrine spots;
+  `VillagerAuthority` checks them and draws the person from `SeedMixer` with the village and slot,
+  so the same figure is the same person.
+- **Living.** `VillagerSystem` runs every settlement step:
+  - **Needs:** hunger, fatigue and health;
+  - **Death:** age, hunger, illness, or danger by `Mortality`;
+  - **Flight:** they flee at `FleeAt` (lower once wary) to the nearest safe village, shelter there
+    fed, and return when the danger falls to half;
+  - **Homes:** a villager whose village is emptied seeks a new home;
+  - **Choosing:** when an activity ends they choose by `VillagerMind.Options`;
+  - **Faith:** it drifts to the village's and grows in prayer, and they turn when it fails.
+- **Memory.** `SimulationEngine.Step` and `Chronicle` pass every event to
+  `VillagerSystem.Witness`, so miracles cast by commands are seen too. A recent hardship adds to the
+  wish to pray; a remembered danger lowers the flight threshold.
+- **Nothing else changes.** Villagers eat, believe and die alone: the village's numbers already
+  count them, so the statistical world is the same with or without them.
+- **Shown and shared.** `VillagerView`, the camera's tracking, the Book's page, F1 and alerts.
+  Villagers travel to joined players in `WorldSection.Notables`.
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -2077,11 +2148,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 30 (current)
+    alt version 31 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 29
+    else versions 1 to 30
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 30, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings)
+        Mig-->>Save: JsonObject at version 31, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
