@@ -48,7 +48,10 @@ public static class OverlayMap
         OverlayKind.Danger => OverlayKind.Migration,
         OverlayKind.Migration => OverlayKind.Culture,
         OverlayKind.Culture => OverlayKind.Nature,
-        OverlayKind.Nature => null,
+        OverlayKind.Nature => OverlayKind.Population,
+        OverlayKind.Population => OverlayKind.Risk,
+        OverlayKind.Risk => OverlayKind.Politics,
+        OverlayKind.Politics => null,
     };
 
     /// <summary>Builds an overlay.</summary>
@@ -106,6 +109,18 @@ public static class OverlayMap
             case OverlayKind.Nature:
                 NatureOverlay.Paint(world, view.OverlayOpacity, (regionId, color, alpha) => Write(rgba, regionId, color, alpha));
                 legend = NatureOverlay.Legend;
+                break;
+            case OverlayKind.Population:
+                StateOverlays.PaintPopulation(world, view.OverlayOpacity, (regionId, color, alpha) => PaintTerritory(grid, regionId, rgba, color, alpha), (regionId, color, alpha) => Write(rgba, regionId, color, alpha));
+                legend = StateOverlays.PopulationLegend;
+                break;
+            case OverlayKind.Risk:
+                StateOverlays.PaintRisk(world, view.OverlayOpacity, (regionId, color, alpha) => Write(rgba, regionId, color, alpha));
+                legend = StateOverlays.RiskLegend;
+                break;
+            case OverlayKind.Politics:
+                StateOverlays.PaintPolitics(world, godId, view, (regionId, color, alpha) => PaintTerritory(grid, regionId, rgba, color, alpha));
+                legend = StateOverlays.PoliticsLegend;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown overlay.");

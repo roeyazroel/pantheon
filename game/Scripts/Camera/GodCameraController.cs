@@ -94,11 +94,16 @@ public partial class GodCameraController : Node3D
         CursorGroundPoint = screenPoint is { } point && TryPickGround(point, out var hit) ? hit : null;
     }
 
-    /// <summary>Handles mouse buttons (zoom, grab) and motion (drag-rotate).</summary>
+    /// <summary>Handles mouse buttons (zoom, grab), motion (drag-rotate) and the strategic overview (`, ADR-031).</summary>
     /// <param name="event">Input event not consumed by the UI.</param>
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventMouseButton button)
+        if (@event.IsActionPressed(InputActions.CameraOverview))
+        {
+            Model.ToggleOverview();
+            GetViewport().SetInputAsHandled();
+        }
+        else if (@event is InputEventMouseButton button)
         {
             HandleMouseButton(button);
         }

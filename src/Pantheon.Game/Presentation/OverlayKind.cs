@@ -29,4 +29,13 @@ public enum OverlayKind
 
     /// <summary>The land's life, its scars and its snow (ADR-028).</summary>
     Nature,
+
+    /// <summary>Each village's people, and people on the road (spec §58, ADR-031).</summary>
+    Population,
+
+    /// <summary>The land's risk of disaster: fire, flood, landslide and the volcano (spec §58, ADR-031).</summary>
+    Risk,
+
+    /// <summary>Political control: the bloc that holds each village (spec §58, ADR-031).</summary>
+    Politics,
 }

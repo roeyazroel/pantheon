@@ -136,16 +136,16 @@ rule is followed by the conventions that meet it in this repository.
   technology, buildings and work, doctrines, turn from the gods and feelings, holy wars, its priority, the player's word to its holy war and proxy acts), the settings page, the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire, scorch, fresh water, flood, snow,
   wildlife, damage, scar, pollution, blight and rubble), the
-  O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature), the `.` single-tick step, the
+  O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk, politics), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
   F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
   flood), M
-  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), R and Shift+R (the hand lifts, sets down and throws), the launch
+  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), R and Shift+R (the hand lifts, sets down and throws), Tab (the Book of the World: world, religion, miracles, Creature), ` (the strategic overview), the launch
   options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
-  `--meet`, `--hand`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
+  `--meet`, `--hand`, `--book`, `--overview`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
   `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with

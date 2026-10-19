@@ -505,6 +505,10 @@ nothing and no land hallowed. A missing,
   `Creatures/CreatureBondText` words how Creatures regard each other, and
   `Creatures/CreatureCommands` brings another Creature to the player's (K);
   `Creatures/CreatureGrowthText` words its paths, callings and attributes (ADR-030).
+- `Book/BookReadout` builds the Book of the World's pages (`WorldPage`, `ReligionPage`,
+  `MiraclesPage`, `CreaturePage`: `BookPage` of `BookLine`s, ADR-031); `Presentation/StateOverlays`
+  paints the population, disaster risk and political control overlays; `Camera/GodCameraModel`
+  toggles the strategic overview.
 - `Hand/HandCommands` uses the player's hand (R, Shift+R, `HandIntent` for a joined player) and
   `Hand/HandText` words it; `Alerts/PowerAlerts` tells of hands, paths and Divine Acts (ADR-030).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
@@ -654,6 +658,11 @@ nothing and no land hallowed. A missing,
   `Presentation/Divine/DivineHand`: the god's hand: it follows the cursor, presses when casting or
   sending, pats or swats the Creature, shows the rock, tree or villagers it holds (`HeldThing`) and
   flings them when it throws; a held Creature hangs under it (ADR-030).
+- `UI/BookPanel` shows the Book of the World and `Bootstrap/BookController` opens it (Tab,
+  `--book`) and sends a miracle chosen in it to `DivineController.Select` (ADR-031). The camera's
+  backtick toggles the strategic overview.
+- `export_presets.cfg` builds Windows x64, macOS (universal, ad-hoc signed with Apple's `codesign`)
+  and Linux x64 into `build/` (ADR-031).
 - `Presentation/Divine/DivinePresenter`: the targeting ring (a decal with a procedural ring
   texture), the map overlay (one decal over the world with one pixel per region) and miracle
   effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a

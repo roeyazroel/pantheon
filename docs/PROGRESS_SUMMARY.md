@@ -156,7 +156,10 @@ followed or the target has been measured.
   - a Greater God may hallow the land forever, wake the volcano or still every disaster at once.
 - Not built: Steam networking, streaming the terrain in pieces, worlds beyond 12 km, and Divine
   Acts that reshape the terrain.
-- 1204 xUnit tests pass headless (1166 at the end of part 9, 853 at the end of Milestone 15).
+- The Book of the World (Tab) gathers the world, religion, every miracle and the Creature; the map
+  overlays add population, disaster risk and political control; backtick shows the whole island;
+  and the game exports for Windows, macOS and Linux (part 11).
+- 1215 xUnit tests pass headless (1204 at the end of part 10, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -188,6 +191,7 @@ followed or the target has been measured.
 | 15.6 | War and intrigue (§43–46) | Implemented, on `main`: war goals and dictated peace, intelligence, veiled miracles, proxy acts, mortal holy wars |
 | 15.7 | Larger worlds and victories (§6, §53, with §84) | Implemented, on `main`: Small, Large, Huge and Vast worlds with up to eight gods, conquest, cultural and sandbox victories, larger pantheons, the AI's cost cut and labels that give way |
 | 15.8 | Seasons and the land's life (§16–18) | Implemented, on `main`: optional seasons, snow, fog, hurricanes, heat and cold waves, wildlife and hunting, harm and scars, pollution, and Nature's healing |
+| 15.11 | The Book of the World, overlays, overview and exports (§56–58, §62) | Implemented, on `main`: the World, Religion, Miracles and Creature pages, population, risk and politics overlays, the strategic overview, and Windows, macOS and Linux export presets |
 | 15.10 | Paths, the hand and Divine Acts (§14, §23–24, §55) | Implemented, on `main`: eight Creature paths and three attributes, the Divine Hand that lifts, carries, rescues and throws, and three Divine Acts |
 | 15.9 | Hazards (§19–21, §64) | Implemented, on `main`: tsunamis, landslides, the volcano, tornadoes, meteors, blight and locusts; sea walls, dams, irrigation and evacuation routes; marks on the land |
 
@@ -706,6 +710,22 @@ The plan is [.docs/milestone-15-part-9-hazards.md](../.docs/milestone-15-part-9-
 
 The plan is [.docs/milestone-15-part-10-powers.md](../.docs/milestone-15-part-10-powers.md).
 
+### Milestone 15, part 11: The Book of the World, overlays, overview and exports
+
+- **Panels (§57):** the Book of the World (Tab), with four pages (ADR-031):
+  - **World:** every god's standing, ties and Creature, the race, the dangers and the holy sites.
+  - **Religion:** the player's followers village by village, every god's faith, the Old Faiths and
+    the godless.
+  - **Miracles:** every miracle with what it costs and still needs, and Aim.
+  - **Creature:** the player's Creature in full.
+- **Overlays (§58):** population, disaster risk and political control.
+- **Camera (§56):** backtick shows the whole island and goes back.
+- **Platforms (§62):** export presets for Windows x64, macOS (universal) and Linux x64. The macOS
+  app was exported and played; it is signed ad hoc with Apple's `codesign`, since macOS 26 kills an
+  ad-hoc app with the hardened runtime.
+
+The plan is [.docs/milestone-15-part-11-interface.md](../.docs/milestone-15-part-11-interface.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -808,9 +828,9 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 55 | Player interaction | Partial | Miracles are cast with a click (ADR-009). The Divine Hand picks up villagers, rocks, trees and the Creature, carries villagers and rescues them from danger, plants trees and throws (ADR-030), pats or swats the Creature and presses when casting (ADR-010). Offerings and physics-driven objects are not built. |
-| 56 | Camera | Partial | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands; the strategic band reaches further over a larger island (ADR-027). Missing: a strategic overview. |
-| 57 | User interface | Partial | HUD with Divine Power, income, followers, rank, the rivals with their status, the race for victory (a bloc's when allied), the miracle bar and hint, the Creature card (with its bonds, combat skill and scars) and alerts, the Diplomacy panel (P), the History panel (H), the Domains panel (G) with the holy sites, and a start screen, pause menu, settings page and end screen with each god's alliances and wars. Missing: the other panels (World, Settlements, Religion, Miracles). |
-| 58 | Map overlays | Partial | Influence (strongest god per region), religion (main god per settlement), faith, food, weather (soil water), danger (fires, ash, shields) and migration (pressure to leave, groups' ways) for the player; the F3 debug map adds the region statistics, blessing, influence, soil water, fire and scorch. Missing: population, ecology, disaster risk and political control. |
+| 56 | Camera | Implemented | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands that reach further over a larger island (ADR-027), and a strategic overview of the whole island on backtick (ADR-031). |
+| 57 | User interface | Implemented | HUD with Divine Power, income, followers, rank, the rivals with their status, the race for victory, the miracle bar and hint, the Creature card (with its bonds, paths and attributes) and alerts; panels for Settlements (N), Diplomacy (P), History (H) and Domains with the Divine Acts (G), and the Book of the World (Tab) with the World, Religion, Miracles and Creature pages (ADR-031); a start screen, pause menu, settings page and end screen. One book for four pages keeps the screen clear, as §57 asks. |
+| 58 | Map overlays | Implemented | Influence, religion, faith, population, food, the land's life (ecology), weather, danger, disaster risk (fire, flood, landslide, the volcano), migration, culture and political control (blocs, wars darkened), cycled with O (ADR-031); the F3 debug map adds every region statistic. |
 | 59 | Alert system | Partial | Starving followers, settlements gained or lost, ranks, Creature deeds, rival miracles on the player's followers, dominance and victory (a bloc's included), diplomacy (proposals, war, betrayal, answers, and alliances between other gods), weather (dry spells, droughts and storms among the player's people), disasters (earthquakes, fires near the player's people and the damage done), migration, and Creatures' meetings and fights. Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
 | 60 | Audio | Implemented | Music in three moods (calm, tension in war or danger, triumph in dominion) and the sounds of miracles, lightning, thunder, earthquakes, fire, Creatures and news, synthesized by the game; events are heard where they happen, distant thunder and roars faintly (ADR-021). |
 | 61 | Visual direction | Partial | Stylised terrain, sea, huts, fields, figures, glowing miracle effects, soft clouds, rain, lightning and storm-dimmed light, flames, smoke, ash, rubble and shield domes, and god colours on labels and overlays. No original art assets, and religion does not yet change how settlements look. |
@@ -819,7 +839,7 @@ Sections that only state intent are summarised at the end of this part.
 
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
-| 62 | Supported platforms | Partial | Built, tested and played on macOS (Apple Silicon, Metal) and Linux x64. Not run on Windows. No export presets. |
+| 62 | Supported platforms | Partial | Export presets for Windows x64, macOS (one universal app for Apple Silicon and Intel) and Linux x64 (ADR-031). The macOS build was exported and played (114 FPS); the Windows and Linux builds export but have not been run, and Windows has never been run. Release signing and notarization need the owner's Apple account. |
 | 63 | Core technology stack | Partial | In use: Godot .NET 4.7.2, C#, Terrain3D, FastNoiseLite and MultiMesh. Jolt is chosen as the physics engine but nothing physical exists yet. Navigation is a region graph in the core rather than Godot's navigation meshes (ADR-010). LimboAI is not used. Utility AI drives the Creature and the gods. No Blender assets. |
 | 64 | Terrain destruction | Implemented | As §64 asks for the initial game: earthquakes leave visible cracks and shake the camera, destroy buildings, set off landslides whose rubble blocks the way, and harm the land; meteors leave craters (ADR-029). The terrain is not remeshed. |
 | 88 | Threading model | Followed | Everything runs on the main thread. |
@@ -907,49 +927,51 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-028](ADR/ADR-028-seasons-extremes-and-ecology.md) | Seasons, weather extremes and the land's life (Milestone 15, part 8) | Accepted |
 | [ADR-029](ADR/ADR-029-hazards-preparation-and-marks-on-the-land.md) | Hazards, disaster preparation and marks on the land (Milestone 15, part 9) | Accepted |
 | [ADR-030](ADR/ADR-030-creature-paths-divine-hand-and-divine-acts.md) | Creatures' paths, the Divine Hand and the Divine Acts (Milestone 15, part 10) | Accepted |
+| [ADR-031](ADR/ADR-031-book-of-the-world-overlays-overview-and-exports.md) | The Book of the World, the last overlays, the strategic overview and export presets (Milestone 15, part 11) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 1204 tests, and they all pass headless in about twelve
+The xUnit suite in `src/Pantheon.Tests` has 1215 tests, and they all pass headless in about twelve
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | 15.5 | 15.6 | 15.7 | 15.8 | 15.9 | Now |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
-| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
-| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
-| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
-| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
-| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 | 33 | 33 | 33 |
-| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 | 25 | 25 | 25 | 25 | 25 |
-| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 | 33 |
-| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 | 41 | 41 | 41 | 41 | 41 |
-| War and intrigue | `WarTests`, `CovertTests`, `HolyWarTests`, `ConflictPresentationTests`, `ConflictMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 24 | 24 | 24 | 24 | 24 |
-| World sizes and victories | `VictoryKindTests`, `WorldSizeTests`, `VictoryPresentationTests`, `AiCostTests`, `LabelDeclutterTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 |
-| Seasons, extremes and the land's life | `ClimateTests`, `EcologyTests`, `NaturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 30 | 30 | 30 |
-| Hazards and preparation | `HazardModelTests`, `HazardSystemTests`, `LivingHazardTests`, `HazardPresentationTests`, `HazardPreparationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 37 | 37 |
-| Paths, the hand and Divine Acts | `CallingTests`, `HandTests`, `DivineActTests`, `PowerPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 32 |
-| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
-| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
-| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
-| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
-| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 |
-| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V21Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 | 132 | 138 | 144 | 150 | 156 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 27 | 30 | 30 | 30 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
-| **Total** |  | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** | **1040** | **1084** | **1123** | **1166** | **1204** |
+| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | 15.5 | 15.6 | 15.7 | 15.8 | 15.9 | 15.10 | Now |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
+| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
+| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
+| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
+| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 | 33 | 33 | 33 | 33 |
+| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 | 25 | 25 | 25 | 25 | 25 | 25 |
+| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 | 33 | 33 |
+| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 | 41 | 41 | 41 | 41 | 41 | 41 |
+| War and intrigue | `WarTests`, `CovertTests`, `HolyWarTests`, `ConflictPresentationTests`, `ConflictMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 24 | 24 | 24 | 24 | 24 | 24 |
+| World sizes and victories | `VictoryKindTests`, `WorldSizeTests`, `VictoryPresentationTests`, `AiCostTests`, `LabelDeclutterTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 |
+| Seasons, extremes and the land's life | `ClimateTests`, `EcologyTests`, `NaturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 30 | 30 | 30 | 30 |
+| Hazards and preparation | `HazardModelTests`, `HazardSystemTests`, `LivingHazardTests`, `HazardPresentationTests`, `HazardPreparationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 37 | 37 | 37 |
+| Paths, the hand and Divine Acts | `CallingTests`, `HandTests`, `DivineActTests`, `PowerPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 32 | 32 |
+| The book, overlays, overview and exports | `BookTests`, `StateOverlayTests`, `ExportPresetTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 |
+| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
+| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
+| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
+| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
+| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 |
+| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V21Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 | 132 | 138 | 144 | 150 | 156 | 156 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 27 | 30 | 30 | 30 | 30 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
+| **Total** |  | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** | **1040** | **1084** | **1123** | **1166** | **1204** | **1215** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -1042,9 +1064,10 @@ The [README](../README.md) lists every control and option.
 
 ### Platforms, performance and tooling
 
-- Not run on Windows. No export presets, so no packaged builds; an export must include
-  `Data/*.json`.
-- macOS may quarantine the unsigned Terrain3D libraries.
+- Not run on Windows. The Windows and Linux builds export (ADR-031) but have not been run; the macOS
+  build has.
+- The macOS build is signed ad hoc: it runs where it was built, and Gatekeeper blocks it elsewhere
+  until it is signed with a developer identity and notarized.
 - No scripted stress scenarios beyond the headless probes (§104). Graphics options exist since
   Milestone 15.
 - Frame times on the Mac were noisy during Milestone 15: Milestone 14's own build showed the same
@@ -1137,13 +1160,14 @@ The [README](../README.md) lists every control and option.
 Every milestone of the specification is implemented. What would make the game richer, in the
 order of the validation priorities (§132) and what playing showed:
 
-1. **Play on Windows and Linux** at 1080p, add export presets, and package builds with
-   `Data/*.json`.
+1. **Play the exported builds on Windows and Linux** at 1080p, and sign and notarize the macOS build
+   with the owner's developer identity.
 2. **Playtest with people.** The balance with active players depends on the domains they choose;
    the probes only cover bots.
 3. **World streaming (§84)**: build the terrain in pieces near the camera, so islands of 10–20 km
    (§6) load quickly; offer the size on the host page.
-4. **More of §57's panels** (World, Religion, Miracles).
+4. **Tier 3 (§80)**: prophets, leaders and a followed villager as individuals with their own
+   memory and paths (part 12).
 5. **Steam networking (§69)** as a second `INetworkTransport`, only if the game ships on Steam.
 6. **Recorded or composed audio** in place of the synthesized sounds, through the same director.
 7. Report the Terrain3D shader defects upstream.

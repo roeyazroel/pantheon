@@ -137,7 +137,7 @@ public sealed class NaturePresentationTests
             [0.5f, 0.4f, 0.3f, 0.2f, 0.1f],
             new[] { RegionDebugLayer.Snow, RegionDebugLayer.Wildlife, RegionDebugLayer.Damage, RegionDebugLayer.Scar, RegionDebugLayer.Pollution }.Select(l => RegionDebugMap.GetValue(region, l)));
         Assert.Equal(RegionDebugLayer.Blight, RegionDebugMap.Next(RegionDebugLayer.Pollution));
-        Assert.Null(OverlayMap.Next(OverlayKind.Nature));
+        Assert.Equal(OverlayKind.Population, OverlayMap.Next(OverlayKind.Nature));
 
         var image = OverlayMap.Build(world, OverlayKind.Nature, 1, DivineWorlds.Rules, SettlementWorlds.Rules, TestContent.DivineView);
 

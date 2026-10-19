@@ -23,6 +23,7 @@ public sealed class GodCameraModel
     private float _targetDistance;
     private Vector2 _boundsMin = new(float.NegativeInfinity);
     private Vector2 _boundsMax = new(float.PositiveInfinity);
+    private (Vector2 Focus, float Distance)? _beforeOverview;
     private bool _hasFocusHeight;
 
     /// <summary>Creates a camera at the initial distance, looking at the origin.</summary>
@@ -162,6 +163,26 @@ public sealed class GodCameraModel
         {
             _targetDistance = Math.Clamp(value, _settings.MinDistance, MaxDistance);
         }
+    }
+
+    /// <summary>Whether the camera shows the strategic overview (spec §56, ADR-031).</summary>
+    public bool InOverview => _beforeOverview is not null;
+
+    /// <summary>
+    /// Toggles the strategic overview (spec §56, ADR-031): the whole island from as far as the camera
+    /// may go, and back to where the camera was before.
+    /// </summary>
+    public void ToggleOverview()
+    {
+        if (_beforeOverview is { } before)
+        {
+            _beforeOverview = null;
+            FocusOn(before.Focus, before.Distance);
+            return;
+        }
+
+        _beforeOverview = (_targetFocus, _targetDistance);
+        FocusOn((_boundsMin + _boundsMax) / 2f, MaxDistance);
     }
 
     /// <summary>Jumps to the target values immediately, for example after loading a world.</summary>

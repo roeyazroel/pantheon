@@ -126,6 +126,10 @@ public partial class GameRoot : Node3D
         AddChild(faith);
         faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);
         faith.ActChosen += _divine.Select;
+        var book = new BookController { Name = "BookOfTheWorld" };
+        AddChild(book);
+        book.Setup(_session, options);
+        book.MiracleAimed += _divine.Select;
         var politics = new PoliticsController { Name = "Politics" };
         AddChild(politics);
         politics.Setup(_session, _camera, _diplomacy, SetStatus, options);

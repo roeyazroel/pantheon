@@ -141,6 +141,12 @@ public static class InputActions
     /// <summary>The hand picks up what is at the cursor, or sets it down; with Shift, throws it (R, ADR-030).</summary>
     public static readonly StringName HandGrab = "hand_grab";
 
+    /// <summary>Opens or closes the Book of the World (Tab, ADR-031).</summary>
+    public static readonly StringName ToggleBook = "toggle_book";
+
+    /// <summary>The camera shows the whole island, or goes back (`, ADR-031).</summary>
+    public static readonly StringName CameraOverview = "camera_overview";
+
     /// <summary>The pause menu (Esc, when no miracle is selected).</summary>
     public static readonly StringName GameMenu = "game_menu";
 
@@ -168,7 +174,7 @@ public static class InputActions
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, HandGrab, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, HandGrab, ToggleBook, CameraOverview, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

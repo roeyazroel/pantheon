@@ -214,6 +214,23 @@ host or join a shared world (joining reloads the game with the host's address). 
 walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
 
+### Building releases
+
+`game/export_presets.cfg` builds Windows x64, macOS (one universal app for Apple Silicon and Intel)
+and Linux x64 into `build/`. It needs the Godot 4.7.2 .NET export templates: in the editor, Editor >
+Manage Export Templates > Download, or unpack the official
+`Godot_v4.7.2-stable_mono_export_templates.tpz` into Godot's `export_templates/4.7.2.stable.mono`
+folder. Then:
+
+```bash
+godot --headless --path game --export-release "Windows Desktop" ../build/windows/Pantheon.exe
+godot --headless --path game --export-release "macOS" ../build/macos/Pantheon.zip
+godot --headless --path game --export-release "Linux" ../build/linux/Pantheon.x86_64
+```
+
+The macOS app is signed ad hoc, so it runs on the machine that built it. To share it, sign it with a
+developer identity and notarize it (the preset's `codesign` and `notarization` options).
+
 ## Tests
 
 ```bash
@@ -260,6 +277,8 @@ covers:
   season does to harvests, stores, health and migration, snow lying and melting, fog and
   hurricanes, harm healing into scars and Nature's healing, wildlife and hunting, pollution, the
   words, alerts, history, readouts and overlay, and the migration of part 7's saves;
+- the Book of the World's four pages, the population, disaster risk and political control
+  overlays, the strategic overview, the book's options and the export presets;
 - the Creature's paths and attributes, the Divine Hand (rescues, abductions, carrying, drowning,
   throwing, trees, the Creature in the hand, every refusal, through a host) and the Divine Acts
   (hallowing, waking the volcano, stilling every disaster, the rank and power they need), their
@@ -319,7 +338,9 @@ covers:
 | Show the Settlements panel for the village under the cursor (its society, technology, buildings and priority), or hide it | N |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture), then off | O |
+| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture, nature, population, disaster risk, political control), then off | O |
+| The Book of the World: the world, religion, miracles and your Creature | Tab |
+| The whole island from afar, and back | ` (backtick) |
 | Look at the next settlement | F or Home |
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
@@ -430,6 +451,12 @@ its cooldown); hover over a button to read what it does.
 - **Divine Acts.** A Greater God can do the dearest miracles of all, from the Domains panel (G):
   Hallow the Land (its blessing never fades), Wake the Volcano and Still the World (every quake,
   fire, flood, storm, swarm, blight and drought ends at once). The world's history remembers each.
+- **The Book of the World (Tab).** Four pages: the **World** (every god's standing, ties and
+  Creature, the race for victory, the dangers under way and the holy sites), **Religion** (your
+  followers village by village, with the failing ones in red, every god's faith, the Old Faiths and
+  the godless), **Miracles** (every miracle with what it costs you and what it still needs; Aim
+  selects one) and your **Creature** (its growth, paths, what it has learned, remembers and thinks
+  of the others). Backtick shows the whole island from afar, and again brings you back.
 
 A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
 followers grow hungry. Try Lightning to see how fear behaves.
@@ -1122,7 +1149,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water,
   flood, snow, wildlife, damage, scar, pollution, blight and rubble, all on a fixed 0 to 1 scale.
 - **O** cycles the map overlays: influence, religion, faith, food, weather, danger, migration,
-  culture and nature.
+  culture, nature, population, disaster risk and political control.
 - **K** brings the nearest other Creature beside yours, so they meet at once and you can watch them
   play, run or fight.
 - **F4** grants your god 500 Divine Power.
@@ -1168,7 +1195,9 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature\|population\|risk\|politics` | Start with a map overlay shown. |
+| `--book=world\|religion\|miracles\|creature` | Open the Book of the World on a page at the start. |
+| `--overview=on\|off` | Start with the camera over the whole island. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--hand=villagers\|creature` | Your hand lifts villagers of the focused settlement, or your Creature, at the start (for captures). |

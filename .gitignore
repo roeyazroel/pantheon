@@ -1,5 +1,7 @@
 # Godot
 .godot/
+# Exported builds (export_presets.cfg writes them here).
+build/
 *.translation
 mono_crash.*.json
 
