@@ -20,6 +20,9 @@ public sealed record SettlementViewSettings
     /// <summary>Representative citizens (Tier 2).</summary>
     public required CitizenSettings Citizens { get; init; }
 
+    /// <summary>How religion shows in villages (ADR-042).</summary>
+    public required StyleSettings Style { get; init; }
+
     /// <summary>Parses and validates the settlement view content file.</summary>
     /// <param name="json">Text of <c>settlement_view.json</c>.</param>
     /// <returns>The validated settings.</returns>
@@ -46,6 +49,7 @@ public sealed record SettlementViewSettings
         var errors = new List<string>();
         Collect(errors, nameof(Layout), Layout.Validate);
         Collect(errors, nameof(Citizens), Citizens.Validate);
+        Collect(errors, nameof(Style), Style.Validate);
         if (errors.Count > 0)
         {
             throw new ArgumentException(string.Join(" ", errors));

@@ -48,7 +48,11 @@ public sealed class WorldPresenter
         _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
         _greatEvents = new GreatEvents.GreatEventPresenter(root.AddLayer("GreatEvents"), content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
+        Style = content.SettlementView.Style;
     }
+
+    /// <summary>How religion shows in villages (ADR-042), for the debug view.</summary>
+    public Pantheon.Game.Presentation.StyleSettings Style { get; }
 
     /// <summary>Name of the active terrain renderer.</summary>
     public string TerrainBackend => _terrain.BackendName;

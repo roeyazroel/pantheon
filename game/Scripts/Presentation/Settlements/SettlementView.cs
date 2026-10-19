@@ -30,6 +30,8 @@ internal sealed class SettlementView
     private readonly SettlementLayoutSettings _layout;
     private readonly SiteView _siteView;
     private readonly CivicView _civicView;
+    private readonly StyleView _styleView;
+    private readonly StyleSettings _style;
     private readonly SettlementCrowd _crowd;
     private readonly CitizenView _citizens;
     private readonly DeclutteredLabel _label;
@@ -60,6 +62,8 @@ internal sealed class SettlementView
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
         _siteView = new SiteView(root, assets, _layout);
         _civicView = new CivicView(root, assets);
+        _style = settings.Style;
+        _styleView = new StyleView(root, _style);
         _crowd = new SettlementCrowd(seed, settlement.Id, settings);
         _citizens = new CitizenView(root, assets, settings.Citizens);
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
@@ -85,7 +89,16 @@ internal sealed class SettlementView
 
         var temple = settlement.Society.Buildings.Find(b => b.Kind == Domain.Society.BuildingKind.Temple);
         _civicView.Show(settlement, Site, _terrain, temple?.GodId is { } god ? _divine.GodColor(god).ToGodot() : null);
+
+        // Religion's look (ADR-042): laid out again only when the style or the village's reach changes.
+        var style = ReligiousStyles.Of(settlement, world, _style);
+        var count = style is null ? 0 : (int)System.MathF.Round(_style.MaxPieces * style.Strength * System.Math.Min(1f, (Site.Houses.Count + 2) / 14f));
+        var key = StyleView.KeyOf(style, count, Site.HouseDiscRadius);
+        _styleView.Show(style, style is null ? [] : key == _styleKey ? [] : ReligiousStyles.Layout(style, settlement, Site, _terrain, _style), key);
+        _styleKey = key;
     }
+
+    private string _styleKey = string.Empty;
 
     /// <summary>Chooses the tier for the camera distance and, in Tier 2, rebuilds and moves the representative citizens.</summary>
     /// <param name="settlement">Current settlement state.</param>

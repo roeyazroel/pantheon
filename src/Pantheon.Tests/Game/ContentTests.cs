@@ -200,12 +200,14 @@ public sealed class ContentTests
     {
         var json = TestContent.ReadText(SettlementViewSettings.FileName)
             .Replace("\"HousesPerField\": 3", "\"HousesPerField\": 0", StringComparison.Ordinal)
-            .Replace("\"FieldSize\": 10.0", "\"FieldSize\": -1.0", StringComparison.Ordinal);
+            .Replace("\"FieldSize\": 10.0", "\"FieldSize\": -1.0", StringComparison.Ordinal)
+            .Replace("\"MaxPieces\": 14", "\"MaxPieces\": 1", StringComparison.Ordinal);
 
         var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
         Assert.Contains(SettlementViewSettings.FileName, exception.Message);
         Assert.Contains("HousesPerField", exception.Message);
         Assert.Contains("FieldSize", exception.Message);
+        Assert.Contains("Style: Threshold must lie in 0..1, MaxPieces be at least 2", exception.Message);
     }
 
     [Fact]

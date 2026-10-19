@@ -126,8 +126,8 @@ rule is followed by the conventions that meet it in this repository.
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second and the sections a player received, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier,
-  water, society and technology, culture, dangers, pressure to leave, belief, Old Faith and
-  sanctuary, every prophet's walk, last deed and time left, with the selected village's elder,
+  water, society and technology, culture, dangers, pressure to leave, belief, Old Faith,
+  sanctuary and religious style, every prophet's walk, last deed and time left, with the selected village's elder,
   the forest standing and the roads, with the selected village's stores, land and roads, and the
   great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the
   selected village's plague),

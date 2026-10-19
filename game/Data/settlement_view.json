@@ -54,5 +54,28 @@
     "FarmerColor": "#a8483a",
     "BuilderColor": "#e09a2a",
     "VillagerColor": "#4a6cb0"
+  },
+
+  // Religion's look (spec section 61, ADR-042). The god most of a village follows gives it a motif:
+  // gardens (Nature, Life, Prosperity, Ocean; compassion, mercy, generosity; nature worship,
+  // pacifism, charity; love), monuments (War, Death, Fire, Storm, Chaos; cruelty, vengeance,
+  // ambition, chaos; militarism, sacrifice, expansionism; fear) or lore (Knowledge, Justice,
+  // Protection, Trickery; honesty, deceit; knowledge seeking, isolationism; faith). A motif's score
+  // weighs these, and shows from Threshold times the god's share, with up to MaxPieces pieces.
+  "Style": {
+    "DomainWeight": 0.4,
+    "DoctrineWeight": 0.3,
+    "TraitWeight": 0.15,
+    "FeelingWeight": 0.15,
+    "Threshold": 0.12,
+    "MaxPieces": 14,
+    "ShrineRingRadius": 5.0,
+    "GardenSpacing": 3.2,
+    "HouseClearance": 3.0,
+    "FlowerColors": ["#e86a7a", "#f2c94c", "#b07ad9", "#f29e4c", "#ffffff"],
+    "Bush": "#3d7a34",
+    "Obelisk": "#2e2a30",
+    "Flame": "#ff8a2a",
+    "Column": "#ece6da"
   }
 }

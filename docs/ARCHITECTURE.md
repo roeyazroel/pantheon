@@ -566,6 +566,12 @@ whatever a hand holds no stores. A missing,
   map, fallback mesh chunks, water depth map, region lines, labels) and `Terrain3DShaderPatch`.
   `SettlementLayout.ComputeSite` lays out a settlement's houses, building site and fields as a
   `SettlementSite`, tuned by `SettlementViewSettings` (`game/Data/settlement_view.json`).
+  `ReligiousStyles` (ADR-042) gives a village its god's style:
+  - `Of` scores a `StyleMotif` (gardens, monuments, columns) from the main god's domains and
+    traits, the village's doctrines and its people's love, fear or faith, times the god's hold;
+  - `Layout` places the `StylePiece`s, monuments and columns in a ring about the shrine clear of
+    the temple, and gardens among the houses;
+  - both are tuned by `StyleSettings` and never saved.
   `PresentationHash` (SplitMix64) gives presentation variation without consuming a simulation
   random stream. `PresentationContent` bundles the biome palette and the settlement view
   settings.
@@ -699,7 +705,10 @@ whatever a hand holds no stores. A missing,
     - `ConstructionSiteView`: the house being built, as scaffold poles, a timber pile, walls
       that rise during the first 70% of the work and a roof during the rest;
     - `CitizenView`: the settlement's Tier 2 representatives in one MultiMesh of a two-surface
-      figure (a body tinted per role, a head), recoloured when the roster changes.
+      figure (a body tinted per role, a head), recoloured when the roster changes;
+    - `StyleView`: the village's religious style (ADR-042), one MultiMesh per kind of piece
+      (flower beds, bushes, obelisks, glowing braziers, columns), rebuilt only when the style or
+      the houses change.
   - `Regions/RegionBoundaryOverlay`: region grid lines draped on the terrain, plus a hover highlight.
 - `UI/DebugOverlay`: FPS, tick, seed, terrain backend, camera band, region under cursor,
   settlement readouts, boundary toggle and status messages, plus the F3 region debug map. Hidden

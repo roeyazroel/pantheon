@@ -36,6 +36,13 @@ internal static class SettlementReadout
         lines.Add(FormatFood(settlement, outlook, stepsPerSecond));
         lines.Add(FormatWater(snapshot, settlement, outlook, stepsPerSecond));
         lines.AddRange(SocietyReadout.Describe(settlement));
+        if (snapshot.Style is { } styles)
+        {
+            lines.Add(Presentation.ReligiousStyles.Of(settlement, snapshot.World, styles) is { } style
+                ? Format("  style: {0} {1:0.00} ({2})", style.Motif, style.Strength, style.Reason)
+                : "  style: none (no god holds most of it, or its worship shows too little)");
+        }
+
         lines.Add(FormatJobs(settlement, outlook));
         lines.Add(Format(
             "  births {0:0.00}/s   deaths {1:0.00}/s   {2}",

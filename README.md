@@ -917,6 +917,15 @@ The rules are in `game/Data/ecology.json`.
   | Build a temple | A temple to you: half again as much power from its worship |
 - **Buildings** rise once the village has put by the wealth for them. Temples (roofed in their
   god's colour) and walls show in the village.
+- **A village looks like what it worships** (ADR-042). Once most of a village follows one god, it
+  takes that god's style:
+  - a loved god of nature, life or plenty brings flower beds and bushes among the houses;
+  - a feared god of war, death or fire brings dark obelisks and burning braziers about the shrine;
+  - a god of knowledge, justice or protection brings a ring of white columns.
+
+  The style comes from the god's domains and traits, the village's doctrines and how its people
+  feel, and it grows with the god's hold. F1 shows the selected village's style and why. The
+  numbers and colours are in `settlement_view.json` (`Style`).
 
 The rules are in `game/Data/society.json`, with what technology and buildings do in
 `settlement_rules.json` (`Civics`), `disasters.json` (`Preparedness`), `divine_rules.json` and

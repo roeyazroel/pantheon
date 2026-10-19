@@ -429,6 +429,7 @@ public partial class GameRoot : Node3D
         FramesPerSecond = Engine.GetFramesPerSecond(),
         World = _session.World,
         SettlementRules = _session.Content.SettlementRules,
+        Style = _presenter.Style,
         DivineRules = _session.Content.DivineRules,
         CreatureRules = _session.Content.Creatures,
         WeatherRules = _session.Content.Weather,
