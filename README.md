@@ -357,7 +357,7 @@ covers:
 | Show the Settlements panel for the village under the cursor (its society, technology, buildings and priority), or hide it | N |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture, nature, population, disaster risk, political control), then off | O |
+| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture, nature, population, disaster risk, political control, navigation, authority), then off | O |
 | The Book of the World: the world, religion, miracles, your Creature and your villager | Tab |
 | Follow the villager at the cursor; with nobody there, keep the camera on the one you follow | / |
 | Let the villager you follow go | Shift+/ |
@@ -1294,7 +1294,10 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed with the island's
   width and the world's victories ("Seed 42   4096 m island   Ascendancy, conquest and cultural
   victory"), terrain renderer,
-  camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
+  camera band, the performance metrics (frame time, the simulation's share of a frame and a tick's
+  time, ticks per second, memory, the engine's objects, nodes and draw calls, the citizens drawn and
+  the last save's times) and the world's load (settlements, people, gods, Creatures, weather cells,
+  disasters, groups on the road, notables and followed villagers), one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now and its top candidate actions with their scores and reasons, its plans (the goals it
   holds with their weights and ages, when it plans next, the gods it knows) and the goals it is
   weighing, its diplomatic moves with the factors behind them, the climate (the season and what it and a heat or cold wave
@@ -1333,7 +1336,11 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water,
   flood, snow, wildlife, damage, scar, pollution, blight and rubble, all on a fixed 0 to 1 scale.
 - **O** cycles the map overlays: influence, religion, faith, food, weather, danger, migration,
-  culture, nature, population, disaster risk and political control.
+  culture, nature, population, disaster risk, political control, navigation and authority:
+  - **Navigation** shows the land walkers may cross, the open roads, the land buried in rubble they
+    go round, and the ways every migrant group, prophet, followed villager and Creature is on.
+  - **Authority** shows who commands the god each village follows: you in gold, another player in
+    blue, the AI in grey (ADR-044).
 - **K** brings the nearest other Creature beside yours, so they meet at once and you can watch them
   play, run or fight.
 - **F4** grants your god 500 Divine Power.
@@ -1361,7 +1368,19 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   (`--terrain`), start from a grown settlement up close (`--advance-ticks`,
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
   Unattended runs end by logging one summary line per settlement, with its tier and the
-  citizens shown.
+  citizens shown, then the performance lines with a save timed, and the world's load.
+- **Stress testing (spec §104, ADR-044).** `--stress=on` makes the stress scenario: the vast island
+  with 50 villages of 2,000 people (100,000 in all), 8 gods and their Creatures, 20 weather cells,
+  and an earthquake, a fire and a flood at once, the camera over the busiest villages and thousands
+  of citizens drawn. For example:
+
+  ```bash
+  godot --path game -- --stress=on --seed=42 --quit-after-frames=600 --screenshot=/tmp/stress.png
+  ```
+
+  On an Apple M3 Pro it runs at about 100 FPS with 7,000 citizens drawn, a tick takes 1.5 ms,
+  and a 10 MB save is written in about 130 ms. A shared game on the stress world sends a player
+  about 144 KB/s.
 
 ## Command-line options
 
@@ -1374,12 +1393,13 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--terrain=auto\|terrain3d\|fallback` | Terrain renderer. `auto` (the default) and `terrain3d` use Terrain3D when it is available; `fallback` forces the built-in mesh renderer. |
 | `--advance-ticks=<n>` | Run `n` simulation ticks (10 per simulated second) before the first frame, for example `--advance-ticks=9000` for a settlement of about 425 people. |
 | `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 25–2600, or further over a larger island). |
-| `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). |
+| `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). The run prints its frame times, the performance lines with a save timed, and the world's load. |
+| `--stress=on\|off` | Start the stress scenario of spec §104 (ADR-044): the vast island with 50 villages of 2,000 people, 8 gods and their Creatures, 20 weather cells and an earthquake, a fire and a flood, the crowd drawn in thousands. |
 | `--screenshot=<file.png>` | Together with `--quit-after-frames`, save a screenshot just before quitting (not in headless mode). |
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature\|population\|risk\|politics` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature\|population\|risk\|politics\|navigation\|authority` | Start with a map overlay shown. |
 | `--book=world\|religion\|miracles\|creature\|villager` | Open the Book of the World on a page at the start. |
 | `--overview=on\|off` | Start with the camera over the whole island. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |

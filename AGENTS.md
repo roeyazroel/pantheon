@@ -115,7 +115,7 @@ rule is followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
-- Current tools: the F1 debug panel (gods, the god AI's goal and top candidates with reasons,
+- Current tools: the F1 debug panel (the performance metrics and the world's load, gods, the god AI's goal and top candidates with reasons,
   its plans, the goals it is weighing and the gods it knows, and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
   others, and how yours would meet the nearest one, its attributes, paths and callings, the climate (the season and what it and a heat
@@ -124,7 +124,7 @@ rule is followed by the conventions that meet it in this repository.
   levels and the lakes, earthquakes and fires, the volcano, tornadoes, locust swarms, blighted and
   buried land and the marks on it,
   migration groups and refugee policies, a shared session's players, round trips, traffic per
-  second and the sections a player received, every god's domains, the holy sites with their
+  second, who decides and the sections a player received and how fresh they are, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier,
   water, society and technology, culture, dangers, pressure to leave, belief, Old Faith,
   sanctuary and religious style, every followed villager with their needs, options and danger, every prophet's walk, last deed and time left, with the selected village's elder,
@@ -139,7 +139,7 @@ rule is followed by the conventions that meet it in this repository.
   technology, buildings and work, doctrines, turn from the gods and feelings, holy wars, its priority, the player's word to its holy war and proxy acts), the settings page, the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire, scorch, fresh water, flood, snow,
   wildlife, damage, scar, pollution, blight, rubble, timber and stone), the
-  O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk, politics), the `.` single-tick step, the
+  O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk, politics, navigation, authority), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
   F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
   flood), M
@@ -148,12 +148,12 @@ rule is followed by the conventions that meet it in this repository.
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
-  `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
+  `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
   `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
-  `--quit-after-frames` and `--screenshot`, which print frame times and, in shared sessions, the
-  network lines. The README lists them.
+  `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a
+  save timed and, in shared sessions, the network lines. The README lists them.
 
 ## Where things go
 

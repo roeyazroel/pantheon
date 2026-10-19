@@ -52,7 +52,9 @@ public static class OverlayMap
         OverlayKind.Nature => OverlayKind.Population,
         OverlayKind.Population => OverlayKind.Risk,
         OverlayKind.Risk => OverlayKind.Politics,
-        OverlayKind.Politics => null,
+        OverlayKind.Politics => OverlayKind.Navigation,
+        OverlayKind.Navigation => OverlayKind.Authority,
+        OverlayKind.Authority => null,
     };
 
     /// <summary>Builds an overlay.</summary>
@@ -122,6 +124,14 @@ public static class OverlayMap
             case OverlayKind.Politics:
                 StateOverlays.PaintPolitics(world, godId, view, (regionId, color, alpha) => PaintTerritory(grid, regionId, rgba, color, alpha));
                 legend = StateOverlays.PoliticsLegend;
+                break;
+            case OverlayKind.Navigation:
+                NavigationOverlay.Paint(world, settlementRules.Roads, view, (regionId, color, alpha) => Write(rgba, regionId, color, alpha));
+                legend = NavigationOverlay.Legend;
+                break;
+            case OverlayKind.Authority:
+                AuthorityOverlay.Paint(world, godId, view.OverlayOpacity, (regionId, color, alpha) => PaintTerritory(grid, regionId, rgba, color, alpha));
+                legend = AuthorityOverlay.Legend;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown overlay.");

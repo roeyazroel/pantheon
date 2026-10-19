@@ -99,6 +99,9 @@ public sealed class MultiplayerClient : IDisposable
     /// <summary>Section updates received, by section, for the debug panel.</summary>
     public IDictionary<WorldSection, int> SectionsReceived { get; } = new Dictionary<WorldSection, int>();
 
+    /// <summary>The host's tick when each section last arrived, for the debug panel's authority lines (ADR-044).</summary>
+    public IDictionary<WorldSection, long> SectionTicks { get; } = new Dictionary<WorldSection, long>();
+
     /// <summary>The round trip to the host in milliseconds, if known.</summary>
     public float? RoundTripMilliseconds => _transport.RoundTripMilliseconds(NetworkProtocol.HostPeerId);
 
@@ -272,6 +275,7 @@ public sealed class MultiplayerClient : IDisposable
 
         var hostTick = WorldSections.Apply(session.World, update.Section, update.Data);
         SectionsReceived[update.Section] = SectionsReceived.TryGetValue(update.Section, out var count) ? count + 1 : 1;
+        SectionTicks[update.Section] = update.Tick;
         HostTick = Math.Max(HostTick, update.Tick);
         if (hostTick is { } tick && Math.Abs(session.World.Tick - tick) > TickSlack)
         {

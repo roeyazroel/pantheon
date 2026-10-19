@@ -75,6 +75,9 @@ public sealed record DebugSnapshot
     /// <summary>The network lines of a shared session (ADR-018); none when playing alone.</summary>
     public IReadOnlyList<string> NetworkLines { get; init; } = [];
 
+    /// <summary>What the client measured over its last frames (ADR-044), or <c>null</c> when it measured nothing.</summary>
+    public PerformanceSample? Performance { get; init; }
+
     /// <summary>How the local Creature would answer the nearest other Creature if they met now, best first (ADR-017).</summary>
     public IReadOnlyList<CreatureOption> CreatureResponses { get; init; } = [];
 

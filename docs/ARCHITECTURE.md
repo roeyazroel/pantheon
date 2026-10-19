@@ -576,7 +576,12 @@ needs and faith in 0..1, a life longer than their age). A missing,
   island's width beyond 2 km (ADR-027).
 - `Diagnostics/DebugReadout`: formats the debug overlay model from state (pure), with
   `SettlementReadout` for the settlement lines. `Diagnostics/RegionDebugMap` builds the F3
-  region debug map image (pure).
+  region debug map image (pure). `Diagnostics/PerformanceReadout` words the client's
+  `PerformanceSample` (with a `SaveTiming`) and the world's load (ADR-044), and `NetworkReadout`
+  says who decides and, for a joined player, how old each section is (`MultiplayerClient.SectionTicks`).
+- `Performance/StressScenario` makes §104's stress world (ADR-044): a world size of the largest
+  island with 50 villages and 8 gods, the crowd drawn in thousands, and `Apply` for the 100,000
+  people, 20 weather cells and three disasters. See [Performance testing](#performance-testing).
 - `Launch/LaunchOptions`: parses user arguments `--seed=`, `--load=`,
   `--terrain=auto|terrain3d|fallback`, `--advance-ticks=`, `--camera-distance=`,
   `--quit-after-frames=` and `--screenshot=`. Bad input becomes a warning, never an error.
@@ -655,7 +660,8 @@ needs and faith in 0..1, a life longer than their age). A missing,
   region's soil water, brown to yellow to blue), danger (fires, ash and shielded settlements) and
   migration (each settlement's lands by the pressure to leave, and every group's way in its god's
   colour) and culture (each settlement's lands in the colour of its strongest doctrine, grey where
-  it has turned from the gods). `Presentation/CloudLayout` lays out each weather
+  it has turned from the gods). `NavigationOverlay` shows walkable land, open roads, rubble and
+  every walker's way, and `AuthorityOverlay` who commands each village's god (ADR-044). `Presentation/CloudLayout` lays out each weather
   cell's puffs, colour, opacity, rain and lightning from `PresentationHash` and
   `WeatherViewSettings` (`weather_view.json`), and how much a storm dims the light.
   `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
@@ -707,6 +713,10 @@ needs and faith in 0..1, a life longer than their age). A missing,
   villages' and holy sites') through `LabelDeclutter`, holy sites first, then villages by
   population (ADR-027).
   `Bootstrap/SmokeTestDriver` implements `--quit-after-frames` and `--screenshot`.
+  `Bootstrap/DebugView` builds the F1 panel's `DebugSnapshot` four times a second and redraws the
+  F3 region map; its `Bootstrap/PerformanceMonitor`, the only code that reads the clock, times the
+  frames, the simulation's share of each and a save (ADR-044). With `--stress` GameRoot makes the
+  stress world.
 - `Camera/GodCameraController`: maps input (WASD, edge scroll, right-drag grab, wheel, Q/E,
   middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`.
 - `Presentation/WorldPresenter`: rebuilds and syncs all world visuals:
@@ -2033,6 +2043,37 @@ flowchart LR
   count them, so the statistical world is the same with or without them.
 - **Shown and shared.** `VillagerView`, the camera's tracking, the Book's page, F1 and alerts.
   Villagers travel to joined players in `WorldSection.Notables`.
+
+## Performance testing
+
+§104 asks for repeatable stress scenarios and measurements (ADR-044).
+
+```mermaid
+flowchart LR
+    option["--stress=on"] --> content[StressScenario.Content and Presentation]
+    content --> world[Stress world: 50 villages, 8 gods and Creatures]
+    world --> apply[StressScenario.Apply: 100,000 people, 20 cells, 3 disasters]
+    apply --> run[The game runs]
+    run --> monitor[PerformanceMonitor: frames, ticks, memory, a save]
+    monitor --> readout[PerformanceReadout: F1 and the run's report]
+```
+
+- **The scenario.** `StressScenario` is pure and seeded:
+  - its world size is the largest island with 50 villages and 8 gods;
+  - `Apply` gives each village 2,000 people with houses and stores, adds weather cells until there
+    are 20, and starts an earthquake, a fire and a flood;
+  - its presentation draws up to 1,000 figures a village within 1,300 m.
+- **Measuring.** `PerformanceMonitor` in the client wraps `GameSession.Update` in a stopwatch and
+  keeps the last 240 frames: frame time, the simulation's share of a frame, a tick's time, ticks
+  per second. It reads memory and the engine's objects, nodes and draw calls from Godot's monitors,
+  and times a save written and read back without touching the disk.
+- **Reporting.** `PerformanceReadout` turns a `PerformanceSample` into F1's lines and adds a census
+  of the world's load; unattended runs print the same lines.
+- **Measured** (Apple M3 Pro, seed 42; numbers in the ADR):
+  - 100 FPS with 7,000 citizens drawn, on both renderers;
+  - 1.5 ms a tick;
+  - a 10 MB save in about 130 ms;
+  - 144 KB/s to a joined player, mostly the regions' small changes.
 
 ## Debug tools
 

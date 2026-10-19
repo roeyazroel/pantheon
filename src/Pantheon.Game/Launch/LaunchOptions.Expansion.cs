@@ -67,6 +67,9 @@ public sealed partial record LaunchOptions
     /// <summary>Whether the player follows one of the focused village's people at the start, the camera on them (ADR-043).</summary>
     public bool Villager { get; init; }
 
+    /// <summary>Whether a new world is the stress scenario of spec §104 (ADR-044): 50 villages of 100,000 people, weather and disasters.</summary>
+    public bool Stress { get; init; }
+
     /// <summary>The great event that begins at the start (ADR-034), for captures.</summary>
     public GreatEvents.GreatEventAtStart? GreatEvent { get; init; }
 
@@ -84,13 +87,13 @@ public sealed partial record LaunchOptions
         ArgumentNullException.ThrowIfNull(content);
         return new NewWorldOptions(
             Simulation.Creatures.CreatureModel.FindSpecies(content.Creatures, Species)?.Name,
-            WorldMaker.Find(content, WorldSize)?.Name,
+            Stress ? Performance.StressScenario.SizeName : WorldMaker.Find(content, WorldSize)?.Name,
             Victory,
             Seasons ?? true);
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -200,6 +203,8 @@ public sealed partial record LaunchOptions
                 return OnOff(value) is { } prophet ? options with { Prophet = prophet } : Warn(options, warnings, $"'--prophet' needs on or off, got '{value}'.");
             case "villager":
                 return OnOff(value) is { } villager ? options with { Villager = villager } : Warn(options, warnings, $"'--villager' needs on or off, got '{value}'.");
+            case "stress":
+                return OnOff(value) is { } stress ? options with { Stress = stress } : Warn(options, warnings, $"'--stress' needs on or off, got '{value}'.");
             case "hand":
                 return Enum.TryParse<HandAtStart>(trimmed, ignoreCase: true, out var hand) && Enum.IsDefined(hand) && !int.TryParse(trimmed, out _)
                     ? options with { Hand = hand }

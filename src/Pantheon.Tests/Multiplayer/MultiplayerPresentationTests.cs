@@ -38,9 +38,9 @@ public sealed class MultiplayerPresentationTests
 
         Assert.StartsWith("Network: hosting on port 7777, 1 of 3 players joined; sent ", host[0], StringComparison.Ordinal);
         Assert.Contains(" KB/s), received ", host[0], StringComparison.Ordinal);
-        Assert.Equal(["  Hostess plays Ilyra (host)", "  Ana plays Vael, round trip 0 ms"], host.Skip(1));
+        Assert.Equal(["  authority: this host simulates the world and decides every act; players send intents and receive its sections", "  Hostess plays Ilyra (host)", "  Ana plays Vael, round trip 0 ms"], host.Skip(1));
         Assert.StartsWith("Network: joined 127.0.0.1:7777, host tick 0, sent 0 KB (0.0 KB/s), received ", player[0], StringComparison.Ordinal);
-        Assert.Equal(["  Hostess plays Ilyra (host)", "  Ana plays Vael (you)"], player.Skip(1));
+        Assert.Equal(["  authority: the host decides the world; this replica predicts your acts and takes the host's sections over its own", "  Hostess plays Ilyra (host)", "  Ana plays Vael (you)"], player.Skip(1));
     }
 
     [Fact]

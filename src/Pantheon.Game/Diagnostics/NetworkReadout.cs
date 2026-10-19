@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -23,6 +24,7 @@ public static class NetworkReadout
         var lines = new List<string>
         {
             Format("Network: hosting on port {0}, {1} of {2} players joined; {3}", port, seats.Count - 1, NetworkProtocol.MaxClients, Traffic(host.Stats, host.Traffic)),
+            "  authority: this host simulates the world and decides every act; players send intents and receive its sections",
         };
         lines.AddRange(seats.Select(seat => Format(
             "  {0} plays {1}{2}",
@@ -57,9 +59,11 @@ public static class NetworkReadout
                 Traffic(client.Stats, client.Traffic),
                 client.RoundTripMilliseconds is { } rtt ? Format(", round trip {0:0} ms", rtt) : string.Empty),
         };
+        lines.Add("  authority: the host decides the world; this replica predicts your acts and takes the host's sections over its own");
         if (client.SectionsReceived.Count > 0)
         {
             lines.Add("  received: " + string.Join(", ", client.SectionsReceived.OrderBy(p => p.Key).Select(p => Format("{0} {1}", p.Key, p.Value))));
+            lines.Add("  ages: " + string.Join(", ", client.SectionTicks.OrderBy(p => p.Key).Select(p => Format("{0} {1:0.0} s", p.Key, Math.Max(0, client.HostTick - p.Value) / (double)Domain.World.SimulationTime.TicksPerSecond))));
         }
 
         lines.AddRange(client.Seats.Select(seat => Format(

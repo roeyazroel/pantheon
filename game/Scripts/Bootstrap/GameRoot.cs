@@ -17,6 +17,7 @@ using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Game.Diagnostics;
 using Pantheon.Game.Launch;
+using Pantheon.Game.Performance;
 using Pantheon.Game.Presentation;
 using Pantheon.Persistence;
 using NVector3 = System.Numerics.Vector3;
@@ -36,9 +37,6 @@ public partial class GameRoot : Node3D
     // C brings the camera this close to the Creature.
     private const float CreatureFocusDistance = 90f;
 
-    // The debug panel details the settlement nearest the cursor within this distance.
-    private const float SelectDistance = 250f;
-
     // F2 seeds stay short enough to read off the overlay and pass back with --seed.
     private const long MaxRandomSeed = 1_000_000_000;
 
@@ -46,7 +44,6 @@ public partial class GameRoot : Node3D
     private const float FogReferenceExtent = 2048f;
 
     private GameSession _session = null!;
-    private BiomePalette _palette = null!;
     private WorldPresenter _presenter = null!;
     private GodCameraController _camera = null!;
     private DebugOverlay _overlay = null!;
@@ -64,8 +61,7 @@ public partial class GameRoot : Node3D
     private CreatureCommandKind? _pendingJudge;
     private IReadOnlyList<(StringName Action, Action Run)> _hotkeys = [];
     private string? _status;
-    private RegionDebugLayer? _regionMapLayer;
-    private (RegionDebugLayer Layer, int? CursorRegion, long Tick, WorldState World)? _shownRegionMap;
+    private DebugView _debug = null!;
 
     /// <summary>Absolute path of the quicksave file.</summary>
     private static string GlobalQuickSavePath => ProjectSettings.GlobalizePath(QuickSavePath);
@@ -87,8 +83,7 @@ public partial class GameRoot : Node3D
             return;
         }
 
-        var (content, presentation) = loaded.Value;
-        _palette = presentation.Palette;
+        var (content, presentation) = options.Stress ? (StressScenario.Content(loaded.Value.Content), StressScenario.Presentation(loaded.Value.Presentation)) : loaded.Value;
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
         _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain);
@@ -103,6 +98,7 @@ public partial class GameRoot : Node3D
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
         _session = _network.Join(content, options) ?? CreateSession(content, options);
         _network.Host(_session, options);
+        _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette);
         _nature = new NatureDebug(_session, _camera, SetStatus);
         var hud = new Hud { Name = "Hud" };
         AddChild(hud);
@@ -160,6 +156,12 @@ public partial class GameRoot : Node3D
             FocusSettlement(distance, snap: true);
         }
 
+        if (options.Stress && !_session.IsReplica)
+        {
+            SetStatus(StressScenario.Apply(_session));
+            _camera.FocusOn(StressScenario.Busiest(_session.World), options.CameraDistance ?? StressScenario.CameraDistance, snap: true);
+        }
+
         _overlay.SetFallbackBadgeVisible(_presenter.TerrainIsFallback);
         if (options.QuitAfterFrames is { } frames)
         {
@@ -177,7 +179,8 @@ public partial class GameRoot : Node3D
     public override void _Process(double delta)
     {
         _network.Update(delta, new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y));
-        _session.Update(delta);
+        _debug.Performance.Simulate(_session, delta);
+        _debug.Performance.Frame(delta);
         _presenter.Sync(_session.World, delta);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
@@ -201,11 +204,7 @@ public partial class GameRoot : Node3D
 
         var cursorRegion = RegionAt(cursor);
         _presenter.SetHoveredRegion(cursorRegion);
-        UpdateRegionMap(cursorRegion);
-        if (_overlay.PanelVisible)
-        {
-            _overlay.ShowModel(DebugReadout.Build(CreateSnapshot(cursor)));
-        }
+        _debug.Update(cursor, cursorRegion, _status, delta);
     }
 
     /// <summary>Runs the first hotkey that matches a newly pressed action.</summary>
@@ -234,7 +233,7 @@ public partial class GameRoot : Node3D
     [
         (InputActions.ToggleRegionBoundaries, () => _presenter.RegionBoundariesVisible = !_presenter.RegionBoundariesVisible),
         (InputActions.ToggleDebugOverlay, () => _overlay.PanelVisible = !_overlay.PanelVisible),
-        (InputActions.ToggleRegionMap, CycleRegionMap),
+        (InputActions.ToggleRegionMap, () => SetStatus(_debug.CycleRegionMap())),
         (InputActions.CameraFocusSettlement, FocusNextSettlement),
         (InputActions.WorldNew, () => SetStatus(SessionCommands.NewWorld(_session, CreateRandomSeed()))),
         (InputActions.WorldQuickSave, () => SetStatus(SessionCommands.QuickSave(_session, GlobalQuickSavePath))),
@@ -393,96 +392,14 @@ public partial class GameRoot : Node3D
         SetStatus($"Looking at {settlements[_focusIndex].Name}");
     }
 
-    /// <summary>Shows the region debug map's next layer, or hides the map after the last one.</summary>
-    private void CycleRegionMap()
-    {
-        _regionMapLayer = RegionDebugMap.Next(_regionMapLayer);
-        SetStatus(_regionMapLayer is { } layer ? $"Debug map: {layer}" : "Debug map off");
-    }
-
-    /// <summary>Redraws the region debug map when its layer, the cursor region, the tick or the world changed.</summary>
-    /// <param name="cursorRegion">Region under the cursor, if any.</param>
-    private void UpdateRegionMap(int? cursorRegion)
-    {
-        (RegionDebugLayer Layer, int? CursorRegion, long Tick, WorldState World)? wanted = _regionMapLayer is { } layer
-            ? (layer, cursorRegion, _session.World.Tick, _session.World)
-            : null;
-        if (wanted == _shownRegionMap)
-        {
-            return;
-        }
-
-        _shownRegionMap = wanted;
-        _overlay.ShowRegionMap(wanted is { } map ? RegionDebugMap.Build(map.World, map.Layer, _palette, map.CursorRegion, InfluenceSamples(map.Layer)) : null);
-    }
-
-    /// <summary>The local god's influence per region, for the influence layer of the debug map.</summary>
-    private float[]? InfluenceSamples(RegionDebugLayer layer) =>
-        layer == RegionDebugLayer.Influence && _session.LocalGodId is { } god
-            ? Pantheon.Simulation.Belief.InfluenceField.Build(_session.Content.DivineRules, _session.World, god).SampleRegions(_session.World.Regions)
-            : null;
-
     /// <summary>Region containing a world point, if any.</summary>
     private int? RegionAt(NVector3? point) =>
         point is { } p && _session.World.Regions.TryGetRegionIdAt(p.X, p.Z, out var regionId) ? regionId : null;
 
-    /// <summary>Collects this frame's data for the debug overlay.</summary>
-    private DebugSnapshot CreateSnapshot(NVector3? cursor) => new()
-    {
-        FramesPerSecond = Engine.GetFramesPerSecond(),
-        World = _session.World,
-        SettlementRules = _session.Content.SettlementRules,
-        Style = _presenter.Style,
-        DivineRules = _session.Content.DivineRules,
-        CreatureRules = _session.Content.Creatures,
-        WeatherRules = _session.Content.Weather,
-        DisasterRules = _session.Content.Disasters,
-        MigrationRules = _session.Content.Migration,
-        ConflictRules = _session.Content.Diplomacy.Conflict,
-        MigrationPressure = PressureUnder(cursor),
-        RefugeeChoices = [.. _session.World.Gods.Select(god => (god.Id, _session.PreviewRefugeePolicy(god))).Where(c => c.Item2 is not null).Select(c => (c.Id, c.Item2!.Value.Policy, c.Item2.Value.Reason))],
-        LocalGodId = _session.LocalGodId,
-        LocalCreatureId = _session.LocalCreature?.Id,
-        CreatureOptions = _session.PreviewCreatureOptions(),
-        CreatureResponses = Pantheon.Game.Creatures.CreatureCommands.PreviewResponses(_session),
-        NetworkLines = _network.Lines(_session),
-        GodDiplomacyCandidates = _session.World.Gods
-            .Where(god => god.Controller == GodController.Ai)
-            .Select(god => (god.Id, _session.PreviewGodDiplomacy(god)))
-            .ToList(),
-        GodAiCandidates = _session.World.Gods
-            .Where(god => god.Controller == GodController.Ai)
-            .Select(god => (god.Id, _session.PreviewGodAi(god)))
-            .ToList(),
-        GodGoalOptions = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodGoals(god)))],
-        SelectedSettlementId = cursor is { } point
-            ? SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance)?.Id
-            : null,
-        IsPaused = _session.Scheduler.IsPaused,
-        TimeScale = _session.Scheduler.TimeScale,
-        TicksPerSecond = _session.Scheduler.TicksPerSecond,
-        TerrainBackend = _presenter.TerrainBackend,
-        TerrainIsFallback = _presenter.TerrainIsFallback,
-        ZoomBand = _camera.Model.Band,
-        CameraDistance = _camera.Model.Distance,
-        CursorWorldPosition = cursor,
-        RegionBoundariesVisible = _presenter.RegionBoundariesVisible,
-        StatusMessage = _status,
-        Crowds = _presenter.CrowdStatuses,
-        HolySiteRules = _session.Content.HolySites,
-        WaterRules = _session.Content.Water,
-    };
-
-    /// <summary>The pressure to leave on the settlement near the cursor, for the debug panel.</summary>
-    private Pantheon.Simulation.Migration.MigrationPressure? PressureUnder(NVector3? cursor) =>
-        cursor is { } point && SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance) is { } settlement
-            ? _session.MigrationPressureOn(settlement)
-            : null;
-
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
     private string DescribeWorld() =>
         $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}"
-        + string.Concat(_network.Lines(_session).Select(line => "\n" + line));
+        + string.Concat(_network.Lines(_session).Select(line => "\n" + line)) + "\n" + _debug.Report();
 
     /// <summary>Remembers a status line for the overlay and echoes it to the log.</summary>
     private void SetStatus(string message)

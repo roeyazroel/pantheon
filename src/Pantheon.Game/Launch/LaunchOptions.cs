@@ -267,7 +267,7 @@ public sealed partial record LaunchOptions
             case "overlay":
                 return Enum.TryParse<OverlayKind>(value, ignoreCase: true, out var overlay) && Enum.IsDefined(overlay)
                     ? options with { Overlay = overlay }
-                    : Warn(options, warnings, $"Unknown overlay '{value}'; expected influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk or politics.");
+                    : Warn(options, warnings, $"Unknown overlay '{value}'; expected influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk, politics, navigation or authority.");
             case "focus":
                 if (string.Equals(value.Trim(), "creature", StringComparison.OrdinalIgnoreCase))
                 {

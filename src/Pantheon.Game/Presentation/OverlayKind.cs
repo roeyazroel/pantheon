@@ -38,4 +38,10 @@ public enum OverlayKind
 
     /// <summary>Political control: the bloc that holds each village (spec §58, ADR-031).</summary>
     Politics,
+
+    /// <summary>Where walkers may go, the roads, and the ways they are on (spec §106's navmesh, ADR-044).</summary>
+    Navigation,
+
+    /// <summary>Who commands the god each village follows: you, another player or the AI (spec §106's network authority, ADR-044).</summary>
+    Authority,
 }

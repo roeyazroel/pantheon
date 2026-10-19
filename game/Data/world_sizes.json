@@ -9,12 +9,13 @@
     { "Name": "Huge", "HeightmapResolution": 2048, "VertexSpacing": 4.0, "RegionsPerSide": 128, "Settlements": 40, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 16.0, "PantheonMaxGods": 4 },
     { "Name": "Vast", "HeightmapResolution": 2048, "VertexSpacing": 6.0, "RegionsPerSide": 128, "Settlements": 48, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 12.0, "PantheonMaxGods": 4 }
   ],
-  // Names added to worldgen.json's for larger worlds.
+  // Names added to worldgen.json's for larger worlds (two to spare, for the stress world of ADR-044).
   "ExtraSettlementNames": [
     "Oakhaven", "Stonebridge", "Mistvale", "Ravenmoor", "Goldmere", "Briarwood", "Coldharbour", "Highcrest",
     "Willowmere", "Ironford", "Sunhallow", "Redfern", "Blackwater", "Hearthstone", "Greywick", "Starfall",
     "Westerly", "Northmarch", "Lindenholm", "Amberly", "Caskmoor", "Dunmere", "Foxhollow", "Glimmerdeep",
-    "Hollin", "Marrowby", "Pinecrest", "Quarrytown", "Rookhaven", "Silverdale", "Tidewell", "Yarrowby"
+    "Hollin", "Marrowby", "Pinecrest", "Quarrytown", "Rookhaven", "Silverdale", "Tidewell", "Yarrowby",
+    "Larkmere", "Thornbury"
   ],
   "ExtraRiverNames": [
     "Amberrun", "Brackwell", "Copperflow", "Deepwater", "Eskmoor", "Foamfall", "Gloamwater",

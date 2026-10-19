@@ -18,7 +18,7 @@ public sealed class StateOverlayTests
         Assert.Equal(OverlayKind.Population, OverlayMap.Next(OverlayKind.Nature));
         Assert.Equal(OverlayKind.Risk, OverlayMap.Next(OverlayKind.Population));
         Assert.Equal(OverlayKind.Politics, OverlayMap.Next(OverlayKind.Risk));
-        Assert.Null(OverlayMap.Next(OverlayKind.Politics));
+        Assert.Equal(OverlayKind.Navigation, OverlayMap.Next(OverlayKind.Politics));
     }
 
     [Fact]
