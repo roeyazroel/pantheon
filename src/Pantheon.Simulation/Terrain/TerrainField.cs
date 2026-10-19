@@ -22,7 +22,8 @@ public sealed class TerrainField
     /// <param name="moisture">Normalised moisture per sample.</param>
     /// <param name="temperature">Normalised temperature per sample.</param>
     /// <param name="biomes">Biome per sample.</param>
-    public TerrainField(int resolution, float spacing, float[] heights, float[] moisture, float[] temperature, Biome[] biomes)
+    /// <param name="hydrology">The rivers and lakes cut into the heights (ADR-022); <c>null</c> for none.</param>
+    public TerrainField(int resolution, float spacing, float[] heights, float[] moisture, float[] temperature, Biome[] biomes, HydrologyMap? hydrology = null)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(resolution, 2);
         if (!(spacing > 0f))
@@ -42,6 +43,11 @@ public sealed class TerrainField
         _moisture = moisture;
         _temperature = temperature;
         _biomes = biomes;
+        Hydrology = hydrology ?? HydrologyMap.Dry(count);
+        if (Hydrology.WaterSurface.Length != count)
+        {
+            throw new ArgumentException($"Expected {count} water samples but got {Hydrology.WaterSurface.Length}.", nameof(hydrology));
+        }
     }
 
     /// <summary>Samples per side.</summary>
@@ -67,6 +73,56 @@ public sealed class TerrainField
 
     /// <summary>Biome per sample, row-major.</summary>
     public ReadOnlySpan<Biome> Biomes => _biomes;
+
+    /// <summary>The rivers and lakes of the field (ADR-022).</summary>
+    public HydrologyMap Hydrology { get; }
+
+    /// <summary>Whether fresh water stands over a sample: a river or a lake.</summary>
+    /// <param name="x">Sample column.</param>
+    /// <param name="z">Sample row.</param>
+    /// <returns><c>true</c> under a river or lake.</returns>
+    public bool IsUnderFreshWater(int x, int z)
+    {
+        var index = IndexOf(x, z);
+        var surface = Hydrology.WaterSurface[index];
+        return !float.IsNaN(surface) && surface > _heights[index];
+    }
+
+    /// <summary>Whether fresh water stands at a world position (the nearest sample).</summary>
+    /// <param name="worldX">World X in metres.</param>
+    /// <param name="worldZ">World Z in metres.</param>
+    /// <returns><c>true</c> in a river or lake.</returns>
+    public bool IsUnderFreshWater(float worldX, float worldZ) =>
+        IsUnderFreshWater((int)MathF.Round(worldX / Spacing), (int)MathF.Round(worldZ / Spacing));
+
+    /// <summary>Whether fresh water stands within a distance of a world position (the samples in a square around it).</summary>
+    /// <param name="worldX">World X in metres.</param>
+    /// <param name="worldZ">World Z in metres.</param>
+    /// <param name="distance">Distance in metres.</param>
+    /// <returns><c>true</c> when a river or lake is that close.</returns>
+    public bool IsNearFreshWater(float worldX, float worldZ, float distance)
+    {
+        if (Hydrology.Rivers.Count == 0 && Hydrology.Lakes.Count == 0)
+        {
+            return false;
+        }
+
+        var reach = Math.Max(0, (int)MathF.Ceiling(distance / Spacing));
+        var centreX = (int)MathF.Round(worldX / Spacing);
+        var centreZ = (int)MathF.Round(worldZ / Spacing);
+        for (var z = centreZ - reach; z <= centreZ + reach; z++)
+        {
+            for (var x = centreX - reach; x <= centreX + reach; x++)
+            {
+                if (IsUnderFreshWater(x, z))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>Height of a sample, with coordinates clamped to the field.</summary>
     /// <param name="x">Sample column.</param>

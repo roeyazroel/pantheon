@@ -438,6 +438,7 @@ public partial class GameRoot : Node3D
         StatusMessage = _status,
         Crowds = _presenter.CrowdStatuses,
         HolySiteRules = _session.Content.HolySites,
+        WaterRules = _session.Content.Water,
     };
 
     /// <summary>The pressure to leave on the settlement near the cursor, for the debug panel.</summary>

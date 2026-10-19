@@ -67,4 +67,7 @@ public sealed class WorldState
 
     /// <summary>The world's sacred places, ordered by id (spec §51, ADR-021).</summary>
     public required List<HolySites.HolySite> HolySites { get; init; }
+
+    /// <summary>The world's rivers and lakes (spec §5, ADR-022).</summary>
+    public required Water.WaterState Water { get; init; }
 }

@@ -3,8 +3,11 @@ namespace Pantheon.Networking;
 /// <summary>Constants every peer of a session agrees on (ADR-018).</summary>
 public static class NetworkProtocol
 {
-    /// <summary>Version of the messages; a host refuses players whose version differs. Version 2 (Milestone 15) adds domains and holy sites.</summary>
-    public const int Version = 2;
+    /// <summary>
+    /// Version of the messages; a host refuses players whose version differs. Version 2 (Milestone 15)
+    /// adds domains and holy sites, version 3 (Milestone 15, part 2) the rivers and floods.
+    /// </summary>
+    public const int Version = 3;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

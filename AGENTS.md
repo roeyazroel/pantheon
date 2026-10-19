@@ -118,7 +118,8 @@ rule is followed by the conventions that meet it in this repository.
 - Current tools: the F1 debug panel (gods, the god AI's goal and top candidates with reasons
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
-  others, and how yours would meet the nearest one, the weather's spell and cells, earthquakes and fires,
+  others, and how yours would meet the nearest one, the weather's spell and cells, the rivers'
+  levels and the lakes, earthquakes and fires,
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second and the sections a player received, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, the selected settlement's economy, tier,
@@ -128,10 +129,11 @@ rule is followed by the conventions that meet it in this repository.
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
   holy sites and who keeps them), the settings page, the B region grid, the F3 region
-  debug map (including blessing, influence, soil water, fire and scorch), the O map overlays
-  (influence, religion, faith, food, weather, danger, migration), the `.` single-tick step, the
+  debug map (including blessing, influence, soil water, fire, scorch, fresh water and flood), the
+  O map overlays (influence, religion, faith, food, weather, danger, migration), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
-  F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), M
+  F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
+  flood), M
   (people leave the village at the cursor) and K (the nearest Creature comes to yours), the launch
   options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,

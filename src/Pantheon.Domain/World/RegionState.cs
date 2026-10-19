@@ -44,4 +44,13 @@ public sealed class RegionState
 
     /// <summary>How badly fire has scorched the land (0..1): it has no fuel left to burn and yields less until it regrows.</summary>
     public required float Scorch { get; set; }
+
+    /// <summary>
+    /// How much of the region a river or lake waters (0 = none, 1 = fully), fixed when the world is
+    /// made (ADR-022). People nearby draw water from it and it keeps the soil moist.
+    /// </summary>
+    public required float FreshWater { get; init; }
+
+    /// <summary>How deep the region lies under a flood now (0 = dry, 1 = drowned; ADR-022).</summary>
+    public required float Flood { get; set; }
 }

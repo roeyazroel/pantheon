@@ -8,6 +8,6 @@ namespace Pantheon.Simulation.Belief;
 /// <param name="Comfort">0 to 1: health times food security.</param>
 /// <param name="FoodNeed">0 (stores are full) to 1 (stores are empty).</param>
 /// <param name="HealthNeed">0 (healthy) to 1 (dying).</param>
-/// <param name="WaterNeed">0 (well-watered farmland) to 1 (parched): the drought.</param>
+/// <param name="WaterNeed">0 (well-watered farmland and full wells) to 1 (parched or dry): the worse of the drought and the thirst.</param>
 /// <param name="DangerNeed">0 (safe) to 1 (fire at the door or the ground heaving).</param>
 public readonly record struct SettlementConditions(float Hardship, float Comfort, float FoodNeed, float HealthNeed, float WaterNeed, float DangerNeed);

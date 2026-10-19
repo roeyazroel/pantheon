@@ -236,4 +236,46 @@ internal static class RecentSaveMigrations
             }
         }
     }
+
+    /// <summary>
+    /// Version 13 to 14 (Milestone 15, part 2): the world gains its rivers and lakes, every region
+    /// fresh water and a flood, and every settlement water in its wells. A version 13 world was
+    /// generated without rivers and keeps its land (its generation settings have no hydrology), so
+    /// it has no rivers or lakes, no region is watered or flooded, and every settlement's wells are
+    /// full at the storage the game shipped with (six per unit of housing).
+    /// </summary>
+    internal static void UpgradeFrom13(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        AddNode(world, "Water", new JsonObject { ["Rivers"] = new JsonArray(), ["Lakes"] = new JsonArray() }, fromVersion: 13);
+        if (world["Regions"] is JsonObject grid && grid["Cells"] is JsonArray cells)
+        {
+            foreach (var node in cells)
+            {
+                if (node is JsonObject region)
+                {
+                    AddMember(region, "FreshWater", 0f, fromVersion: 13);
+                    AddMember(region, "Flood", 0f, fromVersion: 13);
+                }
+            }
+        }
+
+        if (world["Settlements"] is JsonArray settlements)
+        {
+            foreach (var node in settlements)
+            {
+                if (node is JsonObject settlement)
+                {
+                    AddMember(settlement, "Water", (float)(ReadNumber(settlement["Housing"]) * Version14WaterPerHousing), fromVersion: 13);
+                }
+            }
+        }
+    }
+
+    /// <summary>Water storage per unit of housing when version 14 shipped: a migrated settlement's wells are full.</summary>
+    private const double Version14WaterPerHousing = 6.0;
 }

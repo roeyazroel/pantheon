@@ -86,6 +86,7 @@ public static class AudioDirector
     {
         MiracleCast cast when miracles.Find(cast.MiracleId) is { } miracle => MiracleSound(miracle) is { } kind ? new SoundCue(kind, cast.Target, 1f) : null,
         EarthquakeStruck quake => new SoundCue(SoundKind.Rumble, quake.Epicentre, 1f),
+        FloodStarted { GodId: null } flood when flood.RegionId >= 0 && flood.RegionId < world.Regions.Cells.Count => new SoundCue(SoundKind.Rumble, world.Regions.GetRegionCenter(flood.RegionId), 0.6f),
         StormStruck storm when world.Settlements.Find(s => s.Id == storm.SettlementId) is { } place => new SoundCue(SoundKind.Thunder, place.Position, 0.9f),
         WildfireStarted { Cause: not FireCause.Hearth } fire when fire.RegionId >= 0 && fire.RegionId < world.Regions.Cells.Count => new SoundCue(SoundKind.Crackle, world.Regions.GetRegionCenter(fire.RegionId), 0.6f),
         CreaturesMet { Outcome: MeetingOutcome.Fought } met when world.Creatures.Find(c => c.Id == met.CreatureId) is { } creature => new SoundCue(SoundKind.Roar, creature.Position, 1f),
@@ -112,8 +113,10 @@ public static class AudioDirector
             {
                 case MiracleEffectKind.Smite:
                 case MiracleEffectKind.Wound:
+                case MiracleEffectKind.Judge:
                     return SoundKind.Bolt;
                 case MiracleEffectKind.Quake:
+                case MiracleEffectKind.Flood:
                     return SoundKind.Rumble;
                 case MiracleEffectKind.Ignite:
                     return SoundKind.Crackle;
@@ -132,6 +135,8 @@ public static class AudioDirector
                 case MiracleEffectKind.Populate:
                 case MiracleEffectKind.Sanctuary:
                 case MiracleEffectKind.Teach:
+                case MiracleEffectKind.Water:
+                case MiracleEffectKind.Soak:
                     continue;
             }
         }

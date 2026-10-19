@@ -126,14 +126,19 @@ files and compiled assemblies and fails when either rule is broken.
   wish to leave (`Emigration`) and gods their `RefugeePolicy`. Creatures carry their combat
   skill, scars and views of each other (`CreatureRelation`, ADR-017). `History` holds the moments
   the world remembers (`HistoryRecord`, ADR-020). `HolySites` holds the world's sacred places
-  (`HolySite`: kind, name, region, keeper, claimant and the claim so far; ADR-021).
+  (`HolySite`: kind, name, region, keeper, claimant and the claim so far; ADR-021). `Water` holds
+  the rivers (`River`: name, regions from source to mouth, level) and the lakes (`Lake`: name,
+  regions, surface) (ADR-022).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
   `Moisture` (the climate), `Fertility`, `Vegetation` (0..1), `Blessing` (0..1, from miracles; it
   fades), `SoilMoisture` (0..1, the water in the soil now; ADR-013), `Fire` (how fiercely it burns
-  now) and `Scorch` (how much of its fuel fire has eaten; ADR-014).
-- `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Housing`
+  now), `Scorch` (how much of its fuel fire has eaten; ADR-014), `FreshWater` (0..1, how much of it a
+  river or lake waters, fixed at generation) and `Flood` (0..1, how deep it lies under a flood now;
+  ADR-022).
+- `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Water` (in its
+  wells and cisterns; ADR-022), `Housing`
   (capacity in people), `Health` (0..1), `ConstructionProgress` (work done on the one house
   being built; 0 when none is under way), `Ruins` (houses destroyed and not yet rebuilt),
   `ShieldedUntilTick` (while a Shield miracle protects it), `OldFaith` (the share of its people
@@ -170,7 +175,8 @@ files and compiled assemblies and fails when either rule is broken.
   `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
   `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged`, `MigrationStarted`, `MigrationEnded`,
   `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded`, `DomainChosen`, `HolySiteContested`,
-  `HolySiteClaimed`, `SchismStarted`, `SchismEnded` and others) raised during a tick or a command
+  `HolySiteClaimed`, `SchismStarted`, `SchismEnded`, `FloodStarted`, `ThirstStarted` and others)
+  raised during a tick or a command
   and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
@@ -181,7 +187,8 @@ files and compiled assemblies and fails when either rule is broken.
   diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
   (`weather.json`), `DisasterRules` (`disasters.json`), `MigrationRules` (`migration.json`),
   `HistoryRules` (`history.json`), `DomainRules` with its slots, definitions and `DomainBoons`
-  (`domains.json`) and `HolySiteRules` (`holy_sites.json`). `DivineRules` carries the
+  (`domains.json`), `HolySiteRules` (`holy_sites.json`) and `WaterRules` (`water.json`, ADR-022).
+  `WorldGenSettings.Hydrology` (optional) shapes the rivers and lakes. `DivineRules` carries the
   `SchismRules` and the holy sites' influence, and `CreatureRules` the `CreatureSpecies`
   (ADR-021).
 
@@ -197,7 +204,10 @@ files and compiled assemblies and fails when either rule is broken.
   1. Continent fBm plus ridged mountain noise, shaped by a radial island falloff.
   2. Normalised elevation is remapped to metres (land exponent for flatter lowlands).
   3. Moisture (noise plus coastal bonus) and temperature (noise minus elevation lapse rate).
-  4. Each sample is classified by data-driven `BiomeRule`s (first match wins).
+  4. With `Hydrology` set, rivers and lakes are found and cut into the land (ADR-022):
+     `WorldGen/FlowGrid` routes water by a priority flood, `HydrologyGenerator` finds the lakes and
+     rivers and `ChannelCarver` cuts the channels; the result is the field's `HydrologyMap`.
+  5. Each sample is classified by data-driven `BiomeRule`s (first match wins).
 - `WorldGen/RegionBuilder` aggregates samples per region (means plus majority biome) and derives
   fertility and vegetation. `SettlementFounder.FoundAll` places up to `Count` settlements (8) on
   the best habitable regions, at least `MinimumSpacing` regions apart so their farmland never
@@ -238,9 +248,13 @@ files and compiled assemblies and fails when either rule is broken.
 - `Weather/`: `WeatherModel` (cells' rain, wind and lightning, coverage, the weather at a point,
   soil water, summoned rain) and `WeatherSystem` (the weather step). See [Weather](#weather).
 - `Disasters/`: `DisasterModel` (quakes, shaking, flammability, ignition, fire threat, danger,
-  shields), `Wildfires` (lighting, burning, spreading, regrowth) and `DisasterSystem` (the disaster
-  step). `Belief/Hazards` carries a settlement's drought and danger into its conditions. See
+  shields), `Wildfires` (lighting, burning, spreading, regrowth), `DisasterDamage` (what a quake,
+  fire or flood does to a settlement) and `DisasterSystem` (the disaster step). `Belief/Hazards`
+  carries a settlement's drought, danger and thirst into its conditions. See
   [Disasters](#disasters).
+- `Water/`: `WaterModel` (a river's level, overflow, spreading floods, waves) and `WaterSystem`
+  (the water step: levels, floods, silt, irrigation, drowning). `WorldGen/WaterFounder` records
+  the rivers and lakes in the state. See [Rivers, lakes and floods](#rivers-lakes-and-floods).
 - `Migration/`: `MigrationModel` (pressure, abandonment, appeal, conversion, merging),
   `MigrationSystem` (the migration step), `MigrationAuthority` (refugee policies) and
   `RefugeeAdvisor` (AI gods' policies). See [Migration](#migration).
@@ -255,7 +269,7 @@ files and compiled assemblies and fails when either rule is broken.
   `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration and domain
   authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  disaster step, the settlement step, the belief step, the domains' boons, the holy sites, the
+  water step, the disaster step, the settlement step, the belief step, the domains' boons, the holy sites, the
   victory check, the diplomacy step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
@@ -279,7 +293,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 13, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 14, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -300,7 +314,10 @@ files and compiled assemblies and fails when either rule is broken.
   combat skill, scars or views of the others, and marks nothing it did as concerning another
   Creature. Version 11 → 12 gives the world an empty history. Version 12 → 13 gives every god no
   domains, every settlement no Old Faith or sanctuary and the world no holy sites; a session finds
-  the sites as a new world would. A missing, unsupported or newer version
+  the sites as a new world would. Version 13 → 14 gives the world no rivers or lakes, every region
+  no fresh water or flood and every settlement full wells (six per unit of housing); its
+  generation settings have no hydrology, so its land regenerates unchanged. A missing,
+  unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
@@ -312,6 +329,8 @@ files and compiled assemblies and fails when either rule is broken.
   in 0..1, and weather (`WeatherIntegrity`: unique cell ids below the next id, finite positions,
   values in range, known gods), fire and scorch in 0..1, ruins and shields not negative, and
   disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods),
+  rivers and lakes (`WaterIntegrity`: unique ids, names, regions that exist, valid levels), fresh
+  water and flood in 0..1, water not negative,
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
@@ -430,6 +449,9 @@ files and compiled assemblies and fails when either rule is broken.
   - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`)
     tinted by a baked depth map, so it does not read the depth buffer. Waves flatten and the
     surface gets rougher with camera distance, which avoids flickering sun glints.
+  - `Water/FreshWaterPresenter` (ADR-022): the rivers and lakes from the `HydrologyMap`
+    (`WaterSurfaceMesh`) and the floodwater (`FloodSurface`), with `Shaders/fresh_water.gdshader`
+    (depth in the vertex colour; floods are muddy).
   - `Settlements/SettlementPresenter`: one `SettlementView` per settlement with the shrine and
     the name/population label, plus:
     - `SiteView`: the houses (one MultiMesh per hut part) and the fields (crop rows tinted
@@ -612,6 +634,35 @@ flowchart LR
   people who can be converted, and a Sanctuary leaves its god's followers out of those who can
   fall away.
 
+## Rivers, lakes and floods
+
+ADR-022 records the decisions, and the plan
+([.docs/milestone-15-part-2-water-and-law.md](../.docs/milestone-15-part-2-water-and-law.md)) the
+numbers.
+
+```mermaid
+flowchart LR
+    gen[TerrainGenerator with Hydrology] --> map[HydrologyMap: water surface, courses, lakes]
+    map --> state[WorldState.Water, Region.FreshWater]
+    weather[Rain and soil water] --> step[WaterSystem]
+    state --> step
+    step --> level[River.Level]
+    level -->|over its banks| flood[Region.Flood]
+    flood --> damage[DisasterDamage, FloodYieldLoss, silt]
+    state --> wells[Drinking water: rivers, lakes, wells]
+    wells -->|dry| thirst[Health, ThirstStarted, water need]
+    map --> mesh[WaterSurfaceMesh, FloodSurface]
+    mesh --> client[FreshWaterPresenter]
+```
+
+- The hydrology is derived from the seed and the settings like the heightfield, so a world saved
+  before version 14 (no `Hydrology`) regenerates without rivers.
+- Floods go through the same damage as quakes and fires, so Shields and Protection lessen them.
+- Ocean feeds villages from the water regions around them; Justice calms their wish to leave
+  and lets doubt fade; Tidal Wave and Judgement are their signature miracles.
+- The client draws the rivers and lakes once from the `HydrologyMap`, and floodwater as the
+  nearest water risen by the regions' floods, rebuilt when a flood changes visibly.
+
 ## Sound and settings
 
 ```mermaid
@@ -650,7 +701,7 @@ has the measured run.
   - Creature motion at 5 Hz near the player's view (`ViewFocus`) and 1 Hz elsewhere;
   - gods at 4 Hz;
   - migration at 2 Hz;
-  - settlements, weather and disasters at 1 Hz;
+  - settlements, weather, disasters and the rivers (ADR-022) at 1 Hz;
   - whole Creatures, changed regions, the history and the holy sites every 2 s;
   - diplomacy when a status, proposal or memory changes.
 

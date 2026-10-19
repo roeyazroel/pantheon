@@ -83,4 +83,19 @@ public sealed record DomainBoons
 
     /// <summary>Chaos: extra magnitude of the earthquakes the god's miracles start.</summary>
     public required float ChaosMagnitude { get; init; }
+
+    /// <summary>Ocean: food per belief step the god's villages catch from each sea, river or lake region within their farmland (ADR-022).</summary>
+    public required float OceanFishPerWaterRegion { get; init; }
+
+    /// <summary>Ocean: most water regions a village fishes.</summary>
+    public required int OceanMaxWaterRegions { get; init; }
+
+    /// <summary>Justice: share of the wish to leave that fades per belief step in the god's villages: order keeps people home.</summary>
+    public required float JusticeCalmPerStep { get; init; }
+
+    /// <summary>Justice: Doubt about the god that fades per belief step in its villages: justice is seen done.</summary>
+    public required float JusticeDoubtFadePerStep { get; init; }
+
+    /// <summary>Justice: the grudge a god must bear another, or be at war with it, for Judgement to find that god's followers guilty.</summary>
+    public required float JusticeGuiltGrudge { get; init; }
 }

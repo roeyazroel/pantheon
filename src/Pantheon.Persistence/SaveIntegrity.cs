@@ -50,6 +50,7 @@ internal static class SaveIntegrity
         MigrationIntegrity.Validate(world, godIds, errors);
         HistoryIntegrity.Validate(world, godIds, errors);
         HolySiteIntegrity.Validate(world, godIds, errors);
+        WaterIntegrity.Validate(world, errors);
 
         if (errors.Count > 0)
         {
@@ -106,6 +107,10 @@ internal static class SaveIntegrity
             else if (!IsShare(cell.Fire) || !IsShare(cell.Scorch))
             {
                 errors.Add($"Region {i} has fire {cell.Fire} or scorch {cell.Scorch}; both must lie between 0 and 1.");
+            }
+            else if (!IsShare(cell.FreshWater) || !IsShare(cell.Flood))
+            {
+                errors.Add($"Region {i} has fresh water {cell.FreshWater} or flood {cell.Flood}; both must lie between 0 and 1.");
             }
         }
     }
@@ -223,9 +228,9 @@ internal static class SaveIntegrity
                 errors.Add($"Settlement {settlement.Id} references missing region {settlement.RegionId}.");
             }
 
-            if (settlement.Population < 0 || settlement.Housing < 0 || settlement.Food < 0f)
+            if (settlement.Population < 0 || settlement.Housing < 0 || settlement.Food < 0f || !(settlement.Water >= 0f) || !float.IsFinite(settlement.Water))
             {
-                errors.Add($"Settlement {settlement.Id} has negative population, housing or food.");
+                errors.Add($"Settlement {settlement.Id} has negative population, housing, food or water.");
             }
 
             if (!(settlement.Health is >= 0f and <= 1f))

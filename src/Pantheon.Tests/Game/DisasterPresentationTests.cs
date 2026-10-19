@@ -134,7 +134,9 @@ public sealed class DisasterPresentationTests
         Assert.Contains(lines, l => l.StartsWith("  dangers: fire threat 0.75, shaking 0.50; 3 in ruins", StringComparison.Ordinal));
         Assert.Equal(RegionDebugLayer.Fire, RegionDebugMap.Next(RegionDebugLayer.SoilMoisture));
         Assert.Equal(RegionDebugLayer.Scorch, RegionDebugMap.Next(RegionDebugLayer.Fire));
-        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.Scorch));
+        Assert.Equal(RegionDebugLayer.FreshWater, RegionDebugMap.Next(RegionDebugLayer.Scorch));
+        Assert.Equal(RegionDebugLayer.Flood, RegionDebugMap.Next(RegionDebugLayer.FreshWater));
+        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.Flood));
     }
 
     [Fact]
@@ -160,7 +162,8 @@ public sealed class DisasterPresentationTests
         Assert.Equal(DisasterAtStart.Quake, LaunchOptions.Parse(["--disaster=quake"]).Disaster);
         Assert.Equal(DisasterAtStart.Fire, LaunchOptions.Parse(["--disaster=FIRE"]).Disaster);
         Assert.Equal(OverlayKind.Danger, LaunchOptions.Parse(["--overlay=danger"]).Overlay);
-        Assert.Single(LaunchOptions.Parse(["--disaster=flood"]).Warnings);
+        Assert.Equal(DisasterAtStart.Flood, LaunchOptions.Parse(["--disaster=flood"]).Disaster);
+        Assert.Single(LaunchOptions.Parse(["--disaster=meteor"]).Warnings);
     }
 
     [Fact]

@@ -37,6 +37,7 @@ silently:
 | [ADR-019](ADR-019-replication-by-section-and-rate.md) | Replication by section and rate, with interest and event-based diplomacy | Accepted (amends ADR-018) |
 | [ADR-020](ADR-020-vertical-slice-history-flow-and-eligible-pantheons.md) | The vertical slice: world history, the game's flow, save slots and eligible pantheons | Accepted (amends ADR-015) |
 | [ADR-021](ADR-021-domains-holy-sites-schisms-species-settings-and-audio.md) | Polish and expansion: domains, holy sites, schisms, Creature species, settings and synthesized audio | Accepted |
+| [ADR-022](ADR-022-rivers-lakes-floods-water-ocean-and-justice.md) | Rivers, lakes, floods and drinking water, with the Ocean and Justice domains | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

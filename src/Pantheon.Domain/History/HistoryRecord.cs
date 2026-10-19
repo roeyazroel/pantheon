@@ -62,6 +62,12 @@ public enum HistoryKind
 
     /// <summary>The Old Faith of a settlement returned to its god (ADR-021).</summary>
     Reunion,
+
+    /// <summary>A flood drowned a settlement; <see cref="HistoryRecord.Count"/> is the houses lost, and the god is the one whose wave it was, if any (ADR-022).</summary>
+    Flood,
+
+    /// <summary>A settlement's wells ran dry (ADR-022).</summary>
+    Thirst,
 }
 
 /// <summary>

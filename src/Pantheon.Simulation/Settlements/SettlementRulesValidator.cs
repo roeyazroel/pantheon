@@ -55,6 +55,15 @@ public static class SettlementRulesValidator
         errors.RequirePositive(rules.WorkPerHouse, nameof(rules.WorkPerHouse));
         errors.RequireNonNegative(rules.ConstructionFoodReserveSteps, nameof(rules.ConstructionFoodReserveSteps));
         errors.RequireAtLeast(rules.MaxHousing, 0, nameof(rules.MaxHousing));
+        errors.RequireShare(rules.FloodYieldLoss, nameof(rules.FloodYieldLoss));
+        errors.RequireNonNegative(rules.WaterPerPersonPerStep, nameof(rules.WaterPerPersonPerStep));
+        errors.RequireNonNegative(rules.WaterStoragePerHousing, nameof(rules.WaterStoragePerHousing));
+        errors.RequireNonNegative(rules.WaterGatherFactor, nameof(rules.WaterGatherFactor));
+        errors.RequireShare(rules.FreshWaterAccess, nameof(rules.FreshWaterAccess));
+        errors.RequireShare(rules.NeighbourWaterAccess, nameof(rules.NeighbourWaterAccess));
+        errors.RequireShare(rules.WellFloor, nameof(rules.WellFloor));
+        errors.RequireShare(rules.WellAccess, nameof(rules.WellAccess));
+        errors.RequireShare(rules.ThirstHealthLossPerStep, nameof(rules.ThirstHealthLossPerStep));
         errors.ThrowIfAny("settlement rules", nameof(rules));
     }
 }

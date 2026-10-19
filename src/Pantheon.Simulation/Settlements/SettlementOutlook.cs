@@ -28,6 +28,24 @@ public sealed record SettlementOutlook
     /// <summary>Stored food after the step.</summary>
     public required float FoodAfter { get; init; }
 
+    /// <summary>How readily the people find water (0..1, ADR-022).</summary>
+    public required float WaterAccess { get; init; }
+
+    /// <summary>Water drawn from rivers, lakes and wells in the step.</summary>
+    public required float WaterDrawn { get; init; }
+
+    /// <summary>Water the people drink in the step.</summary>
+    public required float WaterNeeded { get; init; }
+
+    /// <summary>Water the wells and cisterns hold at most.</summary>
+    public required float WaterStorage { get; init; }
+
+    /// <summary>Share of the people's thirst that is quenched (0..1); below 1 they go thirsty.</summary>
+    public required float WateredShare { get; init; }
+
+    /// <summary>Water stored after the step.</summary>
+    public required float WaterAfter { get; init; }
+
     /// <summary>Health after the step.</summary>
     public required float HealthAfter { get; init; }
 
@@ -54,6 +72,9 @@ public sealed record SettlementOutlook
 
     /// <summary>Food gained (positive) or lost (negative) by the harvest and meals of one step, before storage limits.</summary>
     public float NetFood => Production - Consumption;
+
+    /// <summary>Whether the people go short of water in the step.</summary>
+    public bool IsThirsty => WateredShare < 1f;
 
     /// <summary>Whether the population goes short of food in the step.</summary>
     public bool IsStarving => FedShare < 1f;

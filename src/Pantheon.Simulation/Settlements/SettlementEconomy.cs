@@ -29,6 +29,7 @@ public static class SettlementEconomy
         var blessing = 0f;
         var soil = 0f;
         var scorch = 0f;
+        var flood = 0f;
         for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
         {
             for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
@@ -41,11 +42,12 @@ public static class SettlementEconomy
                     blessing += SimMath.Clamp01(region.Blessing);
                     soil += SimMath.Clamp01(region.SoilMoisture);
                     scorch += SimMath.Clamp01(region.Scorch);
+                    flood += SimMath.Clamp01(region.Flood);
                 }
             }
         }
 
-        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count) : new FarmlandSurvey(0, 0f);
+        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count, flood / count) : new FarmlandSurvey(0, 0f);
     }
 
     /// <summary>Whether a region can be farmed: dry land with fertile soil.</summary>
@@ -217,7 +219,8 @@ public static class SettlementEconomy
     /// Food harvested in one step with diminishing returns:
     /// <c>FoodPerFarmerPerStep * meanFertility * capacity * (1 - e^(-farmers / capacity))</c>, where
     /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>,
-    /// the water yield (<see cref="ComputeWaterYield"/>) and <c>1 - ScorchYieldLoss * meanScorch</c>. A few farmers each harvest about
+    /// the water yield (<see cref="ComputeWaterYield"/>), <c>1 - ScorchYieldLoss * meanScorch</c> and
+    /// <c>1 - FloodYieldLoss * meanFlood</c>. A few farmers each harvest about
     /// <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
@@ -236,7 +239,45 @@ public static class SettlementEconomy
         var maximumYield = rules.FoodPerFarmerPerStep * SimMath.Clamp01(land.MeanFertility) * capacity;
         var blessing = 1f + (rules.BlessingYieldBonus * SimMath.Clamp01(land.MeanBlessing));
         var scorch = 1f - (rules.ScorchYieldLoss * SimMath.Clamp01(land.MeanScorch));
-        return maximumYield * blessing * ComputeWaterYield(rules, land) * scorch * (1f - MathF.Exp(-farmers / capacity));
+        var flood = 1f - (rules.FloodYieldLoss * SimMath.Clamp01(land.MeanFlood));
+        return maximumYield * blessing * ComputeWaterYield(rules, land) * scorch * flood * (1f - MathF.Exp(-farmers / capacity));
+    }
+
+    /// <summary>
+    /// How readily the people find water (0..1, ADR-022): a river or lake in their region or beside
+    /// it, plus deep wells, plus shallow wells that dry up with the soil of their own region.
+    /// </summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="grid">Region grid.</param>
+    /// <param name="regionId">The settlement's region.</param>
+    /// <returns>Access to water (0..1).</returns>
+    public static float ComputeWaterAccess(SettlementRules rules, RegionGrid grid, int regionId)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(grid);
+        var own = grid.GetRegion(regionId);
+        var fresh = SimMath.Clamp01(own.FreshWater) * rules.FreshWaterAccess;
+        var (column, row) = grid.GetCoordinates(regionId);
+        for (var r = Math.Max(0, row - 1); r <= Math.Min(grid.Rows - 1, row + 1); r++)
+        {
+            for (var c = Math.Max(0, column - 1); c <= Math.Min(grid.Columns - 1, column + 1); c++)
+            {
+                fresh = Math.Max(fresh, SimMath.Clamp01(grid.Cells[(r * grid.Columns) + c].FreshWater) * rules.NeighbourWaterAccess);
+            }
+        }
+
+        var shallow = rules.WellAccess * Math.Min(1f, SimMath.Clamp01(own.SoilMoisture) / rules.WellWateredSoil);
+        return SimMath.Clamp01(fresh + rules.WellFloor + shallow);
+    }
+
+    /// <summary>Most water a settlement's wells and cisterns hold.</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="housing">Housing capacity in people.</param>
+    /// <returns>Water storage.</returns>
+    public static float ComputeWaterStorage(SettlementRules rules, int housing)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        return Math.Max(0, housing) * rules.WaterStoragePerHousing;
     }
 
     /// <summary>Share of the population's food need that is met.</summary>
@@ -330,7 +371,14 @@ public static class SettlementEconomy
         var fedShare = ComputeFedShare(available, consumption);
         var foodAfter = Math.Clamp(available - consumption, 0f, storage);
         var exposure = rules.HomelessHealthLossPerStep * ComputeHomelessShare(settlement);
-        var healthAfter = Math.Max(0f, ComputeHealth(rules, settlement.Health, fedShare) - exposure);
+        var waterAccess = ComputeWaterAccess(rules, regions, settlement.RegionId);
+        var drinking = Math.Max(0, settlement.Population) * rules.WaterPerPersonPerStep;
+        var drawn = drinking * rules.WaterGatherFactor * waterAccess;
+        var waterStorage = ComputeWaterStorage(rules, settlement.Housing);
+        var wateredShare = ComputeFedShare(settlement.Water + drawn, drinking);
+        var waterAfter = Math.Clamp(settlement.Water + drawn - drinking, 0f, waterStorage);
+        var thirst = rules.ThirstHealthLossPerStep * (1f - wateredShare);
+        var healthAfter = Math.Max(0f, ComputeHealth(rules, settlement.Health, fedShare) - exposure - thirst);
         var blocker = FindBirthBlocker(rules, settlement, production, consumption, foodAfter);
         var birthChance = ComputeBirthChance(rules, healthAfter);
         var deathChance = ComputeDeathChance(rules, healthAfter);
@@ -345,6 +393,12 @@ public static class SettlementEconomy
             Storage = storage,
             FedShare = fedShare,
             FoodAfter = foodAfter,
+            WaterAccess = waterAccess,
+            WaterDrawn = drawn,
+            WaterNeeded = drinking,
+            WaterStorage = waterStorage,
+            WateredShare = wateredShare,
+            WaterAfter = waterAfter,
             HealthAfter = healthAfter,
             ConstructionWanted = WantsConstruction(rules, settlement),
             ConstructionFunded = CanFundConstruction(rules, settlement),

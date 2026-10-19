@@ -97,6 +97,19 @@ agrees.
 - **Creature species.** Four species, so your Creature can be tough, quick or clever.
 - **Settings, music and sound.** All synthesized by the game itself.
 
+**Milestone 15, part 2 (Water and Law)** gives the world fresh water and its gods the last two
+domains:
+
+- **Rivers and lakes.** Rivers run from the highlands to the sea and lakes fill the hollows.
+  Villages settle beside them and draw water from them.
+- **Floods.** Rain and wet soil swell the rivers. A river over its banks floods the land
+  downstream: houses fall and people drown, but the silt enriches the fields.
+- **Thirst.** In a long drought away from water the wells run dry. The Water miracle (key 0)
+  fills them.
+- **Ocean and Justice.** An Ocean god's villages fish the waters around them, and its Tidal Wave
+  sends the sea over a low coast. A Justice god's villages keep its law, and its Judgement strikes
+  only those who wronged it.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -198,8 +211,8 @@ covers:
 | Grab and drag the ground | Hold the right mouse button and drag |
 | Zoom (towards the cursor) | Mouse wheel, `=` / `-`, keypad `+` / `-` |
 | Rotate | Q / E, or hold the middle mouse button and drag |
-| Select a miracle (again to deselect) | 1–9, or click it in the miracle bar |
-| Select your domains' miracles, after the ninth | Shift+1, Shift+2, Shift+3 |
+| Select a miracle (again to deselect) | 1–9 and 0, or click it in the miracle bar |
+| Select your domains' miracles, after the tenth | Shift+1, Shift+2, Shift+3 |
 | Show or hide the Domains panel: your domains, what each gives, the holy sites | G |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
@@ -225,6 +238,7 @@ covers:
 | Call a storm at the cursor (debug) | F10 |
 | Start an earthquake at the cursor (debug) | F11 (fn+F11 on Mac laptops) |
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
+| Flood the nearest river, or send a wave over the land at the cursor (debug) | L |
 | Send 20 people out of the village under the cursor (debug) | M |
 | Bring the nearest other Creature to yours, so they meet (debug) | K |
 | Pause menu: resume, save, load, main menu, quit (when no miracle is selected) | Esc |
@@ -417,6 +431,27 @@ The rules are in `game/Data/weather.json`; how dry the soil must be for drought 
 
 The rules are in `game/Data/disasters.json`.
 
+## Rivers, lakes and floods
+
+- **Rivers and lakes.** Every new world has a few rivers running from the highlands to the sea,
+  with tributaries, and lakes in its hollows. New villages prefer the land beside them, and their
+  houses and fields keep off the banks. Rivers and lakes keep the soil beside them moist.
+- **Floods.** A river rises with the rain falling on it and the water in the soil along it. Over
+  its banks it floods the low land downstream, deepest at its mouth. A flood drowns houses, people
+  and stores, puts out fires and leaves silt that makes the fields yield more once the water has
+  gone. Shields and the Protection domain spare a village most of it. Call rain upstream and the
+  river may flood a rival's village downstream.
+- **Drinking water.** Villages draw water from a river or lake in or beside their region, from deep
+  wells and from shallow wells that dry up in a drought. In a long drought away from water the
+  wells run dry: people go thirsty and fall ill, and they are grateful to the god who brings water.
+- **The Water miracle** (key 0) fills the wells of the village beneath it and soaks its fields.
+- **Seeing it.** Labels mark villages "flooded" and "wells dry", the HUD's weather line names your
+  flooded and thirsty villages, and alerts tell you when a river bursts its banks over your
+  people or their wells run dry. The Weather overlay shows rivers and lakes and the Danger overlay
+  floods. Big floods enter the world's history.
+
+The rules are in `game/Data/water.json` and the rivers' shapes in `worldgen.json`'s `Hydrology`.
+
 ## Migration
 
 People leave villages where life is hard and walk to better ones.
@@ -522,7 +557,9 @@ shows them all; the guide asks for your first). A domain is yours for good. It d
   (Nature) or lose fewer houses to disasters (Protection); your Creature hits harder (War) or
   learns faster (Knowledge); storms over your people raise their faith (Storm); fires die down on
   your land (Fire); worship raises more power (Prosperity); the lives your miracles take give you
-  power (Death); your miracles plant more doubt (Trickery); your earthquakes strike harder (Chaos).
+  power (Death); your miracles plant more doubt (Trickery); your earthquakes strike harder (Chaos);
+  your villages fish the sea, rivers and lakes (Ocean); your villages keep your law, so fewer leave
+  and doubt fades (Justice).
 - **A signature miracle** only its gods can cast:
   - Regrowth heals burned land;
   - Gift of Life brings newcomers;
@@ -534,7 +571,10 @@ shows them all; the guide asks for your first). A domain is yours for good. It d
   - Sanctuary keeps your followers from falling away;
   - Enlighten teaches your Creature;
   - Sow Discord makes two rivals blame each other;
-  - Upheaval shakes the ground early.
+  - Upheaval shakes the ground early;
+  - Tidal Wave sends the sea over a low coast;
+  - Judgement strikes only the followers of gods who wronged you (at war with you, or with a
+    grudge you bear them).
 
 The AI gods choose by personality: the Guardian takes Life, Protection and Prosperity, the
 Tyrant Death, Storm and Chaos, the Trickster Trickery, Chaos and Knowledge. Domains and their
@@ -638,8 +678,8 @@ remembers; you can keep watching, start a new world or go back to the start scre
   temperature, moisture, fertility, vegetation, then off. Numeric layers run from dark (the
   lowest value) to bright (the highest), and the legend gives the range. The region under the
   cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
-  vegetation come blessing, your god's influence, the soil's water, fire and scorch, all on a
-  fixed 0 to 1 scale.
+  vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water and
+  flood, all on a fixed 0 to 1 scale.
 - **O** cycles the map overlays: influence, religion, faith, food, weather, danger and migration.
 - **K** brings the nearest other Creature beside yours, so they meet at once and you can watch them
   play, run or fight.
@@ -653,6 +693,9 @@ remembers; you can keep watching, start a new world or go back to the start scre
 - **F8** starts the next weather spell (normal, dry, wet) for its longest length, and **F10** calls
   a storm at the cursor. Use them to drive droughts and storm damage.
 - **F11** starts an earthquake (magnitude 6.5) and **F12** a fire at the cursor.
+- **L** makes the nearest river within 400 m burst its banks, or sends a wave over the low land at
+  the cursor. The debug panel lists the rivers' levels and the lakes, and a selected settlement's
+  water, access to water and river; the region map gains fresh water and flood layers.
 - **M** sends 20 people out of the village under the cursor to the best place they can reach.
 - The debug panel also lists every god's domains, each holy site with its keeper, its claimant
   and who leads its influence by how much, and the selected settlement's Old Faith and sanctuary.
@@ -685,7 +728,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm` | Start in a weather spell, or with a storm over the focused settlement. |
-| `--disaster=quake\|fire` | Start an earthquake or a fire at the focused settlement. |
+| `--disaster=quake\|fire\|flood` | Start an earthquake, a fire or a flood at the focused settlement. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
 | `--menu=on\|off` | Start on the start screen (the default without options) or not. |

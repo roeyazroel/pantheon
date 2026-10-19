@@ -90,4 +90,31 @@ public sealed record SettlementRules
 
     /// <summary>Housing at which the settlement stops building.</summary>
     public required int MaxHousing { get; init; }
+
+    /// <summary>Share of a harvest lost on flooded farmland at full flood (ADR-022).</summary>
+    public required float FloodYieldLoss { get; init; }
+
+    /// <summary>Water each person drinks per step (ADR-022).</summary>
+    public required float WaterPerPersonPerStep { get; init; }
+
+    /// <summary>Water a settlement's wells and cisterns hold per unit of housing.</summary>
+    public required float WaterStoragePerHousing { get; init; }
+
+    /// <summary>Water the people draw per step at full access, as a multiple of what they drink.</summary>
+    public required float WaterGatherFactor { get; init; }
+
+    /// <summary>Access to water a river or lake in the settlement's own region gives, times its <c>FreshWater</c>.</summary>
+    public required float FreshWaterAccess { get; init; }
+
+    /// <summary>Access a river or lake in a neighbouring region gives, times its <c>FreshWater</c>.</summary>
+    public required float NeighbourWaterAccess { get; init; }
+
+    /// <summary>Access to water deep wells give whatever the weather.</summary>
+    public required float WellFloor { get; init; }
+
+    /// <summary>Access shallow wells add on well-watered ground, falling with the soil's water.</summary>
+    public required float WellAccess { get; init; }
+
+    /// <summary>Health lost per step by the share of the people who go without water.</summary>
+    public required float ThirstHealthLossPerStep { get; init; }
 }

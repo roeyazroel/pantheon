@@ -35,4 +35,10 @@ public enum RegionDebugLayer
 
     /// <summary>How badly fire has scorched the land (ADR-014).</summary>
     Scorch,
+
+    /// <summary>How much of the region a river or lake waters (ADR-022).</summary>
+    FreshWater,
+
+    /// <summary>How deep the region lies under a flood now (ADR-022).</summary>
+    Flood,
 }

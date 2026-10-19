@@ -50,5 +50,21 @@
   "BuildersPerSite": 10.0,
   "WorkPerHouse": 100.0,
   "ConstructionFoodReserveSteps": 20.0,
-  "MaxHousing": 1000
+  "MaxHousing": 1000,
+
+  // Water (ADR-022): flooded farmland loses up to FloodYieldLoss of its harvest. People drink WaterPerPersonPerStep from wells and cisterns that hold
+  // WaterStoragePerHousing per unit of housing. Each step they draw WaterGatherFactor times what they
+  // drink, times their access: a river or lake in their own region (FreshWaterAccess) or next to it
+  // (NeighbourWaterAccess), plus deep wells (WellFloor) and shallow wells that dry up with the soil
+  // (WellAccess x soil / WellWateredSoil). Without water, health falls by ThirstHealthLossPerStep
+  // times the share left thirsty.
+  "FloodYieldLoss": 0.8,
+  "WaterPerPersonPerStep": 0.05,
+  "WaterStoragePerHousing": 3.0,
+  "WaterGatherFactor": 1.5,
+  "FreshWaterAccess": 1.0,
+  "NeighbourWaterAccess": 0.8,
+  "WellFloor": 0.25,
+  "WellAccess": 0.5,
+  "ThirstHealthLossPerStep": 0.015
 }

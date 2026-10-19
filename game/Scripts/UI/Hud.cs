@@ -304,7 +304,7 @@ public partial class Hud : CanvasLayer
         var state = slot.Locked ? "locked"
             : slot.CooldownSeconds > 0 ? string.Create(CultureInfo.InvariantCulture, $"{slot.CooldownSeconds:0.0} s")
             : string.Create(CultureInfo.InvariantCulture, $"{slot.BaseCost:0}");
-        var key = slot.Hotkey > 9 ? "\u21e7" + (slot.Hotkey - 9).ToString(CultureInfo.InvariantCulture) : slot.Hotkey.ToString(CultureInfo.InvariantCulture);
+        var key = slot.Hotkey > 10 ? "\u21e7" + (slot.Hotkey - 10).ToString(CultureInfo.InvariantCulture) : (slot.Hotkey % 10).ToString(CultureInfo.InvariantCulture);
         var text = slot.Hotkey > 0 ? $"{key}  {slot.Name}\n{state}" : $"{slot.Name}\n{state}";
         SetText(button, text);
         if (button.TooltipText != slot.Tooltip)

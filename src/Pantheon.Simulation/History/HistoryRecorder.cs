@@ -97,6 +97,12 @@ public sealed class HistoryRecorder
             case FamineStarted famine:
                 Once(world, HistoryKind.Famine, famine.SettlementId, null, 0);
                 break;
+            case SettlementDamaged { Cause: DisasterKind.Flood } flood when flood.Deaths >= _rules.EarthquakeDeaths || flood.HousesLost >= _rules.HousesLost:
+                Once(world, HistoryKind.Flood, flood.SettlementId, null, flood.HousesLost);
+                break;
+            case ThirstStarted thirst:
+                Once(world, HistoryKind.Thirst, thirst.SettlementId, null, 0);
+                break;
             case MigrationStarted exodus when exodus.People >= _rules.ExodusPeople:
                 Once(world, HistoryKind.Exodus, exodus.OriginSettlementId, exodus.GodId, exodus.People);
                 break;

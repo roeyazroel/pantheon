@@ -28,6 +28,9 @@ public sealed class SettlementState
     /// <summary>Stored food in abstract food units (rates are defined by <see cref="SettlementRules"/>).</summary>
     public required float Food { get; set; }
 
+    /// <summary>Water in the settlement's wells and cisterns, in the same units as food (ADR-022); the people drink it, and go thirsty without.</summary>
+    public required float Water { get; set; }
+
     /// <summary>Number of people the settlement's dwellings can house.</summary>
     public required int Housing { get; set; }
 

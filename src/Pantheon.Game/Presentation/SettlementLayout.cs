@@ -20,6 +20,9 @@ public static class SettlementLayout
     private const int AttemptsPerHouse = 3;
     private const int AttemptsPerField = 4;
 
+    // Houses keep this far, in metres, from a river or lake (ADR-022).
+    private const float RiverClearance = 4f;
+
     private const float MinimumHouseScale = 0.85f;
     private const float HouseScaleRange = 0.3f;
     private const float HouseYawJitter = 0.35f;
@@ -95,7 +98,7 @@ public static class SettlementLayout
             var radius = settings.ShrineClearance + (settings.HouseSpacing * MathF.Sqrt(slot + 0.5f));
             var ground = SpiralPoint(center, slot, radius);
             var height = terrain.SampleHeight(ground.X, ground.Y);
-            if (height < settings.MinimumGroundHeight)
+            if (height < settings.MinimumGroundHeight || terrain.IsNearFreshWater(ground.X, ground.Y, RiverClearance))
             {
                 continue;
             }
@@ -152,7 +155,8 @@ public static class SettlementLayout
         normal = Vector3.Normalize(new Vector3(-gradientX, 1f, -gradientZ));
         var lowest = MathF.Min(height, MathF.Min(MathF.Min(east, west), MathF.Min(south, north)));
         return lowest >= settings.MinimumGroundHeight &&
-            MathF.Sqrt((gradientX * gradientX) + (gradientZ * gradientZ)) <= settings.FieldMaxSlope;
+            MathF.Sqrt((gradientX * gradientX) + (gradientZ * gradientZ)) <= settings.FieldMaxSlope &&
+            !terrain.IsNearFreshWater(ground.X, ground.Y, half);
     }
 
     /// <summary>Distance from the centre to the farthest house slot, or the shrine clearance when there are none.</summary>

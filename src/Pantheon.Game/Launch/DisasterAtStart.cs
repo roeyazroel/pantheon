@@ -8,4 +8,7 @@ public enum DisasterAtStart
 
     /// <summary>A fire in its region.</summary>
     Fire,
+
+    /// <summary>The nearest river bursts its banks, or a wave floods the land (ADR-022).</summary>
+    Flood,
 }

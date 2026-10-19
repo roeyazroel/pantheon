@@ -20,6 +20,12 @@ public sealed record StartingSettlementSettings
     /// <summary>Initial food store.</summary>
     public required float Food { get; init; }
 
+    /// <summary>Initial water in the wells and cisterns (ADR-022); worlds generated before version 14 had none to store.</summary>
+    public float Water { get; init; }
+
+    /// <summary>How strongly site selection prefers land beside a river or lake (ADR-022).</summary>
+    public float WaterPreference { get; init; }
+
     /// <summary>Initial housing capacity in people.</summary>
     public required int Housing { get; init; }
 

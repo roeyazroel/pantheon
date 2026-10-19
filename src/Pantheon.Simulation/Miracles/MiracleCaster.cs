@@ -278,6 +278,13 @@ public sealed class MiracleCaster
         god.Cooldowns.Add(new MiracleCooldown { MiracleId = miracle.Id, ReadyAtTick = ready });
     }
 
+    /// <summary>Whether a god wronged another, so that Judgement finds its followers guilty (ADR-022).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="casterId">The god that judges.</param>
+    /// <param name="godId">The god judged.</param>
+    /// <returns><c>true</c> when they are at war or the judge bears it a grudge.</returns>
+    public bool IsGuilty(WorldState world, int casterId, int godId) => _effects.IsGuilty(world, casterId, godId);
+
     /// <summary>How readily a settlement's own region would burn now (0 without disaster rules).</summary>
     /// <param name="world">World state.</param>
     /// <param name="settlement">The settlement.</param>
@@ -330,7 +337,7 @@ public sealed class MiracleCaster
         var harms = false;
         foreach (var effect in miracle.Effects)
         {
-            harms |= effect.Kind is MiracleEffectKind.Smite or MiracleEffectKind.Ignite or MiracleEffectKind.Quake;
+            harms |= effect.Kind is MiracleEffectKind.Smite or MiracleEffectKind.Ignite or MiracleEffectKind.Quake or MiracleEffectKind.Flood or MiracleEffectKind.Judge;
         }
 
         foreach (var rival in world.Gods)

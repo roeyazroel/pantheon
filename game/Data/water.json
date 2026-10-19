@@ -1,0 +1,32 @@
+{
+  // Rivers, floods and irrigation (ADR-022). The water step runs once every StepIntervalTicks ticks
+  // (10 ticks = one simulated second at x1). Rates are per simulated second; values without units
+  // are 0..1. Heights are in metres.
+
+  // A river's level moves towards BaseLevel + SoilLevelGain x max(0, soil - SoilThreshold) +
+  // RainLevelGain x rain, closing LevelResponsePerSecond of the gap each second; soil is the mean
+  // water in the soil along it and rain the mean rain falling on it. Above FloodLevel it overflows,
+  // worst at MaxFloodLevel: the flood is deepest at its mouth, and half as deep on land beside it
+  // less than FloodBankHeight above it. Floods drain FloodRecedePerSecond once the river falls.
+  "StepIntervalTicks": 10,
+  "BaseLevel": 0.45,
+  "SoilThreshold": 0.5,
+  "SoilLevelGain": 1.5,
+  "RainLevelGain": 1.8,
+  "LevelResponsePerSecond": 0.03,
+  "FloodLevel": 1.0,
+  "MaxFloodLevel": 1.6,
+  "FloodBankHeight": 6.0,
+  "FloodRecedePerSecond": 0.01,
+
+  // A flood in a settlement's own region drowns these shares per second at full flood, and stirs
+  // fear and doubt like other disasters (divine_rules.json). Its silt leaves SiltBlessing of blessing.
+  "FloodHousingLossPerSecond": 0.004,
+  "FloodDeathsPerSecond": 0.0008,
+  "FloodFoodLossPerSecond": 0.02,
+  "FloodDreadPerSecond": 0.02,
+  "SiltBlessing": 0.4,
+
+  // Rivers and lakes water the land they run through: soil water per second times FreshWater x (1 - soil).
+  "IrrigationPerSecond": 0.004
+}

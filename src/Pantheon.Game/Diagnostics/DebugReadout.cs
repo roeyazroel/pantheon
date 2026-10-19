@@ -48,6 +48,7 @@ public static class DebugReadout
         GodAiReadout.Append(lines, snapshot);
         CreatureReadout.Append(lines, snapshot);
         WeatherReadout.Append(lines, snapshot);
+        WaterReadout.Append(lines, snapshot);
         DisasterReadout.Append(lines, snapshot);
         MigrationReadout.Append(lines, snapshot);
         FaithReadout.Append(lines, snapshot);

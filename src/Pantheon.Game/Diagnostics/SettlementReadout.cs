@@ -34,6 +34,7 @@ internal static class SettlementReadout
             houses,
             settlement.Health));
         lines.Add(FormatFood(settlement, outlook, stepsPerSecond));
+        lines.Add(FormatWater(snapshot, settlement, outlook, stepsPerSecond));
         lines.Add(FormatJobs(settlement, outlook));
         lines.Add(Format(
             "  births {0:0.00}/s   deaths {1:0.00}/s   {2}",
@@ -108,6 +109,23 @@ internal static class SettlementReadout
             outlook.Production * stepsPerSecond,
             outlook.Consumption * stepsPerSecond);
 
+    /// <summary>Stored water against storage, how readily the people find it, and the river or flood beside them (ADR-022).</summary>
+    private static string FormatWater(DebugSnapshot snapshot, SettlementState settlement, SettlementOutlook outlook, double stepsPerSecond)
+    {
+        var region = snapshot.World.Regions.GetRegion(settlement.RegionId);
+        var river = Simulation.Water.WaterModel.RiverAt(snapshot.World.Water, settlement.RegionId);
+        return Format(
+            "  water {0:0.0} / {1:0}   access {2:0%}   drawn {3:0.00}/s   drunk {4:0.00}/s   fresh water {5:0.00}{6}{7}",
+            settlement.Water,
+            outlook.WaterStorage,
+            outlook.WaterAccess,
+            outlook.WaterDrawn * stepsPerSecond,
+            outlook.WaterNeeded * stepsPerSecond,
+            region.FreshWater,
+            river is null ? string.Empty : Format("   on the {0} (level {1:0.00})", river.Name, river.Level),
+            region.Flood > 0f ? Format("   FLOODED {0:0%}", region.Flood) : string.Empty);
+    }
+
     /// <summary>The labour split and the farmland it works.</summary>
     private static string FormatJobs(SettlementState settlement, SettlementOutlook outlook) =>
         Format(
@@ -144,6 +162,11 @@ internal static class SettlementReadout
         if (outlook.IsStarving)
         {
             warnings.Add(Format("! starving: {0:0%} fed", outlook.FedShare));
+        }
+
+        if (outlook.IsThirsty)
+        {
+            warnings.Add(Format("! thirsty: {0:0%} watered", outlook.WateredShare));
         }
 
         if (DescribeBirthBlocker(outlook.BirthBlocker) is { } blocker)

@@ -23,6 +23,7 @@ public sealed class WorldPresenter
     private readonly BiomePalette _palette;
     private readonly ITerrainPresenter _terrain;
     private readonly WaterPresenter _water;
+    private readonly FreshWaterPresenter _freshWater;
     private readonly SettlementPresenter _settlements;
     private readonly RegionBoundaryOverlay _regions;
 
@@ -37,6 +38,7 @@ public sealed class WorldPresenter
         _palette = content.Palette;
         _terrain = TerrainPresenterFactory.Create(terrainPreference, root.AddLayer("Terrain"), camera);
         _water = new WaterPresenter(root.AddLayer("Water"));
+        _freshWater = new FreshWaterPresenter(root.AddLayer("FreshWater"));
         _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
     }
@@ -62,6 +64,7 @@ public sealed class WorldPresenter
         var stopwatch = Stopwatch.StartNew();
         _terrain.Build(terrain, _palette);
         _water.Build(terrain, _palette);
+        _freshWater.Build(terrain, world);
         _settlements.Build(world, terrain);
         _regions.Build(world.Regions, terrain);
         GD.Print($"World visuals for seed {world.Seed} built in {stopwatch.ElapsedMilliseconds} ms ({TerrainBackend}).");
@@ -72,7 +75,11 @@ public sealed class WorldPresenter
 
     /// <summary>Refreshes visuals that follow the simulation, such as settlement labels, houses and fields.</summary>
     /// <param name="world">Current world.</param>
-    public void Sync(WorldState world) => _settlements.Sync(world);
+    public void Sync(WorldState world)
+    {
+        _settlements.Sync(world);
+        _freshWater.Sync(world);
+    }
 
     /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens near it.</summary>
     /// <param name="world">Current world.</param>

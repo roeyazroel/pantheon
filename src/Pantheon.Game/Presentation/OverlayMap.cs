@@ -28,6 +28,7 @@ public static class OverlayMap
     private static readonly RgbColor Flames = RgbColor.ParseHex("#ff5a1f");
     private static readonly RgbColor Ash = RgbColor.ParseHex("#3a2e26");
     private static readonly RgbColor Shielded = RgbColor.ParseHex("#7fc8ff");
+    private static readonly RgbColor Floodwater = RgbColor.ParseHex("#123f8c");
 
     /// <summary>The overlay the overlay key shows next.</summary>
     /// <param name="kind">Current overlay, or <c>null</c> when none is shown.</param>
@@ -84,11 +85,11 @@ public static class OverlayMap
                 break;
             case OverlayKind.Weather:
                 PaintSoil(world, settlementRules, view.OverlayOpacity, rgba);
-                legend = "Weather: the water in the soil, from brown (drought) through yellow (enough for crops) to blue (soaked)";
+                legend = "Weather: the water in the soil, from brown (drought) through yellow (enough for crops) to blue (soaked); rivers and lakes in deep blue";
                 break;
             case OverlayKind.Danger:
                 PaintDanger(world, view.OverlayOpacity, rgba);
-                legend = "Danger: fires in orange (brighter when fiercer), scorched land in ash, shielded settlements in blue";
+                legend = "Danger: fires in orange (brighter when fiercer), floods in deep blue, scorched land in ash, shielded settlements in blue";
                 break;
             case OverlayKind.Migration:
                 PaintMigration(world, view, pressure, rgba);
@@ -135,7 +136,7 @@ public static class OverlayMap
             var color = soil < enough
                 ? RgbColor.Lerp(Parched, Enough, soil / enough)
                 : RgbColor.Lerp(Enough, Soaked, (soil - enough) / Math.Max(0.01f, 1f - enough));
-            Write(rgba, region.Id, color, opacity);
+            Write(rgba, region.Id, RgbColor.Lerp(color, Floodwater, 0.6f * Math.Clamp(region.FreshWater, 0f, 1f)), opacity);
         }
     }
 
@@ -155,6 +156,10 @@ public static class OverlayMap
             if (region.Fire > 0f)
             {
                 Write(rgba, region.Id, Flames, (0.4f + (0.6f * region.Fire)) * opacity);
+            }
+            else if (region.Flood > 0.02f)
+            {
+                Write(rgba, region.Id, Floodwater, (0.4f + (0.6f * Math.Clamp(region.Flood, 0f, 1f))) * opacity);
             }
             else if (region.Scorch > 0.05f)
             {

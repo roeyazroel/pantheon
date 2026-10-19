@@ -30,11 +30,12 @@ public static class DisasterText
     {
         DisasterKind.Earthquake => "the earthquake",
         DisasterKind.Fire => "the fire",
+        DisasterKind.Flood => "the flood",
     };
 
     /// <summary>
-    /// The short marks a settlement's label carries: in drought, burning, ruins, shielded. Empty when
-    /// none applies.
+    /// The short marks a settlement's label carries: in drought, burning, flooded, wells dry, ruins,
+    /// shielded. Empty when none applies.
     /// </summary>
     /// <param name="settlement">The settlement.</param>
     /// <param name="world">World state.</param>
@@ -54,6 +55,16 @@ public static class DisasterText
         if (DisasterModel.FireThreat(rules, world.Regions, settlement) > 0f)
         {
             marks.Add(world.Regions.Cells[settlement.RegionId].Fire > 0f ? "burning" : "fire nearby");
+        }
+
+        if (world.Regions.Cells[settlement.RegionId].Flood > 0f)
+        {
+            marks.Add("flooded");
+        }
+
+        if (Simulation.Belief.Hazards.ThirstOf(rules, settlement) >= 1f)
+        {
+            marks.Add("wells dry");
         }
 
         if (settlement.Ruins > 0)

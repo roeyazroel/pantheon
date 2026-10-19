@@ -1,5 +1,5 @@
 {
-  // Miracles, in the order of the miracle bar (keys 1-9). PowerCost is the cost at full influence;
+  // Miracles, in the order of the miracle bar (keys 1-9, then 0). PowerCost is the cost at full influence;
   // CooldownTicks are simulation ticks (10 per second); Radius is in metres; InfluenceRequirement is
   // the influence (0..1) the god needs at the target. Witness is the change in belief of the people
   // the miracle reaches; people further away (divine_rules.json WitnessRadius) feel less of it.
@@ -139,6 +139,21 @@
       "Effects": [ { "Kind": "Quake", "Amount": 6.8 } ],
       "Witness": { "Faith": 0.25, "Love": -0.3, "Fear": 0.5, "Doubt": 0.05 },
       "Gratitude": "None"
+    },
+    {
+      "Id": "water",
+      "Name": "Water",
+      "Description": "Fills the wells of the settlement beneath it and soaks its fields.",
+      "Domain": "Ocean",
+      "Scale": "Minor",
+      "PowerCost": 45.0,
+      "CooldownTicks": 120,
+      "Radius": 40.0,
+      "InfluenceRequirement": 0.1,
+      "MinimumRank": "MinorSpirit",
+      "Effects": [ { "Kind": "Water", "Amount": 200.0 }, { "Kind": "Soak", "Amount": 0.6 } ],
+      "Witness": { "Faith": 0.18, "Love": 0.2, "Fear": 0.0, "Doubt": -0.15 },
+      "Gratitude": "Water"
     },
     // Signature miracles (ADR-021): RequiresDomain lets only a god holding the miracle's domain cast it.
     {
@@ -315,6 +330,38 @@
       "RequiresDomain": true,
       "Effects": [ { "Kind": "Quake", "Amount": 5.8 } ],
       "Witness": { "Faith": 0.2, "Love": -0.25, "Fear": 0.4, "Doubt": 0.05 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "tidal_wave",
+      "Name": "Tidal Wave",
+      "Description": "Sends the sea over the low land beneath it: houses fall, people drown and stores spoil, but the silt enriches the fields.",
+      "Domain": "Ocean",
+      "Scale": "Regional",
+      "PowerCost": 260.0,
+      "CooldownTicks": 1500,
+      "Radius": 220.0,
+      "InfluenceRequirement": 0.25,
+      "MinimumRank": "LesserGod",
+      "RequiresDomain": true,
+      "Effects": [ { "Kind": "Flood", "Amount": 12.0 } ],
+      "Witness": { "Faith": 0.2, "Love": -0.3, "Fear": 0.45, "Doubt": 0.05 },
+      "Gratitude": "None"
+    },
+    {
+      "Id": "judgement",
+      "Name": "Judgement",
+      "Description": "Strikes only the followers of the gods who wronged you, beneath it: some die, and the rest doubt their god.",
+      "Domain": "Justice",
+      "Scale": "Minor",
+      "PowerCost": 140.0,
+      "CooldownTicks": 600,
+      "Radius": 60.0,
+      "InfluenceRequirement": 0.2,
+      "MinimumRank": "LesserGod",
+      "RequiresDomain": true,
+      "Effects": [ { "Kind": "Judge", "Amount": 0.12 } ],
+      "Witness": { "Faith": 0.2, "Love": 0.05, "Fear": 0.25, "Doubt": -0.05 },
       "Gratitude": "None"
     }
   ]

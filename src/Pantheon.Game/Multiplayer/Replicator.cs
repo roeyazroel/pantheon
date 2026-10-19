@@ -40,10 +40,11 @@ public sealed class Replicator
         [WorldSection.Regions] = 2.0,
         [WorldSection.History] = 2.0,
         [WorldSection.HolySites] = 2.0,
+        [WorldSection.Water] = 1.0,
     };
 
     // Sections an intent can change at once, sent in the same update as the verdict.
-    private static readonly WorldSection[] Urgent = [WorldSection.Gods, WorldSection.Settlements, WorldSection.Diplomacy, WorldSection.Weather, WorldSection.Disasters, WorldSection.Migration];
+    private static readonly WorldSection[] Urgent = [WorldSection.Gods, WorldSection.Settlements, WorldSection.Diplomacy, WorldSection.Weather, WorldSection.Disasters, WorldSection.Migration, WorldSection.Water];
 
     private readonly Dictionary<int, Peer> _peers = [];
 
@@ -131,7 +132,7 @@ public sealed class Replicator
                     WorldSection.Regions => WorldSections.WriteRegions(world, peer.Regions),
                     WorldSection.Diplomacy => Diplomacy(world, peer, interval, Shared),
                     WorldSection.Gods or WorldSection.Creatures or WorldSection.Settlements or WorldSection.Weather
-                        or WorldSection.Disasters or WorldSection.Migration or WorldSection.History or WorldSection.HolySites => Changed(peer, section, Shared(section)),
+                        or WorldSection.Disasters or WorldSection.Migration or WorldSection.History or WorldSection.HolySites or WorldSection.Water => Changed(peer, section, Shared(section)),
                 };
                 if (data is not null)
                 {

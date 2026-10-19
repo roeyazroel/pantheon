@@ -58,6 +58,8 @@ internal sealed class MiracleEffects
                 MiracleEffectKind.Redirect => FindCloud(world, target, effect.Amount) is not null,
                 MiracleEffectKind.Wound => FindRivalCreatures(world, godId, target, miracle.Radius).Count > 0,
                 MiracleEffectKind.Teach => FindOwnCreature(world, godId, target, miracle.Radius) is not null,
+                MiracleEffectKind.Flood => Water.WaterModel.Reach(world.Regions, target, miracle.Radius, effect.Amount).Count > 0,
+                MiracleEffectKind.Judge => world.Settlements.Exists(s => Distance(s.Position, target) <= miracle.Radius && HasGuilty(world, godId, s)),
                 _ => true,
             };
             if (!found)
@@ -103,6 +105,15 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Terrify:
                     Terrify(world, settlement, godId, effect.Amount);
                     break;
+                case MiracleEffectKind.Water:
+                    var cisterns = SettlementEconomy.ComputeWaterStorage(_settlementRules, settlement.Housing);
+                    settlement.Water = Math.Max(settlement.Water, Math.Min(cisterns, settlement.Water + effect.Amount));
+                    break;
+                case MiracleEffectKind.Judge:
+                    deaths += Judge(world, settlement, godId, effect.Amount);
+                    break;
+                case MiracleEffectKind.Soak:
+                case MiracleEffectKind.Flood:
                 case MiracleEffectKind.Bless:
                 case MiracleEffectKind.Rain:
                 case MiracleEffectKind.Ignite:
@@ -119,12 +130,12 @@ internal sealed class MiracleEffects
         return deaths;
     }
 
-    /// <summary>Applies the land's effects to every region whose centre the miracle reaches: blessing, and regrowth after fire.</summary>
+    /// <summary>Applies the land's effects to every region whose centre the miracle reaches: blessing, soaking, and regrowth after fire.</summary>
     public static void ApplyToRegions(MiracleDefinition miracle, RegionGrid grid, GroundPosition target)
     {
         foreach (var effect in miracle.Effects)
         {
-            if (effect.Kind is not (MiracleEffectKind.Bless or MiracleEffectKind.Regrow))
+            if (effect.Kind is not (MiracleEffectKind.Bless or MiracleEffectKind.Regrow or MiracleEffectKind.Soak))
             {
                 continue;
             }
@@ -139,6 +150,10 @@ internal sealed class MiracleEffects
                 if (effect.Kind == MiracleEffectKind.Bless)
                 {
                     region.Blessing = Math.Max(region.Blessing, SimMath.Clamp01(effect.Amount));
+                }
+                else if (effect.Kind == MiracleEffectKind.Soak)
+                {
+                    region.SoilMoisture = Math.Max(region.SoilMoisture, SimMath.Clamp01(effect.Amount));
                 }
                 else
                 {
@@ -188,8 +203,63 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Discord:
                     SowDiscord(world, godId, affected, (int)MathF.Round(effect.Amount));
                     break;
+                case MiracleEffectKind.Flood when Water.WaterModel.Inundate(world, target, miracle.Radius, effect.Amount) is { } deepest:
+                    events.Add(new FloodStarted { Tick = world.Tick, RiverId = null, GodId = godId, RegionId = deepest });
+                    break;
             }
         }
+    }
+
+    /// <summary>Whether a god wronged the caster: they are at war, or the caster bears it a grudge of at least the Justice domain's measure (ADR-022).</summary>
+    public bool IsGuilty(WorldState world, int casterId, int godId)
+    {
+        if (godId == casterId || DiplomacyModel.AreAllied(world, casterId, godId))
+        {
+            return false;
+        }
+
+        if (DiplomacyModel.AreAtWar(world, casterId, godId))
+        {
+            return true;
+        }
+
+        return _domains is not null && DiplomacyModel.FindRelation(world, casterId, godId) is { } view && DiplomacyModel.Grudge(view) >= _domains.Boons.JusticeGuiltGrudge;
+    }
+
+    /// <summary>Whether a settlement's people follow, in any number, a god who wronged the caster.</summary>
+    public bool HasGuilty(WorldState world, int casterId, SettlementState settlement)
+    {
+        foreach (var belief in settlement.Beliefs)
+        {
+            if (belief.Adherence > 0.05f && IsGuilty(world, casterId, belief.GodId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>The followers of the gods who wronged the caster are punished: some die, and the rest doubt their god.</summary>
+    /// <returns>People killed.</returns>
+    private int Judge(WorldState world, SettlementState settlement, int casterId, float amount)
+    {
+        var deaths = 0;
+        foreach (var belief in settlement.Beliefs)
+        {
+            if (belief.Adherence <= 0.05f || !IsGuilty(world, casterId, belief.GodId))
+            {
+                continue;
+            }
+
+            var killed = Math.Min(settlement.Population, (int)MathF.Round(amount * settlement.Population * SimMath.Clamp01(belief.Adherence)));
+            settlement.Population -= killed;
+            deaths += killed;
+            belief.Faith = BeliefModel.ApplyChange(belief.Faith, -amount);
+            belief.Doubt = BeliefModel.ApplyChange(belief.Doubt, amount);
+        }
+
+        return deaths;
     }
 
     /// <summary>The strongest rain or storm cloud within a distance of a point, if any.</summary>

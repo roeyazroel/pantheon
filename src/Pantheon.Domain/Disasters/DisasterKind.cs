@@ -8,4 +8,7 @@ public enum DisasterKind
 
     /// <summary>A wildfire.</summary>
     Fire,
+
+    /// <summary>A flood: a river over its banks or a wave from the sea (ADR-022).</summary>
+    Flood,
 }

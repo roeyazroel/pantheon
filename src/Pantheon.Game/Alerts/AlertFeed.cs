@@ -112,6 +112,10 @@ public sealed class AlertFeed
         {
             case FamineStarted famine when Settlement(world, famine.SettlementId) is { } settlement && Concerns(settlement, localGodId):
                 return (Key("famine", settlement.Id), Format("{0} is starving.", settlement.Name), AlertSeverity.Warning, settlement.Position);
+            case ThirstStarted thirst when Settlement(world, thirst.SettlementId) is { } settlement && Concerns(settlement, localGodId):
+                return (Key("thirst", settlement.Id), Format("The wells of {0} have run dry.", settlement.Name), AlertSeverity.Warning, settlement.Position);
+            case FloodStarted flood:
+                return WaterAlerts.DescribeFlood(flood, world, localGodId);
             case FollowingChanged change when Settlement(world, change.SettlementId) is { } settlement:
                 return DescribeFollowing(change, settlement, world, localGodId);
             case RankAchieved rank when rank.GodId == localGodId:
@@ -364,7 +368,7 @@ public sealed class AlertFeed
     }
 
     /// <summary>Whether a settlement matters to the player: some of its people follow the player's god.</summary>
-    private static bool Concerns(SettlementState settlement, int? localGodId) =>
+    internal static bool Concerns(SettlementState settlement, int? localGodId) =>
         localGodId is { } god && BeliefModel.Find(settlement, god) is { Adherence: > 0f };
 
     /// <summary>The settlement with an id, if it exists.</summary>

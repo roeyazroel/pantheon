@@ -41,8 +41,10 @@
     "Population": 40,
     "PopulationVariation": 0.35,
     "Food": 120.0,
+    "Water": 120.0,
     "Housing": 60,
     "CenterPreference": 0.35,
+    "WaterPreference": 0.3,
     "Names": [
       "Aldermere",
       "Brightwater",
@@ -61,5 +63,32 @@
       "Duskwater",
       "Harrowmere"
     ]
+  },
+  // Rivers and lakes (ADR-022). Water runs over a grid of CellSize-metre cells: hollows deeper than
+  // MinLakeDepth over at least MinLakeArea square metres hold lakes, and a river runs where at least
+  // RiverCatchment square metres of fully wet land drain, up to where HeadwaterCatchment do. Up to MaxRivers rivers (tributaries
+  // included, the MaxMainRivers longest reaching the sea) at least MinRiverLength long are cut into the land, MinChannelWidth..MaxChannelWidth
+  // wide and MinChannelDepth..MaxChannelDepth deep as they grow, their water Freeboard below the
+  // land, with BankWidth of sloping bank. A region with FullWaterShare of its ground under fresh
+  // water is fully watered.
+  "Hydrology": {
+    "CellSize": 8.0,
+    "RiverCatchment": 6000.0,
+    "HeadwaterCatchment": 700.0,
+    "MaxRivers": 7,
+    "MaxMainRivers": 4,
+    "MinRiverLength": 220.0,
+    "MinChannelWidth": 5.0,
+    "MaxChannelWidth": 16.0,
+    "MinChannelDepth": 1.2,
+    "MaxChannelDepth": 3.0,
+    "BankWidth": 10.0,
+    "Freeboard": 0.8,
+    "SmoothingPasses": 3,
+    "MinLakeDepth": 1.5,
+    "MinLakeArea": 2500.0,
+    "FullWaterShare": 0.08,
+    "RiverNames": [ "Silverrun", "Ashwater", "Brenna", "Coldbrook", "Elderflow", "Fennick", "Greywash", "Lowan", "Mirewind", "Rushmere" ],
+    "LakeNames": [ "Stillmere", "Orrin Water", "Glasslake", "Hollowmere", "Duskpool", "Reedwater" ]
   }
 }

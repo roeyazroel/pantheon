@@ -24,8 +24,8 @@ namespace Pantheon.Game.Hud;
 /// <summary>Builds the player HUD from the session (spec §57). Pure and culture-invariant.</summary>
 public static class HudReadout
 {
-    /// <summary>Most miracles that get a key: 1–9, 0, - and =.</summary>
-    public const int MaxHotkeys = 12;
+    /// <summary>Most miracles that get a key: 1–9, 0, then Shift with 1–3 (ADR-022).</summary>
+    public const int MaxHotkeys = 13;
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
@@ -141,6 +141,8 @@ public static class HudReadout
         var stormy = new List<string>();
         var burning = new List<string>();
         var shaken = new List<string>();
+        var flooded = new List<string>();
+        var thirsty = new List<string>();
         foreach (var settlement in world.Settlements)
         {
             if (BeliefModel.Find(settlement, godId) is not { Adherence: > 0f })
@@ -167,9 +169,19 @@ public static class HudReadout
             {
                 shaken.Add(settlement.Name);
             }
+
+            if (world.Regions.Cells[settlement.RegionId].Flood > 0f)
+            {
+                flooded.Add(settlement.Name);
+            }
+
+            if (Hazards.ThirstOf(session.Content.SettlementRules, settlement) >= 1f)
+            {
+                thirsty.Add(settlement.Name);
+            }
         }
 
-        warning = world.Weather.Spell == WeatherSpell.Dry || dry.Count > 0 || stormy.Count > 0 || burning.Count > 0 || shaken.Count > 0;
+        warning = world.Weather.Spell == WeatherSpell.Dry || dry.Count > 0 || stormy.Count > 0 || burning.Count > 0 || shaken.Count > 0 || flooded.Count > 0 || thirsty.Count > 0;
         if (world.Weather.Spell == WeatherSpell.Normal && !warning)
         {
             return null;
@@ -194,6 +206,16 @@ public static class HudReadout
         if (shaken.Count > 0)
         {
             line += " The earth shakes at " + string.Join(", ", shaken) + ".";
+        }
+
+        if (flooded.Count > 0)
+        {
+            line += " Flood at " + string.Join(", ", flooded) + ".";
+        }
+
+        if (thirsty.Count > 0)
+        {
+            line += " The wells are dry at " + string.Join(", ", thirsty) + ".";
         }
 
         return line;

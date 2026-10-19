@@ -56,6 +56,17 @@ internal static class SettlementWorlds
         WorkPerHouse = 100f,
         ConstructionFoodReserveSteps = 20f,
         MaxHousing = 1000,
+
+        // Nobody drinks, so the rule tests of Milestone 2 never meet thirst (ADR-022).
+        FloodYieldLoss = 0.8f,
+        WaterPerPersonPerStep = 0f,
+        WaterStoragePerHousing = 6f,
+        WaterGatherFactor = 1.5f,
+        FreshWaterAccess = 1f,
+        NeighbourWaterAccess = 0.8f,
+        WellFloor = 0.35f,
+        WellAccess = 0.6f,
+        ThirstHealthLossPerStep = 0.015f,
     };
 
     /// <summary><see cref="Rules"/> without births or deaths, so food, health and construction can be tested alone.</summary>
@@ -90,6 +101,8 @@ internal static class SettlementWorlds
                 SoilMoisture = 0.5f,
                 Fire = 0f,
                 Scorch = 0f,
+                FreshWater = 0f,
+                Flood = 0f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -111,6 +124,7 @@ internal static class SettlementWorlds
                     Position = grid.GetRegionCenter(CenterRegionId),
                     Population = population,
                     Food = food,
+                    Water = 100f,
                     Housing = housing,
                     Health = health,
                     ConstructionProgress = constructionProgress,
@@ -132,6 +146,7 @@ internal static class SettlementWorlds
             WinnerGodIds = [],
             History = [],
             HolySites = [],
+            Water = new Pantheon.Domain.Water.WaterState { Rivers = [], Lakes = [] },
         };
     }
 

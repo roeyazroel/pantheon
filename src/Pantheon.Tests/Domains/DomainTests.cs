@@ -41,7 +41,7 @@ public sealed class DomainTests
         Assert.Equal(DomainRejection.NoFreeSlot, authority.Choose(world, 1, GodDomain.War, 1, events));
         world.Gods[0].Rank = DivineRank.LesserGod;
         Assert.Equal(DomainRejection.AlreadyHeld, authority.Check(world, 1, GodDomain.Storm, 1));
-        Assert.Equal(DomainRejection.UnknownDomain, authority.Check(world, 1, GodDomain.Ocean, 1));
+        Assert.Equal(DomainRejection.UnknownDomain, authority.Check(world, 1, (GodDomain)99, 1));
         Assert.Equal(DomainRejection.NotAuthorized, authority.Check(world, 1, GodDomain.War, 2));
         Assert.Equal(DomainRejection.UnknownGod, authority.Check(world, 9, GodDomain.War, null));
         Assert.Equal(DomainRejection.None, authority.Choose(world, 1, GodDomain.War, null, events));
@@ -82,7 +82,7 @@ public sealed class DomainTests
         Assert.True(before.DomainToChoose);
         Assert.Contains("choose your first [G]", before.Domains, StringComparison.Ordinal);
         var redirect = after.Miracles.Single(slot => slot.MiracleId == "redirect_storm");
-        Assert.Equal(10, redirect.Hotkey);
+        Assert.Equal(11, redirect.Hotkey);
         Assert.Equal(TestContent.Shipped.Miracles.Find("redirect_storm")!.PowerCost * Rules.DomainCostFactor, redirect.BaseCost, 3);
         Assert.Equal(TestContent.Shipped.Miracles.Find("rain")!.PowerCost * Rules.DomainCostFactor, after.Miracles.Single(s => s.MiracleId == "rain").BaseCost, 3);
         Assert.False(after.DomainToChoose);

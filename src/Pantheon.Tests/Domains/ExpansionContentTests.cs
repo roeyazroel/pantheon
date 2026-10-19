@@ -16,18 +16,38 @@ namespace Pantheon.Tests.Domains;
 public sealed class ExpansionContentTests
 {
     [Fact]
-    public void ShippedContent_OffersElevenDomains_EachWithASignatureMiracle_AndFourHolySites()
+    public void ShippedContent_OffersAllThirteenDomains_EachWithASignatureMiracle_AndFourHolySites()
     {
         var content = TestContent.Shipped;
 
-        Assert.Equal(11, content.Domains.Domains.Count);
-        Assert.DoesNotContain(content.Domains.Domains, d => d.Domain is GodDomain.Ocean or GodDomain.Justice);
+        Assert.Equal(System.Enum.GetValues<GodDomain>().Length, content.Domains.Domains.Count);
         Assert.All(content.Domains.Domains, d => Assert.Single(content.Miracles.Miracles, m => m.RequiresDomain && m.Domain == d.Domain));
         Assert.Equal(4, content.HolySites.Sites.Count);
         Assert.Equal(["Mossback", "Stonehide", "Swiftclaw", "Lumen"], content.Creatures.Species.Select(s => s.Name));
         Assert.All(content.GodAi.Profiles!, p => Assert.Equal(3, p.Domains.Count));
         Assert.Equal(0.6f, content.DivineRules.Schism.Doubt);
     }
+
+    [Fact]
+    public void Content_ThatNeedsADomainNotOffered_IsRefused()
+    {
+        var domains = TestContent.ReadText(ContentJson.DomainsFileName);
+        var start = domains.IndexOf(",\n    { \"Domain\": \"Ocean\"", StringComparison.Ordinal);
+        var end = domains.IndexOf("\n  ],", start, StringComparison.Ordinal);
+        Assert.True(start > 0 && end > start);
+        var files = GameContentFiles.Read(name => name == ContentJson.DomainsFileName ? domains.Remove(start, end - start) : TestContent.ReadText(name));
+
+        var exception = Assert.Throws<ContentFormatException>(() => GameContent.Parse(files));
+
+        Assert.Contains("tidal_wave needs Ocean", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(ContentJson.WaterFileName, "\"FloodLevel\": 1.0", "\"FloodLevel\": 2.0", "MaxFloodLevel")]
+    [InlineData(ContentJson.WaterFileName, "\"SiltBlessing\": 0.4", "\"SiltBlessing\": 0.4, \"Dams\": 1", "Dams")]
+    [InlineData(ContentJson.WorldGenFileName, "\"HeadwaterCatchment\": 700.0", "\"HeadwaterCatchment\": 70000.0", "HeadwaterCatchment")]
+    public void BrokenWaterContent_IsRefused_WithTheReason(string file, string from, string to, string expected) =>
+        BrokenExpansionContent_IsRefused_WithTheReason(file, from, to, expected);
 
     [Theory]
     [InlineData(ContentJson.DomainsFileName, "\"DomainCostFactor\": 0.8", "\"DomainCostFactor\": 1.5", "DomainCostFactor")]
@@ -37,8 +57,8 @@ public sealed class ExpansionContentTests
     [InlineData(ContentJson.DivineRulesFileName, "\"ReturnPerStep\": 0.02", "\"ReturnPerStep\": 2.0", "Schism.ReturnPerStep")]
     [InlineData(ContentJson.CreaturesFileName, "\"Toughness\": 1.5", "\"Toughness\": 0.0", "Stonehide.Toughness")]
     [InlineData(ContentJson.GodsFileName, "\"CreatureSpecies\": \"Lumen\"", "\"CreatureSpecies\": \"Griffin\"", "Griffin")]
-    [InlineData(ContentJson.GodAiFileName, "\"Domains\": [\"War\", \"Fire\", \"Death\"]", "\"Domains\": [\"War\", \"Ocean\", \"Death\"]", "Ocean")]
-    [InlineData(ContentJson.MiraclesFileName, "\"Domain\": \"Trickery\"", "\"Domain\": \"Justice\"", "sow_discord needs Justice")]
+    [InlineData(ContentJson.DomainsFileName, "{ \"Domain\": \"Ocean\",", "{ \"Domain\": \"Fire\",", "listed twice")]
+    [InlineData(ContentJson.DomainsFileName, "\"OceanMaxWaterRegions\": 8", "\"OceanMaxWaterRegions\": -1", "OceanMaxWaterRegions")]
     public void BrokenExpansionContent_IsRefused_WithTheReason(string file, string from, string to, string expected)
     {
         var text = TestContent.ReadText(file);

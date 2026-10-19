@@ -119,7 +119,7 @@ public enum WorldSection
     /// <summary>The settlements (people, food, houses, beliefs): a low rate.</summary>
     Settlements,
 
-    /// <summary>The regions' changing values (soil water, fire, scorch, blessing, vegetation, fertility) that changed: a low rate.</summary>
+    /// <summary>The regions' changing values (soil water, fire, scorch, flood, blessing, vegetation, fertility) that changed: a low rate.</summary>
     Regions,
 
     /// <summary>The weather cells and spell: a low rate.</summary>
@@ -139,6 +139,9 @@ public enum WorldSection
 
     /// <summary>The holy sites, their keepers and claims (ADR-021): the lowest rate.</summary>
     HolySites,
+
+    /// <summary>The rivers' levels and the lakes (ADR-022): a low rate.</summary>
+    Water,
 }
 
 /// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>

@@ -47,6 +47,7 @@ internal static class IslandSettlements
             Position = founded.Position,
             Population = population,
             Food = food,
+            Water = 100f,
             Housing = housing,
             Health = 1f,
             ConstructionProgress = constructionProgress,

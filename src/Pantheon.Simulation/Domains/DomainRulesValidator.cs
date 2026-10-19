@@ -48,6 +48,11 @@ public static class DomainRulesValidator
         errors.RequireNonNegative(boons.KnowledgeLearning, nameof(boons.KnowledgeLearning));
         errors.RequireNonNegative(boons.TrickeryDoubt, nameof(boons.TrickeryDoubt));
         errors.RequireNonNegative(boons.ChaosMagnitude, nameof(boons.ChaosMagnitude));
+        errors.RequireNonNegative(boons.OceanFishPerWaterRegion, nameof(boons.OceanFishPerWaterRegion));
+        errors.RequireAtLeast(boons.OceanMaxWaterRegions, 0, nameof(boons.OceanMaxWaterRegions));
+        errors.RequireShare(boons.JusticeCalmPerStep, nameof(boons.JusticeCalmPerStep));
+        errors.RequireShare(boons.JusticeDoubtFadePerStep, nameof(boons.JusticeDoubtFadePerStep));
+        errors.RequireNonNegative(boons.JusticeGuiltGrudge, nameof(boons.JusticeGuiltGrudge));
         errors.ThrowIfAny("domain rules", nameof(rules));
     }
 

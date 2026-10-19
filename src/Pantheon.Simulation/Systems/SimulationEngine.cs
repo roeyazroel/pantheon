@@ -67,7 +67,7 @@ public sealed class SimulationEngine
     }
 
     /// <summary>
-    /// Creates the full game pipeline (ADR-011 to ADR-021): the weather step, the disaster step, the
+    /// Creates the full game pipeline (ADR-011 to ADR-022): the weather step, the water step, the disaster step, the
     /// settlement step, the belief step, the domains' boons and the holy sites, the victory check, the diplomacy step and the migration step
     /// on their intervals, then every Creature every tick, then the AI gods' strategic evaluations
     /// (and refugee policies) on theirs. One ledger records
@@ -86,7 +86,8 @@ public sealed class SimulationEngine
     /// <param name="historyRules">What is significant enough for the world's history; <c>null</c> to keep none (ADR-020).</param>
     /// <param name="domainRules">God domains (ADR-021); <c>null</c> for gods without domains.</param>
     /// <param name="holySiteRules">Holy sites (ADR-021); <c>null</c> for a world without them.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null)
+    /// <param name="waterRules">Rivers and floods (ADR-022); <c>null</c> for still water.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null, Domain.Water.WaterRules? waterRules = null)
     {
         History = historyRules is null ? null : new History.HistoryRecorder(historyRules);
         var ledger = new DiplomacyLedger(diplomacyRules);
@@ -107,10 +108,18 @@ public sealed class SimulationEngine
         var systems = new List<ISimulationSystem>
         {
             new IntervalSystem(new WeatherSystem(weatherRules, settlementRules), weatherRules.StepIntervalTicks),
+        };
+        if (waterRules is not null)
+        {
+            systems.Add(new IntervalSystem(new Water.WaterSystem(waterRules, weatherRules, settlementRules, divineRules, disasterRules, domainRules), waterRules.StepIntervalTicks));
+        }
+
+        systems.AddRange(
+        [
             new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules), disasterRules.StepIntervalTicks),
             CreateSettlementStep(settlementRules),
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
-        };
+        ]);
         if (domainRules is not null)
         {
             systems.Add(new IntervalSystem(new Domains.DomainSystem(domainRules, divineRules, settlementRules, weatherRules), divineRules.StepIntervalTicks));

@@ -123,7 +123,7 @@ public sealed class WaterTests
     }
 
     [Fact]
-    public void AGuardian_CallsRainOnItsFollowersInDrought_AndSaysWhy()
+    public void AGuardian_BringsWaterToItsFollowersInDrought_AndSaysWhy()
     {
         var world = RivalWorlds.Create(GodPersonality.Guardian, 1000f, 300f);
         var settlement = world.Settlements[0];
@@ -136,7 +136,7 @@ public sealed class WaterTests
         var best = RivalWorlds.CreateAi().Evaluate(world, world.Gods.First(g => g.Id == RivalWorlds.RivalId))[0];
 
         Assert.Equal(AiActionKind.CastMiracle, best.Kind);
-        Assert.Equal("rain", best.MiracleId);
+        Assert.Contains(best.MiracleId, new[] { "rain", "water" });
         Assert.Equal(settlement.Id, best.SettlementId);
         Assert.Contains("protect", best.Reason, System.StringComparison.Ordinal);
     }

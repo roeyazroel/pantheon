@@ -50,4 +50,19 @@ public enum MiracleEffectKind
 
     /// <summary>Makes each pair of gods followed where it lands, other than the caster and its allies, remember <c>Amount</c> wrongs done by the other that neither did (Trickery, ADR-021).</summary>
     Discord,
+
+    /// <summary>Fills the wells and cisterns of each settlement it reaches with <c>Amount</c> water, up to their storage (ADR-022).</summary>
+    Water,
+
+    /// <summary>Soaks the soil of every region it reaches to at least <c>Amount</c> (ADR-022).</summary>
+    Soak,
+
+    /// <summary>Sends a wave over the land within its radius that lies less than <c>Amount</c> metres above the sea: it floods, the lowest deepest (Ocean, ADR-022).</summary>
+    Flood,
+
+    /// <summary>
+    /// Punishes the followers of gods who wronged the caster, in each settlement it reaches: <c>Amount</c> of them die, and as
+    /// much of their Faith in that god gives way to Doubt. A god wronged the caster when they are at war or the caster bears it a grudge (Justice, ADR-022).
+    /// </summary>
+    Judge,
 }

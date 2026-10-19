@@ -50,7 +50,9 @@ public static class RegionDebugMap
         RegionDebugLayer.Influence => RegionDebugLayer.SoilMoisture,
         RegionDebugLayer.SoilMoisture => RegionDebugLayer.Fire,
         RegionDebugLayer.Fire => RegionDebugLayer.Scorch,
-        RegionDebugLayer.Scorch => null,
+        RegionDebugLayer.Scorch => RegionDebugLayer.FreshWater,
+        RegionDebugLayer.FreshWater => RegionDebugLayer.Flood,
+        RegionDebugLayer.Flood => null,
     };
 
     /// <summary>A region's value on a numeric layer.</summary>
@@ -75,6 +77,8 @@ public static class RegionDebugMap
             RegionDebugLayer.SoilMoisture => region.SoilMoisture,
             RegionDebugLayer.Fire => region.Fire,
             RegionDebugLayer.Scorch => region.Scorch,
+            RegionDebugLayer.FreshWater => region.FreshWater,
+            RegionDebugLayer.Flood => region.Flood,
         };
     }
 
@@ -172,7 +176,7 @@ public static class RegionDebugMap
     }
 
     /// <summary>Layers whose values are shares, drawn on a fixed 0..1 scale so changes over time are visible.</summary>
-    private static bool IsShareLayer(RegionDebugLayer layer) => layer is RegionDebugLayer.Blessing or RegionDebugLayer.Influence or RegionDebugLayer.SoilMoisture or RegionDebugLayer.Fire or RegionDebugLayer.Scorch;
+    private static bool IsShareLayer(RegionDebugLayer layer) => layer is RegionDebugLayer.Blessing or RegionDebugLayer.Influence or RegionDebugLayer.SoilMoisture or RegionDebugLayer.Fire or RegionDebugLayer.Scorch or RegionDebugLayer.FreshWater or RegionDebugLayer.Flood;
 
     /// <summary>Colour at <paramref name="t"/> (0..1) along the ramp, blending linearly between its stops.</summary>
     private static RgbColor SampleRamp(float t)

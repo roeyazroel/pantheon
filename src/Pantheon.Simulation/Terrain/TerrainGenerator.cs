@@ -43,11 +43,19 @@ public static class TerrainGenerator
                 heights[index] = height;
                 moisture[index] = ComputeMoisture(noise, settings.Climate, worldX, worldZ, height);
                 temperature[index] = ComputeTemperature(noise, settings, worldX, worldZ, height);
-                biomes[index] = classifier.Classify(height, temperature[index], moisture[index]);
             }
         }
 
-        return new TerrainField(resolution, settings.VertexSpacing, heights, moisture, temperature, biomes);
+        // Rivers are cut into the land before the biomes are classified, so a channel that reaches below the sea is sea (ADR-022).
+        var hydrology = settings.Hydrology is { } water
+            ? HydrologyGenerator.Generate(seed, water, resolution, settings.VertexSpacing, heights, moisture)
+            : HydrologyMap.Dry(count);
+        for (var index = 0; index < count; index++)
+        {
+            biomes[index] = classifier.Classify(heights[index], temperature[index], moisture[index]);
+        }
+
+        return new TerrainField(resolution, settings.VertexSpacing, heights, moisture, temperature, biomes, hydrology);
     }
 
     /// <summary>Combines continent and mountain noise under the island mask, then converts to metres.</summary>

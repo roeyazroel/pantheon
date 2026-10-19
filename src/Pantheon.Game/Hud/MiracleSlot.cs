@@ -3,7 +3,7 @@ namespace Pantheon.Game.Hud;
 /// <summary>One button of the miracle bar.</summary>
 public sealed record MiracleSlot
 {
-    /// <summary>Key that selects it: 1–9, then 10, 11 and 12 for the keys 0, - and = (ADR-021); 0 when it has none.</summary>
+    /// <summary>Key that selects it: 1–9, 10 for the key 0, then 11, 12 and 13 for Shift with 1, 2 and 3 (ADR-021, ADR-022); 0 when it has none.</summary>
     public required int Hotkey { get; init; }
 
     /// <summary>Miracle id.</summary>

@@ -29,6 +29,10 @@ public static class WorldGenSettingsValidator
         ValidateNoise(nameof(settings.TemperatureNoise), settings.TemperatureNoise, errors);
         Require(settings.Climate.CoastalMoistureRange > 0f, "Climate.CoastalMoistureRange must be positive.", errors);
         ValidateStartingSettlement(settings.StartingSettlement, errors);
+        if (settings.Hydrology is { } hydrology)
+        {
+            ValidateHydrology(settings, hydrology, errors);
+        }
 
         if (errors.Count > 0)
         {
@@ -83,6 +87,8 @@ public static class WorldGenSettingsValidator
             "StartingSettlement.Housing must house the largest starting population.",
             errors);
         Require(settlement.Food >= 0f, "StartingSettlement.Food must not be negative.", errors);
+        Require(settlement.Water >= 0f, "StartingSettlement.Water must not be negative.", errors);
+        Require(settlement.WaterPreference >= 0f, "StartingSettlement.WaterPreference must not be negative.", errors);
         Require(settlement.CenterPreference >= 0f, "StartingSettlement.CenterPreference must not be negative.", errors);
         Require(settlement.Names.Count >= settlement.Count, "StartingSettlement.Names must hold a name for every settlement.", errors);
         Require(
@@ -92,6 +98,46 @@ public static class WorldGenSettingsValidator
         foreach (var name in settlement.Names)
         {
             Require(!string.IsNullOrWhiteSpace(name), "StartingSettlement.Names must not contain blank names.", errors);
+        }
+    }
+
+    /// <summary>Checks the rivers' and lakes' settings (ADR-022).</summary>
+    private static void ValidateHydrology(WorldGenSettings settings, HydrologySettings hydrology, List<string> errors)
+    {
+        Require(hydrology.CellSize > 0f, "Hydrology.CellSize must be positive.", errors);
+        if (hydrology.CellSize > 0f && settings.VertexSpacing > 0f)
+        {
+            var factor = HydrologyGenerator.CellFactor(hydrology, settings.VertexSpacing);
+            Require(settings.HeightmapResolution % factor == 0 && settings.HeightmapResolution / factor >= 3,
+                "Hydrology.CellSize must divide the heightfield into whole cells, at least three per side.", errors);
+        }
+
+        Require(hydrology.RiverCatchment > 0f, "Hydrology.RiverCatchment must be positive.", errors);
+        Require(hydrology.HeadwaterCatchment > 0f && hydrology.HeadwaterCatchment <= hydrology.RiverCatchment,
+            "Hydrology.HeadwaterCatchment must be positive and at most RiverCatchment.", errors);
+        Require(hydrology.MaxRivers >= 0, "Hydrology.MaxRivers must not be negative.", errors);
+        Require(hydrology.MaxMainRivers >= 0 && hydrology.MaxMainRivers <= hydrology.MaxRivers, "Hydrology.MaxMainRivers must be between 0 and MaxRivers.", errors);
+        Require(hydrology.MinRiverLength >= 0f, "Hydrology.MinRiverLength must not be negative.", errors);
+        Require(hydrology.MinChannelWidth > 0f && hydrology.MaxChannelWidth >= hydrology.MinChannelWidth,
+            "Hydrology channel widths must be positive, the largest at least the smallest.", errors);
+        Require(hydrology.MinChannelDepth > 0f && hydrology.MaxChannelDepth >= hydrology.MinChannelDepth,
+            "Hydrology channel depths must be positive, the largest at least the smallest.", errors);
+        Require(hydrology.BankWidth > 0f, "Hydrology.BankWidth must be positive.", errors);
+        Require(hydrology.Freeboard >= 0f, "Hydrology.Freeboard must not be negative.", errors);
+        Require(hydrology.SmoothingPasses >= 0, "Hydrology.SmoothingPasses must not be negative.", errors);
+        Require(hydrology.MinLakeDepth > 0f, "Hydrology.MinLakeDepth must be positive.", errors);
+        Require(hydrology.MinLakeArea > 0f, "Hydrology.MinLakeArea must be positive.", errors);
+        Require(hydrology.FullWaterShare is > 0f and <= 1f, "Hydrology.FullWaterShare must be above 0 and at most 1.", errors);
+        Require(hydrology.RiverNames.Count >= Math.Max(1, hydrology.MaxRivers), "Hydrology.RiverNames must hold a name for every river.", errors);
+        Require(hydrology.LakeNames.Count >= 1, "Hydrology.LakeNames must hold at least one name.", errors);
+        foreach (var name in hydrology.RiverNames)
+        {
+            Require(!string.IsNullOrWhiteSpace(name), "Hydrology names must not be blank.", errors);
+        }
+
+        foreach (var name in hydrology.LakeNames)
+        {
+            Require(!string.IsNullOrWhiteSpace(name), "Hydrology names must not be blank.", errors);
         }
     }
 

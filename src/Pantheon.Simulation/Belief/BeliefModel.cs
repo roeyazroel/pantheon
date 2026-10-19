@@ -18,7 +18,7 @@ public static class BeliefModel
     /// <summary>How the settlement is faring: its hardship, comfort and needs.</summary>
     /// <param name="rules">Divine rules, for the food the people want in store and the worry drought and danger bring.</param>
     /// <param name="settlement">Settlement state.</param>
-    /// <param name="hazards">Its drought and danger (<see cref="Hazards.Of"/>).</param>
+    /// <param name="hazards">Its drought, danger and thirst (<see cref="Hazards.Of"/>).</param>
     /// <returns>The conditions.</returns>
     public static SettlementConditions AssessConditions(DivineRules rules, SettlementState settlement, Hazards hazards)
     {
@@ -29,7 +29,7 @@ public static class BeliefModel
         var health = SimMath.Clamp01(settlement.Health);
         var foodNeed = 1f - security;
         var healthNeed = 1f - health;
-        var waterNeed = SimMath.Clamp01(hazards.Drought);
+        var waterNeed = SimMath.Clamp01(Math.Max(hazards.Drought, hazards.Thirst));
         var dangerNeed = SimMath.Clamp01(hazards.Danger);
         var worry = Math.Max(rules.DroughtWorry * waterNeed, rules.DangerWorry * dangerNeed);
         var hardship = Math.Max(Math.Max(healthNeed, foodNeed), worry);

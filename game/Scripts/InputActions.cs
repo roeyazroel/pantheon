@@ -66,10 +66,10 @@ public static class InputActions
     /// <summary>Next faster simulation speed preset (]).</summary>
     public static readonly StringName SimSpeedUp = "sim_speed_up";
 
-    /// <summary>Select the miracles of the miracle bar (1–9), in order; with Shift, 1–3 select the domains' miracles after the ninth (ADR-021).</summary>
+    /// <summary>Select the miracles of the miracle bar (1–9, then 0), in order; with Shift, 1–3 select the domains' miracles after the tenth (ADR-021, ADR-022).</summary>
     public static readonly IReadOnlyList<StringName> MiracleSlots =
     [
-        "miracle_1", "miracle_2", "miracle_3", "miracle_4", "miracle_5", "miracle_6", "miracle_7", "miracle_8", "miracle_9",
+        "miracle_1", "miracle_2", "miracle_3", "miracle_4", "miracle_5", "miracle_6", "miracle_7", "miracle_8", "miracle_9", "miracle_10",
     ];
 
     /// <summary>Cast the selected miracle at the cursor (left mouse button).</summary>
@@ -123,6 +123,9 @@ public static class InputActions
     /// <summary>Debug disaster: a fire at the cursor (F12).</summary>
     public static readonly StringName DebugFire = "debug_fire";
 
+    /// <summary>Debug: the nearest river floods, or a wave floods the land at the cursor (L, ADR-022).</summary>
+    public static readonly StringName DebugFlood = "debug_flood";
+
     /// <summary>Debug: send people out of the village under the cursor (M).</summary>
     public static readonly StringName DebugMigrate = "debug_migrate";
 
@@ -144,7 +147,7 @@ public static class InputActions
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugMigrate, DebugMeet, GameMenu, ToggleHistory, ToggleDomains,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, GameMenu, ToggleHistory, ToggleDomains,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

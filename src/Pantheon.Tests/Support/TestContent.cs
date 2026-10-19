@@ -35,7 +35,13 @@ internal static class TestContent
         HeightmapResolution = 256,
         VertexSpacing = 8f,
         RegionsPerSide = 16,
+
+        // Test worlds keep the land of the worlds before rivers (ADR-022); RiverWorldGen has them.
+        Hydrology = null,
     };
+
+    /// <summary><see cref="SmallWorldGen"/> with the shipped rivers and lakes (ADR-022).</summary>
+    public static WorldGenSettings RiverWorldGen => SmallWorldGen with { Hydrology = Shipped.WorldGen.Hydrology };
 
     /// <summary>
     /// <see cref="SmallWorldGen"/> founding one settlement of exactly the starting population, so

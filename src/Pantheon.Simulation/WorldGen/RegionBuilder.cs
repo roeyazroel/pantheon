@@ -40,7 +40,7 @@ public static class RegionBuilder
             for (var column = 0; column < regionsPerSide; column++)
             {
                 var id = (row * regionsPerSide) + column;
-                cells.Add(BuildRegion(field, classifier, id, column * samplesPerRegion, row * samplesPerRegion, samplesPerRegion));
+                cells.Add(BuildRegion(field, classifier, id, column * samplesPerRegion, row * samplesPerRegion, samplesPerRegion, settings.Hydrology?.FullWaterShare ?? 1f));
             }
         }
 
@@ -53,8 +53,11 @@ public static class RegionBuilder
         };
     }
 
-    /// <summary>Averages the climate of one block of samples and derives fertility and vegetation.</summary>
-    private static RegionState BuildRegion(TerrainField field, BiomeClassifier classifier, int id, int startX, int startZ, int size)
+    /// <summary>
+    /// Averages the climate of one block of samples and derives fertility and vegetation. Ground
+    /// under a river or lake is not land; the share of it waters the region (ADR-022).
+    /// </summary>
+    private static RegionState BuildRegion(TerrainField field, BiomeClassifier classifier, int id, int startX, int startZ, int size, float fullWaterShare)
     {
         var heights = field.Heights;
         var moisture = field.Moisture;
@@ -65,6 +68,7 @@ public static class RegionBuilder
         double moistureSum = 0;
         double temperatureSum = 0;
         var landSamples = 0;
+        var waterSamples = 0;
         Span<int> biomeCounts = stackalloc int[BiomeCount];
 
         for (var z = startZ; z < startZ + size; z++)
@@ -76,7 +80,11 @@ public static class RegionBuilder
                 moistureSum += moisture[index];
                 temperatureSum += temperature[index];
                 biomeCounts[(int)biomes[index]]++;
-                if (heights[index] >= 0f)
+                if (field.IsUnderFreshWater(x, z))
+                {
+                    waterSamples++;
+                }
+                else if (heights[index] >= 0f)
                 {
                     landSamples++;
                 }
@@ -105,6 +113,8 @@ public static class RegionBuilder
             SoilMoisture = SimMath.Clamp01(meanMoisture),
             Fire = 0f,
             Scorch = 0f,
+            FreshWater = SimMath.Clamp01((float)(waterSamples / sampleCount) / fullWaterShare),
+            Flood = 0f,
         };
     }
 

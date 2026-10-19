@@ -30,7 +30,11 @@
     { "Domain": "Trickery", "Description": "Deception and luck.",
       "Boon": "Your miracles plant twice the doubt about other gods. Sow Discord turns two rivals against each other." },
     { "Domain": "Chaos", "Description": "Disorder and upheaval.",
-      "Boon": "Your earthquakes strike harder. Upheaval shakes the ground long before you could otherwise." }
+      "Boon": "Your earthquakes strike harder. Upheaval shakes the ground long before you could otherwise." },
+    { "Domain": "Ocean", "Description": "The sea, the rivers and the lakes.",
+      "Boon": "Your villages fish the sea, the rivers and the lakes around them. Tidal Wave sends the sea over a low coast." },
+    { "Domain": "Justice", "Description": "Law, order and punishment.",
+      "Boon": "Your villages keep your law: fewer leave, and doubt about you fades. Judgement strikes only those who wronged you." }
   ],
   "Boons": {
     "NatureBlessing": 0.35,
@@ -43,6 +47,11 @@
     "ProtectionResilience": 0.5,
     "KnowledgeLearning": 0.6,
     "TrickeryDoubt": 1.0,
-    "ChaosMagnitude": 0.6
+    "ChaosMagnitude": 0.6,
+    "OceanFishPerWaterRegion": 0.35,
+    "OceanMaxWaterRegions": 8,
+    "JusticeCalmPerStep": 0.05,
+    "JusticeDoubtFadePerStep": 0.01,
+    "JusticeGuiltGrudge": 1.0
   }
 }

@@ -39,7 +39,7 @@ public static class SettlementFounder
     public static List<SettlementState> FoundAll(RegionGrid grid, TerrainField terrain, WorldSeed seed, StartingSettlementSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        var sites = SelectSites(grid, terrain, settings.CenterPreference, settings.Count, settings.MinimumSpacing);
+        var sites = SelectSites(grid, terrain, settings.CenterPreference, settings.Count, settings.MinimumSpacing, settings.WaterPreference);
         var names = ShuffledNames(seed, settings.Names);
         var sizes = new SimulationRandom(SeedMixer.Derive(seed, "settlement.founding"));
         var settlements = new List<SettlementState>(sites.Count);
@@ -55,6 +55,7 @@ public static class SettlementFounder
                 Position = grid.GetRegionCenter(sites[i]),
                 Population = population,
                 Food = settings.Food,
+                Water = settings.Water,
                 Housing = settings.Housing,
                 Health = InitialHealth,
                 ConstructionProgress = 0f,
@@ -75,16 +76,18 @@ public static class SettlementFounder
     /// Returns up to <paramref name="count"/> habitable regions, best score first, each at least
     /// <paramref name="spacing"/> regions (Chebyshev distance) from the ones before it. The score is
     /// fertility minus <paramref name="centerPreference"/> times the normalised distance to the island
-    /// centre; ties go to the lowest id.
+    /// centre, plus <paramref name="waterPreference"/> times the fresh water at hand (ADR-022); ties go
+    /// to the lowest id.
     /// </summary>
     /// <param name="grid">Region grid.</param>
     /// <param name="terrain">Terrain used for site height and slope checks.</param>
     /// <param name="centerPreference">Weight of the distance penalty.</param>
     /// <param name="count">Most sites wanted.</param>
     /// <param name="spacing">Least distance between sites, in regions.</param>
+    /// <param name="waterPreference">Weight of the fresh water at hand: the most of the region's and its neighbours'.</param>
     /// <returns>Region ids of the sites; at least one.</returns>
     /// <exception cref="InvalidOperationException">No region is habitable.</exception>
-    public static IReadOnlyList<int> SelectSites(RegionGrid grid, TerrainField terrain, float centerPreference, int count, int spacing)
+    public static IReadOnlyList<int> SelectSites(RegionGrid grid, TerrainField terrain, float centerPreference, int count, int spacing, float waterPreference = 0f)
     {
         ArgumentNullException.ThrowIfNull(grid);
         ArgumentNullException.ThrowIfNull(terrain);
@@ -98,7 +101,8 @@ public static class SettlementFounder
             {
                 var dx = (site.X - centerX) / centerX;
                 var dz = (site.Z - centerZ) / centerZ;
-                candidates.Add((region.Fertility - (centerPreference * MathF.Sqrt((dx * dx) + (dz * dz))), region.Id));
+                var water = waterPreference > 0f ? waterPreference * WaterAtHand(grid, region.Id) : 0f;
+                candidates.Add((region.Fertility - (centerPreference * MathF.Sqrt((dx * dx) + (dz * dz))) + water, region.Id));
             }
         }
 
@@ -139,6 +143,22 @@ public static class SettlementFounder
         return names;
     }
 
+    /// <summary>The most fresh water in a region and the regions around it.</summary>
+    private static float WaterAtHand(RegionGrid grid, int regionId)
+    {
+        var (column, row) = grid.GetCoordinates(regionId);
+        var water = 0f;
+        for (var r = Math.Max(0, row - 1); r <= Math.Min(grid.Rows - 1, row + 1); r++)
+        {
+            for (var c = Math.Max(0, column - 1); c <= Math.Min(grid.Columns - 1, column + 1); c++)
+            {
+                water = MathF.Max(water, grid.Cells[(r * grid.Columns) + c].FreshWater);
+            }
+        }
+
+        return water;
+    }
+
     /// <summary>Grid distance between two regions, counting diagonal steps as one.</summary>
     private static int ChebyshevDistance(RegionGrid grid, int a, int b)
     {
@@ -157,6 +177,7 @@ public static class SettlementFounder
 
         var sampleX = (int)MathF.Round(site.X / terrain.Spacing);
         var sampleZ = (int)MathF.Round(site.Z / terrain.Spacing);
-        return terrain.SampleHeight(site.X, site.Z) >= MinimumSiteHeight && terrain.GetSlope(sampleX, sampleZ) <= MaximumSiteSlope;
+        return terrain.SampleHeight(site.X, site.Z) >= MinimumSiteHeight && terrain.GetSlope(sampleX, sampleZ) <= MaximumSiteSlope
+            && !terrain.IsUnderFreshWater(sampleX, sampleZ);
     }
 }

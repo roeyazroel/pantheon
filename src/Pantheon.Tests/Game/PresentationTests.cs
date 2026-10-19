@@ -141,6 +141,7 @@ public sealed class PresentationTests
             Position = new GroundPosition(0f, 0f),
             Population = 41,
             Food = 0f,
+            Water = 0f,
             Housing = 60,
             Health = 1f,
             Beliefs = [],

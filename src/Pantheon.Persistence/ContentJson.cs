@@ -62,6 +62,9 @@ public static class ContentJson
     /// <summary>File name of the holy sites (ADR-021).</summary>
     public const string HolySitesFileName = "holy_sites.json";
 
+    /// <summary>File name of the rivers and floods (ADR-022).</summary>
+    public const string WaterFileName = "water.json";
+
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
     /// <param name="json">File text.</param>
@@ -151,6 +154,11 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The domain rules.</returns>
     public static DomainRules ParseDomains(string json) => Parse<DomainRules>(json, DomainsFileName);
+
+    /// <summary>Parses <c>water.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The water rules.</returns>
+    public static Domain.Water.WaterRules ParseWater(string json) => Parse<Domain.Water.WaterRules>(json, WaterFileName);
 
     /// <summary>Parses <c>holy_sites.json</c>.</summary>
     /// <param name="json">File text.</param>

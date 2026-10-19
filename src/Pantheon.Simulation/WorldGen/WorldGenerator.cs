@@ -59,6 +59,7 @@ public static class WorldGenerator
             WinnerGodIds = [],
             History = [],
             HolySites = [],
+            Water = WaterFounder.Found(terrain.Hydrology, regions),
         };
 
         if (holySites is not null)

@@ -145,7 +145,8 @@ public static class DisasterModel
     public static float DangerTo(SettlementRules rules, WorldState world, SettlementState settlement)
     {
         ArgumentNullException.ThrowIfNull(world);
-        return Math.Max(FireThreat(rules, world.Regions, settlement), ShakingAt(world.Disasters, settlement.Position));
+        var flood = world.Regions.GetRegion(settlement.RegionId).Flood;
+        return Math.Max(Math.Max(FireThreat(rules, world.Regions, settlement), ShakingAt(world.Disasters, settlement.Position)), SimMath.Clamp01(flood));
     }
 
     /// <summary>Whether a Shield miracle protects a settlement now.</summary>

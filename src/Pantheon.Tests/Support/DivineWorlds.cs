@@ -115,6 +115,8 @@ internal static class DivineWorlds
                 SoilMoisture = 0.5f,
                 Fire = 0f,
                 Scorch = 0f,
+                FreshWater = 0f,
+                Flood = 0f,
             })
             .ToList();
         var grid = new RegionGrid { Columns = RegionsPerSide, Rows = RegionsPerSide, RegionSize = RegionSize, Cells = cells };
@@ -131,6 +133,7 @@ internal static class DivineWorlds
                 Position = position,
                 Population = 100,
                 Food = 400f,
+                Water = 100f,
                 Housing = 120,
                 Health = 1f,
                 ConstructionProgress = 0f,
@@ -161,6 +164,7 @@ internal static class DivineWorlds
             WinnerGodIds = [],
             History = [],
             HolySites = [],
+            Water = new Pantheon.Domain.Water.WaterState { Rivers = [], Lakes = [] },
         };
     }
 

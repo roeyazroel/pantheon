@@ -83,7 +83,7 @@ public sealed class MiracleBook
         {
             errors.RequireDefined(effect.Kind, prefix + "Effects.Kind");
             if (effect.Kind is MiracleEffectKind.Heal or MiracleEffectKind.Bless or MiracleEffectKind.Rain or MiracleEffectKind.Ignite
-                or MiracleEffectKind.Regrow or MiracleEffectKind.Wound or MiracleEffectKind.Terrify)
+                or MiracleEffectKind.Regrow or MiracleEffectKind.Wound or MiracleEffectKind.Terrify or MiracleEffectKind.Soak or MiracleEffectKind.Judge)
             {
                 errors.RequireShare(effect.Amount, $"{prefix}Effects.{effect.Kind}.Amount");
             }

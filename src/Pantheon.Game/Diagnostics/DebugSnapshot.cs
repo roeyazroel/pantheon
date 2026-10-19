@@ -107,4 +107,7 @@ public sealed record DebugSnapshot
 
     /// <summary>Holy site rules, for the sites' claims (ADR-021); <c>null</c> hides the sites.</summary>
     public Domain.HolySites.HolySiteRules? HolySiteRules { get; init; }
+
+    /// <summary>Rivers and floods (ADR-022), for the rivers' readout; <c>null</c> to leave it out.</summary>
+    public Domain.Water.WaterRules? WaterRules { get; init; }
 }

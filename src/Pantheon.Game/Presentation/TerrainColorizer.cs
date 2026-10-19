@@ -54,13 +54,28 @@ public static class TerrainColorizer
         ArgumentNullException.ThrowIfNull(palette);
 
         var height = field.GetHeight(x, z);
-        var color = height < 0f ? UnderwaterColor(palette, height) : LandColor(field, palette, x, z, height);
+        var color = height < 0f ? UnderwaterColor(palette, height)
+            : field.IsUnderFreshWater(x, z) ? BedColor(field, palette, x, z, height)
+            : LandColor(field, palette, x, z, height);
         return color.Scale(1f + (palette.ColorVariation * Jitter(x, z)));
     }
 
-    /// <summary>Sand in the shallows, fading to the sea-floor colour with depth.</summary>
+    /// <summary>Sand in the shallows, fading to the sea-floor colour with depth; river and lake beds too (ADR-022).</summary>
     private static RgbColor UnderwaterColor(BiomePalette palette, float height) =>
         RgbColor.Lerp(palette.Beach, palette.SeaFloor, SmoothStep(0f, palette.DeepWaterDepth, -height));
+
+    /// <summary>
+    /// The bed of a river or lake (ADR-022): the land's colour in the shallows at its edge, darkening
+    /// to the sea floor's with depth, so the bank shows no hard outline.
+    /// </summary>
+    private static RgbColor BedColor(TerrainField field, BiomePalette palette, int x, int z, float height)
+    {
+        var depth = field.Hydrology.WaterSurface[(z * field.Resolution) + x] - height;
+        return RgbColor.Lerp(LandColor(field, palette, x, z, height), palette.SeaFloor, SmoothStep(0f, BedDarkDepth, depth));
+    }
+
+    // Depth in metres at which a river or lake bed takes the sea floor's colour.
+    private const float BedDarkDepth = 2.5f;
 
     /// <summary>Biome colour with beach, rock and snow blended in.</summary>
     private static RgbColor LandColor(TerrainField field, BiomePalette palette, int x, int z, float height)

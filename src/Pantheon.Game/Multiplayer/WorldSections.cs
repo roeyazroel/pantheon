@@ -45,6 +45,7 @@ public static class WorldSections
             WorldSection.Diplomacy => Json(world.Diplomacy),
             WorldSection.History => Json(world.History),
             WorldSection.HolySites => Json(world.HolySites),
+            WorldSection.Water => Json(world.Water),
             WorldSection.Regions => throw new ArgumentException("Regions are written as changes, by WriteRegions.", nameof(section)),
         };
     }
@@ -141,6 +142,11 @@ public static class WorldSections
             case WorldSection.HolySites:
                 Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
                 return null;
+            case WorldSection.Water:
+                var water = Read<Domain.Water.WaterState>(data);
+                Replace(world.Water.Rivers, water.Rivers);
+                Replace(world.Water.Lakes, water.Lakes);
+                return null;
         }
 
         throw new ArgumentOutOfRangeException(nameof(section), section, "Unknown world section.");
@@ -225,7 +231,8 @@ public sealed record CreatureMotion(
 /// <param name="SoilMoisture">The water in its soil.</param>
 /// <param name="Fire">How fiercely it burns.</param>
 /// <param name="Scorch">How scorched it is.</param>
-public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch)
+/// <param name="Flood">How deep it lies under a flood (ADR-022).</param>
+public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood)
 {
     /// <summary>A region's changing values now.</summary>
     /// <param name="region">The region.</param>
@@ -233,7 +240,7 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
     public static RegionChange Of(RegionState region)
     {
         ArgumentNullException.ThrowIfNull(region);
-        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch);
+        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood);
     }
 
     /// <summary>Sets a replica's region to these values.</summary>
@@ -241,6 +248,6 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
     public void ApplyTo(RegionState region)
     {
         ArgumentNullException.ThrowIfNull(region);
-        (region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch) = (Fertility, Vegetation, Blessing, SoilMoisture, Fire, Scorch);
+        (region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood) = (Fertility, Vegetation, Blessing, SoilMoisture, Fire, Scorch, Flood);
     }
 }

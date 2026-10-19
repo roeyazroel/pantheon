@@ -6,4 +6,5 @@ namespace Pantheon.Simulation.Settlements;
 /// <param name="MeanBlessing">Mean divine blessing of those regions (0..1); 0 when there are none.</param>
 /// <param name="MeanSoilMoisture">Mean water in their soil (0..1); 1 when there are none, so no land means no drought.</param>
 /// <param name="MeanScorch">Mean scorch of their land (0..1) that wildfires left (ADR-014).</param>
-public readonly record struct FarmlandSurvey(int LandRegions, float MeanFertility, float MeanBlessing = 0f, float MeanSoilMoisture = 1f, float MeanScorch = 0f);
+/// <param name="MeanFlood">Mean flood over their land (0..1, ADR-022).</param>
+public readonly record struct FarmlandSurvey(int LandRegions, float MeanFertility, float MeanBlessing = 0f, float MeanSoilMoisture = 1f, float MeanScorch = 0f, float MeanFlood = 0f);

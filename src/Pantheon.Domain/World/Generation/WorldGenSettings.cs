@@ -40,4 +40,10 @@ public sealed record WorldGenSettings
 
     /// <summary>Parameters of the settlement founded at world creation.</summary>
     public required StartingSettlementSettings StartingSettlement { get; init; }
+
+    /// <summary>
+    /// Rivers and lakes (ADR-022); <c>null</c> for a world without fresh water, as every world saved
+    /// before version 14 was, so its terrain regenerates unchanged.
+    /// </summary>
+    public HydrologySettings? Hydrology { get; init; }
 }

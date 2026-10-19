@@ -15,7 +15,7 @@ namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
 /// The debug drivers of weather, disasters, migration and Creature meetings (ADR-013, ADR-014,
-/// ADR-016, ADR-017): the F8, F10, F11, F12, M and K hotkeys and the <c>--weather</c>,
+/// ADR-016, ADR-017, ADR-022): the F8, F10, F11, F12, L, M and K hotkeys and the <c>--weather</c>,
 /// <c>--disaster</c>, <c>--migrate</c>, <c>--refugees</c> and <c>--meet</c> launch options. Every
 /// change goes through the engine-agnostic commands; this class only wires them to input.
 /// </summary>
@@ -44,6 +44,7 @@ internal sealed class NatureDebug
         (InputActions.DebugStorm, () => AtCursor("call a storm", point => WeatherCommands.SummonStorm(_session, point))),
         (InputActions.DebugQuake, () => AtCursor("start an earthquake", point => DisasterCommands.StartQuake(_session, point))),
         (InputActions.DebugFire, () => AtCursor("start a fire", point => DisasterCommands.StartFire(_session, point))),
+        (InputActions.DebugFlood, () => AtCursor("start a flood", point => DisasterCommands.StartFlood(_session, point))),
         (InputActions.DebugMigrate, () => AtCursor("send people away", point => MigrationCommands.SendFrom(_session, point))),
         (InputActions.DebugMeet, () => _setStatus(CreatureCommands.BringOther(_session))),
     ];
@@ -80,6 +81,7 @@ internal sealed class NatureDebug
             {
                 DisasterAtStart.Quake => DisasterCommands.StartQuake(_session, place),
                 DisasterAtStart.Fire => DisasterCommands.StartFire(_session, place),
+                DisasterAtStart.Flood => DisasterCommands.StartFlood(_session, place),
             });
         }
     }

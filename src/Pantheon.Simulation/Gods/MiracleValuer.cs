@@ -19,6 +19,9 @@ internal sealed class MiracleValuer
 {
     private const float MaxPopulationFactor = 2f;
 
+    // A village whose own region lies this low is within a wave's reach.
+    private const float FloodHeightValued = 10f;
+
     private readonly GodAiRules _rules;
     private readonly MiracleCaster _caster;
 
@@ -73,6 +76,12 @@ internal sealed class MiracleValuer
                     value += Note(reasons, settlement, "defend", profile.Protect * mine * Math.Min(1f, 2f * rivals) * drought * size);
                     value += Note(reasons, settlement, "convert", profile.Convert * (free + rivals) * drought * opportunity * size);
                     break;
+                case MiracleEffectKind.Water:
+                    // Water is worth giving only to the thirsty or the parched: every goal scales with the need (ADR-022).
+                    var thirst = BeliefModel.NeedFor(conditions, miracle.Gratitude);
+                    value += Note(reasons, settlement, "protect", profile.Protect * mine * thirst * size);
+                    value += Note(reasons, settlement, "convert", profile.Convert * (free + rivals) * thirst * opportunity * size);
+                    break;
                 case MiracleEffectKind.AddFood:
                 case MiracleEffectKind.Heal:
                     var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
@@ -105,7 +114,11 @@ internal sealed class MiracleValuer
                     break;
                 case MiracleEffectKind.Ignite:
                 case MiracleEffectKind.Quake:
+                case MiracleEffectKind.Flood:
                     value += ValueDisaster(effect.Kind, reasons, world, settlement, profile, mine, rivals, free, allies, opportunity, size);
+                    break;
+                case MiracleEffectKind.Judge:
+                    value += ValueJudgement(world, god, profile, settlement, opportunity, size, reasons);
                     break;
                 case MiracleEffectKind.Shield:
                     value += Note(reasons, settlement, "shield", profile.Protect * mine * conditions.DangerNeed * size);
@@ -142,7 +155,12 @@ internal sealed class MiracleValuer
             return 0f;
         }
 
-        var reach = kind == MiracleEffectKind.Ignite ? _caster.FlammabilityAt(world, settlement) : 1f;
+        var reach = kind switch
+        {
+            MiracleEffectKind.Ignite => _caster.FlammabilityAt(world, settlement),
+            MiracleEffectKind.Flood => world.Regions.Cells[settlement.RegionId].Elevation < FloodHeightValued ? 1f : 0f,
+            _ => 1f,
+        };
         var fear = Note(reasons, settlement, "intimidate", profile.Intimidate * (rivals + (0.3f * free)) * opportunity * (1f - mine) * reach * size);
         var harm = profile.Protect * mine * size;
         if (harm > 0.01f)
@@ -151,6 +169,25 @@ internal sealed class MiracleValuer
         }
 
         return fear - harm;
+    }
+
+    /// <summary>
+    /// Judging a settlement: worth the share of its people who follow gods that wronged this one, by
+    /// its appetite for intimidation and its grudges (ADR-022). Only the guilty suffer, so its own
+    /// followers there do not count against it.
+    /// </summary>
+    private float ValueJudgement(WorldState world, GodState god, GodProfile profile, SettlementState settlement, float opportunity, float size, List<string> reasons)
+    {
+        var guilty = 0f;
+        foreach (var belief in settlement.Beliefs)
+        {
+            if (belief.Adherence > 0.05f && _caster.IsGuilty(world, god.Id, belief.GodId))
+            {
+                guilty += belief.Adherence;
+            }
+        }
+
+        return Note(reasons, settlement, "judge", Math.Max(profile.Intimidate, profile.Grudge) * guilty * opportunity * size);
     }
 
     /// <summary>Wounding rival Creatures: worth more against an enemy's, by the god's appetite for war (ADR-021).</summary>
