@@ -87,17 +87,21 @@ public sealed class PantheonTests
     }
 
     [Fact]
-    public void ABloc_ReachesAlliesOfAllies()
+    public void APantheon_IsAGodAndItsStrongestDirectAllies_NoMoreThanTheRulesAllow()
     {
         var world = PantheonWorlds.Create(0.5f, 0.5f, 0.5f, 0.5f);
+        world.Settlements[0].Population = 200;
         PantheonWorlds.SetStatus(world, 1, 2, DiplomaticStatus.Alliance);
         PantheonWorlds.SetStatus(world, 3, 2, DiplomaticStatus.Alliance);
         PantheonWorlds.SetStatus(world, 1, 4, DiplomaticStatus.War);
 
         Assert.Equal([2], DiplomacyModel.AlliesOf(world, 1));
         Assert.Equal([1, 2, 3], DiplomacyModel.BlocOf(world, 3));
-        Assert.Equal([4], DiplomacyModel.BlocOf(world, 4));
-        Assert.Equal(0.75f, VictorySystem.StandingOf(DivineWorlds.Rules, world, 1).Share, 3);
+        var (share, allies) = VictorySystem.StandingOf(DivineWorlds.Rules, world, 2);
+        Assert.Equal([1], allies);
+        Assert.Equal(0.6f, share, 3);
+        Assert.Equal(0.4f, VictorySystem.StandingOf(DivineWorlds.Rules, world, 3).Share, 3);
+        Assert.Equal(0.8f, VictorySystem.StandingOf(DivineWorlds.Rules with { PantheonMaxGods = 3 }, world, 2).Share, 3);
     }
 
     [Fact]

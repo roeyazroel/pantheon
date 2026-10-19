@@ -127,6 +127,7 @@ internal static class SettlementWorlds
             Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
+            History = [],
         };
     }
 

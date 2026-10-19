@@ -83,8 +83,10 @@ public sealed class SimulationEngine
     /// <param name="weatherRules">Tuning of weather and soil water.</param>
     /// <param name="disasterRules">Tuning of wildfires and earthquakes.</param>
     /// <param name="migrationRules">Tuning of migration.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules)
+    /// <param name="historyRules">What is significant enough for the world's history; <c>null</c> to keep none (ADR-020).</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null)
     {
+        History = historyRules is null ? null : new History.HistoryRecorder(historyRules);
         var ledger = new DiplomacyLedger(diplomacyRules);
         Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger);
         Authorities = new Authorities(
@@ -124,6 +126,9 @@ public sealed class SimulationEngine
     /// <summary>The migration system of the full pipeline, or <c>null</c> when the engine has none.</summary>
     public MigrationSystem? Migration { get; }
 
+    /// <summary>The world's chronicler (ADR-020), or <c>null</c> when the engine keeps no history.</summary>
+    public History.HistoryRecorder? History { get; }
+
     /// <summary>Creates an engine with an explicit system order.</summary>
     /// <param name="systems">Systems, in the order they run each tick.</param>
     public SimulationEngine(IReadOnlyList<ISimulationSystem> systems)
@@ -141,14 +146,23 @@ public sealed class SimulationEngine
 
         var random = SimulationRandom.FromState(world.Random);
         var context = new TickContext(world, random, events ?? []);
+        var first = context.Events.Count;
         foreach (var system in _systems)
         {
             system.Update(context);
         }
 
+        History?.Record(world, context.Events, first);
+
         world.Random = random.GetState();
         world.Tick++;
     }
+
+    /// <summary>Adds the significant events among those a command raised outside a tick to the world's history (ADR-020).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="events">The events.</param>
+    /// <param name="from">The first event the command raised.</param>
+    public void Chronicle(WorldState world, IReadOnlyList<WorldEvent> events, int from) => History?.Record(world, events, from);
 
     /// <summary>Advances the world by several ticks.</summary>
     /// <param name="world">World to mutate.</param>

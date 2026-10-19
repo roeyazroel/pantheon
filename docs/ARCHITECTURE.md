@@ -124,7 +124,8 @@ files and compiled assemblies and fails when either rule is broken.
   `Weather`, `Disasters`, `Migration` (groups on the road, ADR-016) and `WinnerGodIds` (the god
   or allied gods that have won, spec §53 and §115; ADR-015). Settlements carry their people's
   wish to leave (`Emigration`) and gods their `RefugeePolicy`. Creatures carry their combat
-  skill, scars and views of each other (`CreatureRelation`, ADR-017).
+  skill, scars and views of each other (`CreatureRelation`, ADR-017). `History` holds the moments
+  the world remembers (`HistoryRecord`, ADR-020).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -173,7 +174,8 @@ files and compiled assemblies and fails when either rule is broken.
   new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
   with its `CreatureBondRules` and `CreatureCombatRules` (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
   diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
-  (`weather.json`), `DisasterRules` (`disasters.json`) and `MigrationRules` (`migration.json`).
+  (`weather.json`), `DisasterRules` (`disasters.json`), `MigrationRules` (`migration.json`) and
+  `HistoryRules` (`history.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -229,6 +231,8 @@ files and compiled assemblies and fails when either rule is broken.
 - `Migration/`: `MigrationModel` (pressure, abandonment, appeal, conversion, merging),
   `MigrationSystem` (the migration step), `MigrationAuthority` (refugee policies) and
   `RefugeeAdvisor` (AI gods' policies). See [Migration](#migration).
+- `History/HistoryRecorder` weighs the events of each tick, and of commands through
+  `SimulationEngine.Chronicle`, and keeps the significant ones as the world's history (ADR-020).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
   `Systems/Authorities` bundles the miracle, Creature, diplomacy and migration authorities; the
   first three and the migration step share one ledger.
@@ -275,7 +279,7 @@ files and compiled assemblies and fails when either rule is broken.
   into the list of winners (that god, or none). Version 9 → 10 adds no migration groups, no wish
   to leave and a welcoming refugee policy for every god. Version 10 → 11 gives every Creature no
   combat skill, scars or views of the others, and marks nothing it did as concerning another
-  Creature. A missing, unsupported or newer version
+  Creature. Version 11 → 12 gives the world an empty history. A missing, unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
@@ -371,6 +375,9 @@ files and compiled assemblies and fails when either rule is broken.
   and every player command can name its issuing god (`CastMiracleAs` and the like), which the host
   uses for its players' intents. `SessionEvents` keeps events for the local player and, on a
   host, for the players.
+- `History/HistoryText` and `HistoryReadout` word the chronicle ("Year 12 — The Shaking of Elar");
+  `Flow/EndSummary` builds the end screen, `Flow/Guide` the first-minutes guide (ADR-020).
+  `Persistence/SaveCatalog` lists the saves for the load page.
 - `Population/*`: Tier 2 representative citizens, derived from `WorldState` and never saved:
   `TierSelector`, `RepresentativeRoster`, `CitizenRoutine` and `SettlementCrowd` (see
   [Settlement simulation and population tiers](#settlement-simulation-and-population-tiers)).
@@ -421,6 +428,10 @@ files and compiled assemblies and fails when either rule is broken.
   launch options.
 - `Presentation/Creatures/CreatureView` poses fights (blows traded face to face), games and
   flight, shows a fighter's health on its label, and `CreatureBody` draws scars on the flanks.
+- `Bootstrap/GameFlow` is the game's flow (ADR-020): the start screen, the pause menu (Esc), named
+  saves and the autosave, hosting and joining from the menu (joining reloads the main scene, whose
+  next start reads the host's address from `PendingLaunch`), the end screen, the guide and the history panel (H), drawn by `UI/Flow/`
+  (`MenuScreen`, `HistoryPanel`, `GuidePanel`, `UiKit`).
 - `Network/EnetTransport` puts Godot's `ENetMultiplayerPeer` behind `INetworkTransport` (reliable and
   unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
   (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
@@ -498,6 +509,37 @@ elapsed (× time scale) determines how many ticks run, and the settlement model 
 tenth tick, so its cadence follows simulated time, not frames. The citizens move every frame,
 but their poses are functions of simulation time, so they freeze while paused and speed up
 with the time scale.
+
+## World history and the game's flow
+
+ADR-020 records the decisions, and the Milestone 14 plan
+([.docs/milestone-14-vertical-slice.md](../.docs/milestone-14-vertical-slice.md)) has the rules
+with their shipped values and the measurements.
+
+- **History** is world state. `HistoryRecorder` runs after every tick on the events the tick raised,
+  and after commands through `SimulationEngine.Chronicle`. It keeps only what `history.json` calls
+  significant, does not repeat the same kind for the same place or pair within a while, and notes
+  settlements that fall and are settled again. It is saved, replicated as a section, worded by
+  `HistoryText` and shown in the History panel and on the end screen.
+- **Victory** (amending ADR-015): a god counts with its strongest direct allies only, up to
+  `PantheonMaxGods`.
+- **Flow**: `GameFlow` puts menus over the running world. The start screen shows when the game starts
+  without options; the pause menu pauses a world the player owns (a joined player's keeps running);
+  the end screen opens once per world when it has winners. The guide's steps advance on the events
+  the divine controller hands it.
+
+```mermaid
+flowchart LR
+    Tick["SimulationEngine.Step"] -->|events of the tick| Rec["HistoryRecorder"]
+    Cmd["Session commands"] -->|events, via Chronicle| Rec
+    Rules["history.json"] --> Rec
+    Rec --> Hist["WorldState.History"]
+    Hist --> Text["HistoryText"]
+    Text --> Panel["History panel (H)"]
+    Text --> End["End screen"]
+    Hist --> Save["Save version 12"]
+    Hist --> Section["WorldSection.History"]
+```
 
 ## Multiplayer
 
@@ -1075,11 +1117,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 11 (current)
+    alt version 12 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 10
+    else versions 1 to 11
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 11, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water; 7→8: disasters, fire, scorch, ruins, shields; 8→9: winners; 9→10: migration, refugee policies; 10→11: Creatures' skill, scars and views)
+        Mig-->>Save: JsonObject at version 12, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water; 7→8: disasters, fire, scorch, ruins, shields; 8→9: winners; 9→10: migration, refugee policies; 10→11: Creatures' skill, scars and views; 11→12: history)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
@@ -1166,7 +1208,9 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   multiplayer launch options and readouts. Since Milestone 13 it covers every world section's trip
   into a replica, the sections' rates, change detection, interest, intents reaching players with
   their verdicts, replicas staying with the host, four players, and players coming back to their
-  gods. The tests load the shipped `game/Data/*.json`; rule tests
+  gods. Since Milestone 14 it covers the world's history, the end screen, the guide, the save
+  list, eligible pantheons and the version 11 → 12 migration (against `save-v11.json`). The tests
+  load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
   `WeatherWorlds.Rules`, `DisasterWorlds.Rules`, `MigrationWorlds.Rules`)
   so retuning the data does not change their meaning.

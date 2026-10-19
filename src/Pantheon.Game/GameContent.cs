@@ -35,7 +35,8 @@ namespace Pantheon.Game;
 /// <param name="Weather">Tuning of weather and soil water.</param>
 /// <param name="Disasters">Tuning of wildfires and earthquakes.</param>
 /// <param name="Migration">Tuning of migration.</param>
-public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy, WeatherRules Weather, DisasterRules Disasters, MigrationRules Migration)
+/// <param name="History">What the world's history keeps.</param>
+public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy, WeatherRules Weather, DisasterRules Disasters, MigrationRules Migration, Domain.History.HistoryRules History)
 {
     /// <summary>
     /// A fingerprint of the content files this content was parsed from (SHA-256, hex), so a host can
@@ -45,7 +46,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
 
     /// <summary>The full simulation pipeline over this content.</summary>
     /// <returns>A new engine.</returns>
-    public SimulationEngine CreateEngine() => new(SettlementRules, DivineRules, Creatures, GodAi, Miracles, Diplomacy, Weather, Disasters, Migration);
+    public SimulationEngine CreateEngine() => new(SettlementRules, DivineRules, Creatures, GodAi, Miracles, Diplomacy, Weather, Disasters, Migration, History);
 
     /// <summary>Parses and validates the content files.</summary>
     /// <param name="files">Text of each content file.</param>
@@ -65,6 +66,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         var weather = ContentJson.ParseWeather(files.Weather);
         var disasters = ContentJson.ParseDisasters(files.Disasters);
         var migration = ContentJson.ParseMigration(files.Migration);
+        var history = ContentJson.ParseHistory(files.History);
 
         Check(ContentJson.WorldGenFileName, () =>
         {
@@ -80,15 +82,16 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         Check(ContentJson.WeatherFileName, () => WeatherRulesValidator.Validate(weather));
         Check(ContentJson.DisastersFileName, () => DisasterRulesValidator.Validate(disasters));
         Check(ContentJson.MigrationFileName, () => MigrationRulesValidator.Validate(migration));
+        Check(ContentJson.HistoryFileName, () => Simulation.History.HistoryRulesValidator.Validate(history));
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
-        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration) { Fingerprint = FingerprintOf(files) };
+        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration, history) { Fingerprint = FingerprintOf(files) };
     }
 
     /// <summary>The SHA-256 of every content file's text, in order, as lower-case hex.</summary>
     private static string FingerprintOf(GameContentFiles files)
     {
-        var text = string.Join('\0', files.WorldGen, files.SettlementRules, files.DivineRules, files.Miracles, files.Gods, files.Creatures, files.GodAi, files.Diplomacy, files.Weather, files.Disasters, files.Migration);
+        var text = string.Join('\0', files.WorldGen, files.SettlementRules, files.DivineRules, files.Miracles, files.Gods, files.Creatures, files.GodAi, files.Diplomacy, files.Weather, files.Disasters, files.Migration, files.History);
         return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
@@ -118,7 +121,8 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
 /// <param name="Weather"><c>weather.json</c>.</param>
 /// <param name="Disasters"><c>disasters.json</c>.</param>
 /// <param name="Migration"><c>migration.json</c>.</param>
-public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather, string Disasters, string Migration)
+/// <param name="History"><c>history.json</c>.</param>
+public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather, string Disasters, string Migration, string History)
 {
     /// <summary>Reads every file through a function that returns a content file's text by name.</summary>
     /// <param name="read">Reads one file of <c>game/Data</c>.</param>
@@ -137,6 +141,7 @@ public sealed record GameContentFiles(string WorldGen, string SettlementRules, s
             read(ContentJson.DiplomacyFileName),
             read(ContentJson.WeatherFileName),
             read(ContentJson.DisastersFileName),
-            read(ContentJson.MigrationFileName));
+            read(ContentJson.MigrationFileName),
+            read(ContentJson.HistoryFileName));
     }
 }

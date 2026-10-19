@@ -212,6 +212,9 @@ internal sealed class DivineController
         UpdateOverlay();
     }
 
+    /// <summary>Raised with the events handled this frame, for the game flow (the guide, ADR-020).</summary>
+    public event Action<IReadOnlyList<WorldEvent>>? EventsHandled;
+
     /// <summary>Plays the effects of new miracles and turns events into alerts.</summary>
     private void HandleEvents()
     {
@@ -220,6 +223,8 @@ internal sealed class DivineController
         {
             return;
         }
+
+        EventsHandled?.Invoke(events);
 
         foreach (var worldEvent in events)
         {

@@ -53,6 +53,9 @@ public static class ContentJson
     /// <summary>File name of the migration rules.</summary>
     public const string MigrationFileName = "migration.json";
 
+    /// <summary>File name of the history rules.</summary>
+    public const string HistoryFileName = "history.json";
+
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
     /// <param name="json">File text.</param>
@@ -132,4 +135,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The migration rules.</returns>
     public static MigrationRules ParseMigration(string json) => Parse<MigrationRules>(json, MigrationFileName);
+
+    /// <summary>Parses <c>history.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The history rules.</returns>
+    public static Domain.History.HistoryRules ParseHistory(string json) => Parse<Domain.History.HistoryRules>(json, HistoryFileName);
 }

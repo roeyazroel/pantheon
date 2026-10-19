@@ -70,12 +70,28 @@ internal sealed class NetworkDriver
         return client.Session;
     }
 
+    /// <summary>Whether this game hosts a shared world.</summary>
+    public bool IsHosting => _host is not null;
+
     /// <summary>Hosts the session's world on the port the options name.</summary>
     /// <param name="session">The host's session.</param>
     /// <param name="options">Launch options with <see cref="LaunchOptions.HostPort"/> set.</param>
     public void Host(GameSession session, LaunchOptions options)
     {
-        if (options.HostPort is not { } port || session.IsReplica)
+        if (options.HostPort is { } port)
+        {
+            Host(session, port, options.PlayerName ?? "Host", options.Upnp);
+        }
+    }
+
+    /// <summary>Hosts the session's world on a port, from the options or the menu.</summary>
+    /// <param name="session">The host's session.</param>
+    /// <param name="port">The port.</param>
+    /// <param name="name">The host player's name.</param>
+    /// <param name="upnp">Whether to ask the router for the port.</param>
+    public void Host(GameSession session, int port, string name, bool upnp)
+    {
+        if (session.IsReplica || _host is not null)
         {
             return;
         }
@@ -88,8 +104,8 @@ internal sealed class NetworkDriver
         }
 
         _port = port;
-        _host = new MultiplayerHost(session, transport, options.PlayerName ?? "Host");
-        if (options.Upnp)
+        _host = new MultiplayerHost(session, transport, string.IsNullOrWhiteSpace(name) ? "Host" : name);
+        if (upnp)
         {
             _setStatus(OpenPort(port));
         }

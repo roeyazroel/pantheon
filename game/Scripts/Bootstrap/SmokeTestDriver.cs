@@ -5,11 +5,17 @@ namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
 /// Unattended run support (<c>--quit-after-frames</c>, <c>--screenshot</c>): after a number of
-/// frames it optionally saves a screenshot, prints a one-line summary and quits with exit code 0.
+/// frames it optionally saves a screenshot, prints a one-line summary with the frame times (spec
+/// §104) and quits with exit code 0.
 /// </summary>
 public partial class SmokeTestDriver : Node
 {
     private const string HeadlessDisplayServer = "headless";
+
+    // The first frames build shaders and caches; they are left out of the frame times.
+    private const int WarmUpFrames = 30;
+
+    private readonly System.Collections.Generic.List<double> _frameTimes = [];
 
     private int _frameBudget;
     private int _framesSeen;
@@ -39,6 +45,11 @@ public partial class SmokeTestDriver : Node
     public override void _Process(double delta)
     {
         _framesSeen++;
+        if (_framesSeen > WarmUpFrames)
+        {
+            _frameTimes.Add(delta * 1000.0);
+        }
+
         if (_framesSeen < _frameBudget)
         {
             return;
@@ -51,6 +62,16 @@ public partial class SmokeTestDriver : Node
         }
 
         GD.Print($"Smoke run finished after {_framesSeen} frames: {_summary()}");
+        if (_frameTimes.Count > 0)
+        {
+            _frameTimes.Sort();
+            var average = 0.0;
+            _frameTimes.ForEach(t => average += t / _frameTimes.Count);
+            GD.Print(string.Create(
+                System.Globalization.CultureInfo.InvariantCulture,
+                $"Frame times over {_frameTimes.Count} frames: average {average:0.0} ms ({1000.0 / average:0} FPS), 95th percentile {_frameTimes[(int)(_frameTimes.Count * 0.95)]:0.0} ms, worst {_frameTimes[^1]:0.0} ms"));
+        }
+
         GetTree().Quit();
     }
 

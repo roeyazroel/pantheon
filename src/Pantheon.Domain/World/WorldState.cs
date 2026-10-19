@@ -61,4 +61,7 @@ public sealed class WorldState
     /// until someone wins. The world goes on after a victory.
     /// </summary>
     public required List<int> WinnerGodIds { get; init; }
+
+    /// <summary>The moments the world remembers, oldest first (spec §50, §92, ADR-020).</summary>
+    public required List<History.HistoryRecord> History { get; init; }
 }

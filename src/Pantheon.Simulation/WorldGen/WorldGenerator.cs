@@ -56,6 +56,7 @@ public static class WorldGenerator
             Disasters = new Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
+            History = [],
         };
 
         return new GeneratedWorld(state, terrain);

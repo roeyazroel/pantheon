@@ -127,6 +127,9 @@ public enum WorldSection
 
     /// <summary>Relations, stances and proposals between gods: sent when they change.</summary>
     Diplomacy,
+
+    /// <summary>The world's history (ADR-020): sent when it grows.</summary>
+    History,
 }
 
 /// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>

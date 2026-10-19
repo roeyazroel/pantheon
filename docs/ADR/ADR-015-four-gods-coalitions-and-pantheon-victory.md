@@ -1,6 +1,6 @@
 # ADR-015: Four gods: coalitions, allies' memory and pantheon victory
 
-- Status: Accepted
+- Status: Accepted (amends ADR-011); its pantheon victory amended by ADR-020
 - Date: 2026-10-19
 - Amends: [ADR-011](ADR-011-rival-gods-utility-ai-and-victory.md) (a single winner) and builds on
   [ADR-012](ADR-012-diplomacy-relations-status-and-memory.md) (diplomacy)

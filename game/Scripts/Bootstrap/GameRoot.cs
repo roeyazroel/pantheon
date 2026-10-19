@@ -69,7 +69,8 @@ public partial class GameRoot : Node3D
     /// <summary>Builds the session and the world visuals. Quits with exit code 1 when the content is broken.</summary>
     public override void _Ready()
     {
-        var options = LaunchOptions.Parse(OS.GetCmdlineUserArgs());
+        var arguments = PendingLaunch.Take();
+        var options = LaunchOptions.Parse(arguments);
         ReportLaunchWarnings(options);
         CheckInputMap();
         var loaded = TryLoadContent();
@@ -108,7 +109,11 @@ public partial class GameRoot : Node3D
         _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
         _diplomacy.PolicyClicked += policy => SetStatus(Pantheon.Game.Migration.MigrationCommands.SetPolicy(_session, policy));
         CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
+        var flow = new GameFlow { Name = "GameFlow" };
+        AddChild(flow);
+        flow.Setup(_session, _network, _divine, _diplomacy, SetStatus, options);
         _overlay.PanelVisible = options.DebugPanel ?? false;
+        _session.Scheduler.TimeScale = options.Speed ?? _session.Scheduler.TimeScale;
         if (options.AdvanceTicks is { } ticks)
         {
             SetStatus(SessionCommands.AdvanceTicks(_session, ticks));

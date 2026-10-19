@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.World;
@@ -59,8 +60,9 @@ public sealed class VictorySystem : ISimulationSystem
     }
 
     /// <summary>
-    /// The share of all followers a god holds towards victory, and with whom: its own, or its bloc's
-    /// when it is allied and pantheon victory is on (ADR-015).
+    /// The share of all followers a god holds towards victory, and with whom: its own, or, with
+    /// pantheon victory on, together with its strongest direct allies, at most
+    /// <c>PantheonMaxGods</c> gods in all (ADR-015, ADR-020; ties go to the lower id).
     /// </summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="world">World state.</param>
@@ -75,14 +77,14 @@ public sealed class VictorySystem : ISimulationSystem
             return (own, []);
         }
 
-        var bloc = DiplomacyModel.BlocOf(world, godId);
-        var together = 0f;
-        foreach (var member in bloc)
-        {
-            together += ShareOf(world, member);
-        }
-
-        return bloc.Count > 1 && together > own ? (together, bloc.FindAll(member => member != godId)) : (own, []);
+        var allies = DiplomacyModel.AlliesOf(world, godId)
+            .Select(ally => (Id: ally, Share: ShareOf(world, ally)))
+            .OrderByDescending(ally => ally.Share)
+            .ThenBy(ally => ally.Id)
+            .Take(Math.Max(0, rules.PantheonMaxGods - 1))
+            .ToList();
+        var together = own + allies.Sum(ally => ally.Share);
+        return allies.Count > 0 && together > own ? (together, allies.Select(ally => ally.Id).Order().ToList()) : (own, []);
     }
 
     /// <inheritdoc />

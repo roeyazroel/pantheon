@@ -149,6 +149,12 @@ public sealed record DivineRules
     /// <summary>Whether allied gods who together hold the victory share win together (spec §53 Pantheon victory, ADR-015).</summary>
     public required bool PantheonVictory { get; init; }
 
+    /// <summary>
+    /// Most gods in a pantheon that wins together: a god and its strongest direct allies (spec §53's
+    /// "eligible alliance", ADR-020). Two keeps §54's tension: a god allied with two must leave one out.
+    /// </summary>
+    public required int PantheonMaxGods { get; init; }
+
     /// <summary>Share of a miracle's Love that people get even when they did not need it.</summary>
     public required float GratitudeFloor { get; init; }
 

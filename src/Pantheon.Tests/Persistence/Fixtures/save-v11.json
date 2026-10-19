@@ -1,0 +1,4750 @@
+{
+  "SaveVersion": 11,
+  "World": {
+    "Seed": 77,
+    "Generation": {
+      "HeightmapResolution": 256,
+      "VertexSpacing": 8,
+      "RegionsPerSide": 16,
+      "Shape": {
+        "IslandFalloffStart": 0.5,
+        "IslandFalloffEnd": 1,
+        "RidgeWeight": 0.6,
+        "RidgeMaskStart": 0.5,
+        "RidgeMaskEnd": 0.7,
+        "SeaLevel": 0.24,
+        "LandExponent": 1.5,
+        "MaxElevation": 180,
+        "MaxDepth": 40
+      },
+      "ElevationNoise": {
+        "Frequency": 0.0011,
+        "Octaves": 5,
+        "Lacunarity": 2,
+        "Gain": 0.5
+      },
+      "RidgeNoise": {
+        "Frequency": 0.0024,
+        "Octaves": 4,
+        "Lacunarity": 2.1,
+        "Gain": 0.5
+      },
+      "MoistureNoise": {
+        "Frequency": 0.0016,
+        "Octaves": 3,
+        "Lacunarity": 2,
+        "Gain": 0.5
+      },
+      "TemperatureNoise": {
+        "Frequency": 0.0009,
+        "Octaves": 2,
+        "Lacunarity": 2,
+        "Gain": 0.5
+      },
+      "Climate": {
+        "BaseTemperature": 0.62,
+        "TemperatureVariation": 0.12,
+        "LapseRate": 0.6,
+        "CoastalMoistureBonus": 0.15,
+        "CoastalMoistureRange": 25
+      },
+      "Biomes": [
+        {
+          "Biome": "Sea",
+          "MinElevation": null,
+          "MaxElevation": 0,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": null,
+          "MaxMoisture": null,
+          "BaseFertility": 0,
+          "BaseVegetation": 0
+        },
+        {
+          "Biome": "Highland",
+          "MinElevation": 70,
+          "MaxElevation": null,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": null,
+          "MaxMoisture": null,
+          "BaseFertility": 0.25,
+          "BaseVegetation": 0.2
+        },
+        {
+          "Biome": "Forest",
+          "MinElevation": null,
+          "MaxElevation": null,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": 0.55,
+          "MaxMoisture": null,
+          "BaseFertility": 0.6,
+          "BaseVegetation": 0.9
+        },
+        {
+          "Biome": "Grassland",
+          "MinElevation": null,
+          "MaxElevation": null,
+          "MinTemperature": null,
+          "MaxTemperature": null,
+          "MinMoisture": null,
+          "MaxMoisture": null,
+          "BaseFertility": 0.9,
+          "BaseVegetation": 0.5
+        }
+      ],
+      "StartingSettlement": {
+        "Count": 8,
+        "MinimumSpacing": 5,
+        "Population": 40,
+        "PopulationVariation": 0.35,
+        "Food": 120,
+        "Housing": 60,
+        "CenterPreference": 0.35,
+        "Names": [
+          "Aldermere",
+          "Brightwater",
+          "Thornhollow",
+          "Kestrel Rise",
+          "Emberfield",
+          "Mossgate",
+          "Saltreach",
+          "Larkspur",
+          "Elar",
+          "Valen",
+          "Cinderford",
+          "Wrenmoor",
+          "Ashcombe",
+          "Fernhollow",
+          "Duskwater",
+          "Harrowmere"
+        ]
+      }
+    },
+    "Tick": 2400,
+    "Random": {
+      "S0": 12021195958430969048,
+      "S1": 3340242209897897666,
+      "S2": 9705227349949947408,
+      "S3": 17365275547893259423
+    },
+    "Regions": {
+      "Columns": 16,
+      "Rows": 16,
+      "RegionSize": 128,
+      "Cells": [
+        {
+          "Id": 0,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6376819,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 1,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6582856,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 2,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6542157,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 3,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.64571565,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 4,
+          "Biome": "Sea",
+          "Elevation": -39.972103,
+          "Temperature": 0.67357224,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 5,
+          "Biome": "Sea",
+          "Elevation": -39.568127,
+          "Temperature": 0.68893254,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 6,
+          "Biome": "Sea",
+          "Elevation": -38.109024,
+          "Temperature": 0.656327,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 7,
+          "Biome": "Sea",
+          "Elevation": -37.049763,
+          "Temperature": 0.64201945,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 8,
+          "Biome": "Sea",
+          "Elevation": -37.295895,
+          "Temperature": 0.6342254,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 9,
+          "Biome": "Sea",
+          "Elevation": -37.366875,
+          "Temperature": 0.5852914,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 10,
+          "Biome": "Sea",
+          "Elevation": -39.44606,
+          "Temperature": 0.55095553,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 11,
+          "Biome": "Sea",
+          "Elevation": -39.97846,
+          "Temperature": 0.56203467,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 12,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5617403,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 13,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5675866,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 14,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.611314,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 15,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.63205034,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 16,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.61225724,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 17,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.64948845,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 18,
+          "Biome": "Sea",
+          "Elevation": -39.99833,
+          "Temperature": 0.6609208,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 19,
+          "Biome": "Sea",
+          "Elevation": -39.543297,
+          "Temperature": 0.66094613,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 20,
+          "Biome": "Sea",
+          "Elevation": -37.7664,
+          "Temperature": 0.7023476,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 21,
+          "Biome": "Sea",
+          "Elevation": -33.487892,
+          "Temperature": 0.7082136,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 22,
+          "Biome": "Sea",
+          "Elevation": -24.896954,
+          "Temperature": 0.6549667,
+          "Moisture": 0.9971792,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9971792,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 23,
+          "Biome": "Sea",
+          "Elevation": -13.515424,
+          "Temperature": 0.6238585,
+          "Moisture": 0.97383,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.97383,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 24,
+          "Biome": "Sea",
+          "Elevation": -14.488225,
+          "Temperature": 0.60635686,
+          "Moisture": 0.98687303,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.98687303,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 25,
+          "Biome": "Sea",
+          "Elevation": -18.466768,
+          "Temperature": 0.5530128,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 26,
+          "Biome": "Sea",
+          "Elevation": -32.122375,
+          "Temperature": 0.52427864,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 27,
+          "Biome": "Sea",
+          "Elevation": -37.27881,
+          "Temperature": 0.52363855,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 28,
+          "Biome": "Sea",
+          "Elevation": -39.661278,
+          "Temperature": 0.530494,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 29,
+          "Biome": "Sea",
+          "Elevation": -39.999443,
+          "Temperature": 0.57260895,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 30,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.62664896,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 31,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.625763,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 32,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.58859533,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 33,
+          "Biome": "Sea",
+          "Elevation": -39.99788,
+          "Temperature": 0.6354975,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 34,
+          "Biome": "Sea",
+          "Elevation": -37.824707,
+          "Temperature": 0.64735794,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 35,
+          "Biome": "Sea",
+          "Elevation": -31.453014,
+          "Temperature": 0.65104616,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 36,
+          "Biome": "Sea",
+          "Elevation": -28.154715,
+          "Temperature": 0.6989366,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 37,
+          "Biome": "Sea",
+          "Elevation": -20.81404,
+          "Temperature": 0.7155569,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 38,
+          "Biome": "Sea",
+          "Elevation": -0.43482688,
+          "Temperature": 0.6492151,
+          "Moisture": 0.7821505,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.7821505,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 39,
+          "Biome": "Forest",
+          "Elevation": 26.317125,
+          "Temperature": 0.55534095,
+          "Moisture": 0.61465555,
+          "Fertility": 0.39824012,
+          "Vegetation": 0.69191396,
+          "Blessing": 0,
+          "SoilMoisture": 0.53769505,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 40,
+          "Biome": "Forest",
+          "Elevation": 15.035883,
+          "Temperature": 0.5568543,
+          "Moisture": 0.83831996,
+          "Fertility": 0.43246982,
+          "Vegetation": 0.77459776,
+          "Blessing": 0,
+          "SoilMoisture": 0.50740653,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 41,
+          "Biome": "Sea",
+          "Elevation": -6.7719197,
+          "Temperature": 0.5680582,
+          "Moisture": 0.99853784,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.99853784,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 42,
+          "Biome": "Sea",
+          "Elevation": -17.636961,
+          "Temperature": 0.5565956,
+          "Moisture": 0.99955994,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.99955994,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 43,
+          "Biome": "Sea",
+          "Elevation": -31.72525,
+          "Temperature": 0.55161715,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 44,
+          "Biome": "Sea",
+          "Elevation": -36.54876,
+          "Temperature": 0.567156,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 45,
+          "Biome": "Sea",
+          "Elevation": -39.474968,
+          "Temperature": 0.61183673,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 46,
+          "Biome": "Sea",
+          "Elevation": -39.999012,
+          "Temperature": 0.6419556,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 47,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.61006665,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 48,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.60599345,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 49,
+          "Biome": "Sea",
+          "Elevation": -38.9201,
+          "Temperature": 0.6224797,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 50,
+          "Biome": "Sea",
+          "Elevation": -24.176367,
+          "Temperature": 0.6305798,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 51,
+          "Biome": "Sea",
+          "Elevation": -6.9615355,
+          "Temperature": 0.6355676,
+          "Moisture": 0.85764617,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.85764617,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 52,
+          "Biome": "Sea",
+          "Elevation": -19.688263,
+          "Temperature": 0.6596016,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 53,
+          "Biome": "Sea",
+          "Elevation": -21.21549,
+          "Temperature": 0.6726247,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 54,
+          "Biome": "Sea",
+          "Elevation": -7.425701,
+          "Temperature": 0.6665557,
+          "Moisture": 0.8905257,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.8905257,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 55,
+          "Biome": "Grassland",
+          "Elevation": 20.525068,
+          "Temperature": 0.5987871,
+          "Moisture": 0.44145963,
+          "Fertility": 0.5211581,
+          "Vegetation": 0.31815347,
+          "Blessing": 0,
+          "SoilMoisture": 0.36722767,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 56,
+          "Biome": "Forest",
+          "Elevation": 20.364243,
+          "Temperature": 0.5543636,
+          "Moisture": 0.7018604,
+          "Fertility": 0.41790995,
+          "Vegetation": 0.7361179,
+          "Blessing": 0,
+          "SoilMoisture": 0.49374834,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 57,
+          "Biome": "Sea",
+          "Elevation": -1.0164069,
+          "Temperature": 0.5896352,
+          "Moisture": 0.9120025,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9120025,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 58,
+          "Biome": "Sea",
+          "Elevation": -12.753932,
+          "Temperature": 0.6172294,
+          "Moisture": 0.99731624,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.99731624,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 59,
+          "Biome": "Sea",
+          "Elevation": -28.525734,
+          "Temperature": 0.64356637,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 60,
+          "Biome": "Sea",
+          "Elevation": -29.00915,
+          "Temperature": 0.6546064,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 61,
+          "Biome": "Sea",
+          "Elevation": -34.272057,
+          "Temperature": 0.6543037,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 62,
+          "Biome": "Sea",
+          "Elevation": -39.363766,
+          "Temperature": 0.6523756,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 63,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.61793524,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 64,
+          "Biome": "Sea",
+          "Elevation": -39.93402,
+          "Temperature": 0.6169809,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 65,
+          "Biome": "Sea",
+          "Elevation": -33.441204,
+          "Temperature": 0.6151178,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 66,
+          "Biome": "Sea",
+          "Elevation": -9.7416,
+          "Temperature": 0.617532,
+          "Moisture": 0.9523852,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9523852,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 67,
+          "Biome": "Forest",
+          "Elevation": 8.45269,
+          "Temperature": 0.5960233,
+          "Moisture": 0.58301616,
+          "Fertility": 0.39660934,
+          "Vegetation": 0.6721927,
+          "Blessing": 0,
+          "SoilMoisture": 0.4346609,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 68,
+          "Biome": "Sea",
+          "Elevation": -7.860187,
+          "Temperature": 0.62156385,
+          "Moisture": 0.9312732,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9312732,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 69,
+          "Biome": "Sea",
+          "Elevation": -19.179148,
+          "Temperature": 0.63246685,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 70,
+          "Biome": "Sea",
+          "Elevation": -13.651105,
+          "Temperature": 0.64872056,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0.84478277,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 71,
+          "Biome": "Grassland",
+          "Elevation": 9.517756,
+          "Temperature": 0.6255673,
+          "Moisture": 0.55689126,
+          "Fertility": 0.44209874,
+          "Vegetation": 0.27243283,
+          "Blessing": 0,
+          "SoilMoisture": 0.3757425,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 72,
+          "Biome": "Grassland",
+          "Elevation": 53.973244,
+          "Temperature": 0.45032865,
+          "Moisture": 0.4568397,
+          "Fertility": 0.5114369,
+          "Vegetation": 0.33705193,
+          "Blessing": 0,
+          "SoilMoisture": 0.4836443,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 73,
+          "Biome": "Forest",
+          "Elevation": 8.758696,
+          "Temperature": 0.58398736,
+          "Moisture": 0.64702046,
+          "Fertility": 0.3813148,
+          "Vegetation": 0.65674096,
+          "Blessing": 0,
+          "SoilMoisture": 0.5113542,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 74,
+          "Biome": "Sea",
+          "Elevation": -2.3188677,
+          "Temperature": 0.659542,
+          "Moisture": 0.9123066,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9123066,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 75,
+          "Biome": "Sea",
+          "Elevation": -5.080923,
+          "Temperature": 0.70087355,
+          "Moisture": 0.88342655,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.88342655,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 76,
+          "Biome": "Sea",
+          "Elevation": -11.678807,
+          "Temperature": 0.7044758,
+          "Moisture": 0.97657776,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.97657776,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 77,
+          "Biome": "Sea",
+          "Elevation": -15.884007,
+          "Temperature": 0.6766381,
+          "Moisture": 0.9928111,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9928111,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 78,
+          "Biome": "Sea",
+          "Elevation": -33.429787,
+          "Temperature": 0.6795822,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 79,
+          "Biome": "Sea",
+          "Elevation": -39.922916,
+          "Temperature": 0.6604723,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 80,
+          "Biome": "Sea",
+          "Elevation": -38.707695,
+          "Temperature": 0.60458934,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 81,
+          "Biome": "Sea",
+          "Elevation": -20.246311,
+          "Temperature": 0.59461844,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 82,
+          "Biome": "Forest",
+          "Elevation": 2.554258,
+          "Temperature": 0.5641339,
+          "Moisture": 0.83218735,
+          "Fertility": 0.30668688,
+          "Vegetation": 0.54696465,
+          "Blessing": 0,
+          "SoilMoisture": 0.4897381,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 83,
+          "Biome": "Forest",
+          "Elevation": 12.002497,
+          "Temperature": 0.5525613,
+          "Moisture": 0.8347314,
+          "Fertility": 0.45190787,
+          "Vegetation": 0.81075495,
+          "Blessing": 0,
+          "SoilMoisture": 0.49855232,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 84,
+          "Biome": "Sea",
+          "Elevation": -5.1775713,
+          "Temperature": 0.6074458,
+          "Moisture": 0.9566519,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9566519,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 85,
+          "Biome": "Sea",
+          "Elevation": -13.713105,
+          "Temperature": 0.6181021,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0.84478277,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 86,
+          "Biome": "Grassland",
+          "Elevation": 6.5759616,
+          "Temperature": 0.59147775,
+          "Moisture": 0.5254394,
+          "Fertility": 0.39705804,
+          "Vegetation": 0.24726887,
+          "Blessing": 0.84478277,
+          "SoilMoisture": 0.410775,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 87,
+          "Biome": "Grassland",
+          "Elevation": 41.395462,
+          "Temperature": 0.48006064,
+          "Moisture": 0.30486515,
+          "Fertility": 0.4650682,
+          "Vegetation": 0.29145956,
+          "Blessing": 0.84478277,
+          "SoilMoisture": 0.34600806,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 88,
+          "Biome": "Grassland",
+          "Elevation": 36.321453,
+          "Temperature": 0.4971244,
+          "Moisture": 0.4068975,
+          "Fertility": 0.5057549,
+          "Vegetation": 0.32206926,
+          "Blessing": 0,
+          "SoilMoisture": 0.4891775,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 89,
+          "Biome": "Sea",
+          "Elevation": 0.87433535,
+          "Temperature": 0.61719453,
+          "Moisture": 0.77005553,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.77005553,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 90,
+          "Biome": "Forest",
+          "Elevation": 1.4916784,
+          "Temperature": 0.661581,
+          "Moisture": 0.75655943,
+          "Fertility": 0.28299108,
+          "Vegetation": 0.4773367,
+          "Blessing": 0,
+          "SoilMoisture": 0.47491437,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 91,
+          "Biome": "Grassland",
+          "Elevation": 10.513333,
+          "Temperature": 0.68268967,
+          "Moisture": 0.42240947,
+          "Fertility": 0.5588421,
+          "Vegetation": 0.32672286,
+          "Blessing": 0,
+          "SoilMoisture": 0.25232714,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 92,
+          "Biome": "Grassland",
+          "Elevation": 18.880423,
+          "Temperature": 0.63659173,
+          "Moisture": 0.4854793,
+          "Fertility": 0.57129526,
+          "Vegetation": 0.34564382,
+          "Blessing": 0,
+          "SoilMoisture": 0.29352728,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 93,
+          "Biome": "Forest",
+          "Elevation": 6.1050777,
+          "Temperature": 0.64402384,
+          "Moisture": 0.77887857,
+          "Fertility": 0.41119233,
+          "Vegetation": 0.7013153,
+          "Blessing": 0,
+          "SoilMoisture": 0.44427425,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 94,
+          "Biome": "Sea",
+          "Elevation": -21.99126,
+          "Temperature": 0.6934805,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 95,
+          "Biome": "Sea",
+          "Elevation": -39.014275,
+          "Temperature": 0.69982046,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 96,
+          "Biome": "Sea",
+          "Elevation": -37.452045,
+          "Temperature": 0.5825326,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 97,
+          "Biome": "Sea",
+          "Elevation": -24.36174,
+          "Temperature": 0.56854093,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 98,
+          "Biome": "Sea",
+          "Elevation": -11.15526,
+          "Temperature": 0.55350083,
+          "Moisture": 0.9967649,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9967649,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 99,
+          "Biome": "Forest",
+          "Elevation": 3.2938232,
+          "Temperature": 0.5590331,
+          "Moisture": 0.87526053,
+          "Fertility": 0.34027037,
+          "Vegetation": 0.6114705,
+          "Blessing": 0,
+          "SoilMoisture": 0.51958954,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 100,
+          "Biome": "Forest",
+          "Elevation": 13.72231,
+          "Temperature": 0.536413,
+          "Moisture": 0.73699117,
+          "Fertility": 0.37472546,
+          "Vegetation": 0.66915,
+          "Blessing": 0,
+          "SoilMoisture": 0.5018517,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 101,
+          "Biome": "Sea",
+          "Elevation": 1.1032683,
+          "Temperature": 0.5695695,
+          "Moisture": 0.7334337,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.7334337,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 102,
+          "Biome": "Grassland",
+          "Elevation": 45.15959,
+          "Temperature": 0.44217178,
+          "Moisture": 0.27290016,
+          "Fertility": 0.44325605,
+          "Vegetation": 0.28076902,
+          "Blessing": 0.84478277,
+          "SoilMoisture": 0.35356018,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 103,
+          "Biome": "Grassland",
+          "Elevation": 66.70806,
+          "Temperature": 0.3610418,
+          "Moisture": 0.44382197,
+          "Fertility": 0.4836623,
+          "Vegetation": 0.3331466,
+          "Blessing": 0,
+          "SoilMoisture": 0.48492935,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 104,
+          "Biome": "Grassland",
+          "Elevation": 20.825197,
+          "Temperature": 0.5122086,
+          "Moisture": 0.56168103,
+          "Fertility": 0.56563705,
+          "Vegetation": 0.36850432,
+          "Blessing": 0,
+          "SoilMoisture": 0.54864365,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 105,
+          "Biome": "Sea",
+          "Elevation": -4.794411,
+          "Temperature": 0.6007747,
+          "Moisture": 0.8536867,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.8536867,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 106,
+          "Biome": "Sea",
+          "Elevation": -6.500925,
+          "Temperature": 0.64540184,
+          "Moisture": 0.9463487,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9463487,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 107,
+          "Biome": "Grassland",
+          "Elevation": -0.6797851,
+          "Temperature": 0.701217,
+          "Moisture": 0.59393585,
+          "Fertility": 0.43912303,
+          "Vegetation": 0.2629538,
+          "Blessing": 0,
+          "SoilMoisture": 0.3404195,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 108,
+          "Biome": "Grassland",
+          "Elevation": 3.561504,
+          "Temperature": 0.6822063,
+          "Moisture": 0.5588739,
+          "Fertility": 0.42814642,
+          "Vegetation": 0.2570763,
+          "Blessing": 0,
+          "SoilMoisture": 0.32557768,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 109,
+          "Biome": "Sea",
+          "Elevation": -4.518143,
+          "Temperature": 0.6563936,
+          "Moisture": 0.84129244,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.84129244,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 110,
+          "Biome": "Sea",
+          "Elevation": -19.681597,
+          "Temperature": 0.68619114,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 111,
+          "Biome": "Sea",
+          "Elevation": -37.398403,
+          "Temperature": 0.7094367,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 112,
+          "Biome": "Sea",
+          "Elevation": -37.729218,
+          "Temperature": 0.55150473,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 113,
+          "Biome": "Sea",
+          "Elevation": -28.882044,
+          "Temperature": 0.56013346,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 114,
+          "Biome": "Sea",
+          "Elevation": -13.714668,
+          "Temperature": 0.5734237,
+          "Moisture": 0.98390603,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.98390603,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 115,
+          "Biome": "Grassland",
+          "Elevation": 39.03455,
+          "Temperature": 0.4553395,
+          "Moisture": 0.45456162,
+          "Fertility": 0.4939509,
+          "Vegetation": 0.32454306,
+          "Blessing": 0,
+          "SoilMoisture": 0.326687,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 116,
+          "Biome": "Grassland",
+          "Elevation": 46.409225,
+          "Temperature": 0.402764,
+          "Moisture": 0.4776581,
+          "Fertility": 0.50609416,
+          "Vegetation": 0.34329742,
+          "Blessing": 0,
+          "SoilMoisture": 0.44523007,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 117,
+          "Biome": "Grassland",
+          "Elevation": 60.787903,
+          "Temperature": 0.35118416,
+          "Moisture": 0.50427556,
+          "Fertility": 0.5012444,
+          "Vegetation": 0.35128266,
+          "Blessing": 0,
+          "SoilMoisture": 0.47463474,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 118,
+          "Biome": "Forest",
+          "Elevation": 64.68214,
+          "Temperature": 0.3684309,
+          "Moisture": 0.53212595,
+          "Fertility": 0.34352058,
+          "Vegetation": 0.64734805,
+          "Blessing": 0,
+          "SoilMoisture": 0.4815527,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 119,
+          "Biome": "Highland",
+          "Elevation": 74.98986,
+          "Temperature": 0.31664014,
+          "Moisture": 0.76254994,
+          "Fertility": 0.16009595,
+          "Vegetation": 0.171506,
+          "Blessing": 0,
+          "SoilMoisture": 0.626725,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 120,
+          "Biome": "Forest",
+          "Elevation": -0.06256591,
+          "Temperature": 0.5437016,
+          "Moisture": 0.89045286,
+          "Fertility": 0.2372444,
+          "Vegetation": 0.43027592,
+          "Blessing": 0,
+          "SoilMoisture": 0.62622106,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 121,
+          "Biome": "Sea",
+          "Elevation": -12.357982,
+          "Temperature": 0.58426726,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 122,
+          "Biome": "Sea",
+          "Elevation": -13.059716,
+          "Temperature": 0.62727,
+          "Moisture": 0.993036,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.993036,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 123,
+          "Biome": "Forest",
+          "Elevation": -1.4298908,
+          "Temperature": 0.6735775,
+          "Moisture": 0.8166927,
+          "Fertility": 0.27209166,
+          "Vegetation": 0.4599573,
+          "Blessing": 0,
+          "SoilMoisture": 0.4556423,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 124,
+          "Biome": "Sea",
+          "Elevation": -10.59056,
+          "Temperature": 0.68096536,
+          "Moisture": 0.9990902,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9990902,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 125,
+          "Biome": "Sea",
+          "Elevation": -22.896166,
+          "Temperature": 0.67566365,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 126,
+          "Biome": "Sea",
+          "Elevation": -28.202288,
+          "Temperature": 0.6962792,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 127,
+          "Biome": "Sea",
+          "Elevation": -37.79197,
+          "Temperature": 0.7121803,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 128,
+          "Biome": "Sea",
+          "Elevation": -37.895638,
+          "Temperature": 0.53991294,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 129,
+          "Biome": "Sea",
+          "Elevation": -28.3108,
+          "Temperature": 0.5747359,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 130,
+          "Biome": "Sea",
+          "Elevation": -11.934225,
+          "Temperature": 0.58803964,
+          "Moisture": 0.9770056,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9770056,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 131,
+          "Biome": "Grassland",
+          "Elevation": 22.571539,
+          "Temperature": 0.49476147,
+          "Moisture": 0.348755,
+          "Fertility": 0.47103798,
+          "Vegetation": 0.2962969,
+          "Blessing": 0,
+          "SoilMoisture": 0.24755807,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 132,
+          "Biome": "Grassland",
+          "Elevation": 65.36916,
+          "Temperature": 0.31049126,
+          "Moisture": 0.4567154,
+          "Fertility": 0.47472668,
+          "Vegetation": 0.33701462,
+          "Blessing": 0,
+          "SoilMoisture": 0.42402616,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 133,
+          "Biome": "Highland",
+          "Elevation": 74.166115,
+          "Temperature": 0.28637826,
+          "Moisture": 0.6531142,
+          "Fertility": 0.14765437,
+          "Vegetation": 0.15837371,
+          "Blessing": 0,
+          "SoilMoisture": 0.53969693,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 134,
+          "Biome": "Forest",
+          "Elevation": 69.42534,
+          "Temperature": 0.34076405,
+          "Moisture": 0.7637867,
+          "Fertility": 0.38960582,
+          "Vegetation": 0.7724448,
+          "Blessing": 0,
+          "SoilMoisture": 0.56946576,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 135,
+          "Biome": "Highland",
+          "Elevation": 80.590416,
+          "Temperature": 0.28807652,
+          "Moisture": 0.66151136,
+          "Fertility": 0.14854549,
+          "Vegetation": 0.15938137,
+          "Blessing": 0,
+          "SoilMoisture": 0.60259515,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 136,
+          "Biome": "Forest",
+          "Elevation": 2.6725347,
+          "Temperature": 0.538308,
+          "Moisture": 0.7719492,
+          "Fertility": 0.2641113,
+          "Vegetation": 0.4733945,
+          "Blessing": 0,
+          "SoilMoisture": 0.58905345,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 137,
+          "Biome": "Sea",
+          "Elevation": -12.012023,
+          "Temperature": 0.6154619,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 138,
+          "Biome": "Sea",
+          "Elevation": -8.573885,
+          "Temperature": 0.6569735,
+          "Moisture": 0.9893026,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9893026,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 139,
+          "Biome": "Sea",
+          "Elevation": -3.316565,
+          "Temperature": 0.6667869,
+          "Moisture": 0.92849374,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.92849374,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 140,
+          "Biome": "Sea",
+          "Elevation": -13.613087,
+          "Temperature": 0.6610567,
+          "Moisture": 0.995103,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.995103,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 141,
+          "Biome": "Sea",
+          "Elevation": -19.965315,
+          "Temperature": 0.68790317,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 142,
+          "Biome": "Sea",
+          "Elevation": -28.311756,
+          "Temperature": 0.71461344,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 143,
+          "Biome": "Sea",
+          "Elevation": -37.647923,
+          "Temperature": 0.6944795,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 144,
+          "Biome": "Sea",
+          "Elevation": -38.92399,
+          "Temperature": 0.5695985,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 145,
+          "Biome": "Sea",
+          "Elevation": -28.657234,
+          "Temperature": 0.60193324,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 146,
+          "Biome": "Sea",
+          "Elevation": -8.622077,
+          "Temperature": 0.5787676,
+          "Moisture": 0.8616961,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.8616961,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 147,
+          "Biome": "Grassland",
+          "Elevation": 7.4471292,
+          "Temperature": 0.5146716,
+          "Moisture": 0.3833341,
+          "Fertility": 0.49773434,
+          "Vegetation": 0.3125393,
+          "Blessing": 0,
+          "SoilMoisture": 0.2567458,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 148,
+          "Biome": "Grassland",
+          "Elevation": 56.645184,
+          "Temperature": 0.32936785,
+          "Moisture": 0.48399395,
+          "Fertility": 0.48865876,
+          "Vegetation": 0.3451982,
+          "Blessing": 0,
+          "SoilMoisture": 0.39125794,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 149,
+          "Biome": "Forest",
+          "Elevation": 34.32436,
+          "Temperature": 0.43437722,
+          "Moisture": 0.67682624,
+          "Fertility": 0.38923377,
+          "Vegetation": 0.72548616,
+          "Blessing": 0,
+          "SoilMoisture": 0.48357612,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 150,
+          "Biome": "Forest",
+          "Elevation": 48.071537,
+          "Temperature": 0.41340637,
+          "Moisture": 0.6998168,
+          "Fertility": 0.39029288,
+          "Vegetation": 0.7379011,
+          "Blessing": 0,
+          "SoilMoisture": 0.50067806,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 151,
+          "Biome": "Forest",
+          "Elevation": 45.422638,
+          "Temperature": 0.40148005,
+          "Moisture": 0.6058522,
+          "Fertility": 0.36641952,
+          "Vegetation": 0.68716013,
+          "Blessing": 0,
+          "SoilMoisture": 0.52935994,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 152,
+          "Biome": "Forest",
+          "Elevation": 2.5526469,
+          "Temperature": 0.558284,
+          "Moisture": 0.714634,
+          "Fertility": 0.33251718,
+          "Vegetation": 0.5856499,
+          "Blessing": 0,
+          "SoilMoisture": 0.5567313,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 153,
+          "Biome": "Sea",
+          "Elevation": -10.278157,
+          "Temperature": 0.62204754,
+          "Moisture": 0.98757863,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.98757863,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 154,
+          "Biome": "Sea",
+          "Elevation": -14.417674,
+          "Temperature": 0.66035724,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 155,
+          "Biome": "Sea",
+          "Elevation": -19.639698,
+          "Temperature": 0.67222184,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 156,
+          "Biome": "Sea",
+          "Elevation": -18.468966,
+          "Temperature": 0.66659904,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 157,
+          "Biome": "Sea",
+          "Elevation": -18.00248,
+          "Temperature": 0.6913952,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 158,
+          "Biome": "Sea",
+          "Elevation": -27.274435,
+          "Temperature": 0.70245814,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 159,
+          "Biome": "Sea",
+          "Elevation": -38.686024,
+          "Temperature": 0.6543423,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 160,
+          "Biome": "Sea",
+          "Elevation": -39.633675,
+          "Temperature": 0.6090483,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 161,
+          "Biome": "Sea",
+          "Elevation": -32.102135,
+          "Temperature": 0.61310214,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 162,
+          "Biome": "Sea",
+          "Elevation": -13.156567,
+          "Temperature": 0.5614056,
+          "Moisture": 0.9656013,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9656013,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 163,
+          "Biome": "Grassland",
+          "Elevation": 30.863396,
+          "Temperature": 0.42789176,
+          "Moisture": 0.38563755,
+          "Fertility": 0.4583051,
+          "Vegetation": 0.30089325,
+          "Blessing": 0,
+          "SoilMoisture": 0.2653545,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 164,
+          "Biome": "Grassland",
+          "Elevation": 53.29898,
+          "Temperature": 0.36743718,
+          "Moisture": 0.49933654,
+          "Fertility": 0.503985,
+          "Vegetation": 0.34980097,
+          "Blessing": 0,
+          "SoilMoisture": 0.3633904,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 165,
+          "Biome": "Forest",
+          "Elevation": 20.62337,
+          "Temperature": 0.5138983,
+          "Moisture": 0.711233,
+          "Fertility": 0.41354993,
+          "Vegetation": 0.7440658,
+          "Blessing": 0,
+          "SoilMoisture": 0.4591978,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 166,
+          "Biome": "Forest",
+          "Elevation": 18.042574,
+          "Temperature": 0.51086134,
+          "Moisture": 0.5872811,
+          "Fertility": 0.38301626,
+          "Vegetation": 0.6771318,
+          "Blessing": 0,
+          "SoilMoisture": 0.39908385,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 167,
+          "Biome": "Grassland",
+          "Elevation": 11.259526,
+          "Temperature": 0.49589518,
+          "Moisture": 0.5123702,
+          "Fertility": 0.54333586,
+          "Vegetation": 0.35371107,
+          "Blessing": 0,
+          "SoilMoisture": 0.45165306,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 168,
+          "Biome": "Forest",
+          "Elevation": 1.4451103,
+          "Temperature": 0.5414491,
+          "Moisture": 0.5948573,
+          "Fertility": 0.38611993,
+          "Vegetation": 0.6732398,
+          "Blessing": 0,
+          "SoilMoisture": 0.54920185,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 169,
+          "Biome": "Forest",
+          "Elevation": -0.2961961,
+          "Temperature": 0.57417667,
+          "Moisture": 0.78954923,
+          "Fertility": 0.28534782,
+          "Vegetation": 0.50375974,
+          "Blessing": 0,
+          "SoilMoisture": 0.5912306,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 170,
+          "Biome": "Sea",
+          "Elevation": -13.400028,
+          "Temperature": 0.6160607,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 171,
+          "Biome": "Sea",
+          "Elevation": -26.54534,
+          "Temperature": 0.6632607,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 172,
+          "Biome": "Sea",
+          "Elevation": -18.336903,
+          "Temperature": 0.68372846,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 173,
+          "Biome": "Sea",
+          "Elevation": -19.77089,
+          "Temperature": 0.67680115,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 174,
+          "Biome": "Sea",
+          "Elevation": -31.28596,
+          "Temperature": 0.6421115,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 175,
+          "Biome": "Sea",
+          "Elevation": -39.61605,
+          "Temperature": 0.5993301,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 176,
+          "Biome": "Sea",
+          "Elevation": -39.9789,
+          "Temperature": 0.6340934,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 177,
+          "Biome": "Sea",
+          "Elevation": -37.35987,
+          "Temperature": 0.6289484,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 178,
+          "Biome": "Sea",
+          "Elevation": -22.990566,
+          "Temperature": 0.59266174,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 179,
+          "Biome": "Forest",
+          "Elevation": 13.949133,
+          "Temperature": 0.5364457,
+          "Moisture": 0.7116864,
+          "Fertility": 0.39704946,
+          "Vegetation": 0.7065136,
+          "Blessing": 0,
+          "SoilMoisture": 0.4344787,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 180,
+          "Biome": "Forest",
+          "Elevation": 43.89025,
+          "Temperature": 0.44247645,
+          "Moisture": 0.63958436,
+          "Fertility": 0.3821825,
+          "Vegetation": 0.70537555,
+          "Blessing": 0,
+          "SoilMoisture": 0.4175303,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 181,
+          "Biome": "Forest",
+          "Elevation": 8.917747,
+          "Temperature": 0.5617175,
+          "Moisture": 0.8154726,
+          "Fertility": 0.449159,
+          "Vegetation": 0.8003552,
+          "Blessing": 0,
+          "SoilMoisture": 0.48957902,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 182,
+          "Biome": "Forest",
+          "Elevation": 7.543519,
+          "Temperature": 0.5334793,
+          "Moisture": 0.76640856,
+          "Fertility": 0.43103465,
+          "Vegetation": 0.77386063,
+          "Blessing": 0,
+          "SoilMoisture": 0.48111165,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 183,
+          "Biome": "Grassland",
+          "Elevation": 0.5039321,
+          "Temperature": 0.5243964,
+          "Moisture": 0.6997422,
+          "Fertility": 0.40888187,
+          "Vegetation": 0.270613,
+          "Blessing": 0,
+          "SoilMoisture": 0.49775577,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 184,
+          "Biome": "Sea",
+          "Elevation": -4.4546876,
+          "Temperature": 0.55537814,
+          "Moisture": 0.82753336,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.82753336,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 185,
+          "Biome": "Sea",
+          "Elevation": -4.038056,
+          "Temperature": 0.58109045,
+          "Moisture": 0.8440845,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.8440845,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 186,
+          "Biome": "Sea",
+          "Elevation": -5.861818,
+          "Temperature": 0.60869133,
+          "Moisture": 0.9668785,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9668785,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 187,
+          "Biome": "Sea",
+          "Elevation": -15.59487,
+          "Temperature": 0.6586183,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 188,
+          "Biome": "Sea",
+          "Elevation": -22.55441,
+          "Temperature": 0.6812841,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 189,
+          "Biome": "Sea",
+          "Elevation": -23.799015,
+          "Temperature": 0.6490688,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 190,
+          "Biome": "Sea",
+          "Elevation": -34.418076,
+          "Temperature": 0.58562434,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 191,
+          "Biome": "Sea",
+          "Elevation": -39.968136,
+          "Temperature": 0.5727062,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 192,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6697699,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 193,
+          "Biome": "Sea",
+          "Elevation": -39.316463,
+          "Temperature": 0.6821708,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 194,
+          "Biome": "Sea",
+          "Elevation": -30.338923,
+          "Temperature": 0.6733755,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 195,
+          "Biome": "Sea",
+          "Elevation": -5.694138,
+          "Temperature": 0.6594217,
+          "Moisture": 0.9573511,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9573511,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 196,
+          "Biome": "Forest",
+          "Elevation": 21.803812,
+          "Temperature": 0.5723478,
+          "Moisture": 0.8073695,
+          "Fertility": 0.4477041,
+          "Vegetation": 0.7928702,
+          "Blessing": 0,
+          "SoilMoisture": 0.48763064,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 197,
+          "Biome": "Forest",
+          "Elevation": 13.253275,
+          "Temperature": 0.5761712,
+          "Moisture": 0.7714263,
+          "Fertility": 0.42581847,
+          "Vegetation": 0.7492689,
+          "Blessing": 0,
+          "SoilMoisture": 0.4973505,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 198,
+          "Biome": "Forest",
+          "Elevation": 3.2583313,
+          "Temperature": 0.5870167,
+          "Moisture": 0.83020526,
+          "Fertility": 0.43508416,
+          "Vegetation": 0.76726377,
+          "Blessing": 0,
+          "SoilMoisture": 0.5294967,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 199,
+          "Biome": "Sea",
+          "Elevation": -7.4984245,
+          "Temperature": 0.58862436,
+          "Moisture": 0.97887987,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.97887987,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 200,
+          "Biome": "Sea",
+          "Elevation": -15.380461,
+          "Temperature": 0.61928713,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 201,
+          "Biome": "Sea",
+          "Elevation": -14.948211,
+          "Temperature": 0.63328046,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 202,
+          "Biome": "Sea",
+          "Elevation": -1.0002316,
+          "Temperature": 0.62687135,
+          "Moisture": 0.8602209,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.8602209,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 203,
+          "Biome": "Sea",
+          "Elevation": -5.047264,
+          "Temperature": 0.6189226,
+          "Moisture": 0.9165617,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9165617,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 204,
+          "Biome": "Sea",
+          "Elevation": -17.06129,
+          "Temperature": 0.61083233,
+          "Moisture": 0.97483015,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.97483015,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 205,
+          "Biome": "Sea",
+          "Elevation": -31.94519,
+          "Temperature": 0.5913229,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 206,
+          "Biome": "Sea",
+          "Elevation": -38.956264,
+          "Temperature": 0.5620611,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 207,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5778452,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 208,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6844861,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 209,
+          "Biome": "Sea",
+          "Elevation": -39.998,
+          "Temperature": 0.69574803,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 210,
+          "Biome": "Sea",
+          "Elevation": -38.33172,
+          "Temperature": 0.70640355,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 211,
+          "Biome": "Sea",
+          "Elevation": -29.12318,
+          "Temperature": 0.7020947,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 212,
+          "Biome": "Sea",
+          "Elevation": -9.914848,
+          "Temperature": 0.65762424,
+          "Moisture": 0.9794561,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9794561,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 213,
+          "Biome": "Sea",
+          "Elevation": -3.187521,
+          "Temperature": 0.645061,
+          "Moisture": 0.9820177,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9820177,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 214,
+          "Biome": "Sea",
+          "Elevation": -7.3622994,
+          "Temperature": 0.6680168,
+          "Moisture": 0.98932356,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.98932356,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 215,
+          "Biome": "Sea",
+          "Elevation": -13.261492,
+          "Temperature": 0.6561774,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 216,
+          "Biome": "Sea",
+          "Elevation": -23.92448,
+          "Temperature": 0.64771616,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 217,
+          "Biome": "Sea",
+          "Elevation": -18.16349,
+          "Temperature": 0.64143485,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 218,
+          "Biome": "Sea",
+          "Elevation": -9.087513,
+          "Temperature": 0.62722296,
+          "Moisture": 0.91858107,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.91858107,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 219,
+          "Biome": "Sea",
+          "Elevation": -14.706707,
+          "Temperature": 0.5884396,
+          "Moisture": 0.9787168,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 0.9787168,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 220,
+          "Biome": "Sea",
+          "Elevation": -26.903648,
+          "Temperature": 0.549063,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 221,
+          "Biome": "Sea",
+          "Elevation": -38.00616,
+          "Temperature": 0.5452956,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 222,
+          "Biome": "Sea",
+          "Elevation": -39.997875,
+          "Temperature": 0.55376387,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 223,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5708565,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 224,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6388486,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 225,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6385416,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 226,
+          "Biome": "Sea",
+          "Elevation": -39.99804,
+          "Temperature": 0.68084866,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 227,
+          "Biome": "Sea",
+          "Elevation": -39.216755,
+          "Temperature": 0.68967056,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 228,
+          "Biome": "Sea",
+          "Elevation": -33.550858,
+          "Temperature": 0.63860565,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 229,
+          "Biome": "Sea",
+          "Elevation": -27.736544,
+          "Temperature": 0.6390791,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 230,
+          "Biome": "Sea",
+          "Elevation": -25.736488,
+          "Temperature": 0.67694414,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 231,
+          "Biome": "Sea",
+          "Elevation": -26.902712,
+          "Temperature": 0.68142694,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 232,
+          "Biome": "Sea",
+          "Elevation": -29.440783,
+          "Temperature": 0.6627813,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 233,
+          "Biome": "Sea",
+          "Elevation": -31.903482,
+          "Temperature": 0.64962065,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 234,
+          "Biome": "Sea",
+          "Elevation": -32.524628,
+          "Temperature": 0.64913684,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 235,
+          "Biome": "Sea",
+          "Elevation": -36.399025,
+          "Temperature": 0.62882227,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 236,
+          "Biome": "Sea",
+          "Elevation": -39.352226,
+          "Temperature": 0.5842514,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 237,
+          "Biome": "Sea",
+          "Elevation": -39.998005,
+          "Temperature": 0.57746255,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 238,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5900405,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 239,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5857852,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 240,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5909191,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 241,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.5671601,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 242,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6207714,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 243,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6542796,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 244,
+          "Biome": "Sea",
+          "Elevation": -39.945244,
+          "Temperature": 0.6204838,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 245,
+          "Biome": "Sea",
+          "Elevation": -39.34711,
+          "Temperature": 0.6106591,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 246,
+          "Biome": "Sea",
+          "Elevation": -38.45743,
+          "Temperature": 0.6438241,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 247,
+          "Biome": "Sea",
+          "Elevation": -37.809967,
+          "Temperature": 0.6812748,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 248,
+          "Biome": "Sea",
+          "Elevation": -38.15461,
+          "Temperature": 0.7006313,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 249,
+          "Biome": "Sea",
+          "Elevation": -39.199768,
+          "Temperature": 0.687642,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 250,
+          "Biome": "Sea",
+          "Elevation": -39.58856,
+          "Temperature": 0.6643039,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 251,
+          "Biome": "Sea",
+          "Elevation": -39.9701,
+          "Temperature": 0.6459299,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 252,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.62436426,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 253,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.62719023,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 254,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6478804,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        },
+        {
+          "Id": 255,
+          "Biome": "Sea",
+          "Elevation": -40,
+          "Temperature": 0.6422296,
+          "Moisture": 1,
+          "Fertility": 0,
+          "Vegetation": 0,
+          "Blessing": 0,
+          "SoilMoisture": 1,
+          "Fire": 0,
+          "Scorch": 0
+        }
+      ]
+    },
+    "Settlements": [
+      {
+        "Id": 1,
+        "Name": "Aldermere",
+        "RegionId": 167,
+        "Position": {
+          "X": 960,
+          "Z": 1344
+        },
+        "Population": 78,
+        "Food": 216.8128,
+        "Housing": 95,
+        "Health": 1,
+        "ConstructionProgress": 0,
+        "Ruins": 0,
+        "ShieldedUntilTick": 0,
+        "Emigration": 0.033322975,
+        "Beliefs": [
+          {
+            "GodId": 1,
+            "Adherence": 0.81176937,
+            "Faith": 0.70239544,
+            "Love": 0.7183223,
+            "Fear": 0.02782694,
+            "Doubt": 0.2896649
+          },
+          {
+            "GodId": 2,
+            "Adherence": 0.003280343,
+            "Faith": 0.13856775,
+            "Love": 3.4124445E-05,
+            "Fear": 0.27903777,
+            "Doubt": 0.51846564
+          },
+          {
+            "GodId": 3,
+            "Adherence": 0.032374598,
+            "Faith": 0.05062187,
+            "Love": 0.108872876,
+            "Fear": 0,
+            "Doubt": 0.38410154
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "Name": "Cinderford",
+        "RegionId": 91,
+        "Position": {
+          "X": 1472,
+          "Z": 704
+        },
+        "Population": 63,
+        "Food": 217.05978,
+        "Housing": 75,
+        "Health": 1,
+        "ConstructionProgress": 0,
+        "Ruins": 0,
+        "ShieldedUntilTick": 0,
+        "Emigration": 0,
+        "Beliefs": [
+          {
+            "GodId": 2,
+            "Adherence": 0.81922334,
+            "Faith": 0.6688874,
+            "Love": 0.5136348,
+            "Fear": 0.005516541,
+            "Doubt": 0.2117843
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "Name": "Larkspur",
+        "RegionId": 86,
+        "Position": {
+          "X": 832,
+          "Z": 704
+        },
+        "Population": 74,
+        "Food": 226.14415,
+        "Housing": 85,
+        "Health": 1,
+        "ConstructionProgress": 0,
+        "Ruins": 0,
+        "ShieldedUntilTick": 0,
+        "Emigration": 0,
+        "Beliefs": [
+          {
+            "GodId": 2,
+            "Adherence": 0.015155454,
+            "Faith": 0.04432049,
+            "Love": 0.007692188,
+            "Fear": 0.08701497,
+            "Doubt": 0.4917252
+          },
+          {
+            "GodId": 3,
+            "Adherence": 0.8477498,
+            "Faith": 0.7465834,
+            "Love": 0.5794887,
+            "Fear": 0.005516541,
+            "Doubt": 0.1823881
+          }
+        ]
+      }
+    ],
+    "Gods": [
+      {
+        "Id": 1,
+        "Name": "Ilyra",
+        "Controller": "Human",
+        "Personality": "None",
+        "DivinePower": 857.65466,
+        "Rank": "MinorSpirit",
+        "DominantSinceTick": null,
+        "CreatureId": 1,
+        "RefugeePolicy": "Welcome",
+        "Cooldowns": []
+      },
+      {
+        "Id": 2,
+        "Name": "Vael",
+        "Controller": "Ai",
+        "Personality": "Tyrant",
+        "DivinePower": 110.74837,
+        "Rank": "MinorSpirit",
+        "DominantSinceTick": null,
+        "CreatureId": 2,
+        "RefugeePolicy": "DemandConversion",
+        "Cooldowns": [
+          {
+            "MiracleId": "lightning",
+            "ReadyAtTick": 2539
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "Name": "Seren",
+        "Controller": "Ai",
+        "Personality": "Guardian",
+        "DivinePower": 194.62772,
+        "Rank": "MinorSpirit",
+        "DominantSinceTick": null,
+        "CreatureId": 3,
+        "RefugeePolicy": "Welcome",
+        "Cooldowns": [
+          {
+            "MiracleId": "bless_crops",
+            "ReadyAtTick": 2489
+          },
+          {
+            "MiracleId": "food",
+            "ReadyAtTick": 999
+          }
+        ]
+      },
+      {
+        "Id": 4,
+        "Name": "Kaio",
+        "Controller": "Ai",
+        "Personality": "Trickster",
+        "DivinePower": 100,
+        "Rank": "MinorSpirit",
+        "DominantSinceTick": null,
+        "CreatureId": null,
+        "RefugeePolicy": "Welcome",
+        "Cooldowns": []
+      }
+    ],
+    "Creatures": [
+      {
+        "Id": 1,
+        "GodId": 1,
+        "Name": "Bramble",
+        "Species": "Mossback",
+        "Position": {
+          "X": 946.60535,
+          "Z": 1370.8436
+        },
+        "Heading": 2.6788576,
+        "Level": 2,
+        "Experience": 46.5,
+        "Health": 1,
+        "Loyalty": 0.7,
+        "Morality": 0.2,
+        "Needs": {
+          "Hunger": 0.19900109,
+          "Fatigue": 0.91401064,
+          "Boredom": 0.11760022
+        },
+        "Personality": {
+          "Kindness": 0.7301782,
+          "Aggression": 0.31299022,
+          "Laziness": 0.2709416,
+          "Curiosity": 0.5356516
+        },
+        "Activity": {
+          "Action": "Rest",
+          "Situation": "Tired",
+          "Phase": "Performing",
+          "TargetSettlementId": null,
+          "TargetCreatureId": null,
+          "Target": {
+            "X": 946.60535,
+            "Z": 1370.8436
+          },
+          "Path": [],
+          "TicksLeft": 56
+        },
+        "Preferences": [
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Feed",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "EatFromStores",
+            "Weight": 0.2
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "Hungry",
+            "Action": "EatFromStores",
+            "Weight": 0.55
+          },
+          {
+            "Situation": "Hungry",
+            "Action": "Forage",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "Tired",
+            "Action": "Rest",
+            "Weight": 0.8
+          },
+          {
+            "Situation": "Bored",
+            "Action": "Wander",
+            "Weight": 0.5
+          },
+          {
+            "Situation": "Idle",
+            "Action": "Wander",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "Idle",
+            "Action": "Rest",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "HelpBuild",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Play",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Befriend",
+            "Weight": 0.5
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Flee",
+            "Weight": 0.15
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Fight",
+            "Weight": 0.1
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Fight",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Flee",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Ignore",
+            "Weight": 0.25
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Befriend",
+            "Weight": 0.15
+          }
+        ],
+        "Memories": [
+          {
+            "Tick": 739,
+            "Action": "Rest",
+            "Situation": "Tired",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 801,
+            "Action": "EatFromStores",
+            "Situation": "Hungry",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 883,
+            "Action": "Play",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 965,
+            "Action": "Play",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1047,
+            "Action": "Play",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1129,
+            "Action": "Play",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1381,
+            "Action": "Rest",
+            "Situation": "Tired",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1463,
+            "Action": "Play",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1714,
+            "Action": "Ignore",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1959,
+            "Action": "Play",
+            "Situation": "VillageThriving",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 2081,
+            "Action": "Forage",
+            "Situation": "Hungry",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 2203,
+            "Action": "HelpBuild",
+            "Situation": "VillageBuilding",
+            "SettlementId": 1,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          }
+        ],
+        "HomeSettlementId": 1,
+        "CombatSkill": 0,
+        "Scars": 0,
+        "Relations": [
+          {
+            "OtherCreatureId": 2,
+            "Friendship": 0.22699961,
+            "Fear": 0,
+            "Rivalry": 0,
+            "Respect": 0,
+            "Trust": 0.3,
+            "LastMetTick": 1,
+            "Encounters": [
+              {
+                "Tick": 101,
+                "Kind": "Played"
+              }
+            ]
+          },
+          {
+            "OtherCreatureId": 3,
+            "Friendship": 0.10519975,
+            "Fear": 0,
+            "Rivalry": 0,
+            "Respect": 0,
+            "Trust": 0.3,
+            "LastMetTick": 923,
+            "Encounters": [
+              {
+                "Tick": 923,
+                "Kind": "Greeted"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 2,
+        "GodId": 2,
+        "Name": "Gristle",
+        "Species": "Mossback",
+        "Position": {
+          "X": 941.4678,
+          "Z": 1222.9491
+        },
+        "Heading": 0.15191522,
+        "Level": 1,
+        "Experience": 5.5,
+        "Health": 1,
+        "Loyalty": 0.7,
+        "Morality": -0.005000001,
+        "Needs": {
+          "Hunger": 0.6000143,
+          "Fatigue": 0.3100135,
+          "Boredom": 1
+        },
+        "Personality": {
+          "Kindness": 0.6387112,
+          "Aggression": 0.52249026,
+          "Laziness": 0.650517,
+          "Curiosity": 0.4213118
+        },
+        "Activity": {
+          "Action": "GoTo",
+          "Situation": "Commanded",
+          "Phase": "Travelling",
+          "TargetSettlementId": null,
+          "TargetCreatureId": null,
+          "Target": {
+            "X": 960,
+            "Z": 1344
+          },
+          "Path": [
+            {
+              "X": 960,
+              "Z": 1344
+            }
+          ],
+          "TicksLeft": 0
+        },
+        "Preferences": [
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Feed",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "EatFromStores",
+            "Weight": 0.2
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "Hungry",
+            "Action": "EatFromStores",
+            "Weight": 0.55
+          },
+          {
+            "Situation": "Hungry",
+            "Action": "Forage",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "Tired",
+            "Action": "Rest",
+            "Weight": 0.8
+          },
+          {
+            "Situation": "Bored",
+            "Action": "Wander",
+            "Weight": 0.5
+          },
+          {
+            "Situation": "Idle",
+            "Action": "Wander",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "Idle",
+            "Action": "Rest",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "HelpBuild",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Play",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Befriend",
+            "Weight": 0.5
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Flee",
+            "Weight": 0.15
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Fight",
+            "Weight": 0.1
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Fight",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Flee",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Ignore",
+            "Weight": 0.25
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Befriend",
+            "Weight": 0.15
+          }
+        ],
+        "Memories": [
+          {
+            "Tick": 101,
+            "Action": "Befriend",
+            "Situation": "MeetsCreature",
+            "SettlementId": null,
+            "OtherCreatureId": 1,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1278,
+            "Action": "GoTo",
+            "Situation": "Commanded",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1382,
+            "Action": "EatFromStores",
+            "Situation": "Hungry",
+            "SettlementId": 3,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1633,
+            "Action": "Rest",
+            "Situation": "Tired",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          }
+        ],
+        "HomeSettlementId": 2,
+        "CombatSkill": 0,
+        "Scars": 0,
+        "Relations": [
+          {
+            "OtherCreatureId": 1,
+            "Friendship": 0.22699961,
+            "Fear": 0,
+            "Rivalry": 0,
+            "Respect": 0,
+            "Trust": 0.3,
+            "LastMetTick": 1,
+            "Encounters": [
+              {
+                "Tick": 101,
+                "Kind": "Played"
+              }
+            ]
+          },
+          {
+            "OtherCreatureId": 3,
+            "Friendship": 0.2087157,
+            "Fear": 0,
+            "Rivalry": 0,
+            "Respect": 0,
+            "Trust": 0.3,
+            "LastMetTick": 2195,
+            "Encounters": [
+              {
+                "Tick": 517,
+                "Kind": "Greeted"
+              },
+              {
+                "Tick": 2195,
+                "Kind": "Greeted"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "Id": 3,
+        "GodId": 3,
+        "Name": "Thistle",
+        "Species": "Mossback",
+        "Position": {
+          "X": 967.29083,
+          "Z": 987.8192
+        },
+        "Heading": 2.7394652,
+        "Level": 1,
+        "Experience": 3.5,
+        "Health": 1,
+        "Loyalty": 0.7,
+        "Morality": 0,
+        "Needs": {
+          "Hunger": 0.8000306,
+          "Fatigue": 0.3100147,
+          "Boredom": 1
+        },
+        "Personality": {
+          "Kindness": 0.48592708,
+          "Aggression": 0.55418384,
+          "Laziness": 0.6457831,
+          "Curiosity": 0.4162214
+        },
+        "Activity": {
+          "Action": "GoTo",
+          "Situation": "Commanded",
+          "Phase": "Travelling",
+          "TargetSettlementId": null,
+          "TargetCreatureId": null,
+          "Target": {
+            "X": 1472,
+            "Z": 704
+          },
+          "Path": [
+            {
+              "X": 1088,
+              "Z": 704
+            },
+            {
+              "X": 1216,
+              "Z": 576
+            },
+            {
+              "X": 1344,
+              "Z": 704
+            },
+            {
+              "X": 1472,
+              "Z": 704
+            }
+          ],
+          "TicksLeft": 0
+        },
+        "Preferences": [
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Feed",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "EatFromStores",
+            "Weight": 0.2
+          },
+          {
+            "Situation": "VillageInNeed",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "Hungry",
+            "Action": "EatFromStores",
+            "Weight": 0.55
+          },
+          {
+            "Situation": "Hungry",
+            "Action": "Forage",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "Tired",
+            "Action": "Rest",
+            "Weight": 0.8
+          },
+          {
+            "Situation": "Bored",
+            "Action": "Wander",
+            "Weight": 0.5
+          },
+          {
+            "Situation": "Idle",
+            "Action": "Wander",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "Idle",
+            "Action": "Rest",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "HelpBuild",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageBuilding",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Play",
+            "Weight": 0.45
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "VillageThriving",
+            "Action": "Attack",
+            "Weight": 0.05
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Befriend",
+            "Weight": 0.5
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Ignore",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Flee",
+            "Weight": 0.15
+          },
+          {
+            "Situation": "MeetsCreature",
+            "Action": "Fight",
+            "Weight": 0.1
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Fight",
+            "Weight": 0.4
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Flee",
+            "Weight": 0.3
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Ignore",
+            "Weight": 0.25
+          },
+          {
+            "Situation": "MeetsEnemyCreature",
+            "Action": "Befriend",
+            "Weight": 0.15
+          }
+        ],
+        "Memories": [
+          {
+            "Tick": 1164,
+            "Action": "GoTo",
+            "Situation": "Commanded",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1424,
+            "Action": "Wander",
+            "Situation": "Bored",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1545,
+            "Action": "Forage",
+            "Situation": "Hungry",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          },
+          {
+            "Tick": 1797,
+            "Action": "Rest",
+            "Situation": "Tired",
+            "SettlementId": null,
+            "OtherCreatureId": null,
+            "Feedback": "None"
+          }
+        ],
+        "HomeSettlementId": 3,
+        "CombatSkill": 0,
+        "Scars": 0,
+        "Relations": [
+          {
+            "OtherCreatureId": 1,
+            "Friendship": 0.10519975,
+            "Fear": 0,
+            "Rivalry": 0,
+            "Respect": 0,
+            "Trust": 0.3,
+            "LastMetTick": 923,
+            "Encounters": [
+              {
+                "Tick": 923,
+                "Kind": "Greeted"
+              }
+            ]
+          },
+          {
+            "OtherCreatureId": 2,
+            "Friendship": 0.2087157,
+            "Fear": 0,
+            "Rivalry": 0,
+            "Respect": 0,
+            "Trust": 0.3,
+            "LastMetTick": 2195,
+            "Encounters": [
+              {
+                "Tick": 517,
+                "Kind": "Greeted"
+              },
+              {
+                "Tick": 2195,
+                "Kind": "Greeted"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "Diplomacy": {
+      "Relations": [
+        {
+          "ObserverGodId": 4,
+          "SubjectGodId": 2,
+          "Trust": 0.5019274,
+          "Fear": 1,
+          "Respect": 0,
+          "Rivalry": 0.32851988,
+          "Gratitude": 0,
+          "Suspicion": 0.21957287,
+          "Memories": [
+            {
+              "Tick": 689,
+              "Act": "DeclaredWar",
+              "SettlementId": null,
+              "Weight": 0.40312174
+            },
+            {
+              "Tick": 929,
+              "Act": "WrongedAlly",
+              "SettlementId": 3,
+              "Weight": 0.13869545
+            },
+            {
+              "Tick": 1859,
+              "Act": "MadePeace",
+              "SettlementId": null,
+              "Weight": 0.40269297
+            }
+          ]
+        },
+        {
+          "ObserverGodId": 3,
+          "SubjectGodId": 4,
+          "Trust": 0.5316958,
+          "Fear": 0,
+          "Respect": 0,
+          "Rivalry": 0.2,
+          "Gratitude": 0,
+          "Suspicion": 0.2,
+          "Memories": [
+            {
+              "Tick": 89,
+              "Act": "Allied",
+              "SettlementId": null,
+              "Weight": 0.23771562
+            }
+          ]
+        },
+        {
+          "ObserverGodId": 4,
+          "SubjectGodId": 3,
+          "Trust": 0.5316958,
+          "Fear": 1,
+          "Respect": 0,
+          "Rivalry": 0.2,
+          "Gratitude": 0,
+          "Suspicion": 0.2,
+          "Memories": [
+            {
+              "Tick": 89,
+              "Act": "Allied",
+              "SettlementId": null,
+              "Weight": 0.23771562
+            }
+          ]
+        },
+        {
+          "ObserverGodId": 3,
+          "SubjectGodId": 2,
+          "Trust": 0.43546128,
+          "Fear": 0,
+          "Respect": 0,
+          "Rivalry": 0.28067344,
+          "Gratitude": 0,
+          "Suspicion": 0.2,
+          "Memories": [
+            {
+              "Tick": 689,
+              "Act": "WrongedAlly",
+              "SettlementId": null,
+              "Weight": 0.12597553
+            },
+            {
+              "Tick": 929,
+              "Act": "Harmed",
+              "SettlementId": 3,
+              "Weight": 0.22191271
+            }
+          ]
+        },
+        {
+          "ObserverGodId": 1,
+          "SubjectGodId": 3,
+          "Trust": 0.5,
+          "Fear": 0.015625,
+          "Respect": 0,
+          "Rivalry": 0.2164445,
+          "Gratitude": 0,
+          "Suspicion": 0.20822224,
+          "Memories": [
+            {
+              "Tick": 899,
+              "Act": "Courted",
+              "SettlementId": 1,
+              "Weight": 0.1096302
+            }
+          ]
+        },
+        {
+          "ObserverGodId": 2,
+          "SubjectGodId": 4,
+          "Trust": 0.56443095,
+          "Fear": 0,
+          "Respect": 0,
+          "Rivalry": 0.2,
+          "Gratitude": 0,
+          "Suspicion": 0.2,
+          "Memories": [
+            {
+              "Tick": 1859,
+              "Act": "MadePeace",
+              "SettlementId": null,
+              "Weight": 0.40269297
+            }
+          ]
+        },
+        {
+          "ObserverGodId": 1,
+          "SubjectGodId": 2,
+          "Trust": 0.4219009,
+          "Fear": 0,
+          "Respect": 0,
+          "Rivalry": 0.2976239,
+          "Gratitude": 0,
+          "Suspicion": 0.2,
+          "Memories": [
+            {
+              "Tick": 2339,
+              "Act": "Harmed",
+              "SettlementId": 1,
+              "Weight": 0.39049548
+            }
+          ]
+        }
+      ],
+      "Stances": [
+        {
+          "GodA": 2,
+          "GodB": 4,
+          "Status": "Hostile",
+          "SinceTick": 1869,
+          "LastProposalTick": 1829
+        },
+        {
+          "GodA": 3,
+          "GodB": 4,
+          "Status": "Alliance",
+          "SinceTick": 89,
+          "LastProposalTick": 59
+        },
+        {
+          "GodA": 1,
+          "GodB": 4,
+          "Status": "Neutral",
+          "SinceTick": 89,
+          "LastProposalTick": 1889
+        },
+        {
+          "GodA": 2,
+          "GodB": 3,
+          "Status": "Hostile",
+          "SinceTick": 699,
+          "LastProposalTick": null
+        },
+        {
+          "GodA": 1,
+          "GodB": 3,
+          "Status": "Hostile",
+          "SinceTick": 909,
+          "LastProposalTick": null
+        },
+        {
+          "GodA": 1,
+          "GodB": 2,
+          "Status": "Hostile",
+          "SinceTick": 2349,
+          "LastProposalTick": null
+        }
+      ],
+      "Proposals": [
+        {
+          "FromGodId": 4,
+          "ToGodId": 1,
+          "Kind": "Alliance",
+          "ExpiresAtTick": 2489
+        }
+      ]
+    },
+    "Weather": {
+      "Cells": [
+        {
+          "Id": 1,
+          "X": 1034.7124,
+          "Z": 1529.81,
+          "VelocityX": -0.7552505,
+          "VelocityZ": 4.6870008,
+          "Radius": 223.90778,
+          "Pressure": 0,
+          "Temperature": 0.5513,
+          "Humidity": 0.5422852,
+          "Precipitation": 0.14791171,
+          "Wind": 0,
+          "ElectricalActivity": 0,
+          "SummonedByGodId": null
+        },
+        {
+          "Id": 2,
+          "X": 1846.2239,
+          "Z": 2276.4573,
+          "VelocityX": -0.19299755,
+          "VelocityZ": 4.1907153,
+          "Radius": 276.97153,
+          "Pressure": 0.31162137,
+          "Temperature": 0.6134115,
+          "Humidity": 0.7448289,
+          "Precipitation": 0.4172873,
+          "Wind": 0.31162137,
+          "ElectricalActivity": 0.23929606,
+          "SummonedByGodId": null
+        },
+        {
+          "Id": 3,
+          "X": 809.7186,
+          "Z": 2055.869,
+          "VelocityX": 0.11161685,
+          "VelocityZ": 5.4808736,
+          "Radius": 374.87225,
+          "Pressure": 0.6398337,
+          "Temperature": 0.62542593,
+          "Humidity": 0.5808809,
+          "Precipitation": 0.31396258,
+          "Wind": 0.6398337,
+          "ElectricalActivity": 0.37691388,
+          "SummonedByGodId": null
+        },
+        {
+          "Id": 5,
+          "X": 2163.5767,
+          "Z": 774.10443,
+          "VelocityX": 0.25176996,
+          "VelocityZ": 4.225725,
+          "Radius": 219.54047,
+          "Pressure": 0.18276802,
+          "Temperature": 0.5,
+          "Humidity": 0.7656606,
+          "Precipitation": 0.3898646,
+          "Wind": 0.18276802,
+          "ElectricalActivity": 0.10688218,
+          "SummonedByGodId": null
+        },
+        {
+          "Id": 6,
+          "X": 653.51056,
+          "Z": 415.99683,
+          "VelocityX": -0.57646203,
+          "VelocityZ": 5.363973,
+          "Radius": 364.09235,
+          "Pressure": 0.18749826,
+          "Temperature": 0.7004269,
+          "Humidity": 0.75515974,
+          "Precipitation": 0.3817845,
+          "Wind": 0.18749826,
+          "ElectricalActivity": 0.15041792,
+          "SummonedByGodId": null
+        },
+        {
+          "Id": 7,
+          "X": 84.05679,
+          "Z": -5.3632307,
+          "VelocityX": -0.91557205,
+          "VelocityZ": 4.947116,
+          "Radius": 196.76724,
+          "Pressure": 0.8357777,
+          "Temperature": 0.6582856,
+          "Humidity": 0.75755614,
+          "Precipitation": 0.62792903,
+          "Wind": 0.8357777,
+          "ElectricalActivity": 1,
+          "SummonedByGodId": null
+        },
+        {
+          "Id": 8,
+          "X": 1848.0222,
+          "Z": 45.33749,
+          "VelocityX": -1.118732,
+          "VelocityZ": 5.325427,
+          "Radius": 327.3482,
+          "Pressure": 0.22379598,
+          "Temperature": 0.611314,
+          "Humidity": 0.83007234,
+          "Precipitation": 0.46846023,
+          "Wind": 0.22379598,
+          "ElectricalActivity": 0.1922696,
+          "SummonedByGodId": null
+        }
+      ],
+      "NextCellId": 9,
+      "Spell": "Normal",
+      "SpellEndsTick": 4168,
+      "WindDirection": 1.671055
+    },
+    "Disasters": {
+      "Earthquakes": [],
+      "NextEarthquakeId": 1
+    },
+    "Migration": {
+      "Groups": [],
+      "NextGroupId": 1
+    },
+    "WinnerGodIds": []
+  }
+}

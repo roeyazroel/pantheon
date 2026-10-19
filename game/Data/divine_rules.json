@@ -80,6 +80,9 @@
   "VictoryShare": 0.6,
   "VictorySeconds": 600.0,
   "PantheonVictory": true,
+  // A pantheon that wins together is a god and its strongest direct allies, at most this many gods
+  // (ADR-020): with two, a god allied with two others shares its victory with only one of them.
+  "PantheonMaxGods": 2,
   "BlessingDecayPerStep": 0.008,
 
   // Followers needed for each rank (spec section 13). A god never loses a rank.

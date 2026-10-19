@@ -77,6 +77,10 @@ faith dented, and its god holds a grudge.
 over the network and each takes over a god the AI was playing. The host's computer runs the only
 real world. Everything a joined player does goes to the host, which checks it and answers.
 
+**Milestone 14 (Complete Vertical Slice)** makes it a game you can play from start to end: a start
+screen, a guide for the first minutes, a pause menu with named saves and an autosave, the world's
+history (H), and an end screen when a god or two allies win.
+
 **Milestone 13 (Multiplayer Simulation)** lets four players share a world. Each part of the world
 travels at its own pace: Creatures near your camera often, settlements and weather once a second,
 diplomacy when something happens. Your own miracles show their cost and effect as soon as the host
@@ -106,7 +110,10 @@ godot --path game
 ```
 
 `godot` stands for the Godot 4.7.2 .NET executable. You can also open `game/project.godot` in the
-Godot .NET editor and press F5. If you skip the import step, the first run cannot load
+Godot .NET editor and press F5. Started without options, the game opens on its start screen: begin
+a new world (its seed is shown, so you can share it), continue your newest save, load a world, or
+host or join a shared world (joining reloads the game with the host's address). A short guide
+walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
 
 ## Tests
@@ -151,6 +158,8 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- the world's history (what is significant, how it reads), the end screen, the guide, the list of
+  saves and that a pantheon wins as a god and its strongest ally;
 - multiplayer: the messages and their encoding, a host and its players over an in-memory network
   (joining, gods, refusals, intents checked by the host, snapshots, events, leaving), each part of
   the world reaching players at its own rate, four players, coming back to one's god, and that only
@@ -200,6 +209,8 @@ covers:
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
 | Send 20 people out of the village under the cursor (debug) | M |
 | Bring the nearest other Creature to yours, so they meet (debug) | K |
+| Pause menu: resume, save, load, main menu, quit (when no miracle is selected) | Esc |
+| The world's history | H |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
 120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m). The simulation runs at a
@@ -483,6 +494,23 @@ Every god's Creature roams the same island, and they remember each other.
 
 The rules are in the `Bonds` and `Combat` sections of `game/Data/creatures.json`.
 
+## The world's history
+
+The world remembers what matters (press H): pacts, wars, peace and betrayals; a god's dominion,
+victory and ranks; villages turning to a god; deadly earthquakes and fires; famines; great
+exoduses; villages emptied and settled again; Creatures' battles and their rise to legend. Each
+line reads like a chronicle, "Year 12 — The Shaking of Elar (12 dead)", a year being one minute.
+Your own moments are in gold, and the end screen recalls the ones that led to the victory.
+
+The rules for what is significant are in `game/Data/history.json`.
+
+## Winning
+
+A god wins by holding 60% of all belief for ten minutes. Two allies can win together: each counts
+with its strongest ally only, so a god allied with two others must choose whom to share its
+victory with. The end screen says who won, how your god and Creature ended up, and what the world
+remembers; you can keep watching, start a new world or go back to the start screen.
+
 ## Debug tools
 
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed, terrain renderer,
@@ -564,6 +592,11 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--disaster=quake\|fire` | Start an earthquake or a fire at the focused settlement. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
+| `--menu=on\|off` | Start on the start screen (the default without options) or not. |
+| `--guide=on\|off` | Show the first-minutes guide from the start. |
+| `--history-panel=on\|off` | Open the history panel (H) at the start. |
+| `--pause-menu=on\|off` | Open the pause menu at the start. |
+| `--speed=1\|4\|16` | The simulation's speed from the start. |
 | `--host=on\|off\|<port>` | Host this world for other players (port 7777 by default). |
 | `--join=<address>[:<port>]` | Join a host's world instead of making one. |
 | `--name=<player>` | Your name in a shared world. |
@@ -616,7 +649,11 @@ F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a 
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 11`. The scene tree
+The pause menu saves the world under its god, year and seed in the same folder, an autosave is
+written there every five minutes, and the start screen and pause menu list every save, newest
+first. A host's world is saved there as `hosted.json` when it ends a shared session.
+
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 12`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -629,7 +666,8 @@ start under clear skies, with each region's soil as moist as its climate. Saves 
 to 7 start with nothing burning, shaking or in ruins. Saves from Milestones 1 to 8 keep their one
 winner, if any, as the list of winners. Saves from Milestones 1 to 9 start with nobody on the road
 and every god welcoming migrants. Saves from Milestones 1 to 10 start with Creatures that have
-never dealt with each other: no combat skill, no scars and no views of the others.
+never dealt with each other: no combat skill, no scars and no views of the others. Saves from
+Milestones 1 to 13 start with an empty history: the world remembers from then on.
 
 ## Repository layout
 

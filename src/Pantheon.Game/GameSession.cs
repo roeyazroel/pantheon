@@ -232,7 +232,7 @@ public sealed class GameSession
     /// <param name="target">Where to cast it.</param>
     /// <returns>The verdict.</returns>
     public CastCheck CastMiracleAs(int godId, string miracleId, GroundPosition target) =>
-        _authorities.Miracles.Cast(World, new CastMiracleRequest(godId, miracleId, target), godId, _queue.Pending);
+        Chronicled(() => _authorities.Miracles.Cast(World, new CastMiracleRequest(godId, miracleId, target), godId, _queue.Pending));
 
     /// <summary>The settlements a miracle cast at a target would reach.</summary>
     /// <param name="miracleId">The miracle.</param>
@@ -307,7 +307,7 @@ public sealed class GameSession
     /// <param name="kind">What to do.</param>
     /// <returns>Why it was refused, or <see cref="DiplomacyRejection.None"/>.</returns>
     public DiplomacyRejection CommandDiplomacyAs(int godId, int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) =>
-        _authorities.Diplomacy.Execute(World, new Domain.Diplomacy.DiplomaticCommand(godId, otherGodId, kind), godId, _queue.Pending);
+        Chronicled(() => _authorities.Diplomacy.Execute(World, new Domain.Diplomacy.DiplomaticCommand(godId, otherGodId, kind), godId, _queue.Pending));
 
     /// <summary>Whether a diplomatic command from the local player's god would be accepted now.</summary>
     /// <param name="otherGodId">The other god.</param>
@@ -351,7 +351,7 @@ public sealed class GameSession
     /// <param name="people">How many leave.</param>
     /// <returns>The group, or <c>null</c> when nobody could leave or there is nowhere to go.</returns>
     public Domain.Migration.MigrationGroup? SendMigrants(Domain.Settlements.SettlementState settlement, int people) =>
-        _engine.Migration!.SendOut(World, settlement, people, _queue.Pending);
+        Chronicled(() => _engine.Migration!.SendOut(World, settlement, people, _queue.Pending));
 
     /// <summary>The refugee policy an AI god wants now and why, for the debug view.</summary>
     /// <param name="god">The god.</param>
@@ -415,6 +415,15 @@ public sealed class GameSession
         _queue.Clear();
         Scheduler.Reset();
         WorldReplaced?.Invoke();
+    }
+
+    /// <summary>Runs a command and adds what it raised to the world's history (ADR-020).</summary>
+    private T Chronicled<T>(Func<T> command)
+    {
+        var first = _queue.Pending.Count;
+        var result = command();
+        _engine.Chronicle(World, _queue.Pending, first);
+        return result;
     }
 
     /// <summary>Runs one simulation tick on the current world; a replica keeps none of its events, which the host sends instead.</summary>

@@ -75,6 +75,7 @@ internal static class DivineWorlds
         VictoryShare = 0.6f,
         VictorySeconds = 600f,
         PantheonVictory = true,
+        PantheonMaxGods = 2,
         BlessingDecayPerStep = 0.008f,
         Ranks =
         [
@@ -150,6 +151,7 @@ internal static class DivineWorlds
             Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
+            History = [],
         };
     }
 

@@ -1,0 +1,23 @@
+{
+  // The world's history (spec sections 50 and 92, ADR-020): only significant moments are kept.
+  // A year of history lasts SecondsPerYear simulated seconds; the oldest records beyond Capacity
+  // are forgotten. The same kind of moment for the same settlement or Creatures is not remembered
+  // again within RepeatSeconds.
+  "SecondsPerYear": 60.0,
+  "Capacity": 300,
+  "RepeatSeconds": 300.0,
+
+  // An earthquake in a settlement is history from this many dead, or HousesLost houses; a fire
+  // from HousesLost houses.
+  "EarthquakeDeaths": 5,
+  "HousesLost": 3,
+
+  // A group leaving a settlement is an exodus from this many people.
+  "ExodusPeople": 30,
+
+  // A settlement of at least this many people turning to a god is history.
+  "ConversionPopulation": 20,
+
+  // A Creature reaching one of these levels becomes a legend.
+  "LegendLevels": [5, 10]
+}

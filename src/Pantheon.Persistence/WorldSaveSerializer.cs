@@ -23,9 +23,11 @@ public static class WorldSaveSerializer
     /// diplomacy; version 7 (Milestone 7) added the weather and the soil's water; version 8
     /// (Milestone 8) added disasters, regions' fire and scorch, and settlements' ruins and shields;
     /// version 9 (Milestone 9) replaced the one winner with the winners, for victories won together;
-    /// version 10 (Milestone 10) added migration, settlements' wish to leave and gods' refugee policies.
+    /// version 10 (Milestone 10) added migration, settlements' wish to leave and gods' refugee policies;
+    /// version 11 (Milestone 11) added Creatures' combat skill, scars and views of each other;
+    /// version 12 (Milestone 14) added the world's history.
     /// </summary>
-    public const int CurrentSaveVersion = 11;
+    public const int CurrentSaveVersion = 12;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

@@ -44,6 +44,11 @@ public sealed record LaunchOptions
         "name",
         "god",
         "upnp",
+        "menu",
+        "guide",
+        "history-panel",
+        "speed",
+        "pause-menu",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -129,6 +134,21 @@ public sealed record LaunchOptions
 
     /// <summary>Whether a host asks the router for its port with UPnP (spec §68).</summary>
     public bool Upnp { get; init; }
+
+    /// <summary>Whether the start screen is shown (ADR-020); by default it is when the game starts without options.</summary>
+    public bool? Menu { get; init; }
+
+    /// <summary>Whether the first-minutes guide is shown from the start (ADR-020).</summary>
+    public bool? Guide { get; init; }
+
+    /// <summary>The simulation speed from the start: 1, 4 or 16 (the speed keys' presets), for measuring and captures.</summary>
+    public double? Speed { get; init; }
+
+    /// <summary>Whether the history panel (H) is open from the start, for captures.</summary>
+    public bool HistoryPanel { get; init; }
+
+    /// <summary>Whether the pause menu (Esc) is open from the start, for captures.</summary>
+    public bool PauseMenu { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -281,6 +301,22 @@ public sealed record LaunchOptions
                     : Warn(options, warnings, $"'--name' needs 1 to 24 characters, got '{value}'.");
             case "god":
                 return value.Trim().Length > 0 ? options with { WantedGod = value.Trim() } : Warn(options, warnings, "'--god' needs a god's name.");
+            case "speed":
+                return value.Trim() switch
+                {
+                    "1" => options with { Speed = 1.0 },
+                    "4" => options with { Speed = 4.0 },
+                    "16" => options with { Speed = 16.0 },
+                    _ => Warn(options, warnings, $"'--speed' needs 1, 4 or 16, got '{value}'."),
+                };
+            case "history-panel":
+                return OnOff(value) is { } history ? options with { HistoryPanel = history } : Warn(options, warnings, $"'--history-panel' needs on or off, got '{value}'.");
+            case "pause-menu":
+                return OnOff(value) is { } pause ? options with { PauseMenu = pause } : Warn(options, warnings, $"'--pause-menu' needs on or off, got '{value}'.");
+            case "menu":
+                return OnOff(value) is { } menu ? options with { Menu = menu } : Warn(options, warnings, $"'--menu' needs on or off, got '{value}'.");
+            case "guide":
+                return OnOff(value) is { } guide ? options with { Guide = guide } : Warn(options, warnings, $"'--guide' needs on or off, got '{value}'.");
             case "upnp":
                 return value.Trim().ToLowerInvariant() switch
                 {
@@ -314,6 +350,14 @@ public sealed record LaunchOptions
         warnings.Add(warning);
         return options;
     }
+
+    /// <summary>"on" or "off", in any case; <c>null</c> otherwise.</summary>
+    private static bool? OnOff(string value) => value.Trim().ToLowerInvariant() switch
+    {
+        "on" => true,
+        "off" => false,
+        _ => null,
+    };
 
     /// <summary>Parses a UDP port from 1 to 65535.</summary>
     private static bool TryParsePort(string value, out int port) => TryParsePositiveInt(value, out port) && port <= 65535;

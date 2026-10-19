@@ -77,6 +77,7 @@ public static class DivineRulesValidator
         }
 
         ValidateRanks(rules.Ranks, errors);
+        errors.RequireAtLeast(rules.PantheonMaxGods, 2, nameof(rules.PantheonMaxGods));
         errors.ThrowIfAny("divine rules", nameof(rules));
     }
 

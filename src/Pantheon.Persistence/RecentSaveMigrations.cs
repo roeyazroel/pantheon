@@ -185,4 +185,16 @@ internal static class RecentSaveMigrations
             }
         }
     }
+
+    /// <summary>
+    /// Version 11 to 12 (Milestone 14): the world gains its history. Version 11 kept none, so the
+    /// world remembers nothing from before; it remembers from the next significant moment.
+    /// </summary>
+    internal static void UpgradeFrom11(JsonObject root)
+    {
+        if (root["World"] is JsonObject world)
+        {
+            AddNode(world, "History", new JsonArray(), fromVersion: 11);
+        }
+    }
 }

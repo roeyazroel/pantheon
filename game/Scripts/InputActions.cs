@@ -129,13 +129,19 @@ public static class InputActions
     /// <summary>Debug: bring the nearest other Creature to yours, so they meet (K).</summary>
     public static readonly StringName DebugMeet = "debug_meet";
 
+    /// <summary>The pause menu (Esc, when no miracle is selected).</summary>
+    public static readonly StringName GameMenu = "game_menu";
+
+    /// <summary>Show or hide the world's history (H).</summary>
+    public static readonly StringName ToggleHistory = "toggle_history";
+
     /// <summary>Every action, used to check the input map at start-up.</summary>
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugMigrate, DebugMeet,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugMigrate, DebugMeet, GameMenu, ToggleHistory,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

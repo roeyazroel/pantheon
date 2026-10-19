@@ -122,7 +122,8 @@ rule is followed by the conventions that meet it in this repository.
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second and the sections a player received, the
   selected settlement's economy, tier, water, dangers, pressure to leave and belief),
-  the P diplomacy panel (status, each god's alliances, wars and refugee policy, how your Creature
+  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the P
+  diplomacy panel (status, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire and scorch), the O map overlays
@@ -134,9 +135,11 @@ rule is followed by the conventions that meet it in this repository.
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement or `creature`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
-  `--meet`, and for shared sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
+  `--meet`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, and for shared
+  sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
-  `--quit-after-frames` and `--screenshot`. The README lists them.
+  `--quit-after-frames` and `--screenshot`, which print frame times and, in shared sessions, the
+  network lines. The README lists them.
 
 ## Where things go
 

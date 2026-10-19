@@ -48,6 +48,7 @@ internal static class SaveIntegrity
         WeatherIntegrity.Validate(world, godIds, errors);
         DisasterIntegrity.Validate(world, godIds, errors);
         MigrationIntegrity.Validate(world, godIds, errors);
+        HistoryIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {
