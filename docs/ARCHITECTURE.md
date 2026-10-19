@@ -45,7 +45,7 @@ game/                         Godot 4.7.2 project (res://)
   Scripts/                    Bootstrap, Camera, Network (ENet adapter), Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                               creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json,
-                              migration.json (simulation);
+                              migration.json, world_sizes.json (simulation);
                               settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
                               (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
@@ -128,7 +128,10 @@ files and compiled assemblies and fails when either rule is broken.
   the world remembers (`HistoryRecord`, ADR-020). `HolySites` holds the world's sacred places
   (`HolySite`: kind, name, region, keeper, claimant and the claim so far; ADR-021). `Water` holds
   the rivers (`River`: name, regions from source to mouth, level) and the lakes (`Lake`: name,
-  regions, surface) (ADR-022).
+  regions, surface) (ADR-022). Since ADR-027, `Victory` (`VictorySettings`) records how the world
+  may be won (ascendancy, conquest, cultural victory; none of them makes a sandbox), and
+  `VictoryAchieved.Kind` (`VictoryKind`: ascendancy, pantheon, conquest, cultural) how it was. A
+  world's size lives only in `Generation` and its gods.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -155,7 +158,8 @@ files and compiled assemblies and fails when either rule is broken.
   Followers are `Population × Adherence` and are never stored (ADR-009).
 - `GodState`: `Id`, `Name`, `Controller` (Human, Ai or Remote), `Personality` (`None` for players;
   one of §47's eight for AI gods), `DivinePower`, `Rank` (never falls), `DominantSinceTick`
-  (while it holds the victory share), `CreatureId`, `RefugeePolicy`, `Cooldowns` and `Domains`
+  (while it holds the victory share), `ConquestSinceTick` and `CulturalSinceTick` (while it holds
+  a conquest's or a cultural victory's condition; ADR-027), `CreatureId`, `RefugeePolicy`, `Cooldowns` and `Domains`
   (the domains it has taken up, ADR-021), `Conduct` (`GodConduct`: what the world remembers of its
   acts, fading) and `Traits` (what the world calls it, from that conduct; ADR-024). Followers and
   influence are derived from the beliefs.
@@ -209,7 +213,10 @@ files and compiled assemblies and fails when either rule is broken.
   `DivineRules.Culture` (`CultureRules`) holds the culture's numbers (ADR-024).
   `WorldGenSettings.Hydrology` (optional) shapes the rivers and lakes. `DivineRules` carries the
   `SchismRules` and the holy sites' influence, and `CreatureRules` the `CreatureSpecies`
-  (ADR-021).
+  (ADR-021). `WorldSizes` lists the `WorldSizePreset`s a new world may be made at, with extra
+  settlement and river names (`world_sizes.json`), `PantheonSetup.ExtraGods` the gods larger
+  worlds add, and `DivineRules.ConquestShare` and `CulturalShare` the other victories' thresholds
+  (ADR-027).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -228,10 +235,12 @@ files and compiled assemblies and fails when either rule is broken.
      rivers and `ChannelCarver` cuts the channels; the result is the field's `HydrologyMap`.
   5. Each sample is classified by data-driven `BiomeRule`s (first match wins).
 - `WorldGen/RegionBuilder` aggregates samples per region (means plus majority biome) and derives
-  fertility and vegetation. `SettlementFounder.FoundAll` places up to `Count` settlements (8) on
+  fertility and vegetation. `SettlementFounder.FoundAll` places up to `Count` settlements (8 on a
+  small island, 20 or 40 on larger ones) on
   the best habitable regions, at least `MinimumSpacing` regions apart so their farmland never
   overlaps, with names and populations drawn from seeded streams. `PantheonFounder` creates the
-  gods of `gods.json`, each followed in its own home settlement, best site first.
+  gods of `gods.json` (with as many of its extra gods as the size asks), each followed in its own
+  home settlement, best site first.
 - `Settlements/SettlementEconomy`: the settlement rules as pure functions: the farmland survey,
   the labour split into farmers and builders, production with diminishing returns,
   consumption, storage, health, birth and death chances, and `Assess`, which previews the next
@@ -259,7 +268,10 @@ files and compiled assemblies and fails when either rule is broken.
   `GodAiSystem`; `Gods/MiracleValuer` weighs what each miracle is worth to it, and
   `Gods/GodDiplomat` adds its diplomatic moves. It takes up its personality's domains and sends
   its Creature to claim holy sites (ADR-021). `Belief/VictorySystem` tracks
-  each god's standing (alone or with its bloc), dominance and victory.
+  each god's standing (alone or with its bloc), dominance and victory, by the victories the world
+  was made with. `GodAiSystem.IsTurn` lets the AI gods take turns across the evaluation interval,
+  and `Belief/InfluenceCache` builds each god's influence field once per evaluation for
+  `MiracleCaster.Check` (ADR-027). See [World sizes and victories](#world-sizes-and-victories).
 - `Diplomacy/`: `DiplomacyModel` (finding and creating relations and stances, grudge, warmth),
   `DiplomacyLedger` (the `IActRecorder` that miracles, Creature deeds and conversions report
   acts to), `DiplomacySystem` (the diplomacy step) and `DiplomacyAuthority` (diplomatic commands,
@@ -313,16 +325,16 @@ files and compiled assemblies and fails when either rule is broken.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
   water step, the disaster step, the settlement step, the belief step, the society step, the culture step, the holy war step, the domains' boons, the holy sites, the
   victory check, the diplomacy step, the politics step and the migration step, each in an
-  `IntervalSystem`, then the Creature system every tick, then the AI gods every
-  `EvaluationIntervalTicks`) with a
+  `IntervalSystem`, then the Creature system every tick, then the AI gods, each once every
+  `EvaluationIntervalTicks`, in turn across it) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
   the RNG state back and increments `Tick`.
 - `Terrain/TerrainRaycaster`: ray against the heightfield (used for cursor picking).
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version, the default port (7777), the host's peer id and the
-  most players.
+- `NetworkProtocol`: the protocol version (7 since ADR-027, whose world and victory event carry
+  new members), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
   `ViewFocus`, the intents (`CastIntent`, veiled or not, `CreatureIntent`, `DiplomacyIntent` with a
@@ -336,7 +348,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 15, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 19, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -364,7 +376,9 @@ files and compiled assemblies and fails when either rule is broken.
 every settlement a culture with no doctrine and no secularism, every belief (a settlement's or a
 migration group's) no dependency or resentment, and every god no conduct or traits. Version 16 → 17
 (`PoliticsSaveMigration`) gives the world no treaties, favours or promises and a council that has
-not met. Version 17 → 18 gives the world no war records and every settlement no holy war. A missing,
+not met. Version 17 → 18 gives the world no war records and every settlement no holy war. Version
+18 → 19 (`VictorySaveMigration`) makes the world won by ascendancy alone and starts no god's
+conquest or cultural clock. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -395,6 +409,9 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
 
 ### Application (`Pantheon.Game`)
 
+- `WorldMaker` (ADR-027) makes new worlds from `NewWorldOptions` (the Creature's species, the
+  size and the victories): `AtSize` turns a `world_sizes.json` size into generation settings and
+  gods, and `Validate` checks every size as part of the content's strict parsing.
 - `GameSession`: creates or loads worlds, owns `WorldState` + `TerrainField`, runs the
   scheduler, saves and loads, and raises `WorldReplaced` so presentation rebuilds. It is the local
   authority: `LocalGodId` is the first human god, `CheckCast` and `FindReached` preview a cast,
@@ -417,7 +434,8 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
   ticks per frame so a long frame cannot cause a spiral of death).
 - `Camera/GodCameraModel`: engine-agnostic god-camera math: focus, yaw and distance targets
   with exponential smoothing, pitch from zoom, bounds, terrain clearance, and the zoom bands
-  Close (≤ 120 m), Regional (≤ 700 m) and Strategic (≤ 2600 m).
+  Close (≤ 120 m), Regional (≤ 700 m) and Strategic (≤ 2600 m). `MaxDistance` grows with the
+  island's width beyond 2 km (ADR-027).
 - `Diagnostics/DebugReadout`: formats the debug overlay model from state (pure), with
   `SettlementReadout` for the settlement lines. `Diagnostics/RegionDebugMap` builds the F3
   region debug map image (pure).
@@ -435,7 +453,8 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
   target hint and the Creature card (level, activity, needs, loyalty, morality, combat skill,
   scars, its bonds with the Creatures it has met, what feedback would judge), the rival gods with their status towards the player, the race for victory (a bloc's
-  shared share when allied, ADR-015), and the
+  shared share when allied, ADR-015; a sandbox, a conquest or cultural victory under way, or what
+  the player must do when ascendancy is off, ADR-027), and the
   weather and dangers when they matter (a dry or wet spell; droughts, storms, fires and earthquakes
   among the player's people).
   `Divine/DivineText` words ranks, personalities, clocks and cast verdicts;
@@ -474,7 +493,12 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
   host, for the players.
 - `History/HistoryText` and `HistoryReadout` word the chronicle ("Year 12 — The Shaking of Elar");
   `Flow/EndSummary` builds the end screen, `Flow/Guide` the first-minutes guide (ADR-020).
-  `Persistence/SaveCatalog` lists the saves for the load page.
+  `Persistence/SaveCatalog` lists the saves for the load page. `Flow/VictoryText` words how a world
+  may be and was won, for the alerts, the history's titles, the end screen, the start screen's
+  choices and F1 (ADR-027).
+- `Presentation/LabelDeclutter` (ADR-027) decides, from labels' screen boxes and priorities, which
+  floating labels show in full, which by their short text and which not at all; the client
+  measures the labels.
 - `Culture/CultureText`, `CultureReadout` and `CultureCommands` word doctrines, secular stages and
   traits, build the Settlements panel's and F1's culture lines, and shape a village's culture for
   `--doctrine`; `Alerts/CultureAlerts` adds revolts, godless villages, doctrines and traits, and
@@ -503,7 +527,10 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
 
 - `Bootstrap/GameRoot`: composition root. Loads content (`GodotContentLoader`: the game
   content and the presentation content), creates the session, wires presenters, camera and
-  overlay, routes hotkeys and picks the region under the cursor.
+  overlay, routes hotkeys and picks the region under the cursor. It thins the fog with the island's
+  width and, each frame, has `Presentation/LabelDeclutterer` fit every `DeclutteredLabel` (the
+  villages' and holy sites') through `LabelDeclutter`, holy sites first, then villages by
+  population (ADR-027).
   `Bootstrap/SmokeTestDriver` implements `--quit-after-frames` and `--screenshot`.
 - `Camera/GodCameraController`: maps input (WASD, edge scroll, right-drag grab, wheel, Q/E,
   middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`.
@@ -584,7 +611,8 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
   species by its look in `divine_view.json`.
 - `Presentation/Audio/AudioPresenter` plays the sound (ADR-021), and `Bootstrap/SettingsApplier`
   and `Bootstrap/Startup` load, apply and keep the settings; the menus have a settings page and
-  the new-world page a choice of Creature species.
+  the new-world page a choice of Creature species, and since ADR-027 of world size and victory.
+  The HUD's line of rivals wraps between gods.
 
 ## Frame and tick flow
 
@@ -603,7 +631,7 @@ sequenceDiagram
 
     Godot->>Root: _Process(delta)
     Root->>Session: Update(delta)
-    Note over Root: NetworkDriver.Update first: a host handles intents and sends events and snapshots; a player takes them
+    Note over Root: NetworkDriver.Update first: a host handles intents and sends events and snapshots, a player takes them
     Session->>Sched: Advance(delta, step)
     loop whole ticks (10 Hz x time scale, capped)
         Sched->>Engine: Step(world)
@@ -622,8 +650,8 @@ sequenceDiagram
             Engine->>State: migration step (wish to leave, departures, the road, arrivals)
         end
         Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds, meetings at 5 Hz, fights, views fade at 1 Hz)
-        opt every 30 ticks
-            Engine->>State: AI gods (miracles, Creature, diplomacy, refugee policy) through the authorities
+        opt each AI god once every 30 ticks, in turn
+            Engine->>State: the AI god whose turn it is (miracles, Creature, diplomacy, refugee policy) through the authorities
         end
         Engine->>State: RNG state, Tick++
     end
@@ -655,7 +683,7 @@ with their shipped values and the measurements.
   settlements that fall and are settled again. It is saved, replicated as a section, worded by
   `HistoryText` and shown in the History panel and on the end screen.
 - **Victory** (amending ADR-015): a god counts with its strongest direct allies only, up to
-  `PantheonMaxGods`.
+  `PantheonMaxGods`, or the world's own number when its size sets one (ADR-027).
 - **Flow**: `GameFlow` puts menus over the running world. The start screen shows when the game starts
   without options; the pause menu pauses a world the player owns (a joined player's keeps running);
   the end screen opens once per world when it has winners. The guide's steps advance on the events
@@ -847,6 +875,65 @@ flowchart LR
   everything, and intelligence limits only what a player is shown and what is traced.
 - Every random draw (holy war declarations, raid casualties, covert exposure, leaks) comes from a
   stream derived from the seed and the tick, so replays and saves stay deterministic.
+
+## World sizes and victories
+
+ADR-027 records the decisions, and the plan
+([.docs/milestone-15-part-7-worlds.md](../.docs/milestone-15-part-7-worlds.md)) the numbers.
+
+```mermaid
+flowchart LR
+    sizes[world_sizes.json] --> maker[WorldMaker.AtSize]
+    gods[gods.json: Gods, ExtraGods] --> maker
+    options["NewWorldOptions: start screen, --world-size, --victory"] --> maker
+    maker --> gen[WorldGenerator.Generate]
+    gen --> state[WorldState: Generation, gods, Victory]
+    state --> system[VictorySystem: ascendancy, conquest, culture]
+    system --> clocks[DominantSinceTick, ConquestSinceTick, CulturalSinceTick]
+    clocks --> event[VictoryAchieved with its Kind]
+    event --> words[VictoryText: alerts, history, end screen]
+    clocks --> hud[HUD race line]
+    cache[InfluenceCache] --> caster[MiracleCaster.Check]
+    turns[GodAiSystem.IsTurn] --> ai[GodAi]
+    ai --> caster
+    labels[LabelDeclutter] --> client[Village, holy site, Creature and migrant labels]
+```
+
+- **Sizes.** Small (2 km), Large (4 km), Huge (8 km) and Vast (12 km). A size is generation
+  settings, gods and a pantheon size: `WorldMaker.AtSize` scales the island, the regions (32 to
+  128 a side), the settlements founded, the rivers and the hydrology's cell, adds the extra names,
+  and makes up its number of gods from the first of `ExtraGods`. `WorldMaker.Generate` writes the
+  size's `PantheonMaxGods` (two of four gods, three of six, four of eight) into the world's
+  `VictorySettings`, and `VictorySystem.StandingOf` uses it. The first size must
+  be the world `worldgen.json` and `gods.json` make, so that world is unchanged. The save keeps
+  the generation settings, so a world loads at its size.
+- **Victories.** `VictorySystem` tracks dominance whatever the settings, for the council and the
+  AI, and the conquest and cultural clocks only while their victory is on. The first victory
+  reached is the only one; its kind travels in `VictoryAchieved` and in the history record, and
+  `VictoryText` words it.
+- **The AI's cost** was measured on a huge world before it was cut (seed 42, ten simulated
+  minutes): 4.14 ms a tick, the AI step 9.76 s over 3000 ticks with a worst tick of 110 ms. Then:
+  - `GodAi` skips villages outside its influence before weighing casts;
+  - an `InfluenceCache` builds each god's influence field once per evaluation, and
+    `MiracleCaster.Check` takes it;
+  - `TreatyAdvisor` counts every god's followers once per weighing (11.6 to 0.4 ms for all AI
+    gods);
+  - the AI gods take turns across the evaluation interval (`GodAiSystem.IsTurn`); the first still
+    thinks when the interval is due.
+
+  After: 0.08 ms a tick on a small world, 0.20 ms on a large, 0.59 ms on a huge and 0.56 ms on a
+  vast one; the AI
+  step 0.72 s over 3000 ticks, worst 18 ms. Without the turn-taking the 40-game balance probe
+  repeats part 6's results exactly, so the other changes alter no outcome.
+- **Presentation.** `LabelDeclutter` places holy sites first, then villages by population, then
+  Creatures and migrants: each label in full where it overlaps nothing placed, by its name alone
+  where only that fits, or hidden. A label faded out by its distance takes no place. A small
+  world's village labels rarely overlap, so it looks as before. `GodCameraModel.MaxDistance` and the
+  fog scale with the island's width.
+- **Not modelled:** terrain streamed in pieces (a huge or vast world's heightfield is built at
+  once, in 1.1 s), worlds beyond 12 km, more than eight gods, a size chosen on the start screen's
+  host page (`--host` with `--world-size` hosts any size), victories chosen per player, and history
+  records of more than two winners.
 
 ## Sound and settings
 
@@ -1184,7 +1271,9 @@ the measured contests.
   under a stronger rival's influence costs more.
 - **Victory** (`VictorySystem`): 60% of all followers held for 600 s wins (`WinnerGodIds`,
   `VictoryAchieved`), and the world goes on. Allied gods count together (see
-  [Four gods and pantheon victory](#four-gods-and-pantheon-victory)).
+  [Four gods and pantheon victory](#four-gods-and-pantheon-victory)). Since ADR-027 a world may
+  also, or instead, be won by conquest or culture, or by nobody (see
+  [World sizes and victories](#world-sizes-and-victories)).
 
 ## Diplomacy
 
@@ -1231,7 +1320,9 @@ ADR-015 records the decisions, and the Milestone 9 plan
 measured politics.
 
 - **Four gods**: the player and three AI gods (Tyrant, Guardian and Trickster in `gods.json`), each
-  with a home and a Creature. Eight personalities have profiles in `god_ai.json`.
+  with a home and a Creature. Eight personalities have profiles in `god_ai.json`. Large and huge
+  worlds add two or four of `gods.json`'s `ExtraGods` (Zealot, Nature Keeper, Warlord,
+  Isolationist; ADR-027).
 - **Blocs**: a god and every god allied with it, directly or through allies
   (`DiplomacyModel.BlocOf`). With `PantheonVictory`, a god's standing is its bloc's share when that
   is more than its own, so a bloc dominates and wins together; a god holding the share alone wins
@@ -1362,7 +1453,8 @@ Every system gets tools to see and drive it from the start (see [AGENTS.md](../A
 The readouts are built by pure functions in `Pantheon.Game.Diagnostics` and only displayed by
 the client.
 
-- F1: the debug panel (hidden at the start), built by `DebugReadout` from a `DebugSnapshot`.
+- F1: the debug panel (hidden at the start), built by `DebugReadout` from a `DebugSnapshot`. Its
+  second line gives the seed, the island's width and the world's victories (ADR-027).
   `BeliefReadout` adds a line per god (power and income, rank, followers, next rank) and every
   god's influence under the cursor. The settlement nearest the cursor is shown in detail, with its
   belief conditions and each belief (followers, values, worshippers and the power they raise); the
@@ -1451,11 +1543,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 12 (current)
+    alt version 19 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 11
+    else versions 1 to 18
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 12, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water; 7→8: disasters, fire, scorch, ruins, shields; 8→9: winners; 9→10: migration, refugee policies; 10→11: Creatures' skill, scars and views; 11→12: history)
+        Mig-->>Save: JsonObject at version 19, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

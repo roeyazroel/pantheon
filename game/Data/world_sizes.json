@@ -1,0 +1,23 @@
+{
+  // The sizes a new world may be made at (spec section 6, ADR-027). The first is the world worldgen.json
+  // describes, and must match it; larger ones change the island's size, its regions, the settlements founded at
+  // the start, the gods (gods.json's, then its ExtraGods) and the rivers. Regions are 64 m across (96 m on the vast
+  // island). PantheonMaxGods is how many gods may win a pantheon victory together.
+  "Sizes": [
+    { "Name": "Small", "HeightmapResolution": 1024, "VertexSpacing": 2.0, "RegionsPerSide": 32, "Settlements": 8, "Gods": 4, "Rivers": 7, "MainRivers": 4, "HydrologyCellSize": 8.0, "PantheonMaxGods": 2 },
+    { "Name": "Large", "HeightmapResolution": 1024, "VertexSpacing": 4.0, "RegionsPerSide": 64, "Settlements": 20, "Gods": 6, "Rivers": 14, "MainRivers": 8, "HydrologyCellSize": 8.0, "PantheonMaxGods": 3 },
+    { "Name": "Huge", "HeightmapResolution": 2048, "VertexSpacing": 4.0, "RegionsPerSide": 128, "Settlements": 40, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 16.0, "PantheonMaxGods": 4 },
+    { "Name": "Vast", "HeightmapResolution": 2048, "VertexSpacing": 6.0, "RegionsPerSide": 128, "Settlements": 48, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 12.0, "PantheonMaxGods": 4 }
+  ],
+  // Names added to worldgen.json's for larger worlds.
+  "ExtraSettlementNames": [
+    "Oakhaven", "Stonebridge", "Mistvale", "Ravenmoor", "Goldmere", "Briarwood", "Coldharbour", "Highcrest",
+    "Willowmere", "Ironford", "Sunhallow", "Redfern", "Blackwater", "Hearthstone", "Greywick", "Starfall",
+    "Westerly", "Northmarch", "Lindenholm", "Amberly", "Caskmoor", "Dunmere", "Foxhollow", "Glimmerdeep",
+    "Hollin", "Marrowby", "Pinecrest", "Quarrytown", "Rookhaven", "Silverdale", "Tidewell", "Yarrowby"
+  ],
+  "ExtraRiverNames": [
+    "Amberrun", "Brackwell", "Copperflow", "Deepwater", "Eskmoor", "Foamfall", "Gloamwater",
+    "Hollowrun", "Ivybrook", "Juniper", "Kestrelflow", "Lindwater", "Mossrun", "Nightwell"
+  ]
+}

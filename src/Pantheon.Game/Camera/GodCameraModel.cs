@@ -14,6 +14,9 @@ namespace Pantheon.Game.Camera;
 /// </remarks>
 public sealed class GodCameraModel
 {
+    // The world extent the settings' maximum distance was chosen for, in metres.
+    private const float ReferenceExtent = 2048f;
+
     private readonly GodCameraSettings _settings;
     private Vector2 _targetFocus;
     private float _targetYaw;
@@ -29,12 +32,16 @@ public sealed class GodCameraModel
         ArgumentNullException.ThrowIfNull(settings);
         settings.Validate();
         _settings = settings;
+        MaxDistance = settings.MaxDistance;
         _targetDistance = Math.Clamp(settings.InitialDistance, settings.MinDistance, settings.MaxDistance);
         Distance = _targetDistance;
     }
 
     /// <summary>Camera tuning.</summary>
     public GodCameraSettings Settings => _settings;
+
+    /// <summary>The farthest the camera may pull back: the settings' maximum, more for a world larger than 2 km.</summary>
+    public float MaxDistance { get; private set; }
 
     /// <summary>Current (eased) focus point on the ground.</summary>
     public Vector2 Focus { get; private set; }
@@ -90,6 +97,10 @@ public sealed class GodCameraModel
 
         _boundsMin = min;
         _boundsMax = max;
+
+        // A larger world may be seen whole from farther away (ADR-027): the default reach is for a 2 km island.
+        MaxDistance = Math.Max(_settings.MaxDistance, Math.Max(max.X - min.X, max.Y - min.Y) * _settings.MaxDistance / ReferenceExtent);
+        _targetDistance = Math.Clamp(_targetDistance, _settings.MinDistance, MaxDistance);
         _targetFocus = ClampToBounds(_targetFocus);
         Focus = ClampToBounds(Focus);
     }
@@ -126,7 +137,7 @@ public sealed class GodCameraModel
     /// <summary>Zooms by a number of steps; positive steps zoom in.</summary>
     /// <param name="steps">Zoom steps (one mouse-wheel notch is one step).</param>
     public void Zoom(float steps) =>
-        _targetDistance = Math.Clamp(_targetDistance * MathF.Pow(_settings.ZoomStepFactor, steps), _settings.MinDistance, _settings.MaxDistance);
+        _targetDistance = Math.Clamp(_targetDistance * MathF.Pow(_settings.ZoomStepFactor, steps), _settings.MinDistance, MaxDistance);
 
     /// <summary>Zooms towards (or away from) a ground point, keeping it roughly under the cursor.</summary>
     /// <param name="steps">Zoom steps; positive zooms in.</param>
@@ -149,7 +160,7 @@ public sealed class GodCameraModel
         _targetFocus = ClampToBounds(point);
         if (distance is { } value)
         {
-            _targetDistance = Math.Clamp(value, _settings.MinDistance, _settings.MaxDistance);
+            _targetDistance = Math.Clamp(value, _settings.MinDistance, MaxDistance);
         }
     }
 
@@ -215,7 +226,7 @@ public sealed class GodCameraModel
     private float ComputePitch(float distance)
     {
         var logMin = MathF.Log(_settings.MinDistance);
-        var t = (MathF.Log(distance) - logMin) / (MathF.Log(_settings.MaxDistance) - logMin);
+        var t = (MathF.Log(distance) - logMin) / (MathF.Log(MaxDistance) - logMin);
         t = Math.Clamp(t, 0f, 1f);
         var eased = t * t * (3f - (2f * t));
         var degrees = _settings.MinPitchDegrees + ((_settings.MaxPitchDegrees - _settings.MinPitchDegrees) * eased);

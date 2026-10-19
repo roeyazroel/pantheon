@@ -158,6 +158,12 @@ public sealed record DivineRules
     /// <summary>Whether allied gods who together hold the victory share win together (spec §53 Pantheon victory, ADR-015).</summary>
     public required bool PantheonVictory { get; init; }
 
+    /// <summary>Share of all followers every opponent must fall below for a conquest (spec §53, ADR-027).</summary>
+    public float ConquestShare { get; init; } = 0.05f;
+
+    /// <summary>Share of the living villages a god must lead for a cultural victory (spec §53, ADR-027).</summary>
+    public float CulturalShare { get; init; } = 0.75f;
+
     /// <summary>
     /// Most gods in a pantheon that wins together: a god and its strongest direct allies (spec §53's
     /// "eligible alliance", ADR-020). Two keeps §54's tension: a god allied with two must leave one out.

@@ -68,6 +68,9 @@ public static class ContentJson
     /// <summary>File name of settlements' society (ADR-023).</summary>
     public const string SocietyFileName = "society.json";
 
+    /// <summary>World sizes file name (ADR-027).</summary>
+    public const string WorldSizesFileName = "world_sizes.json";
+
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
     /// <param name="json">File text.</param>
@@ -162,6 +165,11 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The society rules.</returns>
     public static Domain.Society.SocietyRules ParseSociety(string json) => Parse<Domain.Society.SocietyRules>(json, SocietyFileName);
+
+    /// <summary>Parses <c>world_sizes.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The world sizes.</returns>
+    public static Domain.World.WorldSizes ParseWorldSizes(string json) => Parse<Domain.World.WorldSizes>(json, WorldSizesFileName);
 
     /// <summary>Parses <c>water.json</c>.</summary>
     /// <param name="json">File text.</param>

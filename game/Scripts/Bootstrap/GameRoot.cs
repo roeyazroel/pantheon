@@ -42,6 +42,9 @@ public partial class GameRoot : Node3D
     // F2 seeds stay short enough to read off the overlay and pass back with --seed.
     private const long MaxRandomSeed = 1_000_000_000;
 
+    // The island the fog was tuned for, in metres across.
+    private const float FogReferenceExtent = 2048f;
+
     private GameSession _session = null!;
     private BiomePalette _palette = null!;
     private WorldPresenter _presenter = null!;
@@ -57,6 +60,7 @@ public partial class GameRoot : Node3D
     private DiplomacyPanel _diplomacy = null!;
     private DivineController _divine = null!;
     private int _focusIndex = -1;
+    private float? _baseFogDensity;
     private CreatureCommandKind? _pendingJudge;
     private IReadOnlyList<(StringName Action, Action Run)> _hotkeys = [];
     private string? _status;
@@ -174,6 +178,7 @@ public partial class GameRoot : Node3D
         _weather.Sync(_session.World, _session.SimulationSeconds, (float)delta, focus);
         _disasters.Sync(_session.World, (float)delta, focus);
         _migrants.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused);
+        LabelDeclutterer.Apply(GetTree(), _camera.ViewCamera);
         if (_pendingJudge is { } judge)
         {
             _pendingJudge = null;
@@ -275,14 +280,23 @@ public partial class GameRoot : Node3D
         }
 
         var seed = options.Seed ?? LaunchOptions.DefaultSeed;
-        var session = GameSession.CreateNew(content, seed, Pantheon.Simulation.Creatures.CreatureModel.FindSpecies(content.Creatures, options.Species)?.Name);
-        SetStatus(loadFailure ?? $"New world from seed {seed}");
+        var world = options.NewWorld(content);
+        var session = GameSession.CreateNew(content, seed, world);
+        SetStatus(loadFailure ?? SessionCommands.Describe(content, seed, world));
         return session;
     }
 
     /// <summary>Rebuilds every visual from the current state and points the camera at the settlement.</summary>
     private void ShowWorld()
     {
+        // A larger island thins the fog, so its far shore still shows from the camera's greater height (ADR-027).
+        var extent = _session.World.Regions.Columns * _session.World.Regions.RegionSize;
+        if (GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment is { } environment)
+        {
+            _baseFogDensity ??= environment.FogDensity;
+            environment.FogDensity = _baseFogDensity.Value * MathF.Min(1f, FogReferenceExtent / extent);
+        }
+
         _presenter.Rebuild(_session.World, _session.Terrain);
         _divinePresenter.Rebuild(_session.Terrain, _session.World.Regions.Columns * _session.World.Regions.RegionSize);
         _creatures.Rebuild(_session.Terrain);

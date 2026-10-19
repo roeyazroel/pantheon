@@ -75,6 +75,7 @@ public sealed class TreatyAdvisor
     public List<(DiplomaticCommand Command, float Utility)> Moves(WorldState world, GodState god, GodProfile profile)
     {
         var moves = new List<(DiplomaticCommand, float)>();
+        var followings = new Followings(world);
         foreach (var other in world.Gods)
         {
             if (other.Id == god.Id)
@@ -85,7 +86,7 @@ public sealed class TreatyAdvisor
             var view = DiplomacyModel.FindRelation(world, god.Id, other.Id) ?? DiplomacyModel.NewRelation(_rules, god.Id, other.Id);
             foreach (var kind in Enum.GetValues<TreatyKind>())
             {
-                if (Wish(world, god, other, profile, view, kind) is { } wish && Plausible(world, god, other, wish.Terms))
+                if (Wish(world, god, other, profile, view, kind, followings) is { } wish && Plausible(world, god, other, wish.Terms, followings))
                 {
                     moves.Add((new DiplomaticCommand(god.Id, other.Id, DiplomaticCommandKind.ProposeTreaty, Terms: wish.Terms), wish.Utility));
                 }
@@ -93,7 +94,7 @@ public sealed class TreatyAdvisor
 
             foreach (var treaty in TreatyModel.KnownBetween(world, god.Id, god.Id, other.Id))
             {
-                moves.Add((new DiplomaticCommand(god.Id, other.Id, DiplomaticCommandKind.BreakTreaty, TreatyId: treaty.Id), BreakWish(world, god, treaty, profile, view)));
+                moves.Add((new DiplomaticCommand(god.Id, other.Id, DiplomaticCommandKind.BreakTreaty, TreatyId: treaty.Id), BreakWish(god, treaty, profile, view, followings)));
             }
 
             if (FavourBook.Find(world, god.Id, other.Id) is not null && Ask(world, god, other) is { } ask)
@@ -118,9 +119,12 @@ public sealed class TreatyAdvisor
     /// <param name="profile">Its profile.</param>
     /// <param name="view">How it sees the proposer.</param>
     /// <returns>The utility of accepting.</returns>
-    public static float AnswerUtility(DiplomacyRules rules, WorldState world, GodState god, DiplomaticProposal proposal, GodProfile profile, GodRelation view)
+    public static float AnswerUtility(DiplomacyRules rules, WorldState world, GodState god, DiplomaticProposal proposal, GodProfile profile, GodRelation view) =>
+        AnswerUtility(world, god, proposal, profile, view, new Followings(world ?? throw new ArgumentNullException(nameof(world))));
+
+    /// <summary><see cref="AnswerUtility(DiplomacyRules, WorldState, GodState, DiplomaticProposal, GodProfile, GodRelation)"/> with the followers already counted.</summary>
+    private static float AnswerUtility(WorldState world, GodState god, DiplomaticProposal proposal, GodProfile profile, GodRelation view, Followings followings)
     {
-        ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(god);
         ArgumentNullException.ThrowIfNull(proposal);
         ArgumentNullException.ThrowIfNull(profile);
@@ -147,19 +151,19 @@ public sealed class TreatyAdvisor
             // Pacts that keep the peace are weighed as peace is: by weariness, fear and the balance, not by trust.
             var weariness = DiplomacyModel.FindStance(world, god.Id, proposal.FromGodId) is { Status: DiplomaticStatus.War } war
                 ? Math.Min(1f, (world.Tick - war.SinceTick) / (float)SimulationTime.TicksPerSecond / 300f) : 0f;
-            var peace = (profile.Cooperation * (0.4f + Math.Max(0f, -Advantage(world, god.Id, proposal.FromGodId)) + Threat(world, god.Id) + weariness))
+            var peace = (profile.Cooperation * (0.4f + Math.Max(0f, -followings.Advantage(god.Id, proposal.FromGodId)) + Threat(world, god.Id, followings) + weariness))
                 + view.Fear - (0.3f * grudge) - (0.3f * profile.Aggression) + word - 0.4f;
-            return peace + secret + TreatyFit(world, god, proposal.FromGodId, terms, profile, view);
+            return peace + secret + TreatyFit(world, god, proposal.FromGodId, terms, profile, view, followings);
         }
 
-        return basis + secret + TreatyFit(world, god, proposal.FromGodId, terms, profile, view);
+        return basis + secret + TreatyFit(world, god, proposal.FromGodId, terms, profile, view, followings);
     }
 
     /// <summary>
     /// Whether another AI god might accept the terms: a god does not keep offering what its
     /// counterpart plainly refuses. A player's god is always worth asking.
     /// </summary>
-    private bool Plausible(WorldState world, GodState god, GodState other, TreatyTerms terms)
+    private bool Plausible(WorldState world, GodState god, GodState other, TreatyTerms terms, Followings followings)
     {
         if (other.Controller != GodController.Ai || _profiles?.Invoke(other.Personality) is not { } theirs)
         {
@@ -168,18 +172,18 @@ public sealed class TreatyAdvisor
 
         var view = DiplomacyModel.FindRelation(world, other.Id, god.Id) ?? DiplomacyModel.NewRelation(_rules, other.Id, god.Id);
         var proposal = new DiplomaticProposal { FromGodId = god.Id, ToGodId = other.Id, Kind = ProposalKind.Treaty, ExpiresAtTick = world.Tick, Terms = terms };
-        return AnswerUtility(_rules, world, other, proposal, theirs, view) > 0f;
+        return AnswerUtility(world, other, proposal, theirs, view, followings) > 0f;
     }
 
     /// <summary>What a treaty's kind is worth to the god accepting it.</summary>
-    private static float TreatyFit(WorldState world, GodState god, int proposer, TreatyTerms terms, GodProfile profile, GodRelation view)
+    private static float TreatyFit(WorldState world, GodState god, int proposer, TreatyTerms terms, GodProfile profile, GodRelation view, Followings followings)
     {
         var atWar = DiplomacyModel.AreAtWar(world, god.Id, proposer);
         var allyOfTarget = terms.TargetGodId is { } target && DiplomacyModel.AreAllied(world, god.Id, target);
         return terms.Kind switch
         {
             TreatyKind.NonAggression => atWar ? 0.3f : 0.1f,
-            TreatyKind.DefensivePact or TreatyKind.MutualDefense => (0.5f * profile.Cooperation) + Threat(world, god.Id) - (allyOfTarget ? 1f : 0f),
+            TreatyKind.DefensivePact or TreatyKind.MutualDefense => (0.5f * profile.Cooperation) + Threat(world, god.Id, followings) - (allyOfTarget ? 1f : 0f),
             TreatyKind.JointWar => terms.TargetGodId is { } enemy ? (profile.Aggression * Enmity(world, god.Id, enemy)) - (allyOfTarget ? 1.5f : 0f) - 0.2f : -1f,
             TreatyKind.SharedInfluence or TreatyKind.MigrationAgreement or TreatyKind.CreatureNonAggression => (0.5f * profile.Cooperation) - view.Rivalry + 0.2f,
             TreatyKind.ReligiousAccess => (0.5f * profile.Cooperation) - view.Rivalry - (0.3f * profile.Convert),
@@ -204,14 +208,14 @@ public sealed class TreatyAdvisor
     };
 
     /// <summary>The treaty a god would propose to another, of a kind, and how much it wants it; <c>null</c> when the kind does not fit.</summary>
-    private (TreatyTerms Terms, float Utility)? Wish(WorldState world, GodState god, GodState other, GodProfile profile, GodRelation view, TreatyKind kind)
+    private static (TreatyTerms Terms, float Utility)? Wish(WorldState world, GodState god, GodState other, GodProfile profile, GodRelation view, TreatyKind kind, Followings followings)
     {
         var status = DiplomacyModel.StatusOf(world, god.Id, other.Id);
         var friendly = status is DiplomaticStatus.Friendly or DiplomaticStatus.Alliance;
         var cold = status is DiplomaticStatus.Hostile or DiplomaticStatus.War;
         var goodwill = DiplomacyModel.Goodwill(view);
         var grudge = DiplomacyModel.Grudge(view) * profile.Grudge;
-        var advantage = Advantage(world, god.Id, other.Id);
+        var advantage = followings.Advantage(god.Id, other.Id);
         var coop = profile.Cooperation;
         TreatyTerms Terms(float seconds, int? target = null, bool secret = false) => new() { Kind = kind, DurationSeconds = seconds, TargetGodId = target, Secret = secret };
         switch (kind)
@@ -219,10 +223,10 @@ public sealed class TreatyAdvisor
             case TreatyKind.NonAggression when cold || status == DiplomaticStatus.Neutral:
                 return (Terms(600f), (coop * (0.6f + view.Fear + Math.Max(0f, -advantage))) + (cold ? 0.2f : 0f) - grudge - (0.4f * profile.Aggression) - 0.4f);
             case TreatyKind.MutualDefense when friendly:
-                return (Terms(900f), (coop * (view.Trust + goodwill + Threat(world, god.Id))) - view.Rivalry - 0.6f);
-            case TreatyKind.DefensivePact when !cold && Leader(world, god.Id, other.Id) is { } leader:
+                return (Terms(900f), (coop * (view.Trust + goodwill + Threat(world, god.Id, followings))) - view.Rivalry - 0.6f);
+            case TreatyKind.DefensivePact when !cold && Leader(world, god.Id, other.Id, followings) is { } leader:
                 var secret = DiplomacyModel.AreAllied(world, god.Id, leader) || profile.Treachery > 0.5f;
-                return (Terms(900f, leader, secret), (coop * goodwill) + (profile.Aggression * Enmity(world, god.Id, leader)) + Threat(world, god.Id) - 0.8f);
+                return (Terms(900f, leader, secret), (coop * goodwill) + (profile.Aggression * Enmity(world, god.Id, leader)) + Threat(world, god.Id, followings) - 0.8f);
             case TreatyKind.JointWar when !cold && Enemy(world, god.Id, other.Id) is { } enemy:
                 return (Terms(600f, enemy), (profile.Aggression * Enmity(world, god.Id, enemy)) + (0.5f * goodwill) - 1.1f);
             case TreatyKind.SharedInfluence when !cold:
@@ -245,10 +249,10 @@ public sealed class TreatyAdvisor
     }
 
     /// <summary>How much a god wants to break a treaty: a pact that keeps it from a war it wants, a tribute it no longer fears to stop, a joint war it is tired of.</summary>
-    private float BreakWish(WorldState world, GodState god, Treaty treaty, GodProfile profile, GodRelation view)
+    private static float BreakWish(GodState god, Treaty treaty, GodProfile profile, GodRelation view, Followings followings)
     {
         var grudge = DiplomacyModel.Grudge(view) * profile.Grudge;
-        var advantage = Advantage(world, god.Id, treaty.PartnerOf(god.Id));
+        var advantage = followings.Advantage(god.Id, treaty.PartnerOf(god.Id));
         return treaty.Kind switch
         {
             TreatyKind.NonAggression => (profile.Treachery * (view.Rivalry + grudge + Math.Max(0f, advantage))) + (profile.Aggression * 0.3f) - view.Trust - 0.8f,
@@ -281,13 +285,13 @@ public sealed class TreatyAdvisor
     }
 
     /// <summary>The god leading the world that is neither of the two, if it leads past a third of all followers.</summary>
-    private static int? Leader(WorldState world, int godId, int otherId)
+    private static int? Leader(WorldState world, int godId, int otherId, Followings followings)
     {
         int? leader = null;
         var best = 0.33f;
         foreach (var third in world.Gods)
         {
-            var share = VictorySystem.ShareOf(world, third.Id);
+            var share = followings.ShareOf(third.Id);
             if (third.Id != godId && third.Id != otherId && share > best)
             {
                 (leader, best) = (third.Id, share);
@@ -329,25 +333,50 @@ public sealed class TreatyAdvisor
     }
 
     /// <summary>How far any god but this one leads past a third of all followers (0..1).</summary>
-    private static float Threat(WorldState world, int godId)
+    private static float Threat(WorldState world, int godId, Followings followings)
     {
         var threat = 0f;
         foreach (var other in world.Gods)
         {
             if (other.Id != godId && !DiplomacyModel.AreAllied(world, godId, other.Id))
             {
-                threat = Math.Max(threat, SimMath.Clamp01((VictorySystem.ShareOf(world, other.Id) - 0.33f) * 3f));
+                threat = Math.Max(threat, SimMath.Clamp01((followings.ShareOf(other.Id) - 0.33f) * 3f));
             }
         }
 
         return threat;
     }
 
-    /// <summary>The god's lead in followers over the other, from -1 to 1.</summary>
-    private static float Advantage(WorldState world, int godId, int otherId)
+    /// <summary>
+    /// Every god's followers, counted once for a weighing, as <see cref="GodStanding.CountFollowers(WorldState, int)"/>
+    /// and <see cref="VictorySystem.ShareOf"/> count them: counting again for each treaty kind was most
+    /// of the AI's time in a large world (ADR-027).
+    /// </summary>
+    private sealed class Followings
     {
-        var mine = GodStanding.CountFollowers(world, godId);
-        var theirs = GodStanding.CountFollowers(world, otherId);
-        return (mine - theirs) / (float)Math.Max(1, mine + theirs);
+        private readonly Dictionary<int, int> _counts = [];
+        private readonly int _total;
+
+        /// <summary>Counts every god's followers.</summary>
+        public Followings(WorldState world)
+        {
+            foreach (var god in world.Gods)
+            {
+                var followers = GodStanding.CountFollowers(world, god.Id);
+                _counts[god.Id] = followers;
+                _total += followers;
+            }
+        }
+
+        /// <summary>A god's share of all followers.</summary>
+        public float ShareOf(int godId) => _total > 0 ? (float)_counts.GetValueOrDefault(godId) / _total : 0f;
+
+        /// <summary>The god's lead in followers over the other, from -1 to 1.</summary>
+        public float Advantage(int godId, int otherId)
+        {
+            var mine = _counts.GetValueOrDefault(godId);
+            var theirs = _counts.GetValueOrDefault(otherId);
+            return (mine - theirs) / (float)Math.Max(1, mine + theirs);
+        }
     }
 }

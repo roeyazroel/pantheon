@@ -7,9 +7,10 @@ public static class NetworkProtocol
     /// Version of the messages; a host refuses players whose version differs. Version 2 (Milestone 15)
     /// adds domains and holy sites, version 3 (Milestone 15, part 2) the rivers and floods, version 4
     /// (part 3) settlements' society and priorities, version 5 (part 5) treaties, requests and the
-    /// Divine Council, version 6 (part 6) war goals, veiled miracles, proxy acts and holy wars.
+    /// Divine Council, version 6 (part 6) war goals, veiled miracles, proxy acts and holy wars,
+    /// version 7 (part 7) the world's victories and how a victory was won.
     /// </summary>
-    public const int Version = 6;
+    public const int Version = 7;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

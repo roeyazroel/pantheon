@@ -17,6 +17,9 @@ public sealed record PantheonSetup
 
     /// <summary>The gods, in order. At least one.</summary>
     public required IReadOnlyList<GodSlot> Gods { get; init; }
+
+    /// <summary>Gods that join in larger worlds, in order (ADR-027); none in the default world.</summary>
+    public IReadOnlyList<GodSlot> ExtraGods { get; init; } = [];
 }
 
 /// <summary>One god of a new world.</summary>

@@ -16,7 +16,7 @@ internal sealed partial class HolySiteView : Node3D
 
     private readonly StandardMaterial3D _crystal;
     private readonly OmniLight3D _light;
-    private readonly Label3D _label;
+    private readonly DeclutteredLabel _label;
     private float _age;
     private Color _keeper = Unclaimed;
     private Color? _claimant;
@@ -27,8 +27,10 @@ internal sealed partial class HolySiteView : Node3D
         AddChild(new MeshInstance3D { Name = "Crystal", Mesh = new SphereMesh { Radius = 2f, Height = 5.2f, RadialSegments = 6, Rings = 3, Material = _crystal }, Position = new Vector3(0f, crystalHeight, 0f) });
         _light = new OmniLight3D { LightColor = Unclaimed, LightEnergy = 1.5f, OmniRange = 30f, Position = new Vector3(0f, crystalHeight, 0f) };
         AddChild(_light);
-        _label = new Label3D
+        _label = new DeclutteredLabel
         {
+            // Holy sites are few and matter to every god: they take their place before any village.
+            Priority = float.MaxValue,
             Name = "Label",
             Position = new Vector3(0f, crystalHeight + 5f, 0f),
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
@@ -91,11 +93,7 @@ internal sealed partial class HolySiteView : Node3D
     /// <param name="claimant">The claimant's colour, or <c>null</c> when nobody is taking it.</param>
     public void Show(string text, Color? keeper, Color? claimant)
     {
-        if (_label.Text != text)
-        {
-            _label.Text = text;
-        }
-
+        _label.SetTexts(text, text.Split('\n')[0]);
         _keeper = keeper ?? Unclaimed;
         _claimant = claimant;
     }

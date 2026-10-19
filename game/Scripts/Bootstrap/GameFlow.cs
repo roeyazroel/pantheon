@@ -60,6 +60,7 @@ internal sealed partial class GameFlow : Node
         (_session, _network, _divine, _diplomacy, _setStatus) = (session, network, divine, diplomacy, setStatus);
         _menu = new MenuScreen { Name = "Menus" };
         _menu.Species = session.Content.Creatures.Species.Select(s => (s.Name, s.Description)).ToList();
+        _menu.Sizes = session.Content.Sizes.Sizes.Select(s => (s.Name, WorldMaker.Describe(s))).ToList();
         _menu.Settings = settings;
         _menu.SettingsChanged += changed =>
         {
@@ -170,9 +171,9 @@ internal sealed partial class GameFlow : Node
     /// <summary>What each menu choice does.</summary>
     private void WireMenu()
     {
-        _menu.NewWorldChosen += (seed, species) =>
+        _menu.NewWorldChosen += (seed, world) =>
         {
-            _setStatus(SessionCommands.NewWorld(_session, seed, species));
+            _setStatus(SessionCommands.NewWorld(_session, seed, world));
             Begin(guide: true);
         };
         _menu.LoadChosen += path =>

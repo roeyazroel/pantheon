@@ -70,6 +70,8 @@ public static class DivineRulesValidator
             (rules.CreatureInfluenceStrength, nameof(rules.CreatureInfluenceStrength)),
             (rules.RivalMiracleDoubt, nameof(rules.RivalMiracleDoubt)),
             (rules.VictoryShare, nameof(rules.VictoryShare)),
+            (rules.ConquestShare, nameof(rules.ConquestShare)),
+            (rules.CulturalShare, nameof(rules.CulturalShare)),
             (rules.BlessingDecayPerStep, nameof(rules.BlessingDecayPerStep)),
         })
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Godot;
 using Pantheon.Domain.World;
 using Pantheon.Game.Flow;
@@ -20,11 +21,14 @@ internal sealed partial class MenuScreen : CanvasLayer
     private VBoxContainer _column = null!;
     private ColorRect _veil = null!;
 
-    /// <summary>A new world with a seed, and the species of the player's Creature (ADR-021); <c>null</c> keeps the pantheon's.</summary>
-    public event Action<WorldSeed, string?>? NewWorldChosen;
+    /// <summary>A new world with a seed, the species of the player's Creature (ADR-021), its size and its victories (ADR-027).</summary>
+    public event Action<WorldSeed, Pantheon.Game.NewWorldOptions>? NewWorldChosen;
 
     /// <summary>The Creature species the new-world page offers, first the default, with what sets each apart.</summary>
     public IReadOnlyList<(string Name, string Description)> Species { get; set; } = [];
+
+    /// <summary>The world sizes the new-world page offers, first the default, each in words.</summary>
+    public IReadOnlyList<(string Name, string Description)> Sizes { get; set; } = [];
 
     /// <summary>A save to load.</summary>
     public event Action<string>? LoadChosen;
@@ -83,13 +87,22 @@ internal sealed partial class MenuScreen : CanvasLayer
     {
         Open();
         _column.AddChild(UiKit.Text("PANTHEON", 34, UiKit.Gold));
-        _column.AddChild(UiKit.Text("Win the belief of the world's people. Raise your Creature, deal with three rival gods, and hold 60% of all belief for ten minutes.", 15, UiKit.Muted));
+        _column.AddChild(UiKit.Text("Win the belief of the world's people. Raise your Creature, deal with rival gods, and win the world by belief, conquest or culture.", 15, UiKit.Muted));
         var seedField = UiKit.Field(seed.Value.ToString(CultureInfo.InvariantCulture), "seed");
         _column.AddChild(UiKit.Row("World seed", seedField));
-        var species = SpeciesChoice(out var about);
+        var species = Choice(Species, out var about);
         _column.AddChild(UiKit.Row("Your Creature", species));
         _column.AddChild(about);
-        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(ParseSeed(seedField.Text, seed), Chosen(species))));
+        var size = Choice(Sizes, out var sizeAbout);
+        _column.AddChild(UiKit.Row("World size", size));
+        _column.AddChild(sizeAbout);
+        var victories = VictoryText.Choices.Select(c => (c.Name, c.Description)).ToList();
+        var victory = Choice(victories, out var victoryAbout);
+        _column.AddChild(UiKit.Row("Victory", victory));
+        _column.AddChild(victoryAbout);
+        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(
+            ParseSeed(seedField.Text, seed),
+            new Pantheon.Game.NewWorldOptions(Chosen(Species, species), Chosen(Sizes, size), victory.Selected > 0 ? VictoryText.Choices[victory.Selected].Settings : null))));
         if (latest is not null)
         {
             _column.AddChild(UiKit.Button($"Continue: {Describe(latest, year)}", () => LoadChosen?.Invoke(latest.Path)));
@@ -200,7 +213,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         }
 
         _column.AddChild(UiKit.Button("Keep watching", () => ResumeChosen?.Invoke()));
-        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(seed, null)));
+        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(seed, new Pantheon.Game.NewWorldOptions())));
         _column.AddChild(UiKit.Button("Main menu", () => MainMenuChosen?.Invoke()));
     }
 
@@ -250,25 +263,26 @@ internal sealed partial class MenuScreen : CanvasLayer
         _column.AddChild(UiKit.Button("Back", back));
     }
 
-    /// <summary>A choice of the player's Creature species, with a line saying what sets the chosen one apart.</summary>
-    private OptionButton SpeciesChoice(out Label about)
+    /// <summary>A choice among named items, with a line saying what sets the chosen one apart.</summary>
+    private static OptionButton Choice(IReadOnlyList<(string Name, string Description)> items, out Label about)
     {
         var choice = new OptionButton { CustomMinimumSize = new Vector2(260, 32) };
         var description = UiKit.Text(string.Empty, 13, UiKit.Muted);
-        foreach (var (name, _) in Species)
+        foreach (var (name, _) in items)
         {
             choice.AddItem(name);
         }
 
-        void Describe(long index) => description.Text = index >= 0 && index < Species.Count ? Species[(int)index].Description : string.Empty;
+        void Describe(long index) => description.Text = index >= 0 && index < items.Count ? items[(int)index].Description : string.Empty;
         choice.ItemSelected += Describe;
         Describe(0);
         about = description;
         return choice;
     }
 
-    /// <summary>The species chosen, or <c>null</c> when there is no choice.</summary>
-    private string? Chosen(OptionButton choice) => choice.Selected >= 0 && choice.Selected < Species.Count ? Species[choice.Selected].Name : null;
+    /// <summary>The name chosen, or <c>null</c> when there is no choice.</summary>
+    private static string? Chosen(IReadOnlyList<(string Name, string Description)> items, OptionButton choice) =>
+        choice.Selected >= 0 && choice.Selected < items.Count ? items[choice.Selected].Name : null;
 
     /// <summary>Shows the panel with an empty column.</summary>
     private void Open(float width = 460)

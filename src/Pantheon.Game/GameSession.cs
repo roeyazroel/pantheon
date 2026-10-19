@@ -99,10 +99,17 @@ public sealed class GameSession
     /// <param name="seed">World seed.</param>
     /// <param name="species">The species of the player's Creature; <c>gods.json</c>'s when <c>null</c> (ADR-021).</param>
     /// <returns>The new session.</returns>
-    public static GameSession CreateNew(GameContent content, WorldSeed seed, string? species = null)
+    public static GameSession CreateNew(GameContent content, WorldSeed seed, string? species = null) => CreateNew(content, seed, new NewWorldOptions(species));
+
+    /// <summary>Generates a new world at a size, with its victories (ADR-027).</summary>
+    /// <param name="content">Validated content.</param>
+    /// <param name="seed">World seed.</param>
+    /// <param name="options">The Creature's species, the size and the victories.</param>
+    /// <returns>The session.</returns>
+    public static GameSession CreateNew(GameContent content, WorldSeed seed, NewWorldOptions options)
     {
         ArgumentNullException.ThrowIfNull(content);
-        var generated = Generate(content, seed, species);
+        var generated = WorldMaker.Generate(content, seed, options);
         return new GameSession(content, generated.State, generated.Terrain);
     }
 
@@ -216,9 +223,14 @@ public sealed class GameSession
     /// <summary>Replaces the current world with a newly generated one.</summary>
     /// <param name="seed">Seed of the new world.</param>
     /// <param name="species">The species of the player's Creature; <c>gods.json</c>'s when <c>null</c> (ADR-021).</param>
-    public void StartNewWorld(WorldSeed seed, string? species = null)
+    public void StartNewWorld(WorldSeed seed, string? species = null) => StartNewWorld(seed, new NewWorldOptions(species));
+
+    /// <summary>Replaces the world with a new one at a size, with its victories (ADR-027).</summary>
+    /// <param name="seed">World seed.</param>
+    /// <param name="options">The Creature's species, the size and the victories.</param>
+    public void StartNewWorld(WorldSeed seed, NewWorldOptions options)
     {
-        var generated = Generate(Content, seed, species);
+        var generated = WorldMaker.Generate(Content, seed, options);
         Replace(generated.State, generated.Terrain);
     }
 
@@ -387,20 +399,6 @@ public sealed class GameSession
     {
         var (world, terrain) = LoadWorld(Content, path);
         Replace(world, terrain);
-    }
-
-    /// <summary>A new world with the content's pantheon, the player's Creature of the chosen species, and its holy sites.</summary>
-    private static Simulation.WorldGen.GeneratedWorld Generate(GameContent content, WorldSeed seed, string? species)
-    {
-        var pantheon = content.Pantheon;
-        if (species is not null && content.Pantheon.Gods.ToList().FindIndex(g => g.Controller == GodController.Human) is var player and >= 0)
-        {
-            var gods = content.Pantheon.Gods.ToList();
-            gods[player] = gods[player] with { CreatureSpecies = species };
-            pantheon = content.Pantheon with { Gods = gods };
-        }
-
-        return WorldGenerator.Generate(seed, content.WorldGen, pantheon, content.Creatures, content.HolySites);
     }
 
     /// <summary>

@@ -4,7 +4,7 @@ using Pantheon.Domain.Politics;
 
 namespace Pantheon.Game.Launch;
 
-/// <summary>The launch options of Milestone 15's later parts: society, culture and politics (ADR-023 to ADR-025).</summary>
+/// <summary>The launch options of Milestone 15's later parts: society, culture, politics, conflict and world sizes (ADR-023 to ADR-027).</summary>
 public sealed partial record LaunchOptions
 {
     /// <summary>A priority the player's god asks of the focused settlement at the start (ADR-023).</summary>
@@ -34,8 +34,67 @@ public sealed partial record LaunchOptions
     /// <summary>Whether the player casts veiled miracles from the start (ADR-026).</summary>
     public bool Veil { get; init; }
 
+    /// <summary>The size of a new world, by its name in <c>world_sizes.json</c> (ADR-027); the first when <c>null</c>.</summary>
+    public string? WorldSize { get; init; }
+
+    /// <summary>How a new world may be won (ADR-027); ascendancy only when <c>null</c>.</summary>
+    public Domain.World.VictorySettings? Victory { get; init; }
+
+    /// <summary>How to make the world these options ask for, with names the content knows.</summary>
+    /// <param name="content">Validated content.</param>
+    /// <returns>The species, size and victories; an unknown species or size is left to the content's own.</returns>
+    public NewWorldOptions NewWorld(GameContent content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return new NewWorldOptions(
+            Simulation.Creatures.CreatureModel.FindSpecies(content.Creatures, Species)?.Name,
+            WorldMaker.Find(content, WorldSize)?.Name,
+            Victory);
+    }
+
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory"];
+
+    /// <summary>
+    /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
+    /// <c>cultural</c> separated by commas; <c>null</c> when the text is none of these.
+    /// </summary>
+    private static Domain.World.VictorySettings? ParseVictory(string value)
+    {
+        var parts = value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1 && parts[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            return Domain.World.VictorySettings.All;
+        }
+
+        if (parts.Length == 1 && parts[0].Equals("sandbox", StringComparison.OrdinalIgnoreCase))
+        {
+            return Domain.World.VictorySettings.Sandbox;
+        }
+
+        var victory = Domain.World.VictorySettings.Sandbox;
+        foreach (var part in parts)
+        {
+            if (part.Equals("ascendancy", StringComparison.OrdinalIgnoreCase))
+            {
+                victory = victory with { Ascendancy = true };
+            }
+            else if (part.Equals("conquest", StringComparison.OrdinalIgnoreCase))
+            {
+                victory = victory with { Conquest = true };
+            }
+            else if (part.Equals("cultural", StringComparison.OrdinalIgnoreCase))
+            {
+                victory = victory with { Cultural = true };
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        return parts.Length > 0 ? victory : null;
+    }
 
     /// <summary>Applies one of this part's options; <c>null</c> when the option is not one of them.</summary>
     private static LaunchOptions? ApplyExpansion(LaunchOptions options, string name, string value, List<string> warnings)
@@ -69,6 +128,12 @@ public sealed partial record LaunchOptions
                 return OnOff(value) is { } holy ? options with { HolyWar = holy } : Warn(options, warnings, $"'--holy-war' needs on or off, got '{value}'.");
             case "veil":
                 return OnOff(value) is { } veil ? options with { Veil = veil } : Warn(options, warnings, $"'--veil' needs on or off, got '{value}'.");
+            case "world-size":
+                return trimmed.Length > 0 ? options with { WorldSize = trimmed } : Warn(options, warnings, "'--world-size' needs a size such as Small, Large or Huge.");
+            case "victory":
+                return ParseVictory(trimmed) is { } victory
+                    ? options with { Victory = victory }
+                    : Warn(options, warnings, $"'--victory' needs all, sandbox, or ascendancy, conquest and cultural separated by commas, got '{value}'.");
             default:
                 return null;
         }

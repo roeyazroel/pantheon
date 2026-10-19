@@ -160,6 +160,19 @@ alliance and war:
 - **Holy wars.** Militarist villages attack neighbours of another faith of their own will. Urge
   them on or hold them back.
 
+**Milestone 15, part 7 (Larger worlds and victories)** lets you choose the world you play:
+
+- **World sizes.** A small island 2 km across with eight villages and four gods, a large one of
+  4 km with twenty villages and six gods, a huge one of 8 km with forty villages and eight gods,
+  or a vast one of 12 km with forty-eight villages and eight gods. Four new rivals join the
+  larger worlds: Aurel the Zealot, Maren the Nature Keeper, Thorn the Warlord and Ysolde the
+  Isolationist, and larger pantheons may win together.
+- **Victories.** Win by Divine Ascendancy as before, by conquest (every rival a remnant) or by
+  culture (most villages look to you while your rivals live on), by any of them, or play a
+  sandbox that nobody wins.
+- **Large worlds stay smooth.** The AI gods take turns to think, and village labels make way for
+  each other.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -185,7 +198,8 @@ godot --path game
 
 `godot` stands for the Godot 4.7.2 .NET executable. You can also open `game/project.godot` in the
 Godot .NET editor and press F5. Started without options, the game opens on its start screen: begin
-a new world (its seed is shown, so you can share it), continue your newest save, load a world, or
+a new world (its seed is shown, so you can share it, and you choose its size, how it may be won and
+your Creature's species), continue your newest save, load a world, or
 host or join a shared world (joining reloads the game with the host's address). A short guide
 walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
@@ -232,6 +246,11 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- world sizes and victories: the shipped sizes and what a larger one adds, the same world for the
+  same seed and size, the checks on `world_sizes.json`, conquest, culture and the sandbox, the
+  first victory being the only one, how each victory is told (alerts, history, end screen, HUD),
+  the AI's influence cache and turns, labels giving way, the camera's reach, the options and the
+  migration of part 6's saves;
 - war and intrigue: war aims, scores, goals and dictated peace, what gods know of each other,
   veiled miracles and their tracing, proxy acts, holy wars and their gods' word, the panels,
   alerts, history and secrets kept from other players;
@@ -287,7 +306,7 @@ covers:
 | Toggle region boundaries | B |
 | Toggle the debug overlay | F1 |
 | Next region debug map layer, then off | F3 |
-| New world from a random seed | F2 |
+| New world from a random seed (small, won by Divine Ascendancy) | F2 |
 | Quicksave / quickload | F5 / F9 |
 | Pause / resume the simulation | Space |
 | Simulation speed slower / faster (×1, ×4, ×16) | `[` / `]` |
@@ -309,9 +328,9 @@ covers:
 | The world's history | H |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
-120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m). The simulation runs at a
-fixed 10 ticks per second, independent of the frame rate. Choosing a speed also resumes a paused
-simulation.
+120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m, and further over a larger
+island, in proportion to its width). The simulation runs at a fixed 10 ticks per second,
+independent of the frame rate. Choosing a speed also resumes a paused simulation.
 
 ## The living settlements
 
@@ -329,8 +348,8 @@ and ×16 speed it up. Each step:
 - Children are born while there is free housing, a food surplus and stocked stores; fewer when
   health is low. People die at a low baseline rate, faster when health is low.
 
-The island has eight settlements, founded on the best land at least five regions (320 m) apart
-with 26 to 54 people each. With seed 1234 your home village, Duskwater, grows from 30 people to
+A small island has eight settlements (a large one 20 and a huge one 40), founded on the best land
+at least five regions (320 m) apart with 26 to 54 people each. With seed 1234 your home village, Duskwater, grows from 30 people to
 about 390 in 15 simulated minutes (about a minute at ×16). Press F7 and then F6 to start a
 famine. Food runs out, your followers' doubt rises, and unless you help them some turn away;
 and if the land cannot feed the newcomers, health falls and deaths rise until it can.
@@ -379,10 +398,14 @@ followers grow hungry. Try Lightning to see how fear behaves.
 
 Three gods share the island with you, each with a village far from the others and a Creature of
 its own: Vael the Tyrant (Gristle), Seren the Guardian (Thistle) and Kaio the Trickster (Quill).
+A large world adds Aurel the Zealot (Ember) and Maren the Nature Keeper (Fern), and a huge one
+Thorn the Warlord (Brute) and Ysolde the Isolationist (Wisp) as well (see
+[World sizes](#world-sizes)).
 The line under your HUD shows each rival's followers, its share of all belief and where you stand
 with it. The line below that shows the race: who holds most of the world's belief and how long
 until they win. Hold 60% of all followers for ten minutes and you win; let a rival do it and it
-wins. Allies count together (see [Diplomacy](#diplomacy)). The world goes on either way.
+wins. Allies count together (see [Diplomacy](#diplomacy)). The world goes on either way. A world
+may also be made to be won by conquest or culture, or by nobody (see [Winning](#winning)).
 
 The examples below use Vael.
 
@@ -850,7 +873,8 @@ On the start screen you choose your Creature's species for a new world (or pass 
 - the **Swiftclaw**, fast and fierce but fragile;
 - the **Lumen**, gentle and quick to learn.
 
-The rival gods' Creatures are a Stonehide (Vael), a Lumen (Seren) and a Swiftclaw (Kaio).
+The rival gods' Creatures are a Stonehide (Vael), a Lumen (Seren) and a Swiftclaw (Kaio), and in
+larger worlds a Swiftclaw (Aurel), a Mossback (Maren), a Stonehide (Thorn) and a Lumen (Ysolde).
 
 ## Sound and settings
 
@@ -865,16 +889,68 @@ The settings page (start screen or Esc) sets fullscreen, vertical sync, shadows,
 scale, the citizens shown, and the loudness of everything, the music, the effects and the wind and
 rain.
 
+## World sizes
+
+The start screen's "World size" (or `--world-size`) chooses the island of a new world:
+
+| Size | Island | Villages at the start | Gods | Rivers |
+| --- | --- | --- | --- | --- |
+| Small (the default) | 2 km across | 8 | 4 | up to 7, 4 of them to the sea |
+| Large | 4 km across | 20 | 6 | up to 14, 8 of them to the sea |
+| Huge | 8 km across | 40 | 8 | up to 24, 14 of them to the sea |
+| Vast | 12 km across | 48 | 8 | up to 24, 14 of them to the sea |
+
+- **Regions** are 64 m across (96 m on the vast island), so a larger island has more of them: 64
+  or 128 a side.
+- **Pantheons.** As many gods may win together as the size allows: two on a small island, three
+  on a large one, four on a huge or vast one (see [Winning](#winning)).
+- **Long games.** Six or eight gods hold each other in check, so larger worlds take longer to
+  win: in ten hour-long games with a passive player, four large worlds and one huge one found a
+  winner.
+- **More gods.** Larger worlds bring new rivals, each with a Creature, in this order: Aurel the
+  Zealot, Maren the Nature Keeper, Thorn the Warlord and Ysolde the Isolationist.
+- **Seeing a large island.** The camera pulls back further and the fog thins, so the far shore
+  still shows. Labels make way for more important ones: holy sites first, then villages by
+  population, then Creatures and migrants. A label with no room shows its name alone, or nothing
+  until you come closer. The rivals' line on the HUD wraps between gods.
+- **Saves** keep their world's size. Hosting from the start screen makes a small world.
+
+The sizes, with the larger worlds' extra village and river names, are in
+`game/Data/world_sizes.json`; the extra gods are `ExtraGods` in `game/Data/gods.json`.
+
 ## Winning
 
-A god wins by holding 60% of all belief for ten minutes. Two allies can win together: each counts
-with its strongest ally only, so a god allied with two others must choose whom to share its
-victory with. The end screen says who won, how your god and Creature ended up, and what the world
-remembers; you can keep watching, start a new world or go back to the start screen.
+How a world may be won is chosen when it is made (the start screen's "Victory", or `--victory`):
+
+- **Divine Ascendancy** (the default): hold 60% of all belief for ten minutes. Allies can win
+  together, as many as the world's size allows (two on a small island, three on a large one, four
+  on a huge or vast one): each god counts with its strongest allies only, so a god allied with
+  more must choose whom to share its victory with.
+- **Conquest:** bring every god outside your alliances below 5% of all belief, and keep it there
+  for ten minutes. Your allies win with you.
+- **Culture:** lead three in four of the living villages (more of their people follow you than
+  any other god) for ten minutes, while some rival keeps at least 5% of all belief: dominant
+  without wiping your rivals out.
+- **Every victory** puts all three in play. The first reached is the only one.
+- **Sandbox:** nobody wins, and the world goes on as long as you like. Dominance still counts for
+  the council and the AI gods.
+
+The HUD's race line follows the victories in play: "Vael has all but crushed its rivals: it
+conquers the world in 9:12", "You lead 6 of 8 villages: you win the world's culture in 9:12" or
+"A sandbox: no god can win". When ascendancy is off it says what you must do, for example "You
+lead 2 of 8 villages; lead 6 for 10:00 to win the world's culture". Alerts ("Vael has conquered
+the world."), the history ("The Conquest of the World by Vael") and the end screen say how the
+world was won. The end screen says who won, how your god and Creature ended up, and what
+the world remembers; you can keep watching, start a new world or go back to the start screen.
+
+The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `ConquestShare`,
+`CulturalShare` and `VictorySeconds`).
 
 ## Debug tools
 
-- **F1** shows the debug panel (hidden at the start): frame rate, tick, seed, terrain renderer,
+- **F1** shows the debug panel (hidden at the start): frame rate, tick, seed with the island's
+  width and the world's victories ("Seed 42   4096 m island   Ascendancy, conquest and cultural
+  victory"), terrain renderer,
   camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now and its top candidate actions with their scores and reasons, its diplomatic moves
   with the factors behind them, the weather (the spell, the wind and the strongest cells),
@@ -928,7 +1004,8 @@ remembers; you can keep watching, start a new world or go back to the start scre
 - The debug panel also lists every god's domains, each holy site with its keeper, its claimant
   and who leads its influence by how much, and the selected settlement's Old Faith and sanctuary.
   `--rank` and `--domains` try out domains at once, and `--focus=siteN` looks at a holy site.
-- The command-line options below reproduce a world (`--seed`, `--load`), force a renderer
+- The command-line options below reproduce a world (`--seed`, `--load`, `--world-size`,
+  `--victory`), force a renderer
   (`--terrain`), start from a grown settlement up close (`--advance-ticks`,
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
   Unattended runs end by logging one summary line per settlement, with its tier and the
@@ -944,7 +1021,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--load=<path>` | Load a save at startup, for example `user://saves/quicksave.json`. If it fails, a new world is generated. |
 | `--terrain=auto\|terrain3d\|fallback` | Terrain renderer. `auto` (the default) and `terrain3d` use Terrain3D when it is available; `fallback` forces the built-in mesh renderer. |
 | `--advance-ticks=<n>` | Run `n` simulation ticks (10 per simulated second) before the first frame, for example `--advance-ticks=9000` for a settlement of about 425 people. |
-| `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 25–2600). |
+| `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 25–2600, or further over a larger island). |
 | `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). |
 | `--screenshot=<file.png>` | Together with `--quit-after-frames`, save a screenshot just before quitting (not in headless mode). |
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
@@ -980,6 +1057,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--upnp=on\|off` | Ask the router to forward the host's port. |
 | `--meet=on\|off\|<name>` | Bring the nearest other Creature (or the one with that name) beside yours at the start, so they meet. |
 | `--species=<name>` | The species of your Creature in a new world: Mossback, Stonehide, Swiftclaw or Lumen. |
+| `--world-size=small\|large\|huge\|vast` | The size of a new world (see [World sizes](#world-sizes)). An unknown size makes a small world. |
+| `--victory=all\|sandbox\|<list>` | How a new world may be won: every way, no way, or a list of `ascendancy`, `conquest` and `cultural` separated by commas, for example `--victory=conquest,cultural`. Default: ascendancy. |
 | `--rank=<rank>` | Your god starts at this rank, such as LesserGod or God (debug). |
 | `--domains=<domain>[,<domain>...]` | Take up these domains at the start, as your rank allows. |
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
@@ -1010,7 +1089,8 @@ godot --path game -- --join=192.168.1.20 --name=Ana --god=Seren
     for everyone.
   - The HUD names who plays the other gods: "Ilyra (Roey)".
 - **The host decides** the speed and pausing, and only the host saves, loads, starts a new world
-  or uses the debug keys.
+  or uses the debug keys. Hosting from the start screen makes a small world won by Divine
+  Ascendancy.
 - **Leaving.** When a player leaves, the AI takes its god back until the player returns under the
   same name. When the host quits, the session
   ends for everyone and the host's world is saved to `user://saves/hosted.json`.
@@ -1034,7 +1114,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 13`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 19`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1050,7 +1130,8 @@ and every god welcoming migrants. Saves from Milestones 1 to 10 start with Creat
 never dealt with each other: no combat skill, no scars and no views of the others. Saves from
 Milestones 1 to 13 start with an empty history: the world remembers from then on. Saves from
 Milestones 1 to 14 start with gods who have chosen no domains and with no village split, and find
-their holy sites when they are loaded.
+their holy sites when they are loaded. Saves from before Milestone 15, part 7 are won by Divine
+Ascendancy alone. A save keeps its world's size and how it may be won.
 
 Your settings are kept in `user://settings.json`; the start screen and the pause menu have a
 settings page.
@@ -1061,7 +1142,7 @@ settings page.
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
-                      history.json, domains.json, holy_sites.json,
+                      history.json, domains.json, holy_sites.json, world_sizes.json,
                       settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
@@ -1115,8 +1196,11 @@ and the definition of done.
   Terrain3D's platform documentation.
 - Export presets are not set up yet. The game reads `res://Data/*.json` at startup, so every
   export must include those files.
-- Four gods crowd the island: a player who does nothing keeps only a few followers after ten
+- Four gods crowd the small island: a player who does nothing keeps only a few followers after ten
   minutes, and Seren the Guardian is the strongest AI god (kindness converts better than fear).
+- The whole island is built at once rather than streamed in pieces: a huge world's heightfield
+  takes 1.1 s to build. No world is larger than 12 km or holds more than eight gods.
+- A history record names two winners, so a pantheon of three or four is told by its first two.
 - The representative citizens are presentation only: they show what the settlement's numbers
   say, but nothing can interact with an individual citizen until a later milestone adds full
   (Tier 3) agents ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).

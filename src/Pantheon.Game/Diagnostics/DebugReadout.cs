@@ -37,7 +37,7 @@ public static class DebugReadout
         var lines = new List<string>
         {
             Format("FPS {0:0}   Tick {1}   {2}", snapshot.FramesPerSecond, world.Tick, FormatClock(snapshot)),
-            Format("Seed {0}", world.Seed),
+            Format("Seed {0}   {1:0} m island   {2}", world.Seed, world.Regions.Columns * world.Regions.RegionSize, Flow.VictoryText.Settings(world.Victory)),
             FormatTerrain(snapshot),
             Format("Camera {0}  {1:0} m", snapshot.ZoomBand, snapshot.CameraDistance),
             FormatSettlementStep(snapshot),

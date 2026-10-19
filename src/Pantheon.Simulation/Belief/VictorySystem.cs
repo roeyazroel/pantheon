@@ -10,11 +10,13 @@ using Pantheon.Simulation.Systems;
 namespace Pantheon.Simulation.Belief;
 
 /// <summary>
-/// Tracks which god dominates the world's belief (spec §53 Divine Ascendancy and Pantheon victory,
-/// §115): a god that holds <c>VictoryShare</c> of all followers for <c>VictorySeconds</c> without a
-/// break wins, alone or, with pantheon victory on, together with the allies whose followers it
-/// counts with (ADR-015). The world goes on afterwards. A world with fewer than two gods has no
-/// contest and no winner.
+/// Tracks which god dominates the world (spec §53, §115, ADR-015, ADR-027) and declares the winner
+/// by the victories the world was made with: Divine Ascendancy (a god holds <c>VictoryShare</c> of
+/// all followers, alone or with its allies when pantheon victory is on), conquest (every opponent
+/// below <c>ConquestShare</c>) or a cultural victory (it leads <c>CulturalShare</c> of the living
+/// villages while a rival lives on), each for <c>VictorySeconds</c> without a break. Dominance is
+/// tracked whatever the victories, for the council and the AI. The world goes on afterwards. A
+/// world with fewer than two gods has no contest and no winner.
 /// </summary>
 public sealed class VictorySystem : ISimulationSystem
 {
@@ -62,7 +64,8 @@ public sealed class VictorySystem : ISimulationSystem
     /// <summary>
     /// The share of all followers a god holds towards victory, and with whom: its own, or, with
     /// pantheon victory on, together with its strongest direct allies, at most
-    /// <c>PantheonMaxGods</c> gods in all (ADR-015, ADR-020; ties go to the lower id).
+    /// <c>PantheonMaxGods</c> gods in all, the world's own number if its size sets one (ADR-015,
+    /// ADR-020, ADR-027; ties go to the lower id).
     /// </summary>
     /// <param name="rules">Divine rules.</param>
     /// <param name="world">World state.</param>
@@ -81,7 +84,7 @@ public sealed class VictorySystem : ISimulationSystem
             .Select(ally => (Id: ally, Share: ShareOf(world, ally)))
             .OrderByDescending(ally => ally.Share)
             .ThenBy(ally => ally.Id)
-            .Take(Math.Max(0, rules.PantheonMaxGods - 1))
+            .Take(Math.Max(0, (world.Victory.PantheonMaxGods ?? rules.PantheonMaxGods) - 1))
             .ToList();
         var together = own + allies.Sum(ally => ally.Share);
         return allies.Count > 0 && together > own ? (together, allies.Select(ally => ally.Id).Order().ToList()) : (own, []);
@@ -117,13 +120,111 @@ public sealed class VictorySystem : ISimulationSystem
                 context.Events.Add(new DominanceChanged { Tick = world.Tick, GodId = god.Id, Started = true, Allies = allies });
             }
 
-            if (world.WinnerGodIds.Count == 0 && world.Tick - god.DominantSinceTick.Value >= TicksToWin(_rules))
+            if (world.Victory.Ascendancy && world.Tick - god.DominantSinceTick.Value >= TicksToWin(_rules))
             {
-                world.WinnerGodIds.Add(god.Id);
-                world.WinnerGodIds.AddRange(allies);
-                world.WinnerGodIds.Sort();
-                context.Events.Add(new VictoryAchieved { Tick = world.Tick, GodIds = [.. world.WinnerGodIds] });
+                Win(world, god.Id, allies, allies.Count > 0 ? VictoryKind.Pantheon : VictoryKind.Ascendancy, context.Events);
             }
         }
+
+        foreach (var god in world.Gods)
+        {
+            god.ConquestSinceTick = Track(world, god.ConquestSinceTick, world.Victory.Conquest && Conquers(world, god.Id));
+            god.CulturalSinceTick = Track(world, god.CulturalSinceTick, world.Victory.Cultural && LeadsCulture(world, god.Id));
+            if (god.ConquestSinceTick is { } conquest && world.Tick - conquest >= TicksToWin(_rules))
+            {
+                Win(world, god.Id, DiplomacyModel.AlliesOf(world, god.Id), VictoryKind.Conquest, context.Events);
+            }
+
+            if (god.CulturalSinceTick is { } culture && world.Tick - culture >= TicksToWin(_rules))
+            {
+                Win(world, god.Id, [], VictoryKind.Cultural, context.Events);
+            }
+        }
+    }
+
+    /// <summary>Whether every god outside a god's alliances holds less than the conquest share while it has followers (spec §53: conquest).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns><c>true</c> when its opponents are all but gone.</returns>
+    public bool Conquers(WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        if (ShareOf(world, godId) <= 0f)
+        {
+            return false;
+        }
+
+        foreach (var other in world.Gods)
+        {
+            if (other.Id != godId && !DiplomacyModel.AreAllied(world, godId, other.Id) && ShareOf(world, other.Id) >= _rules.ConquestShare)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Whether a god leads the cultural share of the living villages while some rival keeps at
+    /// least the conquest share (spec §53: dominant without eliminating rivals).
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns><c>true</c> when it leads the world's culture.</returns>
+    public bool LeadsCulture(WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var (living, led) = CultureCount(world, godId);
+        return living > 0 && led >= _rules.CulturalShare * living && world.Gods.Exists(g => g.Id != godId && ShareOf(world, g.Id) >= _rules.ConquestShare);
+    }
+
+    /// <summary>The living villages, and how many a god leads (the largest share follows it).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns>The counts.</returns>
+    public static (int Living, int Led) CultureCount(WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var living = 0;
+        var led = 0;
+        foreach (var settlement in world.Settlements)
+        {
+            if (settlement.Population <= 0)
+            {
+                continue;
+            }
+
+            living++;
+            Domain.Belief.GodBelief? main = null;
+            foreach (var belief in settlement.Beliefs)
+            {
+                if (belief.Adherence > 0.05f && (main is null || belief.Adherence > main.Adherence))
+                {
+                    main = belief;
+                }
+            }
+
+            led += main?.GodId == godId ? 1 : 0;
+        }
+
+        return (living, led);
+    }
+
+    /// <summary>Starts, keeps or clears a victory's clock.</summary>
+    private static long? Track(WorldState world, long? since, bool holds) => holds ? since ?? world.Tick : null;
+
+    /// <summary>Declares the winners, once.</summary>
+    private static void Win(WorldState world, int godId, IReadOnlyList<int> allies, VictoryKind kind, List<WorldEvent> events)
+    {
+        if (world.WinnerGodIds.Count > 0)
+        {
+            return;
+        }
+
+        world.WinnerGodIds.Add(godId);
+        world.WinnerGodIds.AddRange(allies);
+        world.WinnerGodIds.Sort();
+        events.Add(new VictoryAchieved { Tick = world.Tick, GodIds = [.. world.WinnerGodIds], Kind = kind });
     }
 }

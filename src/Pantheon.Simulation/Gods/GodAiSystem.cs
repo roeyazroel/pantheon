@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Pantheon.Domain.Gods;
 using Pantheon.Simulation.Migration;
 using Pantheon.Simulation.Systems;
@@ -53,14 +54,11 @@ public sealed class GodAiSystem : ISimulationSystem
     public void Update(TickContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if (!IntervalSystem.IsDue(context.World.Tick, _interval))
-        {
-            return;
-        }
-
+        var turn = 0;
+        var thinkers = context.World.Gods.Count(g => g.Controller == GodController.Ai);
         foreach (var god in context.World.Gods)
         {
-            if (god.Controller == GodController.Ai)
+            if (god.Controller == GodController.Ai && IsTurn(context.World.Tick, turn++, thinkers, _interval))
             {
                 _ai.Act(context.World, god, context.Random, context.Events);
                 if (_ai.ProfileOf(god.Personality) is { } profile)
@@ -74,4 +72,17 @@ public sealed class GodAiSystem : ISimulationSystem
             }
         }
     }
+
+    /// <summary>
+    /// Whether an AI god thinks this tick. The AI gods take turns across the interval, each once,
+    /// rather than all thinking on one tick, which in a world of eight gods made a stutter (ADR-027);
+    /// the first thinks when the interval is due, as a lone AI god always did.
+    /// </summary>
+    /// <param name="tick">The tick being processed.</param>
+    /// <param name="turn">The god's place among the AI gods, from 0.</param>
+    /// <param name="thinkers">How many AI gods there are.</param>
+    /// <param name="interval">Ticks between one god's thoughts.</param>
+    /// <returns><c>true</c> on its turn.</returns>
+    public static bool IsTurn(long tick, int turn, int thinkers, int interval) =>
+        IntervalSystem.IsDue(tick + ((long)turn * interval / Math.Max(1, thinkers)), interval);
 }

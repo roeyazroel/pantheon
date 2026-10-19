@@ -42,7 +42,7 @@ public static class HistoryText
             HistoryKind.Peace => Format("The Peace of {0} and {1}", god, other),
             HistoryKind.Betrayal => Format("The Betrayal of {0}", other),
             HistoryKind.Dominion => Format("The Dominion of {0} begins", both),
-            HistoryKind.Victory => Format("The Ascendancy of {0}", both),
+            HistoryKind.Victory => Flow.VictoryText.Title(Enum.IsDefined((VictoryKind)record.Count) ? (VictoryKind)record.Count : VictoryKind.Ascendancy, both),
             HistoryKind.Rank => Format("{0} becomes a {1}", god, DivineText.Rank((DivineRank)record.Count)),
             HistoryKind.Conversion => Format("{0} turns to {1}", place, god),
             HistoryKind.Earthquake => Format("The Shaking of {0}", place),

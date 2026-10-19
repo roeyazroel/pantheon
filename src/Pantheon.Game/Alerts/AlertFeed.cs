@@ -133,9 +133,9 @@ public sealed class AlertFeed
             case VictoryAchieved victory when victory.GodIds.Count > 0:
                 return localGodId is { } me && victory.GodIds.Contains(me)
                     ? (Key("victory", victory.GodIds[0]), victory.GodIds.Count > 1
-                        ? Format("{0} have won together: your followers held the world's belief for ten minutes.", DivineText.Names(world, victory.GodIds, localGodId))
-                        : "You have won: your followers held the world's belief for ten minutes.", AlertSeverity.Good, null)
-                    : (Key("victory", victory.GodIds[0]), Format("{0} {1} won the world's belief.", DivineText.Names(world, victory.GodIds, localGodId), victory.GodIds.Count > 1 ? "have" : "has"), AlertSeverity.Danger, null);
+                        ? Format("{0} have won together: {1}.", DivineText.Names(world, victory.GodIds, localGodId), Flow.VictoryText.Reason(victory.Kind))
+                        : Format("You have won: {0}.", Flow.VictoryText.Reason(victory.Kind)), AlertSeverity.Good, null)
+                    : (Key("victory", victory.GodIds[0]), Format("{0} {1} {2}.", DivineText.Names(world, victory.GodIds, localGodId), victory.GodIds.Count > 1 ? "have" : "has", Flow.VictoryText.Deed(victory.Kind)), AlertSeverity.Danger, null);
             case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
                 return DescribeChange(changed, creature);
             case WeatherSpellChanged spell:

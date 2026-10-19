@@ -42,6 +42,7 @@ silently:
 | [ADR-024](ADR-024-doctrines-secularism-dependency-resentment-and-traits.md) | Culture: doctrines, secularism, dependency, resentment, missionaries, revolts and gods' traits | Accepted (amends ADR-019) |
 | [ADR-025](ADR-025-treaties-secrets-favours-and-the-divine-council.md) | Treaties, secret agreements, favours and the Divine Council | Accepted |
 | [ADR-026](ADR-026-war-goals-intelligence-proxy-wars-and-holy-wars.md) | War goals, intelligence, proxy wars and mortal holy wars | Accepted |
+| [ADR-027](ADR-027-world-sizes-victories-and-large-worlds.md) | World sizes, conquest, cultural and sandbox victories, and large worlds | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

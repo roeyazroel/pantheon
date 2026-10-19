@@ -37,9 +37,10 @@ public static class EndSummaryBuilder
         var me = session.LocalGodId;
         var won = me is { } id && world.WinnerGodIds.Contains(id);
         var names = DivineText.Names(world, world.WinnerGodIds, me);
+        var deed = VictoryText.Deed(VictoryText.KindOf(world));
         var subtitle = won
-            ? (world.WinnerGodIds.Count > 1 ? Format("{0} have won the world's belief together.", names) : "You have won the world's belief.")
-            : Format("{0} {1} won the world's belief.", names, world.WinnerGodIds.Count > 1 ? "have" : "has");
+            ? (world.WinnerGodIds.Count > 1 ? Format("{0} have {1} together.", names, deed) : Format("You have {0}.", deed))
+            : Format("{0} {1} {2}.", names, world.WinnerGodIds.Count > 1 ? "have" : "has", deed);
         var rules = session.Content.History;
         var facts = new List<string> { Format("Year {0} of the world.", HistoryText.Year(world.Tick, rules)) };
         if (session.LocalGod is { } god)

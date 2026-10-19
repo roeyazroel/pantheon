@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Godot;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
@@ -93,7 +94,7 @@ public partial class Hud : CanvasLayer
         _hint.Modulate = model.TargetValid ? Valid : Invalid;
         ShowSlots(model.Miracles);
         ShowCreature(model.Creature);
-        SetText(_rivals, string.Join("   ", model.Rivals));
+        SetText(_rivals, string.Join("   ", model.Rivals.Select(r => r.Replace(' ', '\u00A0'))));
         _rivals.Visible = model.Rivals.Count > 0;
         SetText(_contest, model.Contest ?? string.Empty);
         _contest.Visible = model.Contest is not null;
@@ -164,6 +165,10 @@ public partial class Hud : CanvasLayer
         _domains.HorizontalAlignment = HorizontalAlignment.Center;
         _rivals = AddLabel(column, 14, new Color(0.95f, 0.7f, 0.65f));
         _rivals.HorizontalAlignment = HorizontalAlignment.Center;
+
+        // A large world's six or eight gods do not fit on one line (ADR-027): it breaks between gods.
+        _rivals.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _rivals.CustomMinimumSize = new Vector2(900f, 0f);
         _contest = AddLabel(column, 15, Ink);
         _contest.HorizontalAlignment = HorizontalAlignment.Center;
         _weather = AddLabel(column, 14, Ink);

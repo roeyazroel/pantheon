@@ -21,7 +21,7 @@ using Pantheon.Simulation.HolySites;
 namespace Pantheon.Simulation.Miracles;
 
 /// <summary>
-/// The authority for miracles (spec §73, ADR-009). <see cref="Check"/> answers whether a request
+/// The authority for miracles (spec §73, ADR-009). <see cref="Check(WorldState, CastMiracleRequest, int?)"/> answers whether a request
 /// may be cast and what it costs; <see cref="Cast"/> checks it again and, when accepted, spends the
 /// power, starts the cooldown, applies the effects and lets the witnesses' belief respond. Both
 /// are deterministic and draw no random numbers.
@@ -41,6 +41,7 @@ public sealed class MiracleCaster
     private readonly DomainRules? _domains;
     private readonly HolySiteRules? _holySites;
     private readonly DiplomacyRules? _diplomacy;
+    private InfluenceCache? _cache;
     private readonly MiracleEffects _effects;
 
     /// <summary>Creates a caster over validated content.</summary>
@@ -104,7 +105,7 @@ public sealed class MiracleCaster
         {
             if (rival.Id != godId && !Politics.TreatyModel.SharesInfluence(world, godId, rival.Id))
             {
-                strongest = Math.Max(strongest, InfluenceField.Build(_rules, world, rival.Id).At(target));
+                strongest = Math.Max(strongest, (_cache is { } cache && ReferenceEquals(cache.World, world) ? cache.For(rival.Id) : InfluenceField.Build(_rules, world, rival.Id)).At(target));
             }
         }
 
@@ -116,9 +117,31 @@ public sealed class MiracleCaster
     /// <param name="request">The request.</param>
     /// <param name="issuerGodId">The god the issuer controls; <c>null</c> for the host itself, which may act for any god.</param>
     /// <returns>The verdict.</returns>
-    public CastCheck Check(WorldState world, CastMiracleRequest request, int? issuerGodId)
+    public CastCheck Check(WorldState world, CastMiracleRequest request, int? issuerGodId) => Check(world, request, issuerGodId, null);
+
+    /// <summary>Checks a request with the influence fields of an unchanging world built once, for weighing many casts (ADR-027).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="request">The request.</param>
+    /// <param name="issuerGodId">The god the issuer controls; <c>null</c> for the host itself.</param>
+    /// <param name="cache">The world's influence fields; <c>null</c> to build them.</param>
+    /// <returns>The verdict.</returns>
+    public CastCheck Check(WorldState world, CastMiracleRequest request, int? issuerGodId, InfluenceCache? cache)
     {
         ArgumentNullException.ThrowIfNull(world);
+        _cache = cache;
+        try
+        {
+            return CheckCore(world, request, issuerGodId);
+        }
+        finally
+        {
+            _cache = null;
+        }
+    }
+
+    /// <summary>Checks a request in the order of spec §73.</summary>
+    private CastCheck CheckCore(WorldState world, CastMiracleRequest request, int? issuerGodId)
+    {
         ArgumentNullException.ThrowIfNull(request);
         if (GodStanding.Find(world, request.GodId) is not { } god)
         {
@@ -132,7 +155,7 @@ public sealed class MiracleCaster
 
         var cooldown = CooldownTicksLeft(world, god, miracle.Id);
         var inWorld = IsInsideWorld(world.Regions, request.Target);
-        var influence = inWorld ? InfluenceField.Build(_rules, world, god.Id).At(request.Target) : 0f;
+        var influence = inWorld ? (_cache is { } cache && ReferenceEquals(cache.World, world) ? cache.For(god.Id) : InfluenceField.Build(_rules, world, god.Id)).At(request.Target) : 0f;
         var rivals = inWorld ? RivalInfluence(world, god.Id, request.Target) : 0f;
         var reach = Reach(miracle);
         var cost = ComputeCost(_rules, miracle, influence, rivals) * DomainModel.CostFactor(_domains, god, miracle) * HolySiteModel.CostFactor(_holySites, world, god.Id)

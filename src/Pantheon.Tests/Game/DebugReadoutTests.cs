@@ -23,7 +23,7 @@ public sealed class DebugReadoutTests
 
         Assert.Contains("FPS 60", text);
         Assert.Contains("Tick 0", text);
-        Assert.Contains("Seed 1234", text);
+        Assert.Contains("Seed 1234   2048 m island   Ascendancy", text);
         Assert.Contains("Terrain Terrain3D", text);
         Assert.Contains("Camera Regional", text);
         Assert.Contains("Settlement step every 10 ticks, next in 10", text);

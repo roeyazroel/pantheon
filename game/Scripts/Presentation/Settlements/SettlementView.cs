@@ -32,7 +32,7 @@ internal sealed class SettlementView
     private readonly CivicView _civicView;
     private readonly SettlementCrowd _crowd;
     private readonly CitizenView _citizens;
-    private readonly Label3D _label;
+    private readonly DeclutteredLabel _label;
     private readonly DivineViewSettings _divine;
     private (int Housing, float ConstructionProgress, int Ruins)? _siteInputs;
 
@@ -106,14 +106,11 @@ internal sealed class SettlementView
         return _crowd.GetStatus(settlement.Population, distance);
     }
 
-    /// <summary>Sets the label text when it changed, tinted by the god most of the people follow.</summary>
+    /// <summary>Sets the label's text, its name for when space is short and its place by the people, tinted by the god most of them follow.</summary>
     private void UpdateLabel(SettlementState settlement, WorldState world)
     {
-        var text = SettlementLabel.Format(settlement, world, _rules);
-        if (_label.Text != text)
-        {
-            _label.Text = text;
-        }
+        _label.SetTexts(SettlementLabel.Format(settlement, world, _rules), settlement.Name);
+        _label.Priority = settlement.Population;
 
         var main = SettlementLabel.MainBelief(settlement);
         var tint = main is { Adherence: >= 0.5f } ? _divine.GodColor(main.GodId).ToGodot() : Colors.White;
@@ -136,8 +133,8 @@ internal sealed class SettlementView
     private static void AddPart(Node3D root, string name, Mesh mesh, Vector3 position) =>
         root.AddChild(new MeshInstance3D { Name = name, Mesh = mesh, Position = position });
 
-    /// <summary>Billboard label with a constant screen size that draws over the terrain.</summary>
-    private static Label3D CreateLabel(Vector3 position) => new()
+    /// <summary>Billboard label with a constant screen size that draws over the terrain, giving way to bigger villages.</summary>
+    private static DeclutteredLabel CreateLabel(Vector3 position) => new()
     {
         Name = "Label",
         Position = position,

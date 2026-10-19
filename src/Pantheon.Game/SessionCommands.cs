@@ -99,6 +99,38 @@ public static class SessionCommands
         return Format("New world from seed {0}", seed);
     }
 
+    /// <summary>Replaces the world with a new one at a size, with its victories (ADR-027); only the host may.</summary>
+    /// <param name="session">Session whose world is replaced.</param>
+    /// <param name="seed">Seed of the new world.</param>
+    /// <param name="options">The Creature's species, the size and the victories.</param>
+    /// <returns>Status line, naming a size other than the first.</returns>
+    public static string NewWorld(GameSession session, WorldSeed seed, NewWorldOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(options);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
+        session.StartNewWorld(seed, options);
+        return Describe(session.Content, seed, options);
+    }
+
+    /// <summary>Words for a new world: its seed, and its size when it is not the first.</summary>
+    /// <param name="content">Validated content.</param>
+    /// <param name="seed">The seed.</param>
+    /// <param name="options">How it was made.</param>
+    /// <returns>For example "New Large world from seed 42".</returns>
+    public static string Describe(GameContent content, WorldSeed seed, NewWorldOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(options);
+        return WorldMaker.Find(content, options.Size) is { } size && !ReferenceEquals(size, content.Sizes.Sizes[0])
+            ? Format("New {0} world from seed {1}", size.Name, seed)
+            : Format("New world from seed {0}", seed);
+    }
+
     /// <summary>Pauses a running simulation or resumes a paused one.</summary>
     /// <param name="session">Session whose clock is toggled.</param>
     /// <returns>Status line.</returns>

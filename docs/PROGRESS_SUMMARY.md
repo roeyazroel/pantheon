@@ -40,7 +40,8 @@ followed or the target has been measured.
   - four players share a world over ENet;
   - the vertical slice plays from start screen to victory or defeat;
   - gods specialize in domains, contest holy sites and suffer schisms, with sound and settings.
-- The world is one 2 km island with eight settlements. Each settlement is simulated
+- The world is an island of four sizes (part 7): Small (2 km, eight settlements, four gods),
+  Large (4 km, twenty, six), Huge (8 km, forty, eight) or Vast (12 km, forty-eight, eight). Each settlement is simulated
   statistically (Tier 1) and, near the camera, shown by up to 300 representative citizens
   (Tier 2).
 - The player is a god, Ilyra:
@@ -53,9 +54,11 @@ followed or the target has been measured.
   helps build, feeds the hungry, steals or attacks, as its needs, personality and learned
   preferences decide. The player teaches it by reward and punishment with a (visual) Divine Hand.
 - Three AI gods, Vael the Tyrant, Seren the Guardian and Kaio the Trickster, compete for the same
-  people with a strategic utility AI that plays by the player's rules. Each has its own Creature.
-  People convert between gods. The first god, or alliance of gods, to hold 60% of all followers
-  for ten minutes wins (§115, §53).
+  people with a strategic utility AI that plays by the player's rules; larger worlds add Aurel
+  the Zealot, Maren the Nature Keeper, Thorn the Warlord and Ysolde the Isolationist. Each has its
+  own Creature. People convert between gods. By default the first god, or alliance of gods, to
+  hold 60% of all followers for ten minutes wins (§115, §53); a world may instead be won by
+  conquest or culture, by any of them, or not at all (part 7).
 - Gods keep a view of each other (trust, fear, respect, rivalry, gratitude, suspicion) and
   remember each other's acts. They can ally, go to war, make peace and betray, through the same
   kind of checked commands as miracles; each AI god weighs these moves by its personality and
@@ -123,13 +126,20 @@ followed or the target has been measured.
   - gods know rivals only through allies, treaties, spies and scouts;
   - miracles may be veiled, and rebels incited and propaganda spread, at the risk of being traced;
   - militarist villages wage holy wars of their own will.
+- Worlds come in four sizes and are won in more ways (part 7):
+  - the start screen offers the size and the victories beside the Creature;
+  - conquest brings every rival below 5% of belief, and culture leads three villages in four
+    while rivals live on; a sandbox has no victory; larger pantheons may win together;
+  - the AI gods cost a seventh of what they did and take turns, so a Huge world runs at about
+    120 FPS; labels give way to bigger villages when seen from afar.
 - Four holy sites are found in every world and kept by the god whose influence holds them;
   Creatures claim and defend them.
 - Doubting followers break away in schisms to keep their god's Old Faith, and return or fade.
 - Creatures come in four species.
 - Every sound and the music are synthesized by the game, and the settings are kept between runs.
-- Not built: Steam networking, larger worlds and picking things up with the hand.
-- 1040 xUnit tests pass headless (1011 at the end of part 5, 853 at the end of Milestone 15).
+- Not built: Steam networking, streaming the terrain in pieces, worlds beyond 12 km and picking
+  things up with the hand.
+- 1084 xUnit tests pass headless (1040 at the end of part 6, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -153,12 +163,13 @@ followed or the target has been measured.
 | 12 | Multiplayer Foundation (§127) | Implemented, on `main` |
 | 13 | Multiplayer Simulation (§128) | Implemented, on `main` |
 | 14 | Complete Vertical Slice (§129) | Implemented, on `main` |
-| 15 | Polish and Expansion (§130) | Implemented, on `main` (domains, holy sites, schisms, species, more miracles, settings, audio; not Steam or larger worlds) |
+| 15 | Polish and Expansion (§130) | Implemented, on `main` (domains, holy sites, schisms, species, more miracles, settings, audio; larger worlds came in part 7; not Steam) |
 | 15.2 | Water and Law (§130, with §5, §12, §15, §19, §30, §110) | Implemented, on `main`: rivers, lakes, floods, drinking water, the Water miracle, and the Ocean and Justice domains |
 | 15.3 | Society (§21, §29, §30, §36, with §6 and §9) | Implemented, on `main`: safety, happiness, order, wealth, learning, priorities, buildings, technology and expansion |
 | 15.4 | Culture (§7, §8, §11, §32–35, with §3.2) | Implemented, on `main`: doctrines, secularism, dependency, resentment, missionaries, charity, revolts and gods' traits |
 | 15.5 | Treaties and the Divine Council (§37–42, §54) | Implemented, on `main`: eleven treaties, secret agreements, betrayal of treaties, favours, requests and promises, the council and its decrees, absorbing an ally |
 | 15.6 | War and intrigue (§43–46) | Implemented, on `main`: war goals and dictated peace, intelligence, veiled miracles, proxy acts, mortal holy wars |
+| 15.7 | Larger worlds and victories (§6, §53, with §84) | Implemented, on `main`: Small, Large, Huge and Vast worlds with up to eight gods, conquest, cultural and sandbox victories, larger pantheons, the AI's cost cut and labels that give way |
 
 ADR-004 and ADR-008 cite an earlier working roadmap with different milestone numbers;
 [GAME_SPEC.md](GAME_SPEC.md#earlier-working-roadmap-superseded) maps them. Every other document
@@ -450,7 +461,7 @@ Measured:
 | Holy sites | Implemented | The Sacred Peak, the Ancient Grove, the Holy Spring and the Standing Stones. They are claimed by influence, kept for power, influence and a gift, and fought over by Creatures; gods remember who took them. |
 | Advanced politics | Partial | Eleven treaties, secret agreements, favours and the Divine Council (part 5, ADR-025); holy sites are grounds for grievance, and Sow Discord sets two rivals against each other. War goals and dictated peace, intelligence, proxy wars and mortal holy wars since part 6 (ADR-026). |
 | Schisms | Implemented | Doubting followers keep the Old Faith, which cannot be converted, returns when the god is loved again and otherwise fades. Sanctuary prevents a schism for a minute. |
-| Larger worlds | Not started | The island is still 2 km; larger worlds have not been measured. |
+| Larger worlds | Implemented (part 7) | Small (2 km), Large (4 km), Huge (8 km) and Vast (12 km) islands with 8, 20, 40 or 48 villages and 4, 6 or 8 gods, chosen on the start screen (ADR-027). The terrain is not yet streamed in pieces (§84). |
 | More miracles | Implemented | Thirteen signature miracles, and with the Water miracle (part 2) twenty-three miracles in all. |
 | More Creatures | Implemented | Four species with their own toughness, strength, speed, learning, temperament and look; the player chooses for a new world. |
 | Steam networking | Not started (decision) | Optional; it needs the Steamworks SDK. `INetworkTransport` is the seam for it beside ENet (ADR-021). |
@@ -577,6 +588,36 @@ The plan is [.docs/milestone-15-part-5-politics.md](../.docs/milestone-15-part-5
 
 The plan is [.docs/milestone-15-part-6-conflict.md](../.docs/milestone-15-part-6-conflict.md).
 
+### Milestone 15, part 7: Larger worlds and victories
+
+- **World sizes (§6):** Small (2 km, 8 villages, 4 gods), Large (4 km, 20, 6), Huge (8 km, 40, 8)
+  and Vast (12 km, 48, 8), from `world_sizes.json` (ADR-027).
+  - Four new rivals with their Creatures: Aurel the Zealot, Maren the Nature Keeper, Thorn the
+    Warlord and Ysolde the Isolationist.
+  - The start screen offers the size and the victories beside the Creature; `--world-size` and
+    `--victory` do the same.
+- **Victories (§53):**
+  - conquest (every rival outside the god's alliances below 5% of belief for ten minutes);
+  - cultural victory (leading three villages in four while a rival keeps 5%);
+  - every victory, or a sandbox.
+  - Larger pantheons may win together: three gods of six, four of eight.
+  - Alerts, history, the end screen and the HUD say how a world was won.
+- **Large worlds (§84 in part):**
+  - **Simulation:** a Huge world's tick fell from 4.14 to 0.59 ms. The AI weighs only villages in
+    its influence, caches influence fields, counts followers once and takes turns.
+  - **Labels:** they give way to more important ones on screen.
+  - **View:** the camera reaches over the whole island, and the fog thins with it.
+  - **Frame rate:** Huge and Vast run at about 120 FPS on the Mac.
+- **Balance:**
+  - 33 of 40 passive Small games found a winner, with a median of 25.9 and a mean of 30.8 minutes
+    (part 6: 38, 29.0 and 31.3). Without turn-taking the probe repeats part 6 exactly, and on
+    seeds 70–109 turn-taking won more games (39 against 37), so the difference is the games'
+    variance.
+  - Larger worlds are long: in ten hour-long games, four Large worlds and one Huge world found a
+    winner, with 10,000–26,000 people.
+
+The plan is [.docs/milestone-15-part-7-worlds.md](../.docs/milestone-15-part-7-worlds.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -586,8 +627,8 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 5 | The world | Partial | One continuous world divided into regions. Regions have a biome, elevation, temperature, moisture, fertility, vegetation, soil water, fresh water from rivers and lakes (ADR-022) and a divine blessing, and religious influence and weather are derived for any point. Missing: wildlife, resources, ecological health and disaster risk. Grassland, forest and mountain (as Highland) exist, plus the sea; river valleys are not a biome of their own. |
-| 6 | World scale | Partial | A 2 km island against 10–20 km. 8 settlements at the start (the MVP number), growing to about 16 as villages found new ones (ADR-023), against 20–50. Four gods. Up to about 10,000 people after an hour against 10,000–100,000+. Hundreds of visible citizens, and no heavyweight object per citizen. |
-| 84 | World streaming | Not started | The whole island is loaded. |
+| 6 | World scale | Implemented | Four sizes (ADR-027): 2, 4, 8 and 12 km across against 10–20 km, with 8, 20, 40 and 48 settlements at the start against 8 for the MVP and 20–50 in the full game, and four, six or eight gods against four, up to eight later. Villages found more as they grow. In an hour the larger worlds reach 10,000–26,000 people against 10,000–100,000+. Hundreds of visible citizens, and no heavyweight object per citizen. The small island's 8 settlements grow to about 16 (ADR-023), with up to about 10,000 people after an hour. |
+| 84 | World streaming | Partial | Citizens are shown only near the camera (Tier 2), and labels give way to bigger villages from afar (ADR-027). The whole heightfield is still built at once: 1.1 s for the 8 and 12 km islands. |
 | 93 | Procedural generation | Partial | Elevation, moisture, temperature, fertility, vegetation, biome, rivers and lakes (ADR-022), holy sites and settlement sites come from the seed (tested). Missing: trees and resources. |
 
 ### Settlements and population
@@ -620,7 +661,7 @@ Sections that only state intent are summarised at the end of this part.
 | 47 | AI gods | Partial | All eight of §47's personalities, with risk, aggression, cooperation, treachery and grudge as profile weights, diplomatic memory, preferred domains taken up in order, and holy sites claimed and held by their Creatures (ADR-021). Long-term goals are not modelled. |
 | 48 | God AI model | Implemented | Utility AI that continuously scores candidate actions, miracles and diplomatic moves alike, with explainable factors. |
 | 49 | AI betrayal | Implemented | An AI god breaks an alliance when it is far ahead, its ally dominates alone, its view has soured, or, near a joint victory, it outweighs its ally, weighted by its `Treachery` and held back by the goodwill of the alliance. The clues are visible beforehand: its attitude and grievances in the diplomacy panel and its weighed moves in the F1 AI view. |
-| 87 | God AI architecture | Partial | Strategic and diplomatic evaluation every 3 s. No major planning yet. |
+| 87 | God AI architecture | Partial | Strategic and diplomatic evaluation every 3 s, the AI gods taking turns across the interval so eight gods never think on one tick (ADR-027). No major planning yet. |
 | 109 | MVP belief | Implemented | Faith, Love, Fear and Doubt. |
 | 110 | MVP miracles | Implemented | Heal, Food, Lightning, Bless Crops, Rain, Fire, Earthquake, Shield and Water (ADR-022). |
 | 115 | MVP victory | Implemented | 60% of all followers for 10 minutes, both configurable in `divine_rules.json`; the world goes on afterwards. |
@@ -669,7 +710,7 @@ Sections that only state intent are summarised at the end of this part.
 | 113 | MVP diplomacy | Implemented | The five statuses and the four actions, plus accepting and declining; the AI remembers betrayal. |
 | 50 | World history | Implemented | The world records its significant moments as "Year 12 — The Shaking of Elar" (ADR-020); a year is a simulated minute. Civilizations do not refer to them yet. |
 | 51–52 | Sacred locations, world events | Partial | Four holy sites found in every world (a peak, a grove, a spring, standing stones): kept by influence, giving power, influence and a gift, fought over and remembered (ADR-021). Scripted world events are not built (§52). |
-| 53 | Victory conditions | Partial | Divine Ascendancy (§115's MVP form) and Pantheon Victory: a god counts its strongest direct ally's followers with its own and wins with it, at most `PantheonMaxGods` (2) gods (ADR-015, ADR-020). Conquest and cultural victories and a sandbox switch are not built. |
+| 53 | Victory conditions | Implemented | Divine Ascendancy (§115's MVP form, at 60% rather than about 70%) and Pantheon Victory: a god counts its strongest direct allies' followers with its own and wins with them, at most `PantheonMaxGods` gods: two on a small island, three on a large one, four on a huge or vast one (ADR-015, ADR-020, ADR-027). Conquest (every rival outside its alliances below 5% of all followers), cultural victory (leading three villages in four while a rival keeps 5%) and a sandbox, chosen with the world on the start screen or with `--victory` (ADR-027). |
 | 54 | Alliance endgame | Partial | Near a joint victory each AI ally weighs staying loyal to share the win against breaking away to seek personal ascendancy, by its `Treachery` and its lead over its ally. Absorbing an ally's believers is a move of its own for players: a betrayal that turns a share of the ally's followers where the god leads (ADR-025); AI gods break away rather than absorb. |
 | 91 | Event architecture | Partial | Systems and the authorities raise transient domain events (among them §91's refugees created, as `MigrationStarted`); alerts and effects read them. |
 | 92 | History system | Implemented | `HistoryRecorder` weighs every event and keeps only the significant ones by `history.json`'s thresholds, without repeats, up to a capacity; saved and replicated (ADR-020). |
@@ -679,7 +720,7 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 55 | Player interaction | Partial | Miracles are cast with a click (ADR-009). A visual Divine Hand follows the cursor, presses when casting or sending, and pats or swats the Creature (ADR-010). Picking up, carrying and throwing are not built. |
-| 56 | Camera | Partial | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands. Missing: a strategic overview. |
+| 56 | Camera | Partial | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands; the strategic band reaches further over a larger island (ADR-027). Missing: a strategic overview. |
 | 57 | User interface | Partial | HUD with Divine Power, income, followers, rank, the rivals with their status, the race for victory (a bloc's when allied), the miracle bar and hint, the Creature card (with its bonds, combat skill and scars) and alerts, the Diplomacy panel (P), the History panel (H), the Domains panel (G) with the holy sites, and a start screen, pause menu, settings page and end screen with each god's alliances and wars. Missing: the other panels (World, Settlements, Religion, Miracles). |
 | 58 | Map overlays | Partial | Influence (strongest god per region), religion (main god per settlement), faith, food, weather (soil water), danger (fires, ash, shields) and migration (pressure to leave, groups' ways) for the player; the F3 debug map adds the region statistics, blessing, influence, soil water, fire and scorch. Missing: population, ecology, disaster risk and political control. |
 | 59 | Alert system | Partial | Starving followers, settlements gained or lost, ranks, Creature deeds, rival miracles on the player's followers, dominance and victory (a bloc's included), diplomacy (proposals, war, betrayal, answers, and alliances between other gods), weather (dry spells, droughts and storms among the player's people), disasters (earthquakes, fires near the player's people and the damage done), migration, and Creatures' meetings and fights. Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
@@ -696,15 +737,15 @@ Sections that only state intent are summarised at the end of this part.
 | 88 | Threading model | Followed | Everything runs on the main thread. |
 | 85 | Navigation | Partial | Strategic: A* over land regions, smoothed (the Creature and migration groups). Local navigation meshes do not exist; citizens walk in straight lines. |
 | 89 | Update frequencies | Partial | Weather steps at 2 Hz; disasters, settlements, belief and diplomacy at 1 Hz; the god AI evaluates every 3 s; the Creature decides at 5 Hz and moves every tick. Citizen poses are evaluated every frame from simulation time. |
-| 104 | Performance testing | Partial | Repeatable measurements: unattended runs print frame times, `--speed` and `--advance-ticks` set up a grown world at speed, and headless probes measure ticks (shipped world and 21 settlements), traffic, saves and loads. No scripted 100,000-citizen or 50-settlement scenario. |
-| 105 | Target performance | Measured (Mac) | 1080p on an Apple M3 Pro: 150 FPS uncapped (6.7 ms) at x16 thirty minutes into a game, Terrain3D or fallback. Not measured on Windows or Linux; graphics options since Milestone 15 (shadows, render scale with FSR, citizens shown). |
+| 104 | Performance testing | Partial | Repeatable measurements: unattended runs print frame times, `--speed` and `--advance-ticks` set up a grown world at speed, and headless probes measure ticks (shipped world and 21 settlements), traffic, saves and loads. Part 7 measured each world size's tick and the AI's cost by system (ADR-027). No scripted 100,000-citizen or 50-settlement scenario. |
+| 105 | Target performance | Measured (Mac) | 1080p on an Apple M3 Pro: 150 FPS uncapped (6.7 ms) at x16 thirty minutes into a game, Terrain3D or fallback. At 1600 × 900 (vsync), a Huge world holds about 120 FPS from 2.6 km up ten minutes in (part 7). Not measured on Windows or Linux; graphics options since Milestone 15 (shadows, render scale with FSR, citizens shown). |
 
 ### Architecture, saves and process
 
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 65 | Local-first architecture | Implemented | Fully offline. |
-| 66 | Single-player architecture | Implemented | The local host (`GameSession`) runs the world with one player and three AI gods. |
+| 66 | Single-player architecture | Implemented | The local host (`GameSession`) runs the world with one player and three, five or seven AI gods by the world's size. |
 | 67 | Multiplayer architecture | Implemented | Host-authoritative (ADR-003, ADR-018): the host's computer runs the canonical world; players hold replicas that never own state. |
 | 68 | Networking technology | Implemented | Godot ENet over UDP, LAN and direct IP, UPnP when asked. Our own messages travel as packets rather than Godot RPCs, so the protocol stays engine-agnostic and testable. |
 | 69 | Optional Steam networking | Not started (decision) | Optional and needs the Steamworks SDK; `INetworkTransport` is the seam for it beside ENet (ADR-021). |
@@ -716,15 +757,15 @@ Sections that only state intent are summarised at the end of this part.
 | 98 | Cheating model | Implemented (as specified) | The host is trusted; no anti-cheat. |
 | 70 | No required server infrastructure | Implemented | |
 | 75 | Save architecture | Partial | A save holds the seed, generation settings, tick, random state, regions (with soil water, fire and scorch), settlements (with ruins, shields, the wish to leave, Old Faiths and sanctuaries), gods (with refugee policies and domains), beliefs, Creatures (with their views of each other), diplomacy, weather, disasters, migration groups, the history and the holy sites. Named slots, an autosave and the quicksave. No GameTime. |
-| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 15 and migrations from versions 1 to 14, each tested against a save written by the previous build. |
+| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 19 and migrations from versions 1 to 18, each tested against a save written by the previous build. |
 | 77–78 | Core rule, layered architecture | Implemented | The core projects never reference Godot (tested). |
 | 79 | Simulation systems | Partial | Weather, disaster, settlement, population, belief, victory, diplomacy, migration, Creature and god AI systems, and the miracle, Creature, diplomacy and migration authorities. |
 | 90 | Core data models | Partial | `GodState` (subset), `SettlementState` with belief, love, fear and doubt per god, `CreatureState` (with combat skill, scars and relationships), `RegionState` (soil water, fire and scorch; no wildlife or pollution), `WeatherState` with §90's weather cells, `DisasterState` with earthquakes, `MigrationState` with §82's groups, and `GodRelation` and `GodStance` for §90's DiplomacyRelation (no treaties). No WorldEvent records with duration. |
 | 100 | Repository structure | Implemented, with differences | As recommended, plus `World/` and `Miracles/` in `Pantheon.Domain`, `game/Data/`, `game/addons/`, `.docs/` and `AGENTS.md`. |
-| 101 | Architecture decision records | Implemented | ADR-001 to ADR-023. |
+| 101 | Architecture decision records | Implemented | ADR-001 to ADR-027. |
 | 102–103 | Testing, deterministic testing | Implemented | Every rule has tests, including §102's "Fear decreases after prolonged safety" and "God cannot cast miracle without enough power". Randomness is seeded and checked. |
 | 106 | Debug tools | Partial | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons, and relationship reasoning: the diplomatic moves weighed with their factors), weather cells (spell, wind, the strongest cells, soil and rain under the cursor, a settlement's water), disasters (earthquakes, the fiercest fires, a settlement's dangers), migration routes (groups on the road, refugee policies with the AI's reasons, a settlement's pressure to leave, the Migration overlay), and Creatures' relationships (views, encounters, combat skill, scars, power and how the player's Creature would meet the nearest one; K and `--meet` bring two together). Missing: navmesh, network authority and other performance metrics. |
-| 107 | Content data | Partial | World generation, settlement and divine balance, miracles, the gods of a new world, Creature rules, AI personalities, diplomacy rules, weather and disaster rules and presentation are data files, parsed strictly. Domains, holy sites, schisms and Creature species are data too (ADR-021). |
+| 107 | Content data | Partial | World generation, settlement and divine balance, miracles, the gods of a new world, Creature rules, AI personalities, diplomacy rules, weather and disaster rules and presentation are data files, parsed strictly. Domains, holy sites, schisms and Creature species are data too (ADR-021), and so are world sizes and the extra gods (ADR-027). |
 | 108 | MVP world | Implemented | One map, three land biomes, 8 settlements, four gods (1 human, 3 AI) and four Creatures. |
 | 131 | Non-goals | Respected | |
 | 132 | Validation priorities | Partly testable | "Is converting populations fun?", "Is raising the Creature fun?", "Are rival gods interesting?" and "Does diplomacy generate stories?" and "Do disasters create meaningful decisions?" can be tried now: rain or shield, rebuild trust after a quake, shake a rival, side with one rival against another, take in or turn away a rival's refugees. |
@@ -774,45 +815,47 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-024](ADR/ADR-024-doctrines-secularism-dependency-resentment-and-traits.md) | Culture: doctrines, secularism, dependency, resentment, missionaries, revolts and gods' traits (Milestone 15, part 4) | Accepted; amends ADR-019 |
 | [ADR-025](ADR/ADR-025-treaties-secrets-favours-and-the-divine-council.md) | Treaties, secret agreements, favours and the Divine Council (Milestone 15, part 5) | Accepted |
 | [ADR-026](ADR/ADR-026-war-goals-intelligence-proxy-wars-and-holy-wars.md) | War goals, intelligence, proxy wars and mortal holy wars (Milestone 15, part 6) | Accepted |
+| [ADR-027](ADR/ADR-027-world-sizes-victories-and-large-worlds.md) | World sizes, conquest, cultural and sandbox victories, and large worlds (Milestone 15, part 7) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 1040 tests, and they all pass headless in about twelve
+The xUnit suite in `src/Pantheon.Tests` has 1084 tests, and they all pass headless in about twelve
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | 15.5 | Now |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
-| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
-| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
-| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
-| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
-| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 |
-| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 | 25 |
-| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 |
-| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 | 41 |
-| War and intrigue | `WarTests`, `CovertTests`, `HolyWarTests`, `ConflictPresentationTests`, `ConflictMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 24 |
-| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
-| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
-| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 | 40 |
-| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 | 40 |
-| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 | 15 |
-| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 | 13 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V17Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 | 132 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
-| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** | **1040** |
+| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | 15.5 | 15.6 | Now |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
+| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
+| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
+| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
+| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 |
+| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 | 25 | 25 |
+| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 |
+| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 | 41 | 41 |
+| War and intrigue | `WarTests`, `CovertTests`, `HolyWarTests`, `ConflictPresentationTests`, `ConflictMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 24 | 24 |
+| World sizes and victories | `VictoryKindTests`, `WorldSizeTests`, `VictoryPresentationTests`, `AiCostTests`, `LabelDeclutterTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 |
+| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
+| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
+| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
+| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 | 40 | 40 |
+| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 | 15 | 15 |
+| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 | 13 | 13 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V18Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 | 132 | 138 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 27 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
+| **Total** |  | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** | **1040** | **1084** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -860,10 +903,13 @@ The [README](../README.md) lists every control and option.
 ### Scope and scale
 
 - **Four gods on a small island.** The MVP's four gods (§108) crowd eight villages: a player who
-  does nothing keeps only a few followers after ten minutes. There is no setup screen to choose
-  the rivals; `gods.json` sets them.
-- **A small world.** One 2 km island instead of 10–20 km (§6). No trees or other vegetation are
-  drawn.
+  does nothing keeps only a few followers after ten minutes. The start screen chooses the size,
+  which sets how many gods there are, but not which rivals; `gods.json` sets them.
+- **Large worlds are long.** The largest island is 12 km across (§6 asks 10–20 km), with eight
+  gods and forty-eight villages (ADR-027). Six or eight gods hold each other in check: in ten
+  hour-long games with a passive player, four large worlds and one huge one found a winner. The
+  terrain is built whole rather than streamed (§84), in 1.1 s for the 8 and 12 km islands. No
+  trees or other vegetation are drawn.
 - **Miracles.** All nine of §110's kinds (Rain since Milestone 7; Fire, Earthquake and Shield
   since Milestone 8; Water since Milestone 15, part 2) and thirteen domain miracles.
 - **Domains.** All thirteen are offered, and a schism keeps the Old Faith rather than founding a
@@ -971,6 +1017,9 @@ The [README](../README.md) lists every control and option.
   migration (§72).
 - Played on one Mac (two rendering instances, or a host and three headless players); not yet
   across computers, a router or Windows. Four rendering instances on one Mac starve each other.
+- The start screen's host page makes a small world won by ascendancy; `--host` with
+  `--world-size` and `--victory` hosts any other (part 7). Victories are the world's, not chosen
+  per player.
 
 ### Interface
 
@@ -997,8 +1046,8 @@ order of the validation priorities (§132) and what playing showed:
    `Data/*.json`.
 2. **Playtest with people.** The balance with active players depends on the domains they choose;
    the probes only cover bots.
-3. **Larger worlds (§6, §84)**: measure a 4 km island with sixteen villages, and stream it if
-   needed.
+3. **World streaming (§84)**: build the terrain in pieces near the camera, so islands of 10–20 km
+   (§6) load quickly; offer the size on the host page.
 4. **More of §57's panels** (World, Religion, Miracles).
 5. **Steam networking (§69)** as a second `INetworkTransport`, only if the game ships on Steam.
 6. **Recorded or composed audio** in place of the synthesized sounds, through the same director.

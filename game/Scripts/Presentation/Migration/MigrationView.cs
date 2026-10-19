@@ -37,7 +37,7 @@ internal sealed class MigrationView
 
     private readonly Node3D _root;
     private readonly MultiMesh _figures;
-    private readonly Label3D _label;
+    private readonly DeclutteredLabel _label;
     private Vector3 _shown;
     private float _heading;
     private float _clock;
@@ -53,8 +53,10 @@ internal sealed class MigrationView
         parent.AddChild(_root);
         _figures = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseColors = true, Mesh = Figure };
         _root.AddChild(new MultiMeshInstance3D { Name = "People", Multimesh = _figures });
-        _label = new Label3D
+        _label = new DeclutteredLabel
         {
+            // A group's label gives way to every village's (ADR-027).
+            Priority = 0f,
             Name = "Label",
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
             FixedSize = true,
@@ -103,10 +105,7 @@ internal sealed class MigrationView
         _root.Position = _shown;
         Walk(terrain, Math.Clamp(group.Population / PeoplePerFigure, MinFigures, MaxFigures));
         var text = MigrationText.Group(group, world);
-        if (_label.Text != text)
-        {
-            _label.Text = text;
-        }
+        _label.SetTexts(text, text.Split('\n')[0]);
     }
 
     /// <summary>Frees the group's nodes.</summary>

@@ -70,4 +70,7 @@ public sealed class WorldState
 
     /// <summary>The world's rivers and lakes (spec §5, ADR-022).</summary>
     public required Water.WaterState Water { get; init; }
+
+    /// <summary>How the world may be won (spec §53, ADR-027); Divine Ascendancy only by default.</summary>
+    public VictorySettings Victory { get; set; } = VictorySettings.Default;
 }

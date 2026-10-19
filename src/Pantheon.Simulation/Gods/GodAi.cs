@@ -90,11 +90,24 @@ public sealed class GodAi
             return candidates;
         }
 
+        // The god's influence at each settlement, once: a miracle outside it would be refused (spec §10),
+        // so those checks are skipped. In a world of forty villages this is most of the AI's time (ADR-027).
+        var cache = new InfluenceCache(_divine, world);
+        var field = cache.For(god.Id);
+        var influence = new float[world.Settlements.Count];
+        for (var i = 0; i < influence.Length; i++)
+        {
+            influence[i] = field.At(world.Settlements[i].Position);
+        }
+
         foreach (var miracle in _book.Miracles)
         {
-            foreach (var settlement in world.Settlements)
+            for (var i = 0; i < world.Settlements.Count; i++)
             {
-                AddCast(candidates, world, god, profile, miracle, settlement);
+                if (influence[i] >= miracle.InfluenceRequirement)
+                {
+                    AddCast(candidates, world, god, profile, miracle, world.Settlements[i], cache);
+                }
             }
         }
 
@@ -266,14 +279,14 @@ public sealed class GodAi
     }
 
     /// <summary>Adds the cast of a miracle on a settlement, when it is allowed and worth something.</summary>
-    private void AddCast(List<AiCandidate> candidates, WorldState world, GodState god, GodProfile profile, MiracleDefinition miracle, SettlementState settlement)
+    private void AddCast(List<AiCandidate> candidates, WorldState world, GodState god, GodProfile profile, MiracleDefinition miracle, SettlementState settlement, InfluenceCache cache)
     {
         if (settlement.Population <= 0)
         {
             return;
         }
 
-        var check = _caster.Check(world, new CastMiracleRequest(god.Id, miracle.Id, settlement.Position), god.Id);
+        var check = _caster.Check(world, new CastMiracleRequest(god.Id, miracle.Id, settlement.Position), god.Id, cache);
         if (!check.IsAccepted)
         {
             return;

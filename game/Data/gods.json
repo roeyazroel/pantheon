@@ -9,5 +9,12 @@
     { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "CreatureSpecies": "Stonehide", "Personality": "Tyrant" },
     { "Name": "Seren", "Controller": "Ai", "CreatureName": "Thistle", "CreatureSpecies": "Lumen", "Personality": "Guardian" },
     { "Name": "Kaio", "Controller": "Ai", "CreatureName": "Quill", "CreatureSpecies": "Swiftclaw", "Personality": "Trickster" }
+  ],
+  // Gods that join in larger worlds (world_sizes.json), in order.
+  "ExtraGods": [
+    { "Name": "Aurel", "Controller": "Ai", "CreatureName": "Ember", "CreatureSpecies": "Swiftclaw", "Personality": "Zealot" },
+    { "Name": "Maren", "Controller": "Ai", "CreatureName": "Fern", "CreatureSpecies": "Mossback", "Personality": "NatureKeeper" },
+    { "Name": "Thorn", "Controller": "Ai", "CreatureName": "Brute", "CreatureSpecies": "Stonehide", "Personality": "Warlord" },
+    { "Name": "Ysolde", "Controller": "Ai", "CreatureName": "Wisp", "CreatureSpecies": "Lumen", "Personality": "Isolationist" }
   ]
 }

@@ -44,6 +44,11 @@ public sealed class ContentTests
     [InlineData("miracles.json", "\"Id\": \"heal\"", "\"Id\": \"food\"", "used more than once")]
     [InlineData("gods.json", "\"Name\": \"Ilyra\"", "\"Name\": \" \"", "blank")]
     [InlineData("worldgen.json", "\"Count\": 8", "\"Count\": 80", "Names must hold a name for every settlement")]
+    [InlineData("world_sizes.json", "\"Gods\": 8,", "\"Gods\": 9,", "needs between 2 and 8 gods")]
+    [InlineData("world_sizes.json", "\"Name\": \"Large\"", "\"Name\": \"small\"", "its own name")]
+    [InlineData("world_sizes.json", "\"Settlements\": 8,", "\"Settlements\": 9,", "must describe the world")]
+    [InlineData("world_sizes.json", "\"Settlements\": 40,", "\"Settlements\": 400,", "Names must hold a name for every settlement")]
+    [InlineData("world_sizes.json", "\"PantheonMaxGods\": 3", "\"PantheonMaxGods\": 7", "between 2 and its 6 gods win together")]
     public void DivineContent_WithOutOfRangeValue_FailsValidation(string file, string from, string to, string expected)
     {
         var text = TestContent.ReadText(file);

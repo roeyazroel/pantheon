@@ -142,7 +142,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--war-goal`, `--holy-war`, `--veil`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times and, in shared sessions, the

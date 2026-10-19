@@ -82,6 +82,11 @@
   "VictoryShare": 0.6,
   "VictorySeconds": 600.0,
   "PantheonVictory": true,
+  // A world may also be won (ADR-027) by conquest, when every opponent holds less than ConquestShare of all
+  // followers, or culturally, when a god leads CulturalShare of the living villages while a rival lives on;
+  // each for VictorySeconds, when the world was made with that victory on.
+  "ConquestShare": 0.05,
+  "CulturalShare": 0.75,
   // A pantheon that wins together is a god and its strongest direct allies, at most this many gods
   // (ADR-020): with two, a god allied with two others shares its victory with only one of them.
   "PantheonMaxGods": 2,

@@ -80,7 +80,7 @@ public sealed class HistoryRecorder
                 Add(world, HistoryKind.Dominion, god: dominance.GodId, other: dominance.Allies.Count > 0 ? dominance.Allies[0] : null);
                 break;
             case VictoryAchieved { GodIds.Count: > 0 } victory:
-                Add(world, HistoryKind.Victory, god: victory.GodIds[0], other: victory.GodIds.Count > 1 ? victory.GodIds[1] : null);
+                Add(world, HistoryKind.Victory, god: victory.GodIds[0], other: victory.GodIds.Count > 1 ? victory.GodIds[1] : null, count: (int)victory.Kind);
                 break;
             case RankAchieved rank:
                 Add(world, HistoryKind.Rank, god: rank.GodId, count: (int)rank.Rank);

@@ -30,6 +30,12 @@ public sealed class GodState
     /// <summary>Tick from which the god has held the victory share of the world's belief without a break, if it holds it now.</summary>
     public required long? DominantSinceTick { get; set; }
 
+    /// <summary>Tick since which every opponent has been below the conquest share, if it is so (ADR-027).</summary>
+    public long? ConquestSinceTick { get; set; }
+
+    /// <summary>Tick since which the god has led the cultural share of the villages, its rivals living on, if it is so (ADR-027).</summary>
+    public long? CulturalSinceTick { get; set; }
+
     /// <summary>The god's Creature, if it has one.</summary>
     public required int? CreatureId { get; init; }
 

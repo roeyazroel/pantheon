@@ -28,7 +28,7 @@ internal sealed class CreatureView
     private readonly Node3D _root;
     private readonly Node3D _pose;
     private readonly CreatureBody _body;
-    private readonly Label3D _label;
+    private readonly DeclutteredLabel _label;
     private Vector3 _shown;
     private float _heading;
     private float _stride;
@@ -56,8 +56,10 @@ internal sealed class CreatureView
         _pose = new Node3D { Name = "Pose" };
         _root.AddChild(_pose);
         _body = new CreatureBody(_pose, godColor, look);
-        _label = new Label3D
+        _label = new DeclutteredLabel
         {
+            // A Creature's label gives way to every village's (ADR-027).
+            Priority = 0f,
             Name = "Label",
             Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
             FixedSize = true,
@@ -132,11 +134,7 @@ internal sealed class CreatureView
         var fighting = creature.Activity.Action == CreatureAction.Fight && creature.Activity.Phase == CreaturePhase.Performing;
         var health = fighting ? $"  {creature.Health:0%}" : string.Empty;
         var text = $"{title}\n{CreatureText.DescribeActivity(creature, world)}{health}";
-        if (_label.Text != text)
-        {
-            _label.Text = text;
-        }
-
+        _label.SetTexts(text, title);
         _label.Position = new Vector3(0f, LabelHeight * (creature.Activity.Action == CreatureAction.Rest && creature.Activity.Phase == CreaturePhase.Performing ? 0.5f : 1f), 0f);
     }
 

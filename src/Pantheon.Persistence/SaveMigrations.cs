@@ -118,6 +118,9 @@ internal static class SaveMigrations
             case 17:
                 PoliticsSaveMigration.UpgradeFrom17(root);
                 break;
+            case 18:
+                VictorySaveMigration.UpgradeFrom18(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }
