@@ -45,6 +45,9 @@ public sealed record MiracleDefinition
 
     /// <summary>The need it answers, which scales the Love it earns.</summary>
     public required MiracleNeed Gratitude { get; init; }
+
+    /// <summary>Whether only a god holding its <see cref="Domain"/> may cast it: a domain's signature miracle (ADR-021).</summary>
+    public bool RequiresDomain { get; init; }
 }
 
 /// <summary>Contents of <c>miracles.json</c>.</summary>

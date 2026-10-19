@@ -148,6 +148,9 @@ public sealed class PresentationTests
             Ruins = 0,
             ShieldedUntilTick = 0,
             Emigration = 0f,
+            OldFaith = null,
+            SanctuaryGodId = null,
+            SanctuaryUntilTick = 0,
         };
 
         Assert.Equal("Mossgate\n41 people", SettlementLabel.Format(settlement));

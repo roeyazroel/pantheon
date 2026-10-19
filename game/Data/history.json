@@ -19,5 +19,9 @@
   "ConversionPopulation": 20,
 
   // A Creature reaching one of these levels becomes a legend.
-  "LegendLevels": [5, 10]
+  "LegendLevels": [5, 10],
+
+  // A schism is history from this many people breaking away (ADR-021); domains taken up, holy sites
+  // taken and an Old Faith returning to its god always are.
+  "SchismPeople": 10
 }

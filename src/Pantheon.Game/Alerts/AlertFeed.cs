@@ -150,6 +150,8 @@ public sealed class AlertFeed
                 return MigrationAlerts.Describe(worldEvent, world, localGodId);
             case CreaturesMet or CreatureFightEnded:
                 return CreatureAlerts.Describe(worldEvent, world, localGodId);
+            case DomainChosen or HolySiteClaimed or HolySiteContested or SchismStarted or SchismEnded:
+                return FaithAlerts.Describe(worldEvent, world, localGodId);
             case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
                 return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             default:

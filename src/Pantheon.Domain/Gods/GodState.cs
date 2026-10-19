@@ -38,4 +38,7 @@ public sealed class GodState
 
     /// <summary>Miracles that are cooling down. Entries whose tick has passed may linger until the miracle is cast again.</summary>
     public required List<MiracleCooldown> Cooldowns { get; init; }
+
+    /// <summary>The domains the god has taken up, in the order it chose them (spec §12, ADR-021); never more than its rank allows.</summary>
+    public required List<GodDomain> Domains { get; init; }
 }

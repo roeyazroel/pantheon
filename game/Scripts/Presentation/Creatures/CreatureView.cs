@@ -38,21 +38,24 @@ internal sealed class CreatureView
     private readonly float _phase;
     private bool _placed;
     private string _owner = string.Empty;
+    private float _height = 1f;
 
     /// <summary>Creates the Creature's nodes under a parent.</summary>
     /// <param name="parent">Node that holds the Creatures.</param>
     /// <param name="creatureId">The Creature's id.</param>
     /// <param name="godColor">Its god's colour.</param>
     /// <param name="owner">Its god's name, shown for rivals' Creatures; empty for the player's.</param>
-    public CreatureView(Node3D parent, int creatureId, Color godColor, string owner)
+    /// <param name="look">Its species' look (ADR-021).</param>
+    public CreatureView(Node3D parent, int creatureId, Color godColor, string owner, Pantheon.Game.Presentation.CreatureLook look)
     {
+        _height = look.Height;
         _owner = owner;
         _phase = creatureId * 1.7f;
         _root = new Node3D { Name = "Creature_" + creatureId };
         parent.AddChild(_root);
         _pose = new Node3D { Name = "Pose" };
         _root.AddChild(_pose);
-        _body = new CreatureBody(_pose, godColor);
+        _body = new CreatureBody(_pose, godColor, look);
         _label = new Label3D
         {
             Name = "Label",
@@ -76,7 +79,7 @@ internal sealed class CreatureView
     public Vector3 ShownPosition => _shown;
 
     /// <summary>Height of the Creature's head above its feet at its current size.</summary>
-    public float HeadHeight => 6.8f * _root.Scale.Y;
+    public float HeadHeight => 6.8f * _height * _root.Scale.Y;
 
     /// <summary>Flashes the Creature's colour briefly, for a reward (warm) or a punishment (red).</summary>
     /// <param name="color">Flash colour.</param>

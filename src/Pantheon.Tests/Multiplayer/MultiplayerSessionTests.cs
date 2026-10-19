@@ -73,7 +73,7 @@ public sealed class MultiplayerSessionTests
         old.Send(NetworkProtocol.HostPeerId, MessageCodec.Encode(new Hello(99, TestContent.Small.Fingerprint, "Old", null)), Delivery.Reliable);
         shared.Exchange();
         var answer = old.Poll().Where(e => e.Kind == TransportEventKind.Received).Select(e => MessageCodec.Decode(e.Data!)).OfType<Refused>().Single();
-        Assert.StartsWith("The host speaks protocol 1", answer.Reason, StringComparison.Ordinal);
+        Assert.StartsWith($"The host speaks protocol {NetworkProtocol.Version}", answer.Reason, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -115,6 +115,24 @@ public sealed class MultiplayerSessionTests
         Assert.Equal(Domain.Migration.RefugeePolicy.Welcome, shared.Host.World.Gods.Single(g => g.Id == 1).RefugeePolicy);
         Assert.Equal(Domain.Creatures.CreatureAction.GoTo, shared.Host.World.Creatures.Single(c => c.GodId == 2).Activity.Action);
         Assert.Equal(3, statuses.Count);
+    }
+
+    [Fact]
+    public void APlayersDomainIntent_TakesUpADomainForItsGod_AndTheSitesReachItsReplica()
+    {
+        var shared = SharedWorlds.Start();
+        var ana = shared.Join("Ana");
+
+        var asking = Pantheon.Game.Domains.DomainCommands.Choose(ana.Session!, Domain.Gods.GodDomain.Storm);
+        var statuses = shared.Exchange(ana);
+        shared.Pass(3.0, ana);
+
+        Assert.Equal("Asking the host...", asking);
+        Assert.Equal([Domain.Gods.GodDomain.Storm], shared.Host.World.Gods.Single(g => g.Id == 2).Domains);
+        Assert.Empty(shared.Host.World.Gods.Single(g => g.Id == 1).Domains);
+        Assert.Contains("You take up the Storm", statuses);
+        Assert.Equal([Domain.Gods.GodDomain.Storm], ana.Session!.World.Gods.Single(g => g.Id == 2).Domains);
+        Assert.Equal(shared.Host.World.HolySites.Select(s => s.Name), ana.Session.World.HolySites.Select(s => s.Name));
     }
 
     [Fact]

@@ -71,9 +71,10 @@ public partial class GameRoot : Node3D
     {
         var arguments = PendingLaunch.Take();
         var options = LaunchOptions.Parse(arguments);
-        ReportLaunchWarnings(options);
-        CheckInputMap();
-        var loaded = TryLoadContent();
+        Startup.ReportLaunchWarnings(options);
+        Startup.CheckInputMap();
+        var settings = Startup.LoadSettings();
+        var loaded = Startup.TryLoadContent(settings);
         if (loaded is null)
         {
             SetProcess(false);
@@ -111,7 +112,15 @@ public partial class GameRoot : Node3D
         CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
         var flow = new GameFlow { Name = "GameFlow" };
         AddChild(flow);
-        flow.Setup(_session, _network, _divine, _diplomacy, SetStatus, options);
+        flow.Setup(_session, _network, _divine, _diplomacy, SetStatus, options, settings);
+        var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };
+        AddChild(audio);
+        audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
+        _divine.EventsHandled += audio.Hear;
+        SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true);
+        var faith = new FaithController { Name = "Faith" };
+        AddChild(faith);
+        faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         _session.Scheduler.TimeScale = options.Speed ?? _session.Scheduler.TimeScale;
         if (options.AdvanceTicks is { } ticks)
@@ -230,13 +239,13 @@ public partial class GameRoot : Node3D
         .. _nature.Hotkeys(),
     ];
 
-    /// <summary>One hotkey per slot of the miracle bar.</summary>
+    /// <summary>One hotkey per slot of the miracle bar; Shift with 1–3 selects the slots after the ninth, the domains' miracles (ADR-021).</summary>
     private IEnumerable<(StringName Action, Action Run)> CreateMiracleHotkeys()
     {
         for (var i = 0; i < InputActions.MiracleSlots.Count; i++)
         {
             var slot = i;
-            yield return (InputActions.MiracleSlots[slot], () => _divine.SelectSlot(slot));
+            yield return (InputActions.MiracleSlots[slot], () => _divine.SelectSlot(Input.IsKeyPressed(Key.Shift) && slot < 3 ? InputActions.MiracleSlots.Count + slot : slot));
         }
     }
 
@@ -260,7 +269,7 @@ public partial class GameRoot : Node3D
         }
 
         var seed = options.Seed ?? LaunchOptions.DefaultSeed;
-        var session = GameSession.CreateNew(content, seed);
+        var session = GameSession.CreateNew(content, seed, Pantheon.Simulation.Creatures.CreatureModel.FindSpecies(content.Creatures, options.Species)?.Name);
         SetStatus(loadFailure ?? $"New world from seed {seed}");
         return session;
     }
@@ -428,6 +437,7 @@ public partial class GameRoot : Node3D
         RegionBoundariesVisible = _presenter.RegionBoundariesVisible,
         StatusMessage = _status,
         Crowds = _presenter.CrowdStatuses,
+        HolySiteRules = _session.Content.HolySites,
     };
 
     /// <summary>The pressure to leave on the settlement near the cursor, for the debug panel.</summary>
@@ -450,39 +460,4 @@ public partial class GameRoot : Node3D
 
     /// <summary>A fresh seed for F2. Only the shell picks random seeds; the simulation never does.</summary>
     private static WorldSeed CreateRandomSeed() => new((ulong)Random.Shared.NextInt64(1, MaxRandomSeed));
-
-    /// <summary>Loads the simulation and presentation content, logging the reason on failure.</summary>
-    private static (GameContent Content, PresentationContent Presentation)? TryLoadContent()
-    {
-        try
-        {
-            return (GodotContentLoader.LoadGameContent(), GodotContentLoader.LoadPresentationContent());
-        }
-        catch (Exception exception) when (exception is ContentFormatException or IOException)
-        {
-            GD.PushError($"Game content could not be loaded: {exception.Message}");
-            return null;
-        }
-    }
-
-    /// <summary>Logs problems found in the command-line options.</summary>
-    private static void ReportLaunchWarnings(LaunchOptions options)
-    {
-        foreach (var warning in options.Warnings)
-        {
-            GD.PushWarning($"Launch options: {warning}");
-        }
-    }
-
-    /// <summary>Reports actions that are referenced in code but missing from <c>project.godot</c>.</summary>
-    private static void CheckInputMap()
-    {
-        foreach (var action in InputActions.All)
-        {
-            if (!InputMap.HasAction(action))
-            {
-                GD.PushError($"Input action '{action}' is missing from project.godot.");
-            }
-        }
-    }
 }

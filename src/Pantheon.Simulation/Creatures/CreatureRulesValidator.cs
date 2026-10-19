@@ -16,10 +16,7 @@ public static class CreatureRulesValidator
         ArgumentNullException.ThrowIfNull(rules);
         var errors = new RuleErrors();
         errors.RequireAtLeast(rules.DecisionIntervalTicks, 1, nameof(rules.DecisionIntervalTicks));
-        if (string.IsNullOrWhiteSpace(rules.Species))
-        {
-            errors.Add("Species must not be empty.");
-        }
+        ValidateSpecies(rules.Species, errors);
 
         foreach (var (value, name) in new[]
         {
@@ -226,6 +223,32 @@ public static class CreatureRulesValidator
             {
                 errors.Add($"Actions has no rule for {action}.");
             }
+        }
+    }
+
+    /// <summary>At least one species, each named once, with positive factors and temperaments within -1..1 (ADR-021).</summary>
+    private static void ValidateSpecies(IReadOnlyList<CreatureSpecies>? species, RuleErrors errors)
+    {
+        if (species is null || species.Count == 0)
+        {
+            errors.Add("At least one species is required.");
+            return;
+        }
+
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var kind in species)
+        {
+            if (string.IsNullOrWhiteSpace(kind.Name) || !names.Add(kind.Name) || string.IsNullOrWhiteSpace(kind.Description))
+            {
+                errors.Add($"Species '{kind.Name}' is unnamed, named twice or lacks a description.");
+            }
+
+            errors.RequirePositive(kind.Toughness, kind.Name + ".Toughness");
+            errors.RequirePositive(kind.Strength, kind.Name + ".Strength");
+            errors.RequirePositive(kind.Speed, kind.Name + ".Speed");
+            errors.RequirePositive(kind.Learning, kind.Name + ".Learning");
+            errors.RequireSignedShare(kind.Kindness, kind.Name + ".Kindness");
+            errors.RequireSignedShare(kind.Aggression, kind.Name + ".Aggression");
         }
     }
 }

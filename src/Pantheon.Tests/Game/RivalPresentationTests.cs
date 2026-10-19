@@ -113,7 +113,7 @@ public sealed class RivalPresentationTests
         var lines = DebugReadout.Build(snapshot).Lines;
 
         Assert.Contains(lines, line => line.StartsWith($"AI {rival.Name} ({DivineText.Personality(rival.Personality)}): goal now: ", StringComparison.Ordinal));
-        Assert.Contains(lines, line => line.Contains("[save power]", StringComparison.Ordinal) || line.Contains("cost ", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.Contains("[save power]", StringComparison.Ordinal) || line.Contains("cost ", StringComparison.Ordinal) || line.Contains("[claim ", StringComparison.Ordinal));
         Assert.Empty(_session.PreviewGodAi(_session.LocalGod!));
     }
 

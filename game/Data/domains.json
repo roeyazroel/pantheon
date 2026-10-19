@@ -1,0 +1,48 @@
+{
+  // God domains (spec section 12, ADR-021). A god takes up one domain as a Minor Spirit, a second as a
+  // Lesser God and a third as a God. Each domain makes its miracles cost DomainCostFactor of their price,
+  // opens its signature miracle (miracles.json, RequiresDomain) and grants a boon (Boons below).
+  "DomainCostFactor": 0.8,
+  "Slots": [
+    { "Rank": "MinorSpirit", "Domains": 1 },
+    { "Rank": "LesserGod", "Domains": 2 },
+    { "Rank": "God", "Domains": 3 }
+  ],
+  "Domains": [
+    { "Domain": "Nature", "Description": "The land, its growth and its renewal.",
+      "Boon": "The farmland of your villages is always blessed. Regrowth heals burned land." },
+    { "Domain": "Life", "Description": "Health, birth and healing.",
+      "Boon": "Your villages heal steadily, so they grow. Gift of Life brings newcomers." },
+    { "Domain": "Storm", "Description": "Wind, rain and lightning.",
+      "Boon": "A storm over your followers is your voice: their faith and fear rise. Redirect Storm carries clouds where you choose." },
+    { "Domain": "Fire", "Description": "Flame, heat and ruin.",
+      "Boon": "Fires die down quickly on your villages' land. Firestorm sets a wide country alight." },
+    { "Domain": "War", "Description": "Battle and conquest.",
+      "Boon": "Your Creature strikes a third harder. Spear of Heaven wounds rival Creatures." },
+    { "Domain": "Death", "Description": "Endings, fear and the dead.",
+      "Boon": "Every life your miracles take gives you power. Dread turns people against their gods." },
+    { "Domain": "Prosperity", "Description": "Plenty, trade and offerings.",
+      "Boon": "Your worshippers raise a fifth more power. Abundance fills the granaries of a whole country." },
+    { "Domain": "Protection", "Description": "Shelter and defence.",
+      "Boon": "Half the houses a disaster would destroy in your villages stand. Sanctuary keeps your followers from falling away." },
+    { "Domain": "Knowledge", "Description": "Learning and secrets.",
+      "Boon": "Your Creature learns more from each reward and punishment. Enlighten teaches it at once." },
+    { "Domain": "Trickery", "Description": "Deception and luck.",
+      "Boon": "Your miracles plant twice the doubt about other gods. Sow Discord turns two rivals against each other." },
+    { "Domain": "Chaos", "Description": "Disorder and upheaval.",
+      "Boon": "Your earthquakes strike harder. Upheaval shakes the ground long before you could otherwise." }
+  ],
+  "Boons": {
+    "NatureBlessing": 0.35,
+    "LifeHealthPerStep": 0.01,
+    "StormAwePerStep": 0.01,
+    "FireQuenchPerStep": 0.15,
+    "WarCreatureDamage": 0.35,
+    "DeathPowerPerDeath": 8.0,
+    "ProsperityPower": 0.2,
+    "ProtectionResilience": 0.5,
+    "KnowledgeLearning": 0.6,
+    "TrickeryDoubt": 1.0,
+    "ChaosMagnitude": 0.6
+  }
+}

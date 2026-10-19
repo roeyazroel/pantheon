@@ -100,6 +100,9 @@ internal static class SaveMigrations
             case 11:
                 RecentSaveMigrations.UpgradeFrom11(root);
                 break;
+            case 12:
+                RecentSaveMigrations.UpgradeFrom12(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

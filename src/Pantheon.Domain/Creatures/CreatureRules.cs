@@ -13,8 +13,8 @@ public sealed record CreatureRules
     /// <summary>Ticks between decisions (2 ticks: 5 Hz at ×1, spec §89).</summary>
     public required int DecisionIntervalTicks { get; init; }
 
-    /// <summary>Species name of new Creatures.</summary>
-    public required string Species { get; init; }
+    /// <summary>The kinds of Creature, the first being the one a god gets unless it chooses another (ADR-021).</summary>
+    public required IReadOnlyList<CreatureSpecies> Species { get; init; }
 
     /// <summary>Walking speed at level 1, in metres per second.</summary>
     public required float BaseSpeed { get; init; }

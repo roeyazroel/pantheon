@@ -24,7 +24,35 @@ public static class CreatureModel
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(creature);
-        return rules.BaseStrength + (rules.StrengthPerLevel * (creature.Level - 1));
+        return (rules.BaseStrength + (rules.StrengthPerLevel * (creature.Level - 1))) * SpeciesOf(rules, creature).Strength;
+    }
+
+    /// <summary>The Creature's species (ADR-021); the first species when its own is not listed, as a Creature from older content.</summary>
+    /// <param name="rules">Creature rules.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <returns>The species.</returns>
+    public static CreatureSpecies SpeciesOf(CreatureRules rules, CreatureState creature)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        return FindSpecies(rules, creature.Species) ?? rules.Species[0];
+    }
+
+    /// <summary>A species by name.</summary>
+    /// <param name="rules">Creature rules.</param>
+    /// <param name="name">Its name.</param>
+    /// <returns>The species, or <c>null</c> when none has the name.</returns>
+    public static CreatureSpecies? FindSpecies(CreatureRules rules, string? name)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        foreach (var species in rules.Species)
+        {
+            if (string.Equals(species.Name, name, StringComparison.Ordinal))
+            {
+                return species;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>Walking speed at the Creature's level, in metres per second.</summary>
@@ -35,7 +63,7 @@ public static class CreatureModel
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(creature);
-        return rules.BaseSpeed + (rules.SpeedPerLevel * (creature.Level - 1));
+        return (rules.BaseSpeed + (rules.SpeedPerLevel * (creature.Level - 1))) * SpeciesOf(rules, creature).Speed;
     }
 
     /// <summary>The level an amount of experience earns.</summary>
@@ -112,8 +140,9 @@ public static class CreatureModel
     /// <param name="situation">The situation of the judged action.</param>
     /// <param name="action">The judged action.</param>
     /// <param name="feedback">Reward or punishment.</param>
+    /// <param name="boost">Extra share of learning, such as its god's Knowledge (ADR-021); the species' factor applies as well.</param>
     /// <returns>The new preference.</returns>
-    public static float Learn(CreatureRules rules, CreatureState creature, CreatureSituation situation, CreatureAction action, CreatureFeedback feedback)
+    public static float Learn(CreatureRules rules, CreatureState creature, CreatureSituation situation, CreatureAction action, CreatureFeedback feedback, float boost = 0f)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(creature);
@@ -124,11 +153,12 @@ public static class CreatureModel
             creature.Preferences.Add(preference);
         }
 
+        var learning = SpeciesOf(rules, creature).Learning * (1f + Math.Max(0f, boost));
         preference.Weight = feedback switch
         {
             CreatureFeedback.None => preference.Weight,
-            CreatureFeedback.Rewarded => preference.Weight + (rules.RewardLearningRate * (1f - preference.Weight)),
-            CreatureFeedback.Punished => preference.Weight - (rules.PunishmentLearningRate * preference.Weight),
+            CreatureFeedback.Rewarded => preference.Weight + (Math.Min(1f, rules.RewardLearningRate * learning) * (1f - preference.Weight)),
+            CreatureFeedback.Punished => preference.Weight - (Math.Min(1f, rules.PunishmentLearningRate * learning) * preference.Weight),
         };
         preference.Weight = SimMath.Clamp01(preference.Weight);
         return preference.Weight;

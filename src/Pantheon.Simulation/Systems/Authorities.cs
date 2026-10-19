@@ -13,4 +13,5 @@ namespace Pantheon.Simulation.Systems;
 /// <param name="Creatures">Rewards, punishments and orders to Creatures.</param>
 /// <param name="Diplomacy">Diplomatic commands.</param>
 /// <param name="Migration">Refugee policies.</param>
-public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration);
+/// <param name="Domains">Domains taken up (ADR-021), or <c>null</c> where gods have none.</param>
+public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration, Domains.DomainAuthority? Domains = null);

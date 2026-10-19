@@ -20,6 +20,7 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(CreatureIntent), "Creature")]
 [JsonDerivedType(typeof(DiplomacyIntent), "Diplomacy")]
 [JsonDerivedType(typeof(RefugeeIntent), "Refugees")]
+[JsonDerivedType(typeof(DomainIntent), "Domain")]
 [JsonDerivedType(typeof(Verdict), "Verdict")]
 [JsonDerivedType(typeof(Goodbye), "Goodbye")]
 [JsonDerivedType(typeof(SectionUpdate), "Section")]
@@ -92,6 +93,11 @@ public sealed record DiplomacyIntent(int RequestId, int OtherGodId, DiplomaticCo
 /// <param name="Policy">The policy.</param>
 public sealed record RefugeeIntent(int RequestId, RefugeePolicy Policy) : NetMessage;
 
+/// <summary>A player takes up a domain for its god (ADR-021).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="Domain">The domain.</param>
+public sealed record DomainIntent(int RequestId, Pantheon.Domain.Gods.GodDomain Domain) : NetMessage;
+
 /// <summary>The host's answer to an intent: whether it was carried out, and what happened or why not.</summary>
 /// <param name="RequestId">The request it answers.</param>
 /// <param name="Accepted">Whether the world changed.</param>
@@ -130,6 +136,9 @@ public enum WorldSection
 
     /// <summary>The world's history (ADR-020): sent when it grows.</summary>
     History,
+
+    /// <summary>The holy sites, their keepers and claims (ADR-021): the lowest rate.</summary>
+    HolySites,
 }
 
 /// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>

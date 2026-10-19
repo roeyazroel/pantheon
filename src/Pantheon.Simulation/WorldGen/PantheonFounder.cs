@@ -59,6 +59,7 @@ public static class PantheonFounder
                 CreatureId = home is not null && creatureRules is not null ? id : null,
                 RefugeePolicy = RefugeePolicy.Welcome,
                 Cooldowns = [],
+                Domains = [],
             };
             gods.Add(god);
             if (home is null)
@@ -68,7 +69,7 @@ public static class PantheonFounder
 
             if (creatureRules is not null)
             {
-                creatures.Add(CreatureFounder.Found(creatureRules, seed, god, slot.CreatureName, home, grid));
+                creatures.Add(CreatureFounder.Found(creatureRules, seed, god, slot.CreatureName, home, grid, slot.CreatureSpecies));
             }
 
             var belief = setup.HomeBelief;

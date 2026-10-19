@@ -86,6 +86,17 @@ travels at its own pace: Creatures near your camera often, settlements and weath
 diplomacy when something happens. Your own miracles show their cost and effect as soon as the host
 agrees.
 
+**Milestone 15 (Polish and Expansion)** deepens and finishes the game:
+
+- **Domains.** Gods choose what they are gods of, from Storm, Life, War, Death, Trickery and six
+  more. Each domain changes how a god plays and opens a miracle of its own: a Storm god carries
+  clouds where it likes, and a Trickster turns rivals against each other unseen.
+- **Holy sites.** A sacred peak, an ancient grove, a holy spring and a ring of standing stones
+  go to the god whose influence holds them.
+- **Schisms.** Followers who come to doubt their god break away to keep its Old Faith.
+- **Creature species.** Four species, so your Creature can be tough, quick or clever.
+- **Settings, music and sound.** All synthesized by the game itself.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -160,6 +171,11 @@ covers:
   gods teach their Creatures about others and when AI gods send them against an enemy's;
 - the world's history (what is significant, how it reads), the end screen, the guide, the list of
   saves and that a pantheon wins as a god and its strongest ally;
+- domains (slots by rank, the authority, cheaper miracles, every boon and every signature miracle,
+  the AI's choices), holy sites (where they are found, claims, keepers' gains, the AI's
+  Creatures), schisms (splits, the Old Faith's return or fading, betrayal doubt, sanctuaries),
+  Creature species, the settings file, the synthesized sounds and music and what the world sounds
+  like, and the migration of Milestone 14 saves;
 - multiplayer: the messages and their encoding, a host and its players over an in-memory network
   (joining, gods, refusals, intents checked by the host, snapshots, events, leaving), each part of
   the world reaching players at its own rate, four players, coming back to one's god, and that only
@@ -183,6 +199,8 @@ covers:
 | Zoom (towards the cursor) | Mouse wheel, `=` / `-`, keypad `+` / `-` |
 | Rotate | Q / E, or hold the middle mouse button and drag |
 | Select a miracle (again to deselect) | 1–9, or click it in the miracle bar |
+| Select your domains' miracles, after the ninth | Shift+1, Shift+2, Shift+3 |
+| Show or hide the Domains panel: your domains, what each gives, the holy sites | G |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
 | Next map overlay (influence, religion, faith, food, weather, danger, migration), then off | O |
@@ -494,6 +512,57 @@ Every god's Creature roams the same island, and they remember each other.
 
 The rules are in the `Bonds` and `Combat` sections of `game/Data/creatures.json`.
 
+## Domains
+
+A god takes up a domain as a Minor Spirit, a second as a Lesser God and a third as a God (G
+shows them all; the guide asks for your first). A domain is yours for good. It does three things:
+
+- **Cheaper miracles:** its miracles cost you a fifth less.
+- **A boon:** one rule of the world changes for you. Your villages heal (Life), stay blessed
+  (Nature) or lose fewer houses to disasters (Protection); your Creature hits harder (War) or
+  learns faster (Knowledge); storms over your people raise their faith (Storm); fires die down on
+  your land (Fire); worship raises more power (Prosperity); the lives your miracles take give you
+  power (Death); your miracles plant more doubt (Trickery); your earthquakes strike harder (Chaos).
+- **A signature miracle** only its gods can cast:
+  - Regrowth heals burned land;
+  - Gift of Life brings newcomers;
+  - Redirect Storm carries the nearest storm to you;
+  - Firestorm sets a wide country alight;
+  - Spear of Heaven wounds rival Creatures;
+  - Dread turns people from other gods;
+  - Abundance fills a country's granaries;
+  - Sanctuary keeps your followers from falling away;
+  - Enlighten teaches your Creature;
+  - Sow Discord makes two rivals blame each other;
+  - Upheaval shakes the ground early.
+
+The AI gods choose by personality: the Guardian takes Life, Protection and Prosperity, the
+Tyrant Death, Storm and Chaos, the Trickster Trickery, Chaos and Knowledge. Domains and their
+numbers are in `game/Data/domains.json`.
+
+## Holy sites
+
+Four sacred places are found in every world, away from the villages: the Sacred Peak on the
+highest summit, the Ancient Grove in the oldest wood, the Holy Spring and the Standing Stones.
+
+- **Taking one:** the god whose influence holds a site, clearly ahead of the others, takes it
+  after 45 seconds.
+- **Keeping one:** its keeper gains power and influence there, and a gift: cheaper miracles,
+  blessed land, healing for its nearby villages, or a wiser Creature.
+- **Fighting over them:** your Creature's presence counts, so send it (V) to claim a site or to
+  hold yours when you are warned that a rival is taking it. The gods remember who took their
+  sites.
+
+The Domains panel lists the sites and who keeps them; Look takes the camera there.
+
+## Schisms and the Old Faith
+
+When the people who follow a village's god come to doubt it deeply, a part of them break away to
+keep its Old Faith. They worship no god, and no other god can win them, until their god is loved
+there again and they return, or they slowly lose their faith altogether. Hunger, disasters and
+neglect sow that doubt. So does a god who strikes people who love it: its deeds no longer match
+what they knew of it.
+
 ## The world's history
 
 The world remembers what matters (press H): pacts, wars, peace and betrayals; a god's dominion,
@@ -503,6 +572,30 @@ line reads like a chronicle, "Year 12 — The Shaking of Elar (12 dead)", a year
 Your own moments are in gold, and the end screen recalls the ones that led to the victory.
 
 The rules for what is significant are in `game/Data/history.json`.
+
+## Your Creature's species
+
+On the start screen you choose your Creature's species for a new world (or pass `--species`):
+
+- the **Mossback**, steady in all things;
+- the **Stonehide**, slow but hard to hurt;
+- the **Swiftclaw**, fast and fierce but fragile;
+- the **Lumen**, gentle and quick to learn.
+
+The rival gods' Creatures are a Stonehide (Vael), a Lumen (Seren) and a Swiftclaw (Kaio).
+
+## Sound and settings
+
+Every sound is made by the game itself:
+
+- the music, which grows tense in war and triumphant when you dominate;
+- bells for kind miracles and a crack for lightning;
+- thunder and roars heard from across the island, where they happen;
+- the earthquake's rumble, fire, and the wind and rain where you look.
+
+The settings page (start screen or Esc) sets fullscreen, vertical sync, shadows, the render
+scale, the citizens shown, and the loudness of everything, the music, the effects and the wind and
+rain.
 
 ## Winning
 
@@ -561,6 +654,9 @@ remembers; you can keep watching, start a new world or go back to the start scre
   a storm at the cursor. Use them to drive droughts and storm damage.
 - **F11** starts an earthquake (magnitude 6.5) and **F12** a fire at the cursor.
 - **M** sends 20 people out of the village under the cursor to the best place they can reach.
+- The debug panel also lists every god's domains, each holy site with its keeper, its claimant
+  and who leads its influence by how much, and the selected settlement's Old Faith and sanctuary.
+  `--rank` and `--domains` try out domains at once, and `--focus=siteN` looks at a holy site.
 - The command-line options below reproduce a world (`--seed`, `--load`), force a renderer
   (`--terrain`), start from a grown settlement up close (`--advance-ticks`,
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
@@ -584,7 +680,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
 | `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration` | Start with a map overlay shown. |
-| `--focus=<n>\|creature` | Start looking at settlement `n` (1 is your home; `--cast` targets it) or at your Creature. |
+| `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
@@ -603,6 +699,11 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--god=<name>` | The god you ask for when joining. |
 | `--upnp=on\|off` | Ask the router to forward the host's port. |
 | `--meet=on\|off\|<name>` | Bring the nearest other Creature (or the one with that name) beside yours at the start, so they meet. |
+| `--species=<name>` | The species of your Creature in a new world: Mossback, Stonehide, Swiftclaw or Lumen. |
+| `--rank=<rank>` | Your god starts at this rank, such as LesserGod or God (debug). |
+| `--domains=<domain>[,<domain>...]` | Take up these domains at the start, as your rank allows. |
+| `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
+| `--settings-page=on\|off` | Open the settings page at the start. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -653,7 +754,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 12`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 13`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -667,7 +768,12 @@ to 7 start with nothing burning, shaking or in ruins. Saves from Milestones 1 to
 winner, if any, as the list of winners. Saves from Milestones 1 to 9 start with nobody on the road
 and every god welcoming migrants. Saves from Milestones 1 to 10 start with Creatures that have
 never dealt with each other: no combat skill, no scars and no views of the others. Saves from
-Milestones 1 to 13 start with an empty history: the world remembers from then on.
+Milestones 1 to 13 start with an empty history: the world remembers from then on. Saves from
+Milestones 1 to 14 start with gods who have chosen no domains and with no village split, and find
+their holy sites when they are loaded.
+
+Your settings are kept in `user://settings.json`; the start screen and the pause menu have a
+settings page.
 
 ## Repository layout
 
@@ -675,6 +781,7 @@ Milestones 1 to 13 start with an empty history: the world remembers from then on
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
+                      history.json, domains.json, holy_sites.json,
                       settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/

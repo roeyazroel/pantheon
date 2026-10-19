@@ -49,6 +49,7 @@ internal static class SaveIntegrity
         DisasterIntegrity.Validate(world, godIds, errors);
         MigrationIntegrity.Validate(world, godIds, errors);
         HistoryIntegrity.Validate(world, godIds, errors);
+        HolySiteIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {
@@ -146,6 +147,11 @@ internal static class SaveIntegrity
             {
                 errors.Add($"God {god.Id} has a cooldown without a miracle.");
             }
+
+            if (god.Domains is null || god.Domains.Exists(d => !Enum.IsDefined(d)) || new HashSet<Domain.Gods.GodDomain>(god.Domains).Count != god.Domains.Count)
+            {
+                errors.Add($"God {god.Id} has no domain list, an unknown domain or a domain twice.");
+            }
         }
 
         return ids;
@@ -238,6 +244,7 @@ internal static class SaveIntegrity
             }
 
             ValidateBeliefs(settlement.Beliefs, $"Settlement {settlement.Id}", godIds, errors);
+            HolySiteIntegrity.ValidateFaith(world, settlement, godIds, errors);
         }
     }
 }

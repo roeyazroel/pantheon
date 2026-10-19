@@ -64,4 +64,7 @@ public sealed class WorldState
 
     /// <summary>The moments the world remembers, oldest first (spec §50, §92, ADR-020).</summary>
     public required List<History.HistoryRecord> History { get; init; }
+
+    /// <summary>The world's sacred places, ordered by id (spec §51, ADR-021).</summary>
+    public required List<HolySites.HolySite> HolySites { get; init; }
 }

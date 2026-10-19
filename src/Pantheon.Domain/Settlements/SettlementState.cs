@@ -46,6 +46,15 @@ public sealed class SettlementState
     /// <summary>People who want to leave and have not yet set out (ADR-016); it builds while life is hard and fades when it eases.</summary>
     public required float Emigration { get; set; }
 
+    /// <summary>People who broke away from their god in a schism and keep its Old Faith, if any (spec §34, ADR-021).</summary>
+    public required OldFaith? OldFaith { get; set; }
+
+    /// <summary>The god whose followers a Sanctuary miracle keeps from falling away, if any (ADR-021).</summary>
+    public required int? SanctuaryGodId { get; set; }
+
+    /// <summary>Tick until which the Sanctuary holds; 0 when there is none.</summary>
+    public required long SanctuaryUntilTick { get; set; }
+
     /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
     public required List<GodBelief> Beliefs { get; init; }
 }

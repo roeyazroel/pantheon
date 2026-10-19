@@ -41,4 +41,7 @@ public enum DiplomaticAct
 
     /// <summary>Its Creature defeated and banished the remembering god's Creature (ADR-017).</summary>
     CreatureDefeated,
+
+    /// <summary>It took a holy site the remembering god kept (ADR-021).</summary>
+    TookHolySite,
 }

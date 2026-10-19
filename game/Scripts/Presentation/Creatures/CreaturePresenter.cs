@@ -49,7 +49,7 @@ public sealed class CreaturePresenter
             if (!_views.TryGetValue(creature.Id, out var view))
             {
                 var owner = creature.GodId == localGodId ? string.Empty : world.Gods.Find(g => g.Id == creature.GodId)?.Name ?? string.Empty;
-                view = new CreatureView(_parent, creature.Id, _view.GodColor(creature.GodId).ToGodot(), owner);
+                view = new CreatureView(_parent, creature.Id, _view.GodColor(creature.GodId).ToGodot(), owner, _view.LookFor(creature.Species));
                 _views[creature.Id] = view;
             }
 

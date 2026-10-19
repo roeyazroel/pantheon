@@ -13,7 +13,7 @@ namespace Pantheon.Simulation.Belief;
 
 /// <summary>
 /// One step of the belief model (spec §7–9, §13, ADR-009): every settlement's belief drifts and
-/// its people convert or fall away, every god gains the Divine Power its worshippers raise and
+/// its people convert, fall away or break away in a schism (ADR-021), every god gains the Divine Power its worshippers raise and
 /// reaches the rank its following earns, and blessings on the land fade.
 /// <see cref="IntervalSystem"/> runs it once every <see cref="DivineRules.StepIntervalTicks"/> ticks.
 /// </summary>
@@ -75,11 +75,19 @@ public sealed class BeliefSystem : ISimulationSystem
         var beliefs = settlement.Beliefs;
         if (beliefs.Count == 0)
         {
+            Schisms.Step(_rules, world, settlement, events);
             return;
         }
 
         var conditions = BeliefModel.AssessConditions(_rules, settlement, Hazards.Of(_settlementRules, world, settlement));
-        var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs, WarResistance(world, beliefs));
+        if (settlement.SanctuaryGodId is not null && world.Tick >= settlement.SanctuaryUntilTick)
+        {
+            settlement.SanctuaryGodId = null;
+            settlement.SanctuaryUntilTick = 0;
+        }
+
+        var steadfast = settlement.SanctuaryGodId is { } sheltered ? beliefs.FindIndex(b => b.GodId == sheltered) : -1;
+        var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs, WarResistance(world, beliefs), Schisms.OldFaithShare(settlement), steadfast);
         int? gainer = null;
         int? loser = null;
         for (var i = 0; i < beliefs.Count; i++)
@@ -109,6 +117,7 @@ public sealed class BeliefSystem : ISimulationSystem
         }
 
         beliefs.RemoveAll(b => b.Adherence * Math.Max(0, settlement.Population) < ForgottenFollowers && b.Faith < _rules.ForgottenFaith);
+        Schisms.Step(_rules, world, settlement, events);
     }
 
     /// <summary>

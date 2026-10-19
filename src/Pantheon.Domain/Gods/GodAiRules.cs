@@ -75,4 +75,10 @@ public sealed record GodProfile
 
     /// <summary>What it does with migrants who arrive where it is followed (ADR-016); a welcoming god turns them away when its own people lack room.</summary>
     public required RefugeePolicy RefugeePolicy { get; init; }
+
+    /// <summary>Sending its Creature to claim holy sites, and to hold its own (ADR-021).</summary>
+    public required float HolySites { get; init; }
+
+    /// <summary>The domains it takes up, in order, as its rank allows (spec §47's preferred domains, ADR-021).</summary>
+    public required IReadOnlyList<GodDomain> Domains { get; init; }
 }

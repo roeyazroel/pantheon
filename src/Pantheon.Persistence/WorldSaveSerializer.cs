@@ -25,9 +25,10 @@ public static class WorldSaveSerializer
     /// version 9 (Milestone 9) replaced the one winner with the winners, for victories won together;
     /// version 10 (Milestone 10) added migration, settlements' wish to leave and gods' refugee policies;
     /// version 11 (Milestone 11) added Creatures' combat skill, scars and views of each other;
-    /// version 12 (Milestone 14) added the world's history.
+    /// version 12 (Milestone 14) added the world's history; version 13 (Milestone 15) added gods'
+    /// domains, holy sites, and settlements' Old Faiths and sanctuaries.
     /// </summary>
-    public const int CurrentSaveVersion = 12;
+    public const int CurrentSaveVersion = 13;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

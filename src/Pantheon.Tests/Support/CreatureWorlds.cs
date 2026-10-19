@@ -34,6 +34,7 @@ internal static class CreatureWorlds
             CreatureId = god.Id,
             RefugeePolicy = god.RefugeePolicy,
             Cooldowns = god.Cooldowns,
+            Domains = god.Domains,
         };
         world.Gods[0] = withCreature;
         var creature = CreatureFounder.Found(Rules, world.Seed, withCreature, "Testling", world.Settlements[0], world.Regions);

@@ -163,6 +163,15 @@ public sealed record DivineRules
 
     /// <summary>Followers needed for each rank above <see cref="DivineRank.MinorSpirit"/>, in rank order.</summary>
     public required IReadOnlyList<RankThreshold> Ranks { get; init; }
+
+    /// <summary>Influence (0..1) at a holy site that the god keeping it holds from the site itself (ADR-021).</summary>
+    public required float HolySiteInfluenceStrength { get; init; }
+
+    /// <summary>Distance in metres at which a holy site's influence fades to nothing.</summary>
+    public required float HolySiteInfluenceReach { get; init; }
+
+    /// <summary>When followers break away from their god (spec §34, ADR-021).</summary>
+    public required SchismRules Schism { get; init; }
 }
 
 /// <summary>Followers a god needs to reach a rank.</summary>

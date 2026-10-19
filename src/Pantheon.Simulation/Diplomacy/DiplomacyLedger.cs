@@ -46,6 +46,7 @@ public sealed class DiplomacyLedger : IActRecorder
                 relation.Rivalry = SimMath.Clamp01(relation.Rivalry + _rules.HarmRivalry);
                 break;
             case DiplomaticAct.Converted:
+            case DiplomaticAct.TookHolySite:
                 relation.Rivalry = SimMath.Clamp01(relation.Rivalry + _rules.HarmRivalry);
                 relation.Suspicion = SimMath.Clamp01(relation.Suspicion + (_rules.HarmRivalry / 2f));
                 break;

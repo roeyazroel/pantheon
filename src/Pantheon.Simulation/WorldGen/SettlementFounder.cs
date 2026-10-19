@@ -61,6 +61,9 @@ public static class SettlementFounder
                 Ruins = 0,
                 ShieldedUntilTick = 0,
                 Emigration = 0f,
+                OldFaith = null,
+                SanctuaryGodId = null,
+                SanctuaryUntilTick = 0,
                 Beliefs = [],
             });
         }

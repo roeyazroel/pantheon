@@ -197,4 +197,43 @@ internal static class RecentSaveMigrations
             AddNode(world, "History", new JsonArray(), fromVersion: 11);
         }
     }
+
+    /// <summary>
+    /// Version 12 to 13 (Milestone 15): gods take up domains, the world has holy sites, and
+    /// settlements may keep an Old Faith or a sanctuary. Version 12 gods had chosen no domains and
+    /// no settlement had split or been made a sanctuary; the holy sites are found in the land when
+    /// the world is next played (ADR-021).
+    /// </summary>
+    internal static void UpgradeFrom12(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world)
+        {
+            return;
+        }
+
+        AddNode(world, "HolySites", new JsonArray(), fromVersion: 12);
+        if (world["Gods"] is JsonArray gods)
+        {
+            foreach (var node in gods)
+            {
+                if (node is JsonObject god)
+                {
+                    AddNode(god, "Domains", new JsonArray(), fromVersion: 12);
+                }
+            }
+        }
+
+        if (world["Settlements"] is JsonArray settlements)
+        {
+            foreach (var node in settlements)
+            {
+                if (node is JsonObject settlement)
+                {
+                    AddNullMember(settlement, "OldFaith", fromVersion: 12);
+                    AddNullMember(settlement, "SanctuaryGodId", fromVersion: 12);
+                    AddNode(settlement, "SanctuaryUntilTick", 0, fromVersion: 12);
+                }
+            }
+        }
+    }
 }

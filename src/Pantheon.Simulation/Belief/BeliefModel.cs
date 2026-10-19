@@ -121,12 +121,14 @@ public static class BeliefModel
     /// <param name="rules">Divine rules.</param>
     /// <param name="beliefs">The settlement's beliefs.</param>
     /// <param name="pullFactors">A factor on each god's pull, in the same order (for example a people at war resisting the enemy); 1 for all when <c>null</c>.</param>
+    /// <param name="reserved">Share of the people who follow no god but cannot be converted: an Old Faith (ADR-021).</param>
+    /// <param name="steadfast">Index of the belief whose followers cannot fall away, under a Sanctuary (ADR-021); -1 for none.</param>
     /// <returns>The change for each belief, in the same order.</returns>
-    public static float[] ComputeAdherenceChanges(DivineRules rules, IReadOnlyList<GodBelief> beliefs, IReadOnlyList<float>? pullFactors = null)
+    public static float[] ComputeAdherenceChanges(DivineRules rules, IReadOnlyList<GodBelief> beliefs, IReadOnlyList<float>? pullFactors = null, float reserved = 0f, int steadfast = -1)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(beliefs);
-        var free = 1f - TotalAdherence(beliefs);
+        var free = 1f - TotalAdherence(beliefs) - SimMath.Clamp01(reserved);
         var pulls = new float[beliefs.Count];
         var totalPull = 0f;
         for (var i = 0; i < beliefs.Count; i++)
@@ -149,7 +151,7 @@ public static class BeliefModel
         for (var i = 0; i < beliefs.Count; i++)
         {
             changes[i] += gains[i] * scale;
-            var loss = Math.Min(rules.ApostasyPerStep * ComputePush(rules, beliefs[i]) * SimMath.Clamp01(beliefs[i].Adherence), SimMath.Clamp01(beliefs[i].Adherence));
+            var loss = i == steadfast ? 0f : Math.Min(rules.ApostasyPerStep * ComputePush(rules, beliefs[i]) * SimMath.Clamp01(beliefs[i].Adherence), SimMath.Clamp01(beliefs[i].Adherence));
             changes[i] -= loss;
             var choice = rules.ApostateFreedom + (totalPull - pulls[i]);
             if (loss <= 0f || choice <= 0f)

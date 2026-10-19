@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Events;
+using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.HolySites;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
@@ -12,8 +15,8 @@ using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Disasters;
-using Pantheon.Simulation.Settlements;
-using Pantheon.Simulation.Weather;
+using Pantheon.Simulation.Domains;
+using Pantheon.Simulation.HolySites;
 
 namespace Pantheon.Simulation.Miracles;
 
@@ -32,8 +35,10 @@ public sealed class MiracleCaster
     private readonly SettlementRules _settlementRules;
     private readonly MiracleBook _book;
     private readonly IActRecorder? _ledger;
-    private readonly WeatherRules? _weather;
     private readonly DisasterRules? _disasters;
+    private readonly DomainRules? _domains;
+    private readonly HolySiteRules? _holySites;
+    private readonly MiracleEffects _effects;
 
     /// <summary>Creates a caster over validated content.</summary>
     /// <param name="rules">Divine rules.</param>
@@ -42,18 +47,26 @@ public sealed class MiracleCaster
     /// <param name="ledger">Where the gods whose followers a miracle reaches note it (ADR-012); <c>null</c> for none.</param>
     /// <param name="weather">Weather rules, for the clouds Rain calls (ADR-013); <c>null</c> where there is no weather, and Rain then calls none.</param>
     /// <param name="disasters">Disaster rules, for the fires and earthquakes miracles start (ADR-014); <c>null</c> where there are no disasters, and those miracles then start none.</param>
-    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null)
+    /// <param name="creatures">Creature rules, for the miracles that reach Creatures (ADR-021); <c>null</c> where there are no Creatures.</param>
+    /// <param name="domains">Domain rules, for domain costs and boons (ADR-021); <c>null</c> for none. A signature miracle always needs its domain.</param>
+    /// <param name="holySites">Holy site rules, for the cheaper miracles of a site's keeper (ADR-021); <c>null</c> for none.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null)
     {
         _ledger = ledger;
-        _weather = weather;
         _disasters = disasters;
+        _domains = domains;
+        _holySites = holySites;
         DivineRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
         ArgumentNullException.ThrowIfNull(book);
         _rules = rules;
         _settlementRules = settlementRules;
         _book = book;
+        _effects = new MiracleEffects(settlementRules, ledger, weather, disasters, creatures, domains);
     }
+
+    /// <summary>The domain rules, if gods have domains (ADR-021).</summary>
+    public DomainRules? Domains => _domains;
 
     /// <summary>
     /// Divine Power a miracle costs: the base cost raised for weak influence, and raised again by how
@@ -116,13 +129,15 @@ public sealed class MiracleCaster
         var inWorld = IsInsideWorld(world.Regions, request.Target);
         var influence = inWorld ? InfluenceField.Build(_rules, world, god.Id).At(request.Target) : 0f;
         var rivals = inWorld ? RivalInfluence(world, god.Id, request.Target) : 0f;
-        var cost = ComputeCost(_rules, miracle, influence, rivals);
+        var cost = ComputeCost(_rules, miracle, influence, rivals) * DomainModel.CostFactor(_domains, god, miracle) * HolySiteModel.CostFactor(_holySites, world, god.Id);
         var rejection =
             issuerGodId is { } issuer && issuer != god.Id ? CastRejection.NotAuthorized
+            : miracle.RequiresDomain && !DomainModel.Holds(god, miracle.Domain) ? CastRejection.DomainRequired
             : god.Rank < miracle.MinimumRank ? CastRejection.RankTooLow
             : cooldown > 0 ? CastRejection.OnCooldown
             : !inWorld ? CastRejection.OutsideWorld
             : influence < miracle.InfluenceRequirement ? CastRejection.OutsideInfluence
+            : !_effects.HasTarget(world, god.Id, miracle, request.Target) ? CastRejection.NothingThere
             : god.DivinePower < cost ? CastRejection.NotEnoughPower
             : CastRejection.None;
         return new CastCheck(rejection, miracle, influence, cost, cooldown);
@@ -148,6 +163,7 @@ public sealed class MiracleCaster
         StartCooldown(god, miracle, world.Tick);
 
         var reach = Reach(miracle);
+        var unseen = IsUnseen(miracle);
         var affected = new List<int>();
         var needs = new Dictionary<int, float>();
         var deaths = 0;
@@ -159,20 +175,28 @@ public sealed class MiracleCaster
             {
                 affected.Add(settlement.Id);
                 needs[settlement.Id] = Math.Max(Math.Max(conditions.FoodNeed, conditions.HealthNeed), conditions.WaterNeed);
-                deaths += ApplyEffects(miracle, settlement, world.Tick);
+                deaths += _effects.ApplyToSettlement(world, miracle, settlement, god.Id);
             }
 
             var closeness = distance <= reach ? 1f : SimMath.Clamp01(1f - ((distance - reach) / Math.Max(1f, _rules.WitnessRadius)));
-            if (closeness > 0f && settlement.Population > 0)
+            if (closeness > 0f && settlement.Population > 0 && !unseen)
             {
                 Witness(world, miracle, settlement, god.Id, closeness, conditions);
             }
         }
 
-        NoteByRivals(world, miracle, god.Id, affected, needs);
+        if (!unseen)
+        {
+            NoteByRivals(world, miracle, god.Id, affected, needs);
+        }
 
-        ApplyRegionEffects(miracle, world.Regions, request.Target);
-        ApplyWorldEffects(world, miracle, god.Id, request.Target, events);
+        if (deaths > 0 && _domains is not null && DomainModel.Holds(god, GodDomain.Death))
+        {
+            god.DivinePower += deaths * _domains.Boons.DeathPowerPerDeath;
+        }
+
+        MiracleEffects.ApplyToRegions(miracle, world.Regions, request.Target);
+        _effects.ApplyToWorld(world, miracle, god.Id, request.Target, affected, events);
         events.Add(new MiracleCast
         {
             Tick = world.Tick,
@@ -229,6 +253,9 @@ public sealed class MiracleCaster
         return 0;
     }
 
+    /// <summary>Whether nobody sees the miracle worked, as Sow Discord (ADR-021): no witness changes belief and no god notes it.</summary>
+    private static bool IsUnseen(MiracleDefinition miracle) => miracle.Effects.Any(effect => effect.Kind == MiracleEffectKind.Discord);
+
     /// <summary>Distance from the target within which a settlement's centre must lie for the miracle to reach it.</summary>
     private float Reach(MiracleDefinition miracle) => miracle.Radius + _rules.SettlementRadius;
 
@@ -251,100 +278,6 @@ public sealed class MiracleCaster
         god.Cooldowns.Add(new MiracleCooldown { MiracleId = miracle.Id, ReadyAtTick = ready });
     }
 
-    /// <summary>Applies the settlement effects to one settlement the miracle reaches.</summary>
-    /// <returns>People killed.</returns>
-    private int ApplyEffects(MiracleDefinition miracle, SettlementState settlement, long tick)
-    {
-        var deaths = 0;
-        foreach (var effect in miracle.Effects)
-        {
-            switch (effect.Kind)
-            {
-                case MiracleEffectKind.AddFood:
-                    var storage = SettlementEconomy.ComputeStorage(_settlementRules, settlement.Housing);
-                    settlement.Food = Math.Max(settlement.Food, Math.Min(storage, settlement.Food + effect.Amount));
-                    break;
-                case MiracleEffectKind.Heal:
-                    settlement.Health = Math.Min(1f, settlement.Health + effect.Amount);
-                    break;
-                case MiracleEffectKind.Smite:
-                    var killed = Math.Min(settlement.Population, (int)MathF.Round(effect.Amount));
-                    settlement.Population -= killed;
-                    deaths += killed;
-                    break;
-                case MiracleEffectKind.Shield:
-                    settlement.ShieldedUntilTick = Math.Max(settlement.ShieldedUntilTick, tick + (long)MathF.Round(effect.Amount * SimulationTime.TicksPerSecond));
-                    break;
-                case MiracleEffectKind.Bless:
-                case MiracleEffectKind.Rain:
-                case MiracleEffectKind.Ignite:
-                case MiracleEffectKind.Quake:
-                    break;
-            }
-        }
-
-        return deaths;
-    }
-
-    /// <summary>Applies the region effects (blessing) to every region whose centre the miracle reaches.</summary>
-    private static void ApplyRegionEffects(MiracleDefinition miracle, RegionGrid grid, GroundPosition target)
-    {
-        foreach (var effect in miracle.Effects)
-        {
-            if (effect.Kind != MiracleEffectKind.Bless)
-            {
-                continue;
-            }
-
-            foreach (var region in grid.Cells)
-            {
-                if (Distance(grid.GetRegionCenter(region.Id), target) <= miracle.Radius)
-                {
-                    region.Blessing = Math.Max(region.Blessing, SimMath.Clamp01(effect.Amount));
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// The effects on the world itself: Rain calls its cloud (ADR-013), Fire sets the regions it
-    /// reaches alight and Earthquake shakes the ground at the target (ADR-014).
-    /// </summary>
-    private void ApplyWorldEffects(WorldState world, MiracleDefinition miracle, int godId, GroundPosition target, ICollection<WorldEvent> events)
-    {
-        foreach (var effect in miracle.Effects)
-        {
-            switch (effect.Kind)
-            {
-                case MiracleEffectKind.Rain when _weather is not null:
-                    WeatherModel.Summon(_weather, world, target, miracle.Radius, effect.Amount, godId);
-                    break;
-                case MiracleEffectKind.Ignite when _disasters is not null:
-                    Ignite(world, miracle.Radius, effect.Amount, target, events);
-                    break;
-                case MiracleEffectKind.Quake when _disasters is not null:
-                    var quake = DisasterModel.StartQuake(_disasters, world.Disasters, target, effect.Amount, world.Tick, godId);
-                    events.Add(new EarthquakeStruck { Tick = world.Tick, QuakeId = quake.Id, Epicentre = target, Magnitude = quake.Magnitude, GodId = godId });
-                    break;
-            }
-        }
-    }
-
-    /// <summary>Sets every region whose centre lies within the radius alight, where there is fuel; the target's region always counts.</summary>
-    private void Ignite(WorldState world, float radius, float intensity, GroundPosition target, ICollection<WorldEvent> events)
-    {
-        var grid = world.Regions;
-        grid.TryGetRegionIdAt(target.X, target.Z, out var targetRegion);
-        foreach (var region in grid.Cells)
-        {
-            if ((region.Id == targetRegion || Distance(grid.GetRegionCenter(region.Id), target) <= radius)
-                && DisasterModel.Ignite(_disasters!, region, intensity))
-            {
-                events.Add(new WildfireStarted { Tick = world.Tick, RegionId = region.Id, Cause = FireCause.Miracle });
-            }
-        }
-    }
-
     /// <summary>How readily a settlement's own region would burn now (0 without disaster rules).</summary>
     /// <param name="world">World state.</param>
     /// <param name="settlement">The settlement.</param>
@@ -364,16 +297,23 @@ public sealed class MiracleCaster
     {
         var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
         var loveScale = _rules.GratitudeFloor + ((1f - _rules.GratitudeFloor) * need);
+        var trickery = _domains is not null && DomainModel.Holds(world, godId, GodDomain.Trickery) ? 1f + _domains.Boons.TrickeryDoubt : 1f;
         foreach (var other in settlement.Beliefs)
         {
             if (other.GodId != godId && other.Adherence > 0f && !DiplomacyModel.AreAllied(world, godId, other.GodId))
             {
-                other.Doubt = BeliefModel.ApplyChange(other.Doubt, _rules.RivalMiracleDoubt * closeness);
+                other.Doubt = BeliefModel.ApplyChange(other.Doubt, _rules.RivalMiracleDoubt * trickery * closeness);
             }
         }
 
         var belief = BeliefModel.FindOrAdd(_rules, settlement, godId);
+        var love = belief.Love;
         BeliefModel.ApplyImpulse(belief, miracle.Witness, closeness, loveScale);
+        if (miracle.Witness.Love < 0f && love > 0f)
+        {
+            // A god that harms people who love it contradicts all they knew of it (spec §34).
+            belief.Doubt = BeliefModel.ApplyChange(belief.Doubt, _rules.Schism.BetrayalDoubt * love * closeness);
+        }
     }
 
     /// <summary>

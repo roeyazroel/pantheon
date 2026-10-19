@@ -201,6 +201,7 @@ public static class DiplomacyText
             DiplomaticAct.Sheltered => "took in its followers" + (where.Length > 0 ? " in" + where : string.Empty),
             DiplomaticAct.TurnedAway => "turned its followers away" + (where.Length > 0 ? " from" + where : string.Empty),
             DiplomaticAct.CreatureDefeated => "let your Creature beat its Creature",
+            DiplomaticAct.TookHolySite => "took its holy site",
         };
     }
 

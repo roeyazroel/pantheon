@@ -95,6 +95,8 @@ public static class DivineText
             CastRejection.UnknownGod => "You have no god to cast with",
             CastRejection.UnknownMiracle => Format("Unknown miracle '{0}'", miracleId),
             CastRejection.NotAuthorized => Format("You may not cast {0} for another god", name),
+            CastRejection.DomainRequired => Format("{0} belongs to {1}: take up {1} first (G)", name, Domains.DomainText.InSentence(check.Miracle?.Domain ?? GodDomain.Nature)),
+            CastRejection.NothingThere => Format("{0}: {1}", name, NothingThere(check.Miracle)),
             CastRejection.RankTooLow => Format("{0} needs the rank of {1}", name, Rank(check.Miracle?.MinimumRank ?? DivineRank.MinorSpirit)),
             CastRejection.OnCooldown => Format("{0} is ready in {1:0.0} s", name, check.CooldownTicksLeft / Math.Max(1.0, ticksPerSecond)),
             CastRejection.OutsideWorld => "There is nothing to cast on there",
@@ -105,6 +107,25 @@ public static class DivineText
                 check.Miracle?.InfluenceRequirement ?? 0f),
             CastRejection.NotEnoughPower => Format("Not enough Divine Power: {0} costs {1:0} here, you have {2:0}", name, check.Cost, power),
         };
+    }
+
+    /// <summary>What a targeted miracle did not find (ADR-021).</summary>
+    private static string NothingThere(Pantheon.Domain.Miracles.MiracleDefinition? miracle)
+    {
+        foreach (var effect in miracle?.Effects ?? [])
+        {
+            switch (effect.Kind)
+            {
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Redirect:
+                    return Format("no rain or storm cloud within {0:0} m", effect.Amount);
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Wound:
+                    return "no rival Creature there";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Teach:
+                    return "your Creature is not there";
+            }
+        }
+
+        return "nothing to act on there";
     }
 
     /// <summary>The result of an accepted cast.</summary>

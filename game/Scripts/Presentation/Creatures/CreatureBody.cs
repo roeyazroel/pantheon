@@ -3,10 +3,10 @@ using Godot;
 namespace Pantheon.Client.Presentation.Creatures;
 
 /// <summary>
-/// The Mossback's body, built from primitive meshes (presentation only, ADR-010): a round, mossy
-/// torso, a big head with a snout, eyes and two curved horns, thick arms and legs on pivots, and
-/// moss tufts on its back. The god's colour tints the horns and the moss. Sizes are for level 1
-/// before the level scale.
+/// A Creature's body, built from primitive meshes (presentation only, ADR-010): a round torso, a
+/// big head with a snout, eyes and two curved horns, thick arms and legs on pivots, and tufts on its
+/// back. Its species' look (ADR-021) sets the colours, girth, height, horns and glow; the god's
+/// colour tints the horns and the tufts. Sizes are for level 1 before the level scale.
 /// </summary>
 internal sealed class CreatureBody
 {
@@ -22,12 +22,15 @@ internal sealed class CreatureBody
     /// <summary>Builds the body under a root node.</summary>
     /// <param name="root">Node that holds the body; it is moved and turned as a whole.</param>
     /// <param name="godColor">The god's colour.</param>
-    public CreatureBody(Node3D root, Color godColor)
+    /// <param name="look">Its species' look.</param>
+    public CreatureBody(Node3D root, Color godColor, Pantheon.Game.Presentation.CreatureLook look)
     {
-        var hide = Material(new Color(0.42f, 0.36f, 0.27f));
-        var belly = Material(new Color(0.78f, 0.69f, 0.52f));
-        var moss = Material(new Color(0.3f, 0.5f, 0.22f).Lerp(godColor, 0.25f));
+        var hideColor = look.Hide.ToGodot();
+        var hide = look.Glow > 0f ? Material(hideColor, emission: hideColor, emissionEnergy: look.Glow) : Material(hideColor);
+        var belly = Material(look.Belly.ToGodot());
+        var moss = Material(look.Tufts.ToGodot().Lerp(godColor, 0.25f), emission: look.Glow > 0f ? look.Tufts.ToGodot() : null, emissionEnergy: look.Glow);
         var horn = Material(godColor.Lightened(0.15f), emission: godColor, emissionEnergy: 0.35f);
+        root.Scale = new Vector3(look.Width, look.Height, look.Width);
         var eyeWhite = Material(new Color(0.97f, 0.95f, 0.88f));
         var pupil = Material(new Color(0.08f, 0.06f, 0.05f));
 
@@ -49,7 +52,10 @@ internal sealed class CreatureBody
         {
             Add(Head, new SphereMesh { Radius = 0.26f, Height = 0.52f, Material = eyeWhite }, new Vector3(side * 0.48f, 0.25f, 0.92f));
             Add(Head, new SphereMesh { Radius = 0.13f, Height = 0.26f, Material = pupil }, new Vector3(side * 0.5f, 0.27f, 1.14f));
-            Add(Head, new CylinderMesh { TopRadius = 0.02f, BottomRadius = 0.28f, Height = 1.5f, Material = horn }, new Vector3(side * 0.75f, 1.1f, -0.1f), new Vector3(-0.35f, 0f, -side * 0.55f));
+            if (look.Horns > 0f)
+            {
+                Add(Head, new CylinderMesh { TopRadius = 0.02f, BottomRadius = 0.28f, Height = 1.5f * look.Horns, Material = horn }, new Vector3(side * 0.75f, 0.6f + (0.5f * look.Horns), -0.1f), new Vector3(-0.35f, 0f, -side * 0.55f));
+            }
         }
 
         _scar = Material(new Color(0.22f, 0.08f, 0.07f));

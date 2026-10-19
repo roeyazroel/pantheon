@@ -125,7 +125,8 @@ files and compiled assemblies and fails when either rule is broken.
   or allied gods that have won, spec §53 and §115; ADR-015). Settlements carry their people's
   wish to leave (`Emigration`) and gods their `RefugeePolicy`. Creatures carry their combat
   skill, scars and views of each other (`CreatureRelation`, ADR-017). `History` holds the moments
-  the world remembers (`HistoryRecord`, ADR-020).
+  the world remembers (`HistoryRecord`, ADR-020). `HolySites` holds the world's sacred places
+  (`HolySite`: kind, name, region, keeper, claimant and the claim so far; ADR-021).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -135,15 +136,18 @@ files and compiled assemblies and fails when either rule is broken.
 - `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Housing`
   (capacity in people), `Health` (0..1), `ConstructionProgress` (work done on the one house
   being built; 0 when none is under way), `Ruins` (houses destroyed and not yet rebuilt),
-  `ShieldedUntilTick` (while a Shield miracle protects it) and `Beliefs`. These aggregates are the canonical
+  `ShieldedUntilTick` (while a Shield miracle protects it), `OldFaith` (the share of its people
+  who broke away from their god in a schism, with how many have returned or fallen away; ADR-021),
+  `SanctuaryGodId` and `SanctuaryUntilTick` (whose followers cannot fall away for now) and
+  `Beliefs`. These aggregates are the canonical
   population (Tier 1, ADR-004 and ADR-008).
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
   follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt` (0..1).
   Followers are `Population × Adherence` and are never stored (ADR-009).
-- `GodState`: `Id`, `Name`, `Controller` (Human or Ai), `Personality` (`None` for players;
-  Guardian, Tyrant, Opportunist, Zealot or NatureKeeper for AI gods), `DivinePower`, `Rank`
-  (never falls), `DominantSinceTick` (while it holds the victory share), `CreatureId` and
-  `Cooldowns`. Followers and influence are derived from the beliefs.
+- `GodState`: `Id`, `Name`, `Controller` (Human, Ai or Remote), `Personality` (`None` for players;
+  one of §47's eight for AI gods), `DivinePower`, `Rank` (never falls), `DominantSinceTick`
+  (while it holds the victory share), `CreatureId`, `RefugeePolicy`, `Cooldowns` and `Domains`
+  (the domains it has taken up, ADR-021). Followers and influence are derived from the beliefs.
 - `CreatureState` (ADR-010): a Tier 3 entity saved whole: position and heading, level, experience,
   health, loyalty, morality, `Needs` (hunger, fatigue, boredom), `Personality` (kindness,
   aggression, laziness, curiosity), `Activity` (action, situation, phase, target, path, ticks
@@ -165,8 +169,9 @@ files and compiled assemblies and fails when either rule is broken.
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
   `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
   `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged`, `MigrationStarted`, `MigrationEnded`,
-  `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded` and others) raised during a tick or a
-  command and never saved.
+  `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded`, `DomainChosen`, `HolySiteContested`,
+  `HolySiteClaimed`, `SchismStarted`, `SchismEnded` and others) raised during a tick or a command
+  and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
@@ -174,8 +179,11 @@ files and compiled assemblies and fails when either rule is broken.
   new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
   with its `CreatureBondRules` and `CreatureCombatRules` (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
   diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
-  (`weather.json`), `DisasterRules` (`disasters.json`), `MigrationRules` (`migration.json`) and
-  `HistoryRules` (`history.json`).
+  (`weather.json`), `DisasterRules` (`disasters.json`), `MigrationRules` (`migration.json`),
+  `HistoryRules` (`history.json`), `DomainRules` with its slots, definitions and `DomainBoons`
+  (`domains.json`) and `HolySiteRules` (`holy_sites.json`). `DivineRules` carries the
+  `SchismRules` and the holy sites' influence, and `CreatureRules` the `CreatureSpecies`
+  (ADR-021).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -207,7 +215,10 @@ files and compiled assemblies and fails when either rule is broken.
   `InfluenceField` derives a god's influence from its followers. `GodStanding` counts followers,
   sums power and picks ranks.
 - `Miracles/MiracleBook` validates and indexes the miracles; `MiracleCaster` checks requests
-  (§73), computes costs and applies accepted casts.
+  (§73: authorisation, a signature miracle's domain, rank, cooldown, place, influence, a target
+  to act on, power), computes costs (less for the god's own domains and its holy sites) and
+  applies accepted casts through `MiracleEffects` (settlements, land, weather, ground, Creatures
+  and the gods' views).
 - `Creatures/`: `CreatureModel` (growth, needs and learning as pure functions), `CreatureBrain`
   (options and utilities, decisions, planned routes), `CreatureDeeds` (what a finished action does
   to the world), `CreatureSystem` (the per-tick state machine), `CreatureAuthority` (rewards,
@@ -216,7 +227,9 @@ files and compiled assemblies and fails when either rule is broken.
   dealings with each other (see [Creature relationships](#creature-relationships)).
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
-  `GodAiSystem`; `Gods/GodDiplomat` adds its diplomatic moves. `Belief/VictorySystem` tracks
+  `GodAiSystem`; `Gods/MiracleValuer` weighs what each miracle is worth to it, and
+  `Gods/GodDiplomat` adds its diplomatic moves. It takes up its personality's domains and sends
+  its Creature to claim holy sites (ADR-021). `Belief/VictorySystem` tracks
   each god's standing (alone or with its bloc), dominance and victory.
 - `Diplomacy/`: `DiplomacyModel` (finding and creating relations and stances, grudge, warmth),
   `DiplomacyLedger` (the `IActRecorder` that miracles, Creature deeds and conversions report
@@ -233,12 +246,17 @@ files and compiled assemblies and fails when either rule is broken.
   `RefugeeAdvisor` (AI gods' policies). See [Migration](#migration).
 - `History/HistoryRecorder` weighs the events of each tick, and of commands through
   `SimulationEngine.Chronicle`, and keeps the significant ones as the world's history (ADR-020).
+- `Domains/`: `DomainModel` (slots by rank, who holds what, cost factors), `DomainAuthority`
+  (taking up a domain, checked) and `DomainSystem` (the lasting boons). `HolySites/`:
+  `HolySitePlacer` (finding the sites in the land), `HolySiteSystem` (claims and keepers' gains)
+  and `HolySiteModel`. `Belief/Schisms` splits off and evolves Old Faiths within the belief step.
+  See [Domains, holy sites and schisms](#domains-holy-sites-and-schisms).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-  `Systems/Authorities` bundles the miracle, Creature, diplomacy and migration authorities; the
-  first three and the migration step share one ledger.
+  `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration and domain
+  authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  disaster step, the settlement step, the belief step, the victory check, the diplomacy step and
-  the migration step, each in an
+  disaster step, the settlement step, the belief step, the domains' boons, the holy sites, the
+  victory check, the diplomacy step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
@@ -251,7 +269,8 @@ files and compiled assemblies and fails when either rule is broken.
   most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
-  `ViewFocus`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent`, `RefugeeIntent`),
+  `ViewFocus`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent`, `RefugeeIntent`,
+  `DomainIntent`),
   `Verdict` and `Goodbye`. `MessageCodec` writes them as JSON tagged with their type, gzipped from
   512 bytes; `EventCodec` carries any `WorldEvent` by its type name.
 - `Transport/INetworkTransport`: connect, receive, send reliably or not, disconnect, round trip.
@@ -260,7 +279,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 10, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 13, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -279,7 +298,9 @@ files and compiled assemblies and fails when either rule is broken.
   into the list of winners (that god, or none). Version 9 → 10 adds no migration groups, no wish
   to leave and a welcoming refugee policy for every god. Version 10 → 11 gives every Creature no
   combat skill, scars or views of the others, and marks nothing it did as concerning another
-  Creature. Version 11 → 12 gives the world an empty history. A missing, unsupported or newer version
+  Creature. Version 11 → 12 gives the world an empty history. Version 12 → 13 gives every god no
+  domains, every settlement no Old Faith or sanctuary and the world no holy sites; a session finds
+  the sites as a new world would. A missing, unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
@@ -292,7 +313,9 @@ files and compiled assemblies and fails when either rule is broken.
   values in range, known gods), fire and scorch in 0..1, ruins and shields not negative, and
   disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods),
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
-  sizes, food, health and positions, and beliefs as a settlement's).
+  sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
+  (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
+  that leave room for the followers, sanctuaries of known gods), and gods' domains (known, once each).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -378,6 +401,14 @@ files and compiled assemblies and fails when either rule is broken.
 - `History/HistoryText` and `HistoryReadout` word the chronicle ("Year 12 — The Shaking of Elar");
   `Flow/EndSummary` builds the end screen, `Flow/Guide` the first-minutes guide (ADR-020).
   `Persistence/SaveCatalog` lists the saves for the load page.
+- `Domains/DomainText`, `DomainCommands` and `DomainReadout` word domains, sites and Old Faiths,
+  take up a domain for the player (asking the host in a shared world) and build the Domains
+  panel; `Alerts/FaithAlerts` and `Diagnostics/FaithReadout` add their alerts and debug lines
+  (ADR-021). The HUD shows the god's domains and kept sites, and only the miracles it can cast:
+  the signature miracles of its domains follow the ninth, on Shift+1–3.
+- `Settings/GameSettings` is the player's settings file, forgiving where content is strict.
+  `Audio/SoundBank` and `Audio/MusicComposer` synthesize the sounds and music; `Audio/AudioDirector`
+  decides what the world sounds like. See [Sound and settings](#sound-and-settings).
 - `Population/*`: Tier 2 representative citizens, derived from `WorldState` and never saved:
   `TierSelector`, `RepresentativeRoster`, `CitizenRoutine` and `SettlementCrowd` (see
   [Settlement simulation and population tiers](#settlement-simulation-and-population-tiers)).
@@ -453,6 +484,14 @@ files and compiled assemblies and fails when either rule is broken.
   effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a
   glow, freed when done).
 - Settlement labels show the main god's share and take its colour once it holds the majority.
+- `Bootstrap/FaithController` (ADR-021) owns the Domains panel (`UI/DomainPanel`, G) and the holy
+  sites in the world (`Presentation/HolySites/`: an obelisk, a great tree, a pool or a ring of
+  stones round a crystal in the keeper's colour that flickers while the site is being taken), and
+  applies `--rank`, `--domains`, `--domains-panel` and `--focus=siteN`. `CreatureBody` draws each
+  species by its look in `divine_view.json`.
+- `Presentation/Audio/AudioPresenter` plays the sound (ADR-021), and `Bootstrap/SettingsApplier`
+  and `Bootstrap/Startup` load, apply and keep the settings; the menus have a settings page and
+  the new-world page a choice of Creature species.
 
 ## Frame and tick flow
 
@@ -541,6 +580,59 @@ flowchart LR
     Hist --> Section["WorldSection.History"]
 ```
 
+## Domains, holy sites and schisms
+
+ADR-021 records the decisions, and the Milestone 15 plan
+([.docs/milestone-15-polish-and-expansion.md](../.docs/milestone-15-polish-and-expansion.md)) the
+numbers.
+
+```mermaid
+flowchart LR
+    rank[Rank] -->|slots| choose[DomainAuthority]
+    choose --> domains[GodState.Domains]
+    domains -->|0.8 cost, signature miracles| caster[MiracleCaster]
+    domains -->|boons| boons[DomainSystem, combat, disasters, learning]
+    influence[InfluenceField] --> sites[HolySiteSystem]
+    creature[Creature presence] --> influence
+    sites -->|keeper: power, influence, boon| influence
+    sites -->|TookHolySite| ledger[Diplomacy ledger]
+    harm[Harmful miracle on loving followers] -->|BetrayalDoubt| doubt[Doubt]
+    hardship[Hardship] --> doubt
+    doubt -->|past Schism.Doubt| schism[Schisms: Old Faith]
+    schism -->|loved again| back[Returns to the god]
+    schism -->|otherwise| unbelief[Fades into unbelief]
+```
+
+- A domain is taken up through its authority, as a player's intent or by the AI (its
+  personality's preferred domains in order), and held for good.
+- Holy sites are found in the land from the regions and settlements when a world is made.
+  Influence decides who takes them: a Creature at a site adds its own, which is why AI gods send
+  theirs to claim sites and to hold their own.
+- An Old Faith sits outside the beliefs: `ComputeAdherenceChanges` leaves its share out of the
+  people who can be converted, and a Sanctuary leaves its god's followers out of those who can
+  fall away.
+
+## Sound and settings
+
+```mermaid
+flowchart LR
+    events[Events of a frame] --> director[AudioDirector.Cues]
+    world[World] --> mood[AudioDirector.Mood]
+    weather[Weather at the camera's focus] --> ambience[AudioDirector.Ambience]
+    bank[SoundBank and MusicComposer on a worker thread] --> streams[AudioStreamWav]
+    director --> players[Positional and news players]
+    mood --> music[Two music players crossfading]
+    ambience --> loops[Rain and wind loops]
+    settings[user://settings.json] --> applier[SettingsApplier: window, vsync, shadows, render scale, buses]
+```
+
+- Sounds of events play where they happen (`AudioStreamPlayer3D`, heard from far off at a
+  low volume); the player's news plays everywhere. The same kind of sound starts at most every
+  0.4 s.
+- The music holds a mood at least 20 s and crossfades over 3 s.
+- Settings apply at once from the menus' settings page; fewer citizens apply when the game next
+  starts, since the settlement presenters are built with the count.
+
 ## Multiplayer
 
 ADR-018 records the decisions, and the Milestone 12 plan
@@ -559,7 +651,7 @@ has the measured run.
   - gods at 4 Hz;
   - migration at 2 Hz;
   - settlements, weather and disasters at 1 Hz;
-  - whole Creatures and changed regions every 2 s;
+  - whole Creatures, changed regions, the history and the holy sites every 2 s;
   - diplomacy when a status, proposal or memory changes.
 
   Every event goes out as it is raised, and the list of players when it changes. After an intent

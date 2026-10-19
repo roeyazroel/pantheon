@@ -49,6 +49,11 @@ public sealed record LaunchOptions
         "history-panel",
         "speed",
         "pause-menu",
+        "species",
+        "rank",
+        "domains",
+        "domains-panel",
+        "settings-page",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -150,6 +155,24 @@ public sealed record LaunchOptions
     /// <summary>Whether the pause menu (Esc) is open from the start, for captures.</summary>
     public bool PauseMenu { get; init; }
 
+    /// <summary>The species of the player's Creature in a new world (ADR-021), or <c>null</c> for <c>gods.json</c>'s.</summary>
+    public string? Species { get; init; }
+
+    /// <summary>The rank the player's god starts at, a debug tool to try domains and great miracles (ADR-021).</summary>
+    public Domain.Gods.DivineRank? Rank { get; init; }
+
+    /// <summary>The domains the player's god takes up at the start, in order, as its rank allows (ADR-021).</summary>
+    public IReadOnlyList<Domain.Gods.GodDomain> Domains { get; init; } = [];
+
+    /// <summary>The holy site the camera looks at from the start (1 is the first), for captures (ADR-021).</summary>
+    public int? FocusSite { get; init; }
+
+    /// <summary>Whether the Domains panel (G) is open from the start, for captures.</summary>
+    public bool DomainsPanel { get; init; }
+
+    /// <summary>Whether the settings page is open from the start, for captures.</summary>
+    public bool SettingsPage { get; init; }
+
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
 
@@ -244,9 +267,14 @@ public sealed record LaunchOptions
                     return options with { FocusCreature = true };
                 }
 
+                if (value.Trim().StartsWith("site", StringComparison.OrdinalIgnoreCase) && TryParsePositiveInt(value.Trim()[4..], out var site))
+                {
+                    return options with { FocusSite = site };
+                }
+
                 return TryParsePositiveInt(value, out var focus)
                     ? options with { FocusSettlement = focus }
-                    : Warn(options, warnings, $"'--focus' needs a settlement number from 1 or 'creature', got '{value}'.");
+                    : Warn(options, warnings, $"'--focus' needs a settlement number from 1, 'creature' or a holy site such as site2, got '{value}'.");
             case "judge":
                 return value.Trim().ToLowerInvariant() switch
                 {
@@ -315,6 +343,18 @@ public sealed record LaunchOptions
                 return OnOff(value) is { } pause ? options with { PauseMenu = pause } : Warn(options, warnings, $"'--pause-menu' needs on or off, got '{value}'.");
             case "menu":
                 return OnOff(value) is { } menu ? options with { Menu = menu } : Warn(options, warnings, $"'--menu' needs on or off, got '{value}'.");
+            case "species":
+                return value.Trim().Length > 0 ? options with { Species = value.Trim() } : Warn(options, warnings, "'--species' needs a species' name.");
+            case "rank":
+                return Enum.TryParse<Domain.Gods.DivineRank>(value.Trim(), ignoreCase: true, out var rank) && Enum.IsDefined(rank) && !int.TryParse(value.Trim(), out _)
+                    ? options with { Rank = rank }
+                    : Warn(options, warnings, $"'--rank' needs a rank such as LesserGod or God, got '{value}'.");
+            case "domains":
+                return ParseDomains(value) is { } domains ? options with { Domains = domains } : Warn(options, warnings, $"'--domains' needs domains separated by commas, such as Storm,War, got '{value}'.");
+            case "domains-panel":
+                return OnOff(value) is { } panel ? options with { DomainsPanel = panel } : Warn(options, warnings, $"'--domains-panel' needs on or off, got '{value}'.");
+            case "settings-page":
+                return OnOff(value) is { } settings ? options with { SettingsPage = settings } : Warn(options, warnings, $"'--settings-page' needs on or off, got '{value}'.");
             case "guide":
                 return OnOff(value) is { } guide ? options with { Guide = guide } : Warn(options, warnings, $"'--guide' needs on or off, got '{value}'.");
             case "upnp":
@@ -349,6 +389,23 @@ public sealed record LaunchOptions
     {
         warnings.Add(warning);
         return options;
+    }
+
+    /// <summary>Domains separated by commas, each known; <c>null</c> when one is not.</summary>
+    private static List<Domain.Gods.GodDomain>? ParseDomains(string value)
+    {
+        var domains = new List<Domain.Gods.GodDomain>();
+        foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!Enum.TryParse<Domain.Gods.GodDomain>(part, ignoreCase: true, out var domain) || !Enum.IsDefined(domain) || int.TryParse(part, out _))
+            {
+                return null;
+            }
+
+            domains.Add(domain);
+        }
+
+        return domains.Count > 0 ? domains : null;
     }
 
     /// <summary>"on" or "off", in any case; <c>null</c> otherwise.</summary>

@@ -3,7 +3,7 @@ namespace Pantheon.Game.Hud;
 /// <summary>One button of the miracle bar.</summary>
 public sealed record MiracleSlot
 {
-    /// <summary>Number key that selects it (1–9), or 0 when it has none.</summary>
+    /// <summary>Key that selects it: 1–9, then 10, 11 and 12 for the keys 0, - and = (ADR-021); 0 when it has none.</summary>
     public required int Hotkey { get; init; }
 
     /// <summary>Miracle id.</summary>
@@ -15,7 +15,7 @@ public sealed record MiracleSlot
     /// <summary>Tooltip: description, base cost, radius, cooldown and requirements.</summary>
     public required string Tooltip { get; init; }
 
-    /// <summary>Cost at full influence.</summary>
+    /// <summary>Cost at full influence, less for a miracle of the god's own domains.</summary>
     public required float BaseCost { get; init; }
 
     /// <summary>Whether it is the selected miracle.</summary>

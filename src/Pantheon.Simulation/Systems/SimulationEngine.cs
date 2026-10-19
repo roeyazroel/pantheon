@@ -67,8 +67,8 @@ public sealed class SimulationEngine
     }
 
     /// <summary>
-    /// Creates the full game pipeline (ADR-011 to ADR-016): the weather step, the disaster step, the
-    /// settlement step, the belief step, the victory check, the diplomacy step and the migration step
+    /// Creates the full game pipeline (ADR-011 to ADR-021): the weather step, the disaster step, the
+    /// settlement step, the belief step, the domains' boons and the holy sites, the victory check, the diplomacy step and the migration step
     /// on their intervals, then every Creature every tick, then the AI gods' strategic evaluations
     /// (and refugee policies) on theirs. One ledger records
     /// every act gods notice of each other, and AI gods act through the same
@@ -84,34 +84,52 @@ public sealed class SimulationEngine
     /// <param name="disasterRules">Tuning of wildfires and earthquakes.</param>
     /// <param name="migrationRules">Tuning of migration.</param>
     /// <param name="historyRules">What is significant enough for the world's history; <c>null</c> to keep none (ADR-020).</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null)
+    /// <param name="domainRules">God domains (ADR-021); <c>null</c> for gods without domains.</param>
+    /// <param name="holySiteRules">Holy sites (ADR-021); <c>null</c> for a world without them.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null)
     {
         History = historyRules is null ? null : new History.HistoryRecorder(historyRules);
         var ledger = new DiplomacyLedger(diplomacyRules);
-        Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger);
+        Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger, domainRules);
         Authorities = new Authorities(
-            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules),
-            new CreatureAuthority(creatureRules, Creatures.Brain),
+            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules, creatureRules, domainRules, holySiteRules),
+            new CreatureAuthority(creatureRules, Creatures.Brain, domainRules),
             new DiplomacyAuthority(diplomacyRules, ledger),
-            new MigrationAuthority());
+            new MigrationAuthority(),
+            domainRules is null ? null : new Domains.DomainAuthority(domainRules));
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
         Gods = new GodAiSystem(
-            new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat),
+            new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains),
             godAiRules.EvaluationIntervalTicks,
             new RefugeeAdvisor(migrationRules, Authorities.Migration));
         Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger);
-        _systems =
-        [
+        HolySites = holySiteRules is null ? null : new HolySites.HolySiteSystem(holySiteRules, divineRules, creatureRules, ledger);
+        var systems = new List<ISimulationSystem>
+        {
             new IntervalSystem(new WeatherSystem(weatherRules, settlementRules), weatherRules.StepIntervalTicks),
-            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules), disasterRules.StepIntervalTicks),
+            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules), disasterRules.StepIntervalTicks),
             CreateSettlementStep(settlementRules),
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
+        };
+        if (domainRules is not null)
+        {
+            systems.Add(new IntervalSystem(new Domains.DomainSystem(domainRules, divineRules, settlementRules, weatherRules), divineRules.StepIntervalTicks));
+        }
+
+        if (HolySites is not null)
+        {
+            systems.Add(new IntervalSystem(HolySites, holySiteRules!.StepIntervalTicks));
+        }
+
+        systems.AddRange(
+        [
             new IntervalSystem(new VictorySystem(divineRules), divineRules.StepIntervalTicks),
             new IntervalSystem(new DiplomacySystem(diplomacyRules), diplomacyRules.StepIntervalTicks),
             new IntervalSystem(Migration, migrationRules.StepIntervalTicks),
             Creatures,
             Gods,
-        ];
+        ]);
+        _systems = [.. systems];
     }
 
     /// <summary>The authorities of the full pipeline, or <c>null</c> when the engine has none.</summary>
@@ -128,6 +146,9 @@ public sealed class SimulationEngine
 
     /// <summary>The world's chronicler (ADR-020), or <c>null</c> when the engine keeps no history.</summary>
     public History.HistoryRecorder? History { get; }
+
+    /// <summary>The holy sites' system (ADR-021), or <c>null</c> when the world has none.</summary>
+    public HolySites.HolySiteSystem? HolySites { get; }
 
     /// <summary>Creates an engine with an explicit system order.</summary>
     /// <param name="systems">Systems, in the order they run each tick.</param>

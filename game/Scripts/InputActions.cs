@@ -66,7 +66,7 @@ public static class InputActions
     /// <summary>Next faster simulation speed preset (]).</summary>
     public static readonly StringName SimSpeedUp = "sim_speed_up";
 
-    /// <summary>Select the miracles of the miracle bar (1–9), in order.</summary>
+    /// <summary>Select the miracles of the miracle bar (1–9), in order; with Shift, 1–3 select the domains' miracles after the ninth (ADR-021).</summary>
     public static readonly IReadOnlyList<StringName> MiracleSlots =
     [
         "miracle_1", "miracle_2", "miracle_3", "miracle_4", "miracle_5", "miracle_6", "miracle_7", "miracle_8", "miracle_9",
@@ -135,13 +135,16 @@ public static class InputActions
     /// <summary>Show or hide the world's history (H).</summary>
     public static readonly StringName ToggleHistory = "toggle_history";
 
+    /// <summary>Show or hide the Domains panel with the holy sites (G, ADR-021).</summary>
+    public static readonly StringName ToggleDomains = "toggle_domains";
+
     /// <summary>Every action, used to check the input map at start-up.</summary>
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugMigrate, DebugMeet, GameMenu, ToggleHistory,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugMigrate, DebugMeet, GameMenu, ToggleHistory, ToggleDomains,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

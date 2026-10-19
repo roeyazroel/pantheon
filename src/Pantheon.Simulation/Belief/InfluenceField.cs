@@ -8,8 +8,8 @@ namespace Pantheon.Simulation.Belief;
 /// <summary>
 /// A god's divine influence (spec §10, ADR-009). It is derived from the world, never stored: each
 /// settlement with followers is a source whose strength is its adherence times Faith and whose
-/// reach grows with the square root of its followers, and the god's Creature carries a source
-/// with it (ADR-010). Sources combine like independent chances,
+/// reach grows with the square root of its followers, the god's Creature carries a source
+/// with it (ADR-010) and every holy site it keeps is one (ADR-021). Sources combine like independent chances,
 /// <c>1 − Π(1 − influence)</c>, so overlapping sources add up but never pass 1. Several gods can
 /// hold influence over the same place.
 /// </summary>
@@ -60,6 +60,14 @@ public sealed class InfluenceField
             if (creature.GodId == godId && creature.Activity.Phase != Domain.Creatures.CreaturePhase.Banished && rules.CreatureInfluenceStrength > 0f)
             {
                 sources.Add(new InfluenceSource(creature.Position, Math.Min(1f, rules.CreatureInfluenceStrength), rules.CreatureInfluenceReach));
+            }
+        }
+
+        foreach (var site in world.HolySites)
+        {
+            if (site.KeeperGodId == godId && rules.HolySiteInfluenceStrength > 0f)
+            {
+                sources.Add(new InfluenceSource(site.Position, rules.HolySiteInfluenceStrength, rules.HolySiteInfluenceReach));
             }
         }
 

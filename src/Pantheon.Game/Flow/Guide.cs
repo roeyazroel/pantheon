@@ -10,6 +10,9 @@ public enum GuideStep
     /// <summary>Who the player is and what the HUD shows.</summary>
     Welcome,
 
+    /// <summary>Take up a first domain (ADR-021).</summary>
+    Domain,
+
     /// <summary>Cast a miracle on a village within the god's influence.</summary>
     Cast,
 
@@ -48,10 +51,11 @@ public sealed class Guide
     public string Text(string godName, string creatureName) => Step switch
     {
         GuideStep.Welcome => $"You are {godName}. The villages near your shrine believe in you: their worship is your Divine Power, shown at the top with your followers.",
+        GuideStep.Domain => "Choose what you are a god of: press G and take up a domain. Each changes how you play and opens a miracle of its own; you gain more as you rise.",
         GuideStep.Cast => "Pick a miracle with 1-9 and click a village inside your influence (O shows it). Food for the hungry, Heal for the sick, Lightning for those who doubt you.",
         GuideStep.Teach => $"{creatureName} is your Creature and decides for itself. When it does something you like, reward it (Z); punish what you dislike (X). It learns.",
         GuideStep.Diplomacy => "Three other gods want the same people. Press P to see what they think of you, and to ally, make peace or declare war.",
-        GuideStep.Win => "Hold 60% of all belief for ten minutes to win. H shows the world's history, F1 the debug view, and Esc pauses.",
+        GuideStep.Win => "Hold 60% of all belief for ten minutes to win. Holy sites (G) give power to the god whose influence holds them. H shows the world's history, and Esc pauses.",
         GuideStep.Done => string.Empty,
     };
 
@@ -80,6 +84,7 @@ public sealed class Guide
         ArgumentNullException.ThrowIfNull(events);
         var done = Step switch
         {
+            GuideStep.Domain => Exists(events, e => e is DomainChosen chosen && chosen.GodId == localGodId),
             GuideStep.Cast => Exists(events, e => e is MiracleCast cast && cast.GodId == localGodId),
             GuideStep.Teach => Exists(events, e => e is CreatureChanged { Change: CreatureChange.Rewarded or CreatureChange.Punished } judged && judged.CreatureId == creatureId),
             GuideStep.Diplomacy => diplomacyOpen,

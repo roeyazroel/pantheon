@@ -20,8 +20,11 @@ internal sealed partial class MenuScreen : CanvasLayer
     private VBoxContainer _column = null!;
     private ColorRect _veil = null!;
 
-    /// <summary>A new world with a seed.</summary>
-    public event Action<WorldSeed>? NewWorldChosen;
+    /// <summary>A new world with a seed, and the species of the player's Creature (ADR-021); <c>null</c> keeps the pantheon's.</summary>
+    public event Action<WorldSeed, string?>? NewWorldChosen;
+
+    /// <summary>The Creature species the new-world page offers, first the default, with what sets each apart.</summary>
+    public IReadOnlyList<(string Name, string Description)> Species { get; set; } = [];
 
     /// <summary>A save to load.</summary>
     public event Action<string>? LoadChosen;
@@ -43,6 +46,12 @@ internal sealed partial class MenuScreen : CanvasLayer
 
     /// <summary>Quit the game.</summary>
     public event Action? QuitChosen;
+
+    /// <summary>The player changed a setting (ADR-021).</summary>
+    public event Action<Pantheon.Game.Settings.GameSettings>? SettingsChanged;
+
+    /// <summary>The settings the settings page shows and changes.</summary>
+    public Pantheon.Game.Settings.GameSettings Settings { get; set; } = new();
 
     /// <summary>Whether a page is shown.</summary>
     public bool IsOpen => _panel.Visible;
@@ -77,7 +86,10 @@ internal sealed partial class MenuScreen : CanvasLayer
         _column.AddChild(UiKit.Text("Win the belief of the world's people. Raise your Creature, deal with three rival gods, and hold 60% of all belief for ten minutes.", 15, UiKit.Muted));
         var seedField = UiKit.Field(seed.Value.ToString(CultureInfo.InvariantCulture), "seed");
         _column.AddChild(UiKit.Row("World seed", seedField));
-        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(ParseSeed(seedField.Text, seed))));
+        var species = SpeciesChoice(out var about);
+        _column.AddChild(UiKit.Row("Your Creature", species));
+        _column.AddChild(about);
+        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(ParseSeed(seedField.Text, seed), Chosen(species))));
         if (latest is not null)
         {
             _column.AddChild(UiKit.Button($"Continue: {Describe(latest, year)}", () => LoadChosen?.Invoke(latest.Path)));
@@ -90,6 +102,7 @@ internal sealed partial class MenuScreen : CanvasLayer
 
         _column.AddChild(UiKit.Button("Host a shared world...", () => ShowHost(seed, () => ShowStart(seed, latest, saves, year))));
         _column.AddChild(UiKit.Button("Join a shared world...", () => ShowJoin(() => ShowStart(seed, latest, saves, year))));
+        _column.AddChild(UiKit.Button("Settings...", () => ShowSettings(() => ShowStart(seed, latest, saves, year))));
         _column.AddChild(UiKit.Button("Quit", () => QuitChosen?.Invoke()));
     }
 
@@ -113,8 +126,54 @@ internal sealed partial class MenuScreen : CanvasLayer
             _column.AddChild(UiKit.Text("In a shared world only the host saves and loads.", 14, UiKit.Muted));
         }
 
+        _column.AddChild(UiKit.Button("Settings...", () => ShowSettings(() => ShowPause(canSave, saves, year))));
         _column.AddChild(UiKit.Button("Main menu", () => MainMenuChosen?.Invoke()));
         _column.AddChild(UiKit.Button("Quit", () => QuitChosen?.Invoke()));
+    }
+
+    /// <summary>
+    /// The settings (spec §105, ADR-021): the window, frame pacing, shadows, render scale, citizens
+    /// shown and loudness. Each change applies at once and is kept for the next run.
+    /// </summary>
+    /// <param name="back">Where Back leads.</param>
+    public void ShowSettings(Action back)
+    {
+        Open(width: 520);
+        _column.AddChild(UiKit.Text("Settings", 24, UiKit.Gold));
+        Toggle("Fullscreen", Settings.Fullscreen, on => Settings with { Fullscreen = on });
+        Toggle("Vertical sync", Settings.VSync, on => Settings with { VSync = on });
+        Toggle("Shadows", Settings.Shadows, on => Settings with { Shadows = on });
+        Slide("Render scale", Settings.RenderScale, Pantheon.Game.Settings.GameSettings.MinRenderScale, value => Settings with { RenderScale = value });
+        Slide("Citizens shown", Settings.Citizens, Pantheon.Game.Settings.GameSettings.MinCitizens, value => Settings with { Citizens = value });
+        _column.AddChild(UiKit.Text("Fewer citizens take effect when the game next starts.", 13, UiKit.Muted));
+        Slide("Volume", Settings.MasterVolume, 0f, value => Settings with { MasterVolume = value });
+        Slide("Music", Settings.MusicVolume, 0f, value => Settings with { MusicVolume = value });
+        Slide("Effects", Settings.EffectsVolume, 0f, value => Settings with { EffectsVolume = value });
+        Slide("Wind and rain", Settings.AmbienceVolume, 0f, value => Settings with { AmbienceVolume = value });
+        _column.AddChild(UiKit.Button("Back", back));
+    }
+
+    /// <summary>A check box that changes a setting.</summary>
+    private void Toggle(string caption, bool value, Func<bool, Pantheon.Game.Settings.GameSettings> change)
+    {
+        var box = new CheckBox { ButtonPressed = value };
+        box.Toggled += on => Change(change(on));
+        _column.AddChild(UiKit.Row(caption, box));
+    }
+
+    /// <summary>A slider from a least value to 1 that changes a setting.</summary>
+    private void Slide(string caption, float value, float least, Func<float, Pantheon.Game.Settings.GameSettings> change)
+    {
+        var slider = new HSlider { MinValue = least, MaxValue = 1.0, Step = 0.05, Value = value, CustomMinimumSize = new Vector2(280, 28) };
+        slider.ValueChanged += changed => Change(change((float)changed));
+        _column.AddChild(UiKit.Row(caption, slider));
+    }
+
+    /// <summary>Keeps a changed setting and reports it.</summary>
+    private void Change(Pantheon.Game.Settings.GameSettings settings)
+    {
+        Settings = settings.Clamped();
+        SettingsChanged?.Invoke(Settings);
     }
 
     /// <summary>The end of a game: who won, and what the world remembers.</summary>
@@ -141,7 +200,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         }
 
         _column.AddChild(UiKit.Button("Keep watching", () => ResumeChosen?.Invoke()));
-        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(seed)));
+        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(seed, null)));
         _column.AddChild(UiKit.Button("Main menu", () => MainMenuChosen?.Invoke()));
     }
 
@@ -190,6 +249,26 @@ internal sealed partial class MenuScreen : CanvasLayer
         _column.AddChild(UiKit.Button("Join", () => JoinChosen?.Invoke(address.Text.Trim(), ParsePort(port.Text), name.Text.Trim(), god.Text.Trim().Length > 0 ? god.Text.Trim() : null)));
         _column.AddChild(UiKit.Button("Back", back));
     }
+
+    /// <summary>A choice of the player's Creature species, with a line saying what sets the chosen one apart.</summary>
+    private OptionButton SpeciesChoice(out Label about)
+    {
+        var choice = new OptionButton { CustomMinimumSize = new Vector2(260, 32) };
+        var description = UiKit.Text(string.Empty, 13, UiKit.Muted);
+        foreach (var (name, _) in Species)
+        {
+            choice.AddItem(name);
+        }
+
+        void Describe(long index) => description.Text = index >= 0 && index < Species.Count ? Species[(int)index].Description : string.Empty;
+        choice.ItemSelected += Describe;
+        Describe(0);
+        about = description;
+        return choice;
+    }
+
+    /// <summary>The species chosen, or <c>null</c> when there is no choice.</summary>
+    private string? Chosen(OptionButton choice) => choice.Selected >= 0 && choice.Selected < Species.Count ? Species[choice.Selected].Name : null;
 
     /// <summary>Shows the panel with an empty column.</summary>
     private void Open(float width = 460)

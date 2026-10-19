@@ -117,6 +117,9 @@ internal static class SettlementWorlds
                     Ruins = 0,
                     ShieldedUntilTick = 0,
                     Emigration = 0f,
+                    OldFaith = null,
+                    SanctuaryGodId = null,
+                    SanctuaryUntilTick = 0,
                     Beliefs = [],
                 },
             },
@@ -128,6 +131,7 @@ internal static class SettlementWorlds
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
             History = [],
+            HolySites = [],
         };
     }
 

@@ -31,6 +31,9 @@ public sealed record GodSlot
     /// <summary>Name of the god's Creature.</summary>
     public required string CreatureName { get; init; }
 
+    /// <summary>Species of the god's Creature, one of <c>creatures.json</c>'s.</summary>
+    public required string CreatureSpecies { get; init; }
+
     /// <summary>The AI's personality; <see cref="GodPersonality.None"/> for a player.</summary>
     public required GodPersonality Personality { get; init; }
 }

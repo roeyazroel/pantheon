@@ -53,6 +53,10 @@ public static class HistoryText
             HistoryKind.Resettled => Format("{0} is settled again", place),
             HistoryKind.Battle => Format("The Battle of {0} and {1}", creature, CreatureName(world, record.OtherCreatureId)),
             HistoryKind.Legend => Format(record.Count >= 10 ? "{0} becomes a legend" : "{0} grows mighty", creature),
+            HistoryKind.Domain => Format("{0} takes up {1}", god, Domains.DomainText.InSentence((GodDomain)record.Count)),
+            HistoryKind.Claimed => Format("{0} claims {1}", god, Domains.DomainText.SiteName(world, record.Count)),
+            HistoryKind.Schism => Format("The Schism of {0}", place),
+            HistoryKind.Reunion => Format("The Old Faith of {0} returns to {1}", place, god),
         };
     }
 
@@ -72,8 +76,10 @@ public static class HistoryText
             HistoryKind.Battle => Format("{0} prevailed", CreatureName(world, record.CreatureId)),
             HistoryKind.Betrayal => Format("broken by {0}", GodName(world, record.GodId)),
             HistoryKind.Legend => Format("level {0}", record.Count),
-            HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory
-                or HistoryKind.Rank or HistoryKind.Conversion or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled => string.Empty,
+            HistoryKind.Claimed => record.OtherGodId is null ? string.Empty : Format("taken from {0}", GodName(world, record.OtherGodId)),
+            HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
+            HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
+                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion => string.Empty,
         };
     }
 

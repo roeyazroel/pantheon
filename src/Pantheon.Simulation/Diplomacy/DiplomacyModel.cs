@@ -26,6 +26,7 @@ public static class DiplomacyModel
         DiplomaticAct.Sheltered => 0.4f,
         DiplomaticAct.TurnedAway => 0.3f,
         DiplomaticAct.CreatureDefeated => 0.4f,
+        DiplomaticAct.TookHolySite => 0.5f,
     };
 
     /// <summary>Whether an act is hostile.</summary>
@@ -33,7 +34,7 @@ public static class DiplomacyModel
     /// <returns><c>true</c> for acts that build a grudge.</returns>
     public static bool IsHostile(DiplomaticAct act) => act switch
     {
-        DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.CreatureDefeated => true,
+        DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.CreatureDefeated or DiplomaticAct.TookHolySite => true,
         DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace or DiplomaticAct.Sheltered => false,
     };
 

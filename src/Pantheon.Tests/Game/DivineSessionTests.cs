@@ -115,7 +115,7 @@ public sealed class DivineSessionTests
         Assert.StartsWith(_session.LocalGod!.Name + " - Minor Spirit", hud.GodLine, StringComparison.Ordinal);
         Assert.Equal("100", hud.PowerText);
         Assert.EndsWith("Lesser God at 100", hud.FollowersText, StringComparison.Ordinal);
-        Assert.Equal(TestContent.Shipped.Miracles.Miracles.Count, hud.Miracles.Count);
+        Assert.Equal(TestContent.Shipped.Miracles.Miracles.Count(m => !m.RequiresDomain), hud.Miracles.Count);
         Assert.Equal(Enumerable.Range(1, hud.Miracles.Count), hud.Miracles.Select(slot => slot.Hotkey));
         Assert.True(hud.Miracles[0].Selected);
         Assert.True(hud.Miracles.Single(slot => slot.MiracleId == "mass_healing").Locked);

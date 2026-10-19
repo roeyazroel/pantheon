@@ -22,14 +22,17 @@ public static class CreatureFounder
     /// <param name="name">Its name.</param>
     /// <param name="home">Its home settlement.</param>
     /// <param name="grid">Region grid, to place it on land.</param>
+    /// <param name="species">Its species' name; the first species when <c>null</c> or unknown (ADR-021).</param>
     /// <returns>The Creature.</returns>
-    public static CreatureState Found(CreatureRules rules, WorldSeed seed, GodState god, string name, SettlementState home, RegionGrid grid)
+    public static CreatureState Found(CreatureRules rules, WorldSeed seed, GodState god, string name, SettlementState home, RegionGrid grid, string? species = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(god);
         ArgumentNullException.ThrowIfNull(home);
+        var kind = CreatureModel.FindSpecies(rules, species) ?? rules.Species[0];
         var random = new SimulationRandom(SeedMixer.Derive(seed, "creature.personality." + god.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)));
         float Trait() => SimMath.Clamp01(0.5f + (rules.PersonalitySpread * ((2f * random.NextFloat()) - 1f)));
+        var (kindness, aggression, laziness, curiosity) = (Trait(), Trait(), Trait(), Trait());
         var preferences = new List<LearnedPreference>(rules.StartingPreferences.Count);
         foreach (var seedPreference in rules.StartingPreferences)
         {
@@ -42,7 +45,7 @@ public static class CreatureFounder
             Id = god.Id,
             GodId = god.Id,
             Name = name,
-            Species = rules.Species,
+            Species = kind.Name,
             Position = position,
             Heading = 0f,
             Level = 1,
@@ -51,7 +54,13 @@ public static class CreatureFounder
             Loyalty = rules.StartingLoyalty,
             Morality = 0f,
             Needs = new CreatureNeeds { Hunger = 0.2f, Fatigue = 0.1f, Boredom = 0.3f },
-            Personality = new CreaturePersonality { Kindness = Trait(), Aggression = Trait(), Laziness = Trait(), Curiosity = Trait() },
+            Personality = new CreaturePersonality
+            {
+                Kindness = SimMath.Clamp01(kindness + kind.Kindness),
+                Aggression = SimMath.Clamp01(aggression + kind.Aggression),
+                Laziness = laziness,
+                Curiosity = curiosity,
+            },
             Activity = new CreatureActivity
             {
                 Action = CreatureAction.Rest,

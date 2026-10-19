@@ -31,8 +31,9 @@ public static class WorldGenerator
     /// <param name="settings">Data-driven generation settings; they are stored in the state.</param>
     /// <param name="pantheon">The gods to create, each followed in its own home settlement; <c>null</c> for none.</param>
     /// <param name="creatureRules">Creature rules, so each god's Creature is born at its home; <c>null</c> for none.</param>
+    /// <param name="holySites">Holy site rules, so the world's sacred places are found (ADR-021); <c>null</c> for none.</param>
     /// <returns>The new world state and its terrain.</returns>
-    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings, PantheonSetup? pantheon, CreatureRules? creatureRules = null)
+    public static GeneratedWorld Generate(WorldSeed seed, WorldGenSettings settings, PantheonSetup? pantheon, CreatureRules? creatureRules = null, Domain.HolySites.HolySiteRules? holySites = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
 
@@ -57,7 +58,13 @@ public static class WorldGenerator
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
             History = [],
+            HolySites = [],
         };
+
+        if (holySites is not null)
+        {
+            HolySites.HolySitePlacer.EnsurePlaced(holySites, state);
+        }
 
         return new GeneratedWorld(state, terrain);
     }

@@ -178,6 +178,10 @@ public sealed class HistoryTests
         var guide = new Guide();
         Assert.True(guide.CanSkipStep);
         guide.Next();
+        Assert.Equal(GuideStep.Domain, guide.Step);
+        guide.Observe([new DomainChosen { Tick = 0, GodId = 2, Domain = Pantheon.Domain.Gods.GodDomain.Storm }], 1, 1, false);
+        Assert.Equal(GuideStep.Domain, guide.Step);
+        guide.Observe([new DomainChosen { Tick = 0, GodId = 1, Domain = Pantheon.Domain.Gods.GodDomain.Storm }], 1, 1, false);
         Assert.Equal(GuideStep.Cast, guide.Step);
         guide.Next();
         guide.Observe([new MiracleCast { Tick = 0, GodId = 2, MiracleId = "food", Target = default, Cost = 1f, AffectedSettlementIds = [], Deaths = 0 }], 1, 1, false);

@@ -85,8 +85,9 @@ public static class SessionCommands
     /// <summary>Replaces the current world with a newly generated one.</summary>
     /// <param name="session">Session to replace the world of.</param>
     /// <param name="seed">Seed of the new world.</param>
+    /// <param name="species">The species of the player's Creature, or <c>null</c> for <c>gods.json</c>'s (ADR-021).</param>
     /// <returns>Status line.</returns>
-    public static string NewWorld(GameSession session, WorldSeed seed)
+    public static string NewWorld(GameSession session, WorldSeed seed, string? species = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         if (HostOnly(session) is { } refusal)
@@ -94,7 +95,7 @@ public static class SessionCommands
             return refusal;
         }
 
-        session.StartNewWorld(seed);
+        session.StartNewWorld(seed, species);
         return Format("New world from seed {0}", seed);
     }
 

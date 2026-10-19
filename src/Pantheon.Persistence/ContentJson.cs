@@ -56,6 +56,12 @@ public static class ContentJson
     /// <summary>File name of the history rules.</summary>
     public const string HistoryFileName = "history.json";
 
+    /// <summary>File name of the god domains (ADR-021).</summary>
+    public const string DomainsFileName = "domains.json";
+
+    /// <summary>File name of the holy sites (ADR-021).</summary>
+    public const string HolySitesFileName = "holy_sites.json";
+
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
     /// <param name="json">File text.</param>
@@ -140,4 +146,14 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The history rules.</returns>
     public static Domain.History.HistoryRules ParseHistory(string json) => Parse<Domain.History.HistoryRules>(json, HistoryFileName);
+
+    /// <summary>Parses <c>domains.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The domain rules.</returns>
+    public static DomainRules ParseDomains(string json) => Parse<DomainRules>(json, DomainsFileName);
+
+    /// <summary>Parses <c>holy_sites.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The holy site rules.</returns>
+    public static Domain.HolySites.HolySiteRules ParseHolySites(string json) => Parse<Domain.HolySites.HolySiteRules>(json, HolySitesFileName);
 }

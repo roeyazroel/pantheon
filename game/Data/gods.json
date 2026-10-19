@@ -1,12 +1,13 @@
 {
   // The gods of a new world. The first god's home is the best site; each later god's home is the
   // settlement furthest from the homes already taken. AI gods need a Personality (god_ai.json).
+  // CreatureSpecies is one of creatures.json's species; a player may choose another for a new world.
   "StartingDivinePower": 100.0,
   "HomeBelief": { "Adherence": 0.6, "Faith": 0.5, "Love": 0.3, "Fear": 0.1, "Doubt": 0.15 },
   "Gods": [
-    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble", "Personality": "None" },
-    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "Personality": "Tyrant" },
-    { "Name": "Seren", "Controller": "Ai", "CreatureName": "Thistle", "Personality": "Guardian" },
-    { "Name": "Kaio", "Controller": "Ai", "CreatureName": "Quill", "Personality": "Trickster" }
+    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble", "CreatureSpecies": "Mossback", "Personality": "None" },
+    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "CreatureSpecies": "Stonehide", "Personality": "Tyrant" },
+    { "Name": "Seren", "Controller": "Ai", "CreatureName": "Thistle", "CreatureSpecies": "Lumen", "Personality": "Guardian" },
+    { "Name": "Kaio", "Controller": "Ai", "CreatureName": "Quill", "CreatureSpecies": "Swiftclaw", "Personality": "Trickster" }
   ]
 }

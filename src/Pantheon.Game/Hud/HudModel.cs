@@ -49,4 +49,10 @@ public sealed record HudModel
 
     /// <summary>The Creature's card, or <c>null</c> when the god has no Creature.</summary>
     public CreatureCard? Creature { get; init; }
+
+    /// <summary>The god's domains and holy sites (ADR-021), for example "Storm, Death - keeps the Sacred Peak of Elar".</summary>
+    public string? Domains { get; init; }
+
+    /// <summary>Whether the god may take up a domain now: the HUD invites it to (G).</summary>
+    public bool DomainToChoose { get; init; }
 }

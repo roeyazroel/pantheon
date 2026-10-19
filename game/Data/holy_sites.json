@@ -1,0 +1,26 @@
+{
+  // Holy sites (spec section 51, ADR-021): sacred places found when the world is made, one of each kind,
+  // at least MinimumSpacing regions apart. Every StepIntervalTicks ticks (1 s) the god with the strongest
+  // influence at a site, at least ClaimInfluence and ClaimLead ahead of every other god, works to take
+  // it; after ClaimSeconds without a break it keeps it. The keeper gains PowerPerStep each step, the
+  // site's own influence (divine_rules.json HolySiteInfluenceStrength and Reach) and its boon.
+  "StepIntervalTicks": 10,
+  "ClaimInfluence": 0.35,
+  "ClaimLead": 0.1,
+  "ClaimSeconds": 45.0,
+  "MinimumSpacing": 5,
+  "Sites": [
+    { "Kind": "SacredPeak", "Name": "The Sacred Peak",
+      "Description": "The island's highest summit. Its keeper's miracles cost a tenth less everywhere.",
+      "PowerPerStep": 1.5, "Boon": "CheaperMiracles", "BoonAmount": 0.1, "BoonReach": 0.0 },
+    { "Kind": "AncientGrove", "Name": "The Ancient Grove",
+      "Description": "The oldest wood. The land around it stays blessed for its keeper.",
+      "PowerPerStep": 1.5, "Boon": "Blessing", "BoonAmount": 0.5, "BoonReach": 350.0 },
+    { "Kind": "HolySpring", "Name": "The Holy Spring",
+      "Description": "Water that heals. Its keeper's villages near it are kept healthy.",
+      "PowerPerStep": 1.5, "Boon": "Healing", "BoonAmount": 0.02, "BoonReach": 450.0 },
+    { "Kind": "StandingStones", "Name": "The Standing Stones",
+      "Description": "A ring of stones older than any god. Its keeper's Creature grows wise near it.",
+      "PowerPerStep": 1.5, "Boon": "Wisdom", "BoonAmount": 0.5, "BoonReach": 400.0 }
+  ]
+}

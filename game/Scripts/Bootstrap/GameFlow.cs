@@ -52,12 +52,20 @@ internal sealed partial class GameFlow : Node
     /// <param name="diplomacy">The diplomacy panel, for the guide.</param>
     /// <param name="setStatus">Shows a status line.</param>
     /// <param name="options">Launch options: the start screen (by default when there are no options), the guide, and the history panel or pause menu open from the start.</param>
-    public void Setup(GameSession session, NetworkDriver network, DivineController divine, DiplomacyPanel diplomacy, Action<string> setStatus, Game.Launch.LaunchOptions options)
+    /// <param name="settings">The player's settings, for the settings page.</param>
+    public void Setup(GameSession session, NetworkDriver network, DivineController divine, DiplomacyPanel diplomacy, Action<string> setStatus, Game.Launch.LaunchOptions options, Game.Settings.GameSettings settings)
     {
         ArgumentNullException.ThrowIfNull(options);
         var showStart = options.Menu ?? (options.Seed is null && options.LoadPath is null && options.Join is null && options.HostPort is null && options.QuitAfterFrames is null);
         (_session, _network, _divine, _diplomacy, _setStatus) = (session, network, divine, diplomacy, setStatus);
         _menu = new MenuScreen { Name = "Menus" };
+        _menu.Species = session.Content.Creatures.Species.Select(s => (s.Name, s.Description)).ToList();
+        _menu.Settings = settings;
+        _menu.SettingsChanged += changed =>
+        {
+            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false);
+            Startup.SaveSettings(changed);
+        };
         _history = new HistoryPanel { Name = "History" };
         _guidePanel = new GuidePanel { Name = "Guide" };
         AddChild(_menu);
@@ -74,6 +82,10 @@ internal sealed partial class GameFlow : Node
         }
 
         CallDeferred(nameof(Open), showStart, options.HistoryPanel, options.PauseMenu);
+        if (options.SettingsPage)
+        {
+            CallDeferred(nameof(OpenSettings));
+        }
     }
 
     /// <summary>Opens what the options ask for, once the panels are ready.</summary>
@@ -90,6 +102,13 @@ internal sealed partial class GameFlow : Node
         }
 
         _history.PanelVisible = history;
+    }
+
+    /// <summary>Opens the settings page, for captures.</summary>
+    private void OpenSettings()
+    {
+        Pause();
+        _menu.ShowSettings(Resume);
     }
 
     /// <inheritdoc />
@@ -151,9 +170,9 @@ internal sealed partial class GameFlow : Node
     /// <summary>What each menu choice does.</summary>
     private void WireMenu()
     {
-        _menu.NewWorldChosen += seed =>
+        _menu.NewWorldChosen += (seed, species) =>
         {
-            _setStatus(SessionCommands.NewWorld(_session, seed));
+            _setStatus(SessionCommands.NewWorld(_session, seed, species));
             Begin(guide: true);
         };
         _menu.LoadChosen += path =>

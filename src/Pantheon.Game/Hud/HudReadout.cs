@@ -12,6 +12,9 @@ using Pantheon.Game.Divine;
 using Pantheon.Game.Weather;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Disasters;
+using Pantheon.Game.Domains;
+using Pantheon.Simulation.Domains;
+using Pantheon.Simulation.HolySites;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Settlements;
 using Pantheon.Simulation.Weather;
@@ -21,8 +24,8 @@ namespace Pantheon.Game.Hud;
 /// <summary>Builds the player HUD from the session (spec §57). Pure and culture-invariant.</summary>
 public static class HudReadout
 {
-    /// <summary>Most miracles that get a number key.</summary>
-    public const int MaxHotkeys = 9;
+    /// <summary>Most miracles that get a key: 1–9, 0, - and =.</summary>
+    public const int MaxHotkeys = 12;
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
@@ -50,17 +53,20 @@ public static class HudReadout
         var content = session.Content;
         var world = session.World;
         var stepsPerSecond = session.Scheduler.TicksPerSecond / content.DivineRules.StepIntervalTicks;
-        var income = GodStanding.ComputePowerPerStep(content.DivineRules, content.SettlementRules, world, god.Id) * stepsPerSecond;
+        var prosperity = DomainModel.Holds(god, Domain.Gods.GodDomain.Prosperity) ? 1f + content.Domains.Boons.ProsperityPower : 1f;
+        var income = GodStanding.ComputePowerPerStep(content.DivineRules, content.SettlementRules, world, god.Id) * prosperity * stepsPerSecond;
         var followers = GodStanding.CountFollowers(world, god.Id);
         var next = GodStanding.NextRank(content.DivineRules, god.Rank);
         var slots = new List<MiracleSlot>();
         MiracleDefinition? selected = null;
-        foreach (var miracle in content.Miracles.Miracles)
+        foreach (var miracle in AvailableMiracles(session))
         {
             if (string.Equals(miracle.Id, selectedMiracleId, StringComparison.Ordinal))
             {
                 selected = miracle;
             }
+
+            var cost = miracle.PowerCost * DomainModel.CostFactor(content.Domains, god, miracle) * HolySiteModel.CostFactor(content.HolySites, world, god.Id);
 
             slots.Add(new MiracleSlot
             {
@@ -68,11 +74,11 @@ public static class HudReadout
                 MiracleId = miracle.Id,
                 Name = miracle.Name,
                 Tooltip = DescribeMiracle(miracle, session.Scheduler.TicksPerSecond),
-                BaseCost = miracle.PowerCost,
+                BaseCost = cost,
                 Selected = selected == miracle,
                 Locked = god.Rank < miracle.MinimumRank,
                 CooldownSeconds = MiracleCaster.CooldownTicksLeft(world, god, miracle.Id) / session.Scheduler.TicksPerSecond,
-                Affordable = god.DivinePower >= miracle.PowerCost,
+                Affordable = god.DivinePower >= cost,
             });
         }
 
@@ -96,7 +102,31 @@ public static class HudReadout
             ContestFavoursPlayer = favours,
             Weather = DescribeWeather(session, god.Id, out var warning),
             WeatherWarning = warning,
+            Domains = DescribeDomains(session, god),
+            DomainToChoose = DomainModel.FreeSlots(content.Domains, god) > 0,
         };
+    }
+
+    /// <summary>The god's domains, an invitation to choose one when a slot is free, and the holy sites it keeps (ADR-021).</summary>
+    private static string DescribeDomains(GameSession session, Domain.Gods.GodState god)
+    {
+        var line = god.Domains.Count == 0 ? "No domain yet" : "Domains: " + DomainText.List(god);
+        if (DomainModel.FreeSlots(session.Content.Domains, god) > 0)
+        {
+            line += god.Domains.Count == 0 ? " - choose your first [G]" : " - choose another [G]";
+        }
+
+        var kept = session.World.HolySites.FindAll(site => site.KeeperGodId == god.Id).ConvertAll(DomainText.SiteName);
+        return kept.Count == 0 ? line : line + " - keeps " + string.Join(", ", kept);
+    }
+
+    /// <summary>The miracles of the local god's bar, in order: every miracle but the signatures of domains it does not hold (ADR-021).</summary>
+    /// <param name="session">Game session.</param>
+    /// <returns>The miracles; none without a god.</returns>
+    public static IReadOnlyList<MiracleDefinition> AvailableMiracles(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return session.LocalGod is not { } god ? [] : [.. session.Content.Miracles.Miracles.Where(m => !m.RequiresDomain || DomainModel.Holds(god, m.Domain))];
     }
 
     /// <summary>

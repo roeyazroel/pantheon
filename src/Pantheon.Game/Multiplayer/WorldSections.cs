@@ -44,6 +44,7 @@ public static class WorldSections
             WorldSection.Migration => Json(world.Migration),
             WorldSection.Diplomacy => Json(world.Diplomacy),
             WorldSection.History => Json(world.History),
+            WorldSection.HolySites => Json(world.HolySites),
             WorldSection.Regions => throw new ArgumentException("Regions are written as changes, by WriteRegions.", nameof(section)),
         };
     }
@@ -136,6 +137,9 @@ public static class WorldSections
                 return null;
             case WorldSection.History:
                 Replace(world.History, Read<List<Domain.History.HistoryRecord>>(data));
+                return null;
+            case WorldSection.HolySites:
+                Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
                 return null;
         }
 

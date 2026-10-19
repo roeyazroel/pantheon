@@ -73,7 +73,7 @@ internal sealed class DivineController
     /// <param name="slot">Zero-based slot of the miracle bar.</param>
     public void SelectSlot(int slot)
     {
-        var miracles = _session.Content.Miracles.Miracles;
+        var miracles = HudReadout.AvailableMiracles(_session);
         if (slot >= 0 && slot < miracles.Count)
         {
             Select(miracles[slot].Id == SelectedMiracle ? null : miracles[slot].Id);

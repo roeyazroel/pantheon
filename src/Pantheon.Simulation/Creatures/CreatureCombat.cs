@@ -31,15 +31,18 @@ public sealed class CreatureCombat
 
     private readonly CreatureRules _rules;
     private readonly IActRecorder? _ledger;
+    private readonly Domain.Gods.DomainRules? _domains;
 
     /// <summary>Creates the combat over validated rules.</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="ledger">Where a Creature's defeat is recorded for its god; <c>null</c> for none.</param>
-    public CreatureCombat(CreatureRules rules, IActRecorder? ledger = null)
+    /// <param name="domains">Domain rules, for the War domain's harder blows (ADR-021); <c>null</c> for none.</param>
+    public CreatureCombat(CreatureRules rules, IActRecorder? ledger = null, Domain.Gods.DomainRules? domains = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         _rules = rules;
         _ledger = ledger;
+        _domains = domains;
     }
 
     /// <summary>Plays one tick of every fight, each pair once, in id order.</summary>
@@ -89,8 +92,8 @@ public sealed class CreatureCombat
         var powerA = CreatureBonds.Power(_rules, a);
         var powerB = CreatureBonds.Power(_rules, b);
         var blow = combat.DamagePerSecond * SimulationTime.SecondsPerTick * 2f / (powerA + powerB);
-        b.Health = SimMath.Clamp01(b.Health - (blow * powerA * Jitter(random)));
-        a.Health = SimMath.Clamp01(a.Health - (blow * powerB * Jitter(random)));
+        b.Health = SimMath.Clamp01(b.Health - (blow * powerA * Fury(world, a) * Jitter(random) / CreatureModel.SpeciesOf(_rules, b).Toughness));
+        a.Health = SimMath.Clamp01(a.Health - (blow * powerB * Fury(world, b) * Jitter(random) / CreatureModel.SpeciesOf(_rules, a).Toughness));
         a.Activity.TicksLeft--;
         b.Activity.TicksLeft--;
         var aDown = a.Health <= combat.YieldHealth;
@@ -106,6 +109,10 @@ public sealed class CreatureCombat
             Draw(world, a, b, events);
         }
     }
+
+    /// <summary>How much harder a Creature strikes for its god's War domain (ADR-021): 1 without it.</summary>
+    private float Fury(WorldState world, CreatureState creature) =>
+        _domains is not null && Domains.DomainModel.Holds(world, creature.GodId, Domain.Gods.GodDomain.War) ? 1f + _domains.Boons.WarCreatureDamage : 1f;
 
     /// <summary>A share of usual strength for one blow: 1 ± <c>Jitter</c>.</summary>
     private float Jitter(SimulationRandom random) => 1f + (_rules.Combat.Jitter * ((2f * random.NextFloat()) - 1f));

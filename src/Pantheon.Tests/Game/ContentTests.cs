@@ -31,7 +31,7 @@ public sealed class ContentTests
         var content = TestContent.Shipped;
 
         Assert.Equal(10, content.DivineRules.StepIntervalTicks);
-        Assert.Equal(["food", "heal", "bless_crops", "lightning", "mass_healing", "rain", "fire", "shield", "earthquake"], content.Miracles.Miracles.Select(m => m.Id));
+        Assert.Equal(["food", "heal", "bless_crops", "lightning", "mass_healing", "rain", "fire", "shield", "earthquake"], content.Miracles.Miracles.Where(m => !m.RequiresDomain).Select(m => m.Id));
         Assert.NotEmpty(content.Pantheon.Gods);
         Assert.Equal(Pantheon.Domain.Gods.GodController.Human, content.Pantheon.Gods[0].Controller);
         Assert.All(content.Miracles.Miracles, m => Assert.Equal(m.Id, TestContent.DivineView.EffectFor(m.Id).MiracleId));
@@ -60,7 +60,7 @@ public sealed class ContentTests
     {
         var rules = TestContent.Shipped.Creatures;
 
-        Assert.Equal("Mossback", rules.Species);
+        Assert.Equal("Mossback", rules.Species[0].Name);
         Assert.Equal(Enum.GetValues<Pantheon.Domain.Creatures.CreatureAction>().Length - 1, rules.Actions.Count);
         Assert.Contains(rules.StartingPreferences, p => p.Action == Pantheon.Domain.Creatures.CreatureAction.Feed && p.Weight == 0.4f);
     }

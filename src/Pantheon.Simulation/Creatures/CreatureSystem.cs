@@ -40,7 +40,8 @@ public sealed class CreatureSystem : ISimulationSystem
     /// <param name="settlementRules">Settlement rules.</param>
     /// <param name="diplomacy">Diplomacy rules, so Creatures turn on their god's enemies and spare its allies; <c>null</c> to ignore diplomacy.</param>
     /// <param name="ledger">Where attacks on other gods' followers are recorded; <c>null</c> for none.</param>
-    public CreatureSystem(CreatureRules rules, DivineRules divine, SettlementRules settlementRules, DiplomacyRules? diplomacy = null, IActRecorder? ledger = null)
+    /// <param name="domains">Domain rules, for the War domain's harder blows (ADR-021); <c>null</c> for none.</param>
+    public CreatureSystem(CreatureRules rules, DivineRules divine, SettlementRules settlementRules, DiplomacyRules? diplomacy = null, IActRecorder? ledger = null, Domain.Gods.DomainRules? domains = null)
     {
         CreatureRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(divine);
@@ -49,7 +50,7 @@ public sealed class CreatureSystem : ISimulationSystem
         _brain = new CreatureBrain(rules, divine, settlementRules, diplomacy);
         _deeds = new CreatureDeeds(rules, divine, settlementRules, ledger);
         _meetings = new CreatureMeetings(rules, _brain);
-        _combat = new CreatureCombat(rules, ledger);
+        _combat = new CreatureCombat(rules, ledger, domains);
     }
 
     /// <summary>The brain, for previews and commands.</summary>
@@ -188,7 +189,7 @@ public sealed class CreatureSystem : ISimulationSystem
         var resting = activity.Action == CreatureAction.Rest && activity.Phase == CreaturePhase.Performing;
         if (creature.Needs.Hunger >= 1f)
         {
-            creature.Health -= _rules.StarvationHealthLossPerSecond * SimulationTime.SecondsPerTick;
+            creature.Health -= _rules.StarvationHealthLossPerSecond * SimulationTime.SecondsPerTick / CreatureModel.SpeciesOf(_rules, creature).Toughness;
         }
         else if (resting)
         {

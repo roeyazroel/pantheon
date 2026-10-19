@@ -257,6 +257,7 @@ public sealed class CreatureBehaviourTests
             CreatureId = creature.Id,
             RefugeePolicy = RefugeePolicy.Welcome,
             Cooldowns = [],
+            Domains = [],
         };
         creature.Needs.Hunger = 0f;
         creature.Needs.Fatigue = 0f;

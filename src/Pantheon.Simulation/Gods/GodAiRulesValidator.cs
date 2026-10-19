@@ -48,6 +48,16 @@ public static class GodAiRulesValidator
             errors.RequireShare(profile.Treachery, prefix + nameof(profile.Treachery));
             errors.RequireShare(profile.Grudge, prefix + nameof(profile.Grudge));
             errors.RequireDefined(profile.RefugeePolicy, prefix + nameof(profile.RefugeePolicy));
+            errors.RequireShare(profile.HolySites, prefix + nameof(profile.HolySites));
+            var domains = new HashSet<GodDomain>();
+            foreach (var domain in profile.Domains ?? [])
+            {
+                errors.RequireDefined(domain, prefix + nameof(profile.Domains));
+                if (!domains.Add(domain))
+                {
+                    errors.Add($"{prefix}Domains lists {domain} more than once.");
+                }
+            }
         }
 
         foreach (var personality in Enum.GetValues<GodPersonality>())

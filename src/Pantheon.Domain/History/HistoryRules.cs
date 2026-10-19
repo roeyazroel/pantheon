@@ -28,4 +28,7 @@ public sealed record HistoryRules
 
     /// <summary>Creature levels that are history when reached.</summary>
     public required IReadOnlyList<int> LegendLevels { get; init; }
+
+    /// <summary>People from which a schism is history (ADR-021).</summary>
+    public required int SchismPeople { get; init; }
 }

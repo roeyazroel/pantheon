@@ -61,16 +61,19 @@ public sealed class CreatureAuthority
 {
     private readonly CreatureRules _rules;
     private readonly CreatureBrain _brain;
+    private readonly Domain.Gods.DomainRules? _domains;
 
     /// <summary>Creates the authority.</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="brain">The brain, for commanded walks.</param>
-    public CreatureAuthority(CreatureRules rules, CreatureBrain brain)
+    /// <param name="domains">Domain rules, for the Knowledge domain's faster learning (ADR-021); <c>null</c> for none.</param>
+    public CreatureAuthority(CreatureRules rules, CreatureBrain brain, Domain.Gods.DomainRules? domains = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(brain);
         _rules = rules;
         _brain = brain;
+        _domains = domains;
     }
 
     /// <summary>Checks a command and carries it out when it is allowed.</summary>
@@ -152,7 +155,8 @@ public sealed class CreatureAuthority
             return new CreatureCommandResult(CreatureCommandRejection.NothingToJudge);
         }
 
-        var preference = CreatureModel.Learn(_rules, creature, judged.Situation, judged.Action, feedback);
+        var knowledge = _domains is not null && Domains.DomainModel.Holds(world, creature.GodId, Domain.Gods.GodDomain.Knowledge) ? _domains.Boons.KnowledgeLearning : 0f;
+        var preference = CreatureModel.Learn(_rules, creature, judged.Situation, judged.Action, feedback, knowledge);
         CreatureModel.Nudge(_rules, creature.Personality, judged.Action, feedback);
         var rewarded = feedback == CreatureFeedback.Rewarded;
         creature.Loyalty = SimMath.Clamp01(creature.Loyalty + (rewarded ? _rules.LoyaltyPerReward : -_rules.LoyaltyPerPunishment));

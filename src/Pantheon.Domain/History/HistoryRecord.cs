@@ -50,6 +50,18 @@ public enum HistoryKind
 
     /// <summary>A Creature reached a great level; <see cref="HistoryRecord.Count"/> is the level.</summary>
     Legend,
+
+    /// <summary>A god took up a domain; <see cref="HistoryRecord.Count"/> is the domain's number (ADR-021).</summary>
+    Domain,
+
+    /// <summary>A god took a holy site; <see cref="HistoryRecord.Count"/> is the site's id (ADR-021).</summary>
+    Claimed,
+
+    /// <summary>Followers of a god broke away to keep its Old Faith; <see cref="HistoryRecord.Count"/> is how many (ADR-021).</summary>
+    Schism,
+
+    /// <summary>The Old Faith of a settlement returned to its god (ADR-021).</summary>
+    Reunion,
 }
 
 /// <summary>
@@ -79,6 +91,6 @@ public sealed class HistoryRecord
     /// <summary>The other Creature (the loser of a battle), if any.</summary>
     public required int? OtherCreatureId { get; init; }
 
-    /// <summary>A number the kind gives meaning to: the dead, the houses, the people, the rank or the level; 0 otherwise.</summary>
+    /// <summary>A number the kind gives meaning to: the dead, the houses, the people, the rank, the level, the domain or the holy site; 0 otherwise.</summary>
     public required int Count { get; init; }
 }

@@ -21,6 +21,7 @@ public static class HistoryRulesValidator
         errors.RequireAtLeast(rules.HousesLost, 1, nameof(rules.HousesLost));
         errors.RequireAtLeast(rules.ExodusPeople, 1, nameof(rules.ExodusPeople));
         errors.RequireAtLeast(rules.ConversionPopulation, 0, nameof(rules.ConversionPopulation));
+        errors.RequireAtLeast(rules.SchismPeople, 0, nameof(rules.SchismPeople));
         if (rules.LegendLevels is null)
         {
             errors.Add("LegendLevels is required.");

@@ -34,13 +34,15 @@ public sealed class DisasterSystem : ISimulationSystem
     private readonly SettlementRules _settlementRules;
     private readonly DivineRules _divine;
     private readonly Wildfires _fires;
+    private readonly Domain.Gods.DomainRules? _domains;
 
     /// <summary>Creates the system with validated rules.</summary>
     /// <param name="rules">Disaster rules.</param>
     /// <param name="settlementRules">Settlement rules, for houses and farmland.</param>
     /// <param name="divine">Divine rules, for how disasters shake belief.</param>
     /// <param name="weather">Weather rules, for lightning, rain and wind.</param>
-    public DisasterSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather)
+    /// <param name="domains">Domain rules, for the houses the Protection domain saves (ADR-021); <c>null</c> for none.</param>
+    public DisasterSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, Domain.Gods.DomainRules? domains = null)
     {
         DisasterRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
@@ -50,6 +52,7 @@ public sealed class DisasterSystem : ISimulationSystem
         _settlementRules = settlementRules;
         _divine = divine;
         _fires = new Wildfires(rules, weather);
+        _domains = domains;
     }
 
     /// <inheritdoc />
@@ -102,7 +105,7 @@ public sealed class DisasterSystem : ISimulationSystem
                 }
 
                 var severity = shaking * share;
-                var houses = Destroy(settlement, random, _rules.QuakeHousingLoss * (1f - _rules.HouseQuakeResistance) * severity);
+                var houses = Destroy(settlement, random, _rules.QuakeHousingLoss * (1f - _rules.HouseQuakeResistance) * severity * Fragility(world, settlement));
                 var deaths = Kill(settlement, random, _rules.QuakeDeaths * severity);
                 settlement.Food *= 1f - (_rules.QuakeFoodLoss * severity);
                 settlement.ConstructionProgress *= 1f - severity;
@@ -129,7 +132,7 @@ public sealed class DisasterSystem : ISimulationSystem
             }
 
             var severity = fire * seconds;
-            var houses = Destroy(settlement, random, _rules.FireHousingLossPerSecond * (1f - _rules.HouseFireResistance) * severity);
+            var houses = Destroy(settlement, random, _rules.FireHousingLossPerSecond * (1f - _rules.HouseFireResistance) * severity * Fragility(world, settlement));
             var deaths = Kill(settlement, random, _rules.FireDeathsPerSecond * severity);
             settlement.Food *= Math.Max(0f, 1f - (_rules.FireFoodLossPerSecond * severity));
             Frighten(settlement, _rules.FireDreadPerSecond * severity);
@@ -140,6 +143,10 @@ public sealed class DisasterSystem : ISimulationSystem
     /// <summary>Share of disaster damage a settlement takes: all of it, or a little under a Shield.</summary>
     private float Protection(SettlementState settlement, long tick) =>
         DisasterModel.IsShielded(settlement, tick) ? _rules.ShieldedDamage : 1f;
+
+    /// <summary>Share of the houses a disaster would destroy that fall: fewer where the majority's god holds Protection (ADR-021).</summary>
+    private float Fragility(WorldState world, SettlementState settlement) =>
+        _domains is not null && Domains.DomainModel.MajorityHolds(world, settlement, Domain.Gods.GodDomain.Protection) ? 1f - _domains.Boons.ProtectionResilience : 1f;
 
     /// <summary>Destroys a Poisson draw of the settlement's houses; their housing is lost and they become ruins.</summary>
     /// <returns>Houses destroyed.</returns>

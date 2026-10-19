@@ -78,6 +78,9 @@ public static class DivineRulesValidator
 
         ValidateRanks(rules.Ranks, errors);
         errors.RequireAtLeast(rules.PantheonMaxGods, 2, nameof(rules.PantheonMaxGods));
+        errors.RequireShare(rules.HolySiteInfluenceStrength, nameof(rules.HolySiteInfluenceStrength));
+        errors.RequireNonNegative(rules.HolySiteInfluenceReach, nameof(rules.HolySiteInfluenceReach));
+        ValidateSchism(rules.Schism, errors);
         errors.ThrowIfAny("divine rules", nameof(rules));
     }
 
@@ -102,5 +105,34 @@ public static class DivineRulesValidator
             errors.RequireAtLeast(threshold.Followers, 1, $"Followers of {threshold.Rank}");
             previous = threshold;
         }
+    }
+
+    /// <summary>Schism thresholds and rates are shares; times and populations are not negative (ADR-021).</summary>
+    private static void ValidateSchism(SchismRules? schism, RuleErrors errors)
+    {
+        if (schism is null)
+        {
+            errors.Add("Schism is required.");
+            return;
+        }
+
+        foreach (var (value, name) in new[]
+        {
+            (schism.Doubt, nameof(schism.Doubt)),
+            (schism.MinimumAdherence, nameof(schism.MinimumAdherence)),
+            (schism.Share, nameof(schism.Share)),
+            (schism.DoubtRelief, nameof(schism.DoubtRelief)),
+            (schism.BetrayalDoubt, nameof(schism.BetrayalDoubt)),
+            (schism.ReconcileLove, nameof(schism.ReconcileLove)),
+            (schism.ReconcileDoubt, nameof(schism.ReconcileDoubt)),
+            (schism.ReturnPerStep, nameof(schism.ReturnPerStep)),
+            (schism.FadePerStep, nameof(schism.FadePerStep)),
+        })
+        {
+            errors.RequireShare(value, "Schism." + name);
+        }
+
+        errors.RequireAtLeast(schism.MinimumPopulation, 0, "Schism.MinimumPopulation");
+        errors.RequireNonNegative(schism.CooldownSeconds, "Schism.CooldownSeconds");
     }
 }

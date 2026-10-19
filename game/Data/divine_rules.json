@@ -92,5 +92,30 @@
     { "Rank": "GreaterGod", "Followers": 1200 },
     { "Rank": "HighGod", "Followers": 3000 },
     { "Rank": "Ascendant", "Followers": 8000 }
-  ]
+  ],
+
+  // Holy sites (ADR-021): a site gives the god that keeps it influence of this strength, fading to 0 at
+  // this many metres.
+  "HolySiteInfluenceStrength": 0.6,
+  "HolySiteInfluenceReach": 250.0,
+
+  // Schisms (spec section 34, ADR-021). Where the god most people follow is doubted past Doubt (and holds
+  // at least MinimumAdherence of a settlement of MinimumPopulation people), Share of its followers break
+  // away to keep its Old Faith, taking DoubtRelief of the doubt with them. A god that harms people who love
+  // it plants BetrayalDoubt x their Love of extra doubt. The Old Faith follows no god: it returns to the
+  // god at ReturnPerStep while the god is loved (ReconcileLove) and trusted (ReconcileDoubt) there, and
+  // fades into unbelief at FadePerStep otherwise. A settlement splits again only after CooldownSeconds.
+  "Schism": {
+    "Doubt": 0.6,
+    "MinimumAdherence": 0.4,
+    "MinimumPopulation": 20,
+    "Share": 0.4,
+    "DoubtRelief": 0.5,
+    "BetrayalDoubt": 0.5,
+    "ReconcileLove": 0.45,
+    "ReconcileDoubt": 0.35,
+    "ReturnPerStep": 0.02,
+    "FadePerStep": 0.004,
+    "CooldownSeconds": 600.0
+  }
 }

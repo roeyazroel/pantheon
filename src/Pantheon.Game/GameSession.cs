@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
@@ -96,11 +97,12 @@ public sealed class GameSession
     /// <summary>Generates a new world.</summary>
     /// <param name="content">Validated content.</param>
     /// <param name="seed">World seed.</param>
+    /// <param name="species">The species of the player's Creature; <c>gods.json</c>'s when <c>null</c> (ADR-021).</param>
     /// <returns>The new session.</returns>
-    public static GameSession CreateNew(GameContent content, WorldSeed seed)
+    public static GameSession CreateNew(GameContent content, WorldSeed seed, string? species = null)
     {
         ArgumentNullException.ThrowIfNull(content);
-        var generated = WorldGenerator.Generate(seed, content.WorldGen, content.Pantheon, content.Creatures);
+        var generated = Generate(content, seed, species);
         return new GameSession(content, generated.State, generated.Terrain);
     }
 
@@ -112,7 +114,7 @@ public sealed class GameSession
     public static GameSession Load(GameContent content, string path)
     {
         ArgumentNullException.ThrowIfNull(content);
-        var (world, terrain) = LoadWorld(path);
+        var (world, terrain) = LoadWorld(content, path);
         return new GameSession(content, world, terrain);
     }
 
@@ -213,11 +215,25 @@ public sealed class GameSession
 
     /// <summary>Replaces the current world with a newly generated one.</summary>
     /// <param name="seed">Seed of the new world.</param>
-    public void StartNewWorld(WorldSeed seed)
+    /// <param name="species">The species of the player's Creature; <c>gods.json</c>'s when <c>null</c> (ADR-021).</param>
+    public void StartNewWorld(WorldSeed seed, string? species = null)
     {
-        var generated = WorldGenerator.Generate(seed, Content.WorldGen, Content.Pantheon, Content.Creatures);
+        var generated = Generate(Content, seed, species);
         Replace(generated.State, generated.Terrain);
     }
+
+    /// <summary>Takes up a domain for a god, as its player's intent (spec §12, ADR-021); the authority checks it first.</summary>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="domain">The domain.</param>
+    /// <returns>Why it was refused, or <see cref="Simulation.Domains.DomainRejection.None"/>.</returns>
+    public Simulation.Domains.DomainRejection ChooseDomainAs(int godId, GodDomain domain) =>
+        Chronicled(() => _authorities.Domains?.Choose(World, godId, domain, godId, _queue.Pending) ?? Simulation.Domains.DomainRejection.UnknownDomain);
+
+    /// <summary>Whether the local player's god may take up a domain now.</summary>
+    /// <param name="domain">The domain.</param>
+    /// <returns>Why it would be refused, or <see cref="Simulation.Domains.DomainRejection.None"/>.</returns>
+    public Simulation.Domains.DomainRejection CheckDomain(GodDomain domain) =>
+        _authorities.Domains?.Check(World, LocalGodId ?? 0, domain, LocalGodId ?? 0) ?? Simulation.Domains.DomainRejection.UnknownDomain;
 
     /// <summary>Checks whether the local player's god may cast a miracle at a target, without casting it.</summary>
     /// <param name="miracleId">The miracle.</param>
@@ -378,14 +394,32 @@ public sealed class GameSession
     /// <exception cref="SaveFormatException">The save is invalid.</exception>
     public void LoadFrom(string path)
     {
-        var (world, terrain) = LoadWorld(path);
+        var (world, terrain) = LoadWorld(Content, path);
         Replace(world, terrain);
     }
 
-    /// <summary>Reads a save and regenerates its terrain from the saved seed and generation settings. Gods that connected players played go back to the AI.</summary>
-    private static (WorldState World, TerrainField Terrain) LoadWorld(string path)
+    /// <summary>A new world with the content's pantheon, the player's Creature of the chosen species, and its holy sites.</summary>
+    private static Simulation.WorldGen.GeneratedWorld Generate(GameContent content, WorldSeed seed, string? species)
+    {
+        var pantheon = content.Pantheon;
+        if (species is not null && content.Pantheon.Gods.ToList().FindIndex(g => g.Controller == GodController.Human) is var player and >= 0)
+        {
+            var gods = content.Pantheon.Gods.ToList();
+            gods[player] = gods[player] with { CreatureSpecies = species };
+            pantheon = content.Pantheon with { Gods = gods };
+        }
+
+        return WorldGenerator.Generate(seed, content.WorldGen, pantheon, content.Creatures, content.HolySites);
+    }
+
+    /// <summary>
+    /// Reads a save and regenerates its terrain from the saved seed and generation settings. Gods that
+    /// connected players played go back to the AI, and a world from before holy sites finds its own (ADR-021).
+    /// </summary>
+    private static (WorldState World, TerrainField Terrain) LoadWorld(GameContent content, string path)
     {
         var world = WorldSaveSerializer.LoadFromFile(path);
+        Simulation.HolySites.HolySitePlacer.EnsurePlaced(content.HolySites, world);
         foreach (var god in world.Gods)
         {
             if (god.Controller == GodController.Remote)

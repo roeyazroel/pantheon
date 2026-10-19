@@ -35,6 +35,7 @@ public partial class Hud : CanvasLayer
     private Label _followers = null!;
     private Label _hint = null!;
     private Label _overlayLegend = null!;
+    private Label _domains = null!;
     private Label _rivals = null!;
     private Label _contest = null!;
     private Label _weather = null!;
@@ -100,6 +101,9 @@ public partial class Hud : CanvasLayer
         SetText(_weather, model.Weather ?? string.Empty);
         _weather.Visible = model.Weather is not null;
         _weather.Modulate = model.WeatherWarning ? Warning : Ink;
+        SetText(_domains, model.Domains ?? string.Empty);
+        _domains.Visible = model.Domains is not null;
+        _domains.Modulate = model.DomainToChoose ? Gold : new Color(0.85f, 0.8f, 0.65f);
     }
 
     /// <summary>Shows the legend of the map overlay, or hides it.</summary>
@@ -156,6 +160,8 @@ public partial class Hud : CanvasLayer
         _power = AddLabel(row, 24, Gold);
         _income = AddLabel(row, 16, Valid);
         _followers = AddLabel(row, 16, Ink);
+        _domains = AddLabel(column, 14, Ink);
+        _domains.HorizontalAlignment = HorizontalAlignment.Center;
         _rivals = AddLabel(column, 14, new Color(0.95f, 0.7f, 0.65f));
         _rivals.HorizontalAlignment = HorizontalAlignment.Center;
         _contest = AddLabel(column, 15, Ink);
@@ -276,8 +282,17 @@ public partial class Hud : CanvasLayer
             _slotIds.Add(string.Empty);
         }
 
+        // Twelve buttons fit a 1280-pixel window only when narrower (ADR-021: domains add up to three).
+        // Sizes change only when the count does: a theme override set every frame relayouts the HUD.
+        var size = new Vector2(slots.Count > 9 ? 98 : 118, 52);
         for (var i = 0; i < slots.Count; i++)
         {
+            if (_slots[i].CustomMinimumSize != size)
+            {
+                _slots[i].CustomMinimumSize = size;
+                _slots[i].AddThemeFontSizeOverride("font_size", slots.Count > 9 ? 13 : 15);
+            }
+
             ShowSlot(_slots[i], slots[i]);
             _slotIds[i] = slots[i].Selected ? string.Empty : slots[i].MiracleId;
         }
@@ -289,9 +304,8 @@ public partial class Hud : CanvasLayer
         var state = slot.Locked ? "locked"
             : slot.CooldownSeconds > 0 ? string.Create(CultureInfo.InvariantCulture, $"{slot.CooldownSeconds:0.0} s")
             : string.Create(CultureInfo.InvariantCulture, $"{slot.BaseCost:0}");
-        var text = slot.Hotkey > 0
-            ? string.Create(CultureInfo.InvariantCulture, $"{slot.Hotkey}  {slot.Name}\n{state}")
-            : $"{slot.Name}\n{state}";
+        var key = slot.Hotkey > 9 ? "\u21e7" + (slot.Hotkey - 9).ToString(CultureInfo.InvariantCulture) : slot.Hotkey.ToString(CultureInfo.InvariantCulture);
+        var text = slot.Hotkey > 0 ? $"{key}  {slot.Name}\n{state}" : $"{slot.Name}\n{state}";
         SetText(button, text);
         if (button.TooltipText != slot.Tooltip)
         {

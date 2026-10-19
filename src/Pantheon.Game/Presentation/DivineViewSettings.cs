@@ -25,6 +25,9 @@ public sealed record DivineViewSettings
     /// <summary>The look of each miracle.</summary>
     public required IReadOnlyList<MiracleEffectView> Effects { get; init; }
 
+    /// <summary>The look of each Creature species (ADR-021).</summary>
+    public required IReadOnlyList<CreatureLook> CreatureLooks { get; init; }
+
     /// <summary>Parses and validates the divine view content file.</summary>
     /// <param name="json">Text of <c>divine_view.json</c>.</param>
     /// <returns>The validated settings.</returns>
@@ -45,7 +48,31 @@ public sealed record DivineViewSettings
             }
         }
 
+        foreach (var look in settings.CreatureLooks)
+        {
+            if (string.IsNullOrWhiteSpace(look.Species) || !(look.Width > 0f) || !(look.Height > 0f) || !(look.Horns >= 0f) || !(look.Glow is >= 0f and <= 1f))
+            {
+                throw new ContentFormatException($"{FileName}: the look of '{look.Species}' needs a species, a positive width and height, horns not below 0 and a glow from 0 to 1.");
+            }
+        }
+
         return settings;
+    }
+
+    /// <summary>The look of a species, or the first look when the file does not list it.</summary>
+    /// <param name="species">The species' name.</param>
+    /// <returns>The look.</returns>
+    public CreatureLook LookFor(string species)
+    {
+        foreach (var look in CreatureLooks)
+        {
+            if (string.Equals(look.Species, species, StringComparison.Ordinal))
+            {
+                return look;
+            }
+        }
+
+        return CreatureLooks.Count > 0 ? CreatureLooks[0] : CreatureLook.Default;
     }
 
     /// <summary>Colour of a god.</summary>
@@ -84,4 +111,45 @@ public sealed record MiracleEffectView
 
     /// <summary>How long the effect lasts, in seconds.</summary>
     public required float Seconds { get; init; }
+}
+
+/// <summary>The look of a Creature species (ADR-021): its colours and proportions.</summary>
+public sealed record CreatureLook
+{
+    /// <summary>The look of a Mossback, for content without looks.</summary>
+    public static readonly CreatureLook Default = new()
+    {
+        Species = "Mossback",
+        Hide = new RgbColor(0.42f, 0.36f, 0.27f),
+        Belly = new RgbColor(0.78f, 0.69f, 0.52f),
+        Tufts = new RgbColor(0.3f, 0.5f, 0.22f),
+        Width = 1f,
+        Height = 1f,
+        Horns = 1f,
+        Glow = 0f,
+    };
+
+    /// <summary>The species' name (<c>creatures.json</c>).</summary>
+    public required string Species { get; init; }
+
+    /// <summary>Colour of its hide.</summary>
+    public required RgbColor Hide { get; init; }
+
+    /// <summary>Colour of its belly and snout.</summary>
+    public required RgbColor Belly { get; init; }
+
+    /// <summary>Colour of the tufts on its back, tinted by its god.</summary>
+    public required RgbColor Tufts { get; init; }
+
+    /// <summary>Factor on its girth.</summary>
+    public required float Width { get; init; }
+
+    /// <summary>Factor on its height.</summary>
+    public required float Height { get; init; }
+
+    /// <summary>Factor on its horns' length; 0 for none.</summary>
+    public required float Horns { get; init; }
+
+    /// <summary>How much its hide glows (0..1).</summary>
+    public required float Glow { get; init; }
 }

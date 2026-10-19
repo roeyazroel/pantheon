@@ -12,6 +12,7 @@ using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Diplomacy;
+using Pantheon.Simulation.Domains;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Randomness;
 
@@ -31,6 +32,9 @@ public sealed class GodAi
     // An AI god sends its Creature against an enemy Creature only when it is at least this sure of it (power and health).
     private const float MatchConfidence = 0.8f;
 
+    // A Creature this close to a holy site is there already.
+    private const float ClaimDistance = 100f;
+
     private readonly GodAiRules _rules;
     private readonly DivineRules _divine;
     private readonly MiracleBook _book;
@@ -38,6 +42,8 @@ public sealed class GodAi
     private readonly CreatureAuthority? _creatures;
     private readonly CreatureRules? _creatureRules;
     private readonly GodDiplomat? _diplomat;
+    private readonly DomainAuthority? _domains;
+    private readonly MiracleValuer _valuer;
 
     /// <summary>Creates the AI over validated rules and the authorities it acts through.</summary>
     /// <param name="rules">AI rules.</param>
@@ -47,9 +53,11 @@ public sealed class GodAi
     /// <param name="creatures">The Creature authority, or <c>null</c> when there are no Creatures.</param>
     /// <param name="creatureRules">Creature rules, for what an action's kindness is.</param>
     /// <param name="diplomat">The diplomatic half of the AI, or <c>null</c> for no diplomacy.</param>
-    public GodAi(GodAiRules rules, DivineRules divine, MiracleBook book, MiracleCaster caster, CreatureAuthority? creatures, CreatureRules? creatureRules, GodDiplomat? diplomat = null)
+    /// <param name="domains">The domain authority, through which it takes up domains (ADR-021); <c>null</c> where gods have none.</param>
+    public GodAi(GodAiRules rules, DivineRules divine, MiracleBook book, MiracleCaster caster, CreatureAuthority? creatures, CreatureRules? creatureRules, GodDiplomat? diplomat = null, DomainAuthority? domains = null)
     {
         _diplomat = diplomat;
+        _domains = domains;
         GodAiRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(divine);
         ArgumentNullException.ThrowIfNull(book);
@@ -60,6 +68,7 @@ public sealed class GodAi
         _caster = caster;
         _creatures = creatures;
         _creatureRules = creatureRules;
+        _valuer = new MiracleValuer(rules, caster);
     }
 
     /// <summary>The profile of a personality.</summary>
@@ -118,6 +127,7 @@ public sealed class GodAi
 
         Execute(world, god, best, events);
         TeachCreature(world, god, events);
+        ChooseDomain(world, god, events);
         if (_diplomat is not null && ProfileOf(god.Personality) is { } profile)
         {
             _diplomat.Act(world, god, profile, events);
@@ -147,6 +157,45 @@ public sealed class GodAi
             case AiActionKind.SendCreature:
             case AiActionKind.Wait:
                 break;
+        }
+    }
+
+    /// <summary>The domain the god would take up next, if its rank leaves a slot free: its personality's next preference, or the first it lacks (ADR-021).</summary>
+    /// <param name="god">The god.</param>
+    /// <returns>The domain, or <c>null</c> when it has no free slot or nothing left to choose.</returns>
+    public GodDomain? NextDomain(GodState god)
+    {
+        ArgumentNullException.ThrowIfNull(god);
+        if (_domains is null || DomainModel.FreeSlots(_domains.Rules, god) <= 0)
+        {
+            return null;
+        }
+
+        foreach (var domain in ProfileOf(god.Personality)?.Domains ?? [])
+        {
+            if (!god.Domains.Contains(domain) && DomainModel.Find(_domains.Rules, domain) is not null)
+            {
+                return domain;
+            }
+        }
+
+        foreach (var definition in _domains.Rules.Domains)
+        {
+            if (!god.Domains.Contains(definition.Domain))
+            {
+                return definition.Domain;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Takes up the next domain when a slot is free.</summary>
+    private void ChooseDomain(WorldState world, GodState god, List<WorldEvent> events)
+    {
+        if (_domains is not null && NextDomain(god) is { } domain)
+        {
+            _domains.Choose(world, god.Id, domain, god.Id, events);
         }
     }
 
@@ -215,7 +264,7 @@ public sealed class GodAi
         var reasons = new List<string>();
         foreach (var reached in _caster.FindReached(world, miracle, settlement.Position))
         {
-            value += Value(world, god, profile, miracle, reached, reasons);
+            value += _valuer.Value(world, god, profile, miracle, reached, settlement.Position, reasons);
         }
 
         if (value <= 0f)
@@ -224,105 +273,8 @@ public sealed class GodAi
         }
 
         var utility = value * (1f - (profile.Thrift * check.Cost / Math.Max(1f, god.DivinePower)));
-        reasons.Add(Format("cost {0:0}", check.Cost));
+        reasons.Add(MiracleValuer.Format("cost {0:0}", check.Cost));
         candidates.Add(new AiCandidate(AiActionKind.CastMiracle, miracle.Id, settlement.Id, settlement.Position, value, check.Cost, utility, string.Join(", ", reasons)));
-    }
-
-    /// <summary>What a miracle is worth to the god in one settlement it reaches, by the god's goals.</summary>
-    private float Value(WorldState world, GodState god, GodProfile profile, MiracleDefinition miracle, SettlementState settlement, List<string> reasons)
-    {
-        var own = BeliefModel.Find(settlement, god.Id);
-        var mine = own?.Adherence ?? 0f;
-        var rivals = 0f;
-        var allies = 0f;
-        var rivalDoubt = 0f;
-        foreach (var belief in settlement.Beliefs)
-        {
-            if (belief.GodId == god.Id)
-            {
-                continue;
-            }
-
-            if (DiplomacyModel.AreAllied(world, god.Id, belief.GodId))
-            {
-                // An ally's followers are not to be courted or frightened.
-                allies += belief.Adherence;
-                continue;
-            }
-
-            var enmity = DiplomacyModel.AreAtWar(world, god.Id, belief.GodId) ? 1.5f : 1f;
-            rivals += belief.Adherence * enmity;
-            rivalDoubt = Math.Max(rivalDoubt, belief.Adherence > 0f ? belief.Doubt : 0f);
-        }
-
-        var free = Math.Max(0f, 1f - mine - rivals - allies);
-        var conditions = _caster.AssessConditions(world, settlement);
-        var size = Math.Min(MaxPopulationFactor, MathF.Sqrt(settlement.Population / _rules.ReferencePopulation));
-        var opportunity = 1f + (profile.Opportunism * Math.Max(conditions.Hardship, rivalDoubt));
-        var value = 0f;
-        foreach (var effect in miracle.Effects)
-        {
-            switch (effect.Kind)
-            {
-                case MiracleEffectKind.Rain:
-                    // Rain is worth calling only on parched land: every goal scales with how far the drought is past RainDrought.
-                    var drought = Math.Max(0f, conditions.WaterNeed - _rules.RainDrought) / (1f - _rules.RainDrought);
-                    value += Note(reasons, settlement, "protect", profile.Protect * mine * drought * size);
-                    value += Note(reasons, settlement, "defend", profile.Protect * mine * Math.Min(1f, 2f * rivals) * drought * size);
-                    value += Note(reasons, settlement, "convert", profile.Convert * (free + rivals) * drought * opportunity * size);
-                    break;
-                case MiracleEffectKind.AddFood:
-                case MiracleEffectKind.Heal:
-                    var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
-                    value += Note(reasons, settlement, "protect", profile.Protect * mine * need * size);
-                    value += Note(reasons, settlement, "defend", profile.Protect * mine * Math.Min(1f, 2f * rivals) * size);
-                    value += Note(reasons, settlement, "convert", profile.Convert * (free + rivals) * (0.3f + (0.7f * need)) * opportunity * size);
-                    break;
-                case MiracleEffectKind.Bless:
-                    value += Note(reasons, settlement, "bless", profile.Bless * (mine + (0.5f * (1f - mine))) * (0.4f + (0.6f * conditions.FoodNeed)) * size);
-                    break;
-                case MiracleEffectKind.Smite:
-                    // Striking a village also strikes its own followers there; it never strikes an ally's.
-                    if (allies <= 0.05f)
-                    {
-                        value += Note(reasons, settlement, "intimidate", profile.Intimidate * (rivals + (0.3f * free)) * opportunity * (1f - mine) * size);
-                    }
-
-                    break;
-                case MiracleEffectKind.Ignite:
-                case MiracleEffectKind.Quake:
-                    value += ValueDisaster(effect.Kind, reasons, world, settlement, profile, mine, rivals, free, allies, opportunity, size);
-                    break;
-                case MiracleEffectKind.Shield:
-                    value += Note(reasons, settlement, "shield", profile.Protect * mine * conditions.DangerNeed * size);
-                    break;
-            }
-        }
-
-        return value;
-    }
-
-    /// <summary>
-    /// What setting a village alight or shaking it is worth (ADR-014): fear among rivals' followers
-    /// (a fire only where the land will burn), less the harm to its own followers, which counts
-    /// against it. It never strikes an ally's village.
-    /// </summary>
-    private float ValueDisaster(MiracleEffectKind kind, List<string> reasons, WorldState world, SettlementState settlement, GodProfile profile, float mine, float rivals, float free, float allies, float opportunity, float size)
-    {
-        if (allies > 0.05f)
-        {
-            return 0f;
-        }
-
-        var reach = kind == MiracleEffectKind.Ignite ? _caster.FlammabilityAt(world, settlement) : 1f;
-        var fear = Note(reasons, settlement, "intimidate", profile.Intimidate * (rivals + (0.3f * free)) * opportunity * (1f - mine) * reach * size);
-        var harm = profile.Protect * mine * size;
-        if (harm > 0.01f)
-        {
-            reasons.Add(Format("harms own {0} -{1:0.00}", settlement.Name, harm));
-        }
-
-        return fear - harm;
     }
 
     /// <summary>Adds sending the Creature to the settlement the god courts most, if it is far from there.</summary>
@@ -352,10 +304,41 @@ public sealed class GodAi
         if (best is not null)
         {
             var value = profile.SendCreature * bestCourt;
-            candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, best.Id, best.Position, value, 0f, value, Format("court {0} {1:0.00}", best.Name, value)));
+            candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, best.Id, best.Position, value, 0f, value, MiracleValuer.Format("court {0} {1:0.00}", best.Name, value)));
         }
 
         AddConfrontCreature(candidates, world, god, profile, creature);
+        AddClaimHolySites(candidates, world, god, profile, creature);
+    }
+
+    /// <summary>
+    /// Adds sending the Creature to a holy site (ADR-021): its presence lends the god influence there,
+    /// to take a site it does not keep or to hold its own against a claimant. Nearer sites count for more.
+    /// </summary>
+    private static void AddClaimHolySites(List<AiCandidate> candidates, WorldState world, GodState god, GodProfile profile, CreatureState creature)
+    {
+        foreach (var site in world.HolySites)
+        {
+            var defending = site.KeeperGodId == god.Id;
+            if ((defending && site.ClaimantGodId is null) || (site.KeeperGodId is { } keeper && DiplomacyModel.AreAllied(world, god.Id, keeper)))
+            {
+                continue;
+            }
+
+            var dx = site.Position.X - creature.Position.X;
+            var dz = site.Position.Z - creature.Position.Z;
+            var distance = MathF.Sqrt((dx * dx) + (dz * dz));
+            if (distance <= ClaimDistance)
+            {
+                continue;
+            }
+
+            var value = profile.HolySites * (defending ? 1f : 0.7f) / (1f + (distance / 1000f));
+            if (value > 0f)
+            {
+                candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, null, site.Position, value, 0f, value, MiracleValuer.Format("{0} {1} {2:0.00}", defending ? "hold" : "claim", site.Name, value)));
+            }
+        }
     }
 
     /// <summary>
@@ -399,7 +382,7 @@ public sealed class GodAi
             var value = profile.SendCreature * ((profile.Protect * threat) + (0.5f * profile.Aggression)) * confidence;
             if (value > 0f)
             {
-                candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, null, enemy.Position, value, 0f, value, Format("confront {0} {1:0.00}", enemy.Name, value)));
+                candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, null, enemy.Position, value, 0f, value, MiracleValuer.Format("confront {0} {1:0.00}", enemy.Name, value)));
             }
         }
     }
@@ -408,17 +391,6 @@ public sealed class GodAi
     private bool IsFitToSend(CreatureState creature) =>
         _creatureRules is null
         || (creature.Health >= 0.6f && creature.Needs.Hunger < _creatureRules.HungryThreshold && creature.Needs.Fatigue < _creatureRules.TiredThreshold);
-
-    /// <summary>Records a factor when it counts.</summary>
-    private static float Note(List<string> reasons, SettlementState settlement, string goal, float value)
-    {
-        if (value > 0.005f)
-        {
-            reasons.Add(Format("{0} {1} {2:0.00}", goal, settlement.Name, value));
-        }
-
-        return value;
-    }
 
     /// <summary>The profile of a personality, if listed.</summary>
     private static GodProfile? FindProfile(IReadOnlyList<GodProfile> profiles, GodPersonality personality)
@@ -433,7 +405,4 @@ public sealed class GodAi
 
         return null;
     }
-
-    /// <summary>Invariant-culture string formatting.</summary>
-    private static string Format(string format, params object?[] args) => string.Format(CultureInfo.InvariantCulture, format, args);
 }

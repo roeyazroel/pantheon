@@ -166,7 +166,7 @@ public sealed class MultiplayerHost : IDisposable
                 statuses.Add(Format("{0} left; the AI plays {1} again", left.Name, GodName(left.GodId)));
                 _transport.Disconnect(peerId);
                 break;
-            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent when seated:
+            case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent or DomainIntent when seated:
                 Answer(peerId, seat!.GodId, message);
                 _replicator.Hurry();
                 break;
@@ -215,6 +215,7 @@ public sealed class MultiplayerHost : IDisposable
             CreatureIntent creature => (creature.RequestId, SessionCommands.CommandCreatureAs(_session, godId, creature.Kind, creature.Target)),
             DiplomacyIntent move => (move.RequestId, SessionCommands.CommandDiplomacyAs(_session, godId, move.OtherGodId, move.Kind)),
             RefugeeIntent policy => (policy.RequestId, MigrationCommands.SetPolicyAs(_session, godId, policy.Policy)),
+            DomainIntent domain => (domain.RequestId, Domains.DomainCommands.ChooseAs(_session, godId, domain.Domain)),
             _ => (0, new CommandOutcome(false, "The host does not know that command")),
         };
         Send(peerId, new Verdict(requestId, outcome.Accepted, outcome.Text));

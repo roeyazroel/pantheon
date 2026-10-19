@@ -167,7 +167,7 @@ public sealed class DisasterPresentationTests
     public void ShippedDisasterContent_Parses_AndBrokenRulesAreRejected()
     {
         Assert.Equal(10, TestContent.Shipped.Disasters.StepIntervalTicks);
-        Assert.Equal(["fire", "shield", "earthquake"], TestContent.Shipped.Miracles.Miracles.Skip(6).Select(m => m.Id));
+        Assert.Equal(["fire", "shield", "earthquake"], TestContent.Shipped.Miracles.Miracles.Skip(6).Take(3).Select(m => m.Id));
 
         var text = TestContent.ReadText(ContentJson.DisastersFileName).Replace("\"FullMagnitude\": 7.5", "\"FullMagnitude\": 4.0", StringComparison.Ordinal);
         var files = GameContentFiles.Read(name => name == ContentJson.DisastersFileName ? text : TestContent.ReadText(name));

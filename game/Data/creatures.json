@@ -2,7 +2,18 @@
   // Creatures (ADR-010). Rates are per simulated second; distances in metres. The Creature moves
   // every tick and decides at most every DecisionIntervalTicks ticks (2 ticks = 5 Hz at x1).
   "DecisionIntervalTicks": 2,
-  "Species": "Mossback",
+  // Species (ADR-021): their factors scale the rules below. Toughness divides the harm a Creature takes;
+  // Kindness and Aggression are added to the temperament it is born with. The first is the default.
+  "Species": [
+    { "Name": "Mossback", "Description": "A patient, moss-covered beast, steady in all things.",
+      "Toughness": 1.0, "Strength": 1.0, "Speed": 1.0, "Learning": 1.0, "Kindness": 0.0, "Aggression": 0.0 },
+    { "Name": "Stonehide", "Description": "Slow and massive, with a hide like granite: hard to hurt and strong, but slow to learn.",
+      "Toughness": 1.5, "Strength": 1.25, "Speed": 0.75, "Learning": 0.8, "Kindness": 0.05, "Aggression": 0.0 },
+    { "Name": "Swiftclaw", "Description": "Lean and quick to anger: it covers ground fast and strikes hard, but breaks easily.",
+      "Toughness": 0.8, "Strength": 1.1, "Speed": 1.4, "Learning": 1.0, "Kindness": -0.05, "Aggression": 0.15 },
+    { "Name": "Lumen", "Description": "A gentle, glowing beast that learns quickly from its god but is frail in a fight.",
+      "Toughness": 0.85, "Strength": 0.85, "Speed": 1.1, "Learning": 1.5, "Kindness": 0.15, "Aggression": -0.1 }
+  ],
   "BaseSpeed": 7.0,
   "SpeedPerLevel": 0.5,
   "BaseStrength": 1.0,

@@ -106,6 +106,18 @@ public sealed class HistoryRecorder
             case CreatureChanged { Change: CreatureChange.LevelledUp } grown when world.Creatures.Find(c => c.Id == grown.CreatureId) is { } creature && _rules.LegendLevels.Contains(creature.Level):
                 Add(world, HistoryKind.Legend, creature: creature.Id, god: creature.GodId, count: creature.Level);
                 break;
+            case DomainChosen domain:
+                Add(world, HistoryKind.Domain, god: domain.GodId, count: (int)domain.Domain);
+                break;
+            case HolySiteClaimed claim:
+                Add(world, HistoryKind.Claimed, god: claim.GodId, other: claim.PreviousGodId, count: claim.SiteId);
+                break;
+            case SchismStarted schism when schism.People >= _rules.SchismPeople:
+                Add(world, HistoryKind.Schism, god: schism.GodId, settlement: schism.SettlementId, count: schism.People);
+                break;
+            case SchismEnded { Reconciled: true } reunion:
+                Add(world, HistoryKind.Reunion, god: reunion.GodId, settlement: reunion.SettlementId);
+                break;
             default:
                 break;
         }

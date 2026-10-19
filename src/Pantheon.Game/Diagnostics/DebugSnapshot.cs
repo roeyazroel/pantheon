@@ -104,4 +104,7 @@ public sealed record DebugSnapshot
 
     /// <summary>Simulation tier and representative citizens of each settlement; settlements without a status read as Tier 1.</summary>
     public IReadOnlyList<CrowdStatus> Crowds { get; init; } = [];
+
+    /// <summary>Holy site rules, for the sites' claims (ADR-021); <c>null</c> hides the sites.</summary>
+    public Domain.HolySites.HolySiteRules? HolySiteRules { get; init; }
 }

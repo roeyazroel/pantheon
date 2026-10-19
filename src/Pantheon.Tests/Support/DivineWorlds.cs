@@ -82,6 +82,11 @@ internal static class DivineWorlds
             new RankThreshold { Rank = DivineRank.LesserGod, Followers = 100 },
             new RankThreshold { Rank = DivineRank.God, Followers = 400 },
         ],
+        HolySiteInfluenceStrength = 0.6f,
+        HolySiteInfluenceReach = 250f,
+
+        // No schisms and no betrayal doubt, so the Milestone 3 rule tests keep their numbers (ADR-021).
+        Schism = TestContent.Shipped.DivineRules.Schism with { MinimumPopulation = 1_000_000, BetrayalDoubt = 0f },
     };
 
     /// <summary>The shipped miracles.</summary>
@@ -132,6 +137,9 @@ internal static class DivineWorlds
                 Ruins = 0,
                 ShieldedUntilTick = 0,
                 Emigration = 0f,
+                OldFaith = null,
+                SanctuaryGodId = null,
+                SanctuaryUntilTick = 0,
                 Beliefs = [],
             });
         }
@@ -152,6 +160,7 @@ internal static class DivineWorlds
             Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
             History = [],
+            HolySites = [],
         };
     }
 
@@ -174,6 +183,7 @@ internal static class DivineWorlds
         CreatureId = null,
         RefugeePolicy = RefugeePolicy.Welcome,
         Cooldowns = [],
+        Domains = [],
     };
 
     /// <summary>Gives a settlement a belief in the god.</summary>
