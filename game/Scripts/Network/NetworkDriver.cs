@@ -54,7 +54,7 @@ internal sealed class NetworkDriver
         var deadline = Time.GetTicksMsec() + JoinTimeoutMilliseconds;
         while (client.Phase == ClientPhase.Connecting && Time.GetTicksMsec() < deadline)
         {
-            Show(client.Update());
+            Show(client.Update(0.02));
             OS.DelayMsec(20);
         }
 
@@ -99,7 +99,8 @@ internal sealed class NetworkDriver
 
     /// <summary>Handles the network for this frame.</summary>
     /// <param name="delta">Real seconds since the last frame.</param>
-    public void Update(double delta)
+    /// <param name="focus">Where the camera looks, which a joined player tells the host (spec §95's interest).</param>
+    public void Update(double delta, Domain.World.GroundPosition focus)
     {
         if (_host is not null)
         {
@@ -108,7 +109,8 @@ internal sealed class NetworkDriver
 
         if (_client is not null)
         {
-            Show(_client.Update());
+            Show(_client.Update(delta));
+            _client.SetFocus(focus);
         }
     }
 

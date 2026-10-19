@@ -44,6 +44,16 @@ public static class WorldSaveSerializer
         return JsonSerializer.Serialize(save, PantheonJson.SaveOptions);
     }
 
+    /// <summary>Serializes a world as compact save JSON, for sending it over the network (ADR-019); <see cref="Deserialize"/> reads it.</summary>
+    /// <param name="world">World to send.</param>
+    /// <returns>JSON without indentation whose first member is <c>SaveVersion</c>.</returns>
+    public static string SerializeCompact(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var save = new SaveGame { SaveVersion = CurrentSaveVersion, World = world };
+        return JsonSerializer.Serialize(save, PantheonJson.WireOptions);
+    }
+
     /// <summary>Parses save-file JSON back into a world.</summary>
     /// <param name="json">Save-file text.</param>
     /// <returns>The loaded world.</returns>

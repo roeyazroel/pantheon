@@ -13,23 +13,22 @@ using Pantheon.Persistence;
 namespace Pantheon.Game.Multiplayer;
 
 /// <summary>
-/// The host of a shared world (spec §67, §71, §73, ADR-018). Its session runs the only canonical
-/// simulation. A player who joins takes over a god the AI was playing; the host checks each of its
-/// intents with the same authorities as the host's own commands, as that god, and answers with a
-/// verdict. Players receive the world when they join and then every
-/// <see cref="SnapshotSeconds"/>, and every event as it happens. When a player leaves, the AI plays
-/// its god again.
+/// The host of a shared world (spec §67, §71, §73, ADR-018, ADR-019). Its session runs the only
+/// canonical simulation. A player who joins takes over a god the AI was playing; the host checks
+/// each of its intents with the same authorities as the host's own commands, as that god, and
+/// answers with a verdict. Players receive the whole world when they join, then each part of it at
+/// its own rate (<see cref="Replicator"/>), and every event as it happens. When a player leaves, the
+/// AI plays its god again; the god waits for the player to come back under the same name.
 /// </summary>
 public sealed class MultiplayerHost : IDisposable
 {
-    /// <summary>Real seconds between the world snapshots sent to players.</summary>
-    public const double SnapshotSeconds = 1.0;
-
     private readonly GameSession _session;
     private readonly INetworkTransport _transport;
     private readonly string _hostName;
     private readonly Dictionary<int, PlayerSeat> _seats = [];
-    private double _sinceSnapshot;
+    private readonly Dictionary<string, int> _departed = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Replicator _replicator = new();
+    private readonly TrafficMeter _traffic = new();
     private bool _closed;
 
     /// <summary>Starts hosting a session's world.</summary>
@@ -60,7 +59,10 @@ public sealed class MultiplayerHost : IDisposable
     /// <summary>Traffic so far.</summary>
     public TransportStats Stats => _transport.Stats;
 
-    /// <summary>Handles what arrived, sends the events raised since the last call, and a snapshot when it is due.</summary>
+    /// <summary>Traffic per second, smoothed.</summary>
+    public TrafficMeter Traffic => _traffic;
+
+    /// <summary>Handles what arrived, sends the events raised since the last call, and the parts of the world that are due.</summary>
     /// <param name="realDeltaSeconds">Real seconds since the previous call.</param>
     /// <returns>Status lines for the host: players joining and leaving, refusals.</returns>
     public IReadOnlyList<string> Update(double realDeltaSeconds)
@@ -82,13 +84,8 @@ public sealed class MultiplayerHost : IDisposable
             Broadcast(new EventBatch(_session.World.Tick, EventCodec.Wrap(events)));
         }
 
-        _sinceSnapshot += Math.Max(0.0, realDeltaSeconds);
-        if (_sinceSnapshot >= SnapshotSeconds && _seats.Count > 0)
-        {
-            _sinceSnapshot = 0.0;
-            Broadcast(CreateSnapshot());
-        }
-
+        Replicate(Math.Max(0.0, realDeltaSeconds));
+        _traffic.Update(_transport.Stats, realDeltaSeconds);
         return statuses;
     }
 
@@ -171,6 +168,10 @@ public sealed class MultiplayerHost : IDisposable
                 break;
             case CastIntent or CreatureIntent or DiplomacyIntent or RefugeeIntent when seated:
                 Answer(peerId, seat!.GodId, message);
+                _replicator.Hurry();
+                break;
+            case ViewFocus focus when seated:
+                _replicator.Focus(peerId, new Domain.World.GroundPosition(focus.X, focus.Z));
                 break;
             default:
                 break;
@@ -184,7 +185,9 @@ public sealed class MultiplayerHost : IDisposable
         var refusal = hello.ProtocolVersion != NetworkProtocol.Version ? Format("The host speaks protocol {0}, you speak {1}", NetworkProtocol.Version, hello.ProtocolVersion)
             : !string.Equals(hello.ContentFingerprint, _session.Content.Fingerprint, StringComparison.Ordinal) ? "Your game data differs from the host's"
             : null;
-        var god = refusal is null ? FreeGod(hello.WantedGod) : null;
+        // A player coming back under the same name gets its god again, if the AI still plays it.
+        var asked = hello.WantedGod ?? (_departed.TryGetValue(name, out var before) ? _session.World.Gods.Find(g => g.Id == before)?.Name : null);
+        var god = refusal is null ? FreeGod(asked) ?? (hello.WantedGod is null ? FreeGod(null) : null) : null;
         refusal ??= god is null ? (hello.WantedGod is { } wanted ? Format("{0} is not free", wanted) : "No god is free") : null;
         if (refusal is not null || god is null)
         {
@@ -195,8 +198,10 @@ public sealed class MultiplayerHost : IDisposable
 
         god.Controller = GodController.Remote;
         _seats[peerId] = new PlayerSeat(peerId, name, god.Id);
+        _departed.Remove(name);
         Send(peerId, new Welcome(peerId, god.Id));
         Send(peerId, CreateSnapshot());
+        _replicator.Add(peerId, _session.World);
         PublishPlayers();
         statuses.Add(Format("{0} joined and plays {1}", name, god.Name));
     }
@@ -215,11 +220,16 @@ public sealed class MultiplayerHost : IDisposable
         Send(peerId, new Verdict(requestId, outcome.Accepted, outcome.Text));
     }
 
-    /// <summary>The god a joining player gets: the one it asked for if the AI plays it, else the first the AI plays.</summary>
+    /// <summary>
+    /// The god a joining player gets: the one it asked for if the AI plays it; else the first the AI
+    /// plays that no departed player may come back for; else the first the AI plays.
+    /// </summary>
     private GodState? FreeGod(string? wanted)
     {
         var free = _session.World.Gods.Where(g => g.Controller == GodController.Ai).OrderBy(g => g.Id).ToList();
-        return wanted is null ? free.FirstOrDefault() : free.Find(g => string.Equals(g.Name, wanted.Trim(), StringComparison.OrdinalIgnoreCase));
+        return wanted is not null
+            ? free.Find(g => string.Equals(g.Name, wanted.Trim(), StringComparison.OrdinalIgnoreCase))
+            : free.Find(g => !_departed.ContainsValue(g.Id)) ?? free.FirstOrDefault();
     }
 
     /// <summary>Gives a player's god back to the AI and tells everyone; returns the seat, or <c>null</c> for an unseated peer.</summary>
@@ -230,6 +240,8 @@ public sealed class MultiplayerHost : IDisposable
             return null;
         }
 
+        _replicator.Remove(peerId);
+        _departed[seat.Name] = seat.GodId;
         if (_session.World.Gods.Find(g => g.Id == seat.GodId) is { Controller: GodController.Remote } god)
         {
             god.Controller = GodController.Ai;
@@ -262,7 +274,38 @@ public sealed class MultiplayerHost : IDisposable
 
         PublishPlayers();
         Broadcast(CreateSnapshot());
-        _sinceSnapshot = 0.0;
+        _replicator.SyncedAll(_session.World);
+    }
+
+    /// <summary>Sends each player the whole world or the parts of it that are due (ADR-019).</summary>
+    private void Replicate(double seconds)
+    {
+        if (_seats.Count == 0)
+        {
+            return;
+        }
+
+        var (snapshots, updates) = _replicator.Due(_session.World, seconds);
+        if (snapshots.Count > 0)
+        {
+            var packet = MessageCodec.Encode(CreateSnapshot());
+            foreach (var playerId in snapshots)
+            {
+                _transport.Send(playerId, packet, Delivery.Reliable);
+            }
+        }
+
+        // The same part goes to several players as one encoded packet.
+        var encoded = new Dictionary<(WorldSection, string), byte[]>();
+        foreach (var (playerId, update) in updates)
+        {
+            if (!encoded.TryGetValue((update.Section, update.Data), out var packet))
+            {
+                packet = encoded[(update.Section, update.Data)] = MessageCodec.Encode(update);
+            }
+
+            _transport.Send(playerId, packet, update.Section == WorldSection.CreatureMotion ? Delivery.Unreliable : Delivery.Reliable);
+        }
     }
 
     /// <summary>Tells the session and every player who plays which god.</summary>
@@ -291,7 +334,7 @@ public sealed class MultiplayerHost : IDisposable
 
     /// <summary>The whole world now, with the host's clock.</summary>
     private Snapshot CreateSnapshot() =>
-        new(_session.World.Tick, _session.Scheduler.TimeScale, _session.Scheduler.IsPaused, WorldSaveSerializer.Serialize(_session.World));
+        new(_session.World.Tick, _session.Scheduler.TimeScale, _session.Scheduler.IsPaused, WorldSaveSerializer.SerializeCompact(_session.World));
 
     /// <summary>Sends a message to every seated player.</summary>
     private void Broadcast(NetMessage message)

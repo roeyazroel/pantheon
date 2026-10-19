@@ -37,8 +37,9 @@ public sealed class MultiplayerPresentationTests
         var player = NetworkReadout.Describe(ana, "127.0.0.1:7777", ana.Session!);
 
         Assert.StartsWith("Network: hosting on port 7777, 1 of 3 players joined; sent ", host[0], StringComparison.Ordinal);
+        Assert.Contains(" KB/s), received ", host[0], StringComparison.Ordinal);
         Assert.Equal(["  Hostess plays Ilyra (host)", "  Ana plays Vael, round trip 0 ms"], host.Skip(1));
-        Assert.StartsWith("Network: joined 127.0.0.1:7777, host tick 0, sent 0 KB, received ", player[0], StringComparison.Ordinal);
+        Assert.StartsWith("Network: joined 127.0.0.1:7777, host tick 0, sent 0 KB (0.0 KB/s), received ", player[0], StringComparison.Ordinal);
         Assert.Equal(["  Hostess plays Ilyra (host)", "  Ana plays Vael (you)"], player.Skip(1));
     }
 

@@ -154,7 +154,7 @@ public sealed class MultiplayerSessionTests
         SessionCommands.CastMiracle(shared.Host, "food", home.Position);
         shared.Host.RunTicks(30);
         replica.RunTicks(30);
-        shared.Pass(MultiplayerHost.SnapshotSeconds, ana);
+        shared.Pass(Replicator.SnapshotSeconds, ana);
 
         Assert.Contains(replica.DrainEvents(), e => e is MiracleCast { GodId: 1 });
         Assert.Equal(shared.Host.World.Tick, ana.HostTick);
@@ -172,7 +172,7 @@ public sealed class MultiplayerSessionTests
         shared.Host.Scheduler.IsPaused = true;
 
         replica.RunTicks(600);
-        shared.Pass(MultiplayerHost.SnapshotSeconds, ana);
+        shared.Pass(Replicator.SnapshotSeconds, ana);
 
         Assert.Empty(replica.DrainEvents());
         Assert.Equal((4.0, true), (replica.Scheduler.TimeScale, replica.Scheduler.IsPaused));

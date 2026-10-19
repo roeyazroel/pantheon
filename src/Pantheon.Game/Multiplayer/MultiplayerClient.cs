@@ -27,19 +27,32 @@ public enum ClientPhase
 }
 
 /// <summary>
-/// A player connected to a host (spec §67, §73, ADR-018). It asks to join and, once the host has
-/// given it a god and the world, holds a replica <see cref="GameSession"/>. Its commands go to the
-/// host as intents, whose verdicts come back as status lines; the host's snapshots replace the
-/// replica's world and its events become the player's alerts and effects.
+/// A player connected to a host (spec §67, §73, ADR-018, ADR-019). It asks to join and, once the
+/// host has given it a god and the world, holds a replica <see cref="GameSession"/>. Its commands go
+/// to the host as intents, whose verdicts come back as status lines. The host's snapshots and
+/// section updates replace parts of the replica's world as they arrive, and its events become the
+/// player's alerts and effects. It tells the host where its camera looks.
 /// </summary>
 public sealed class MultiplayerClient : IDisposable
 {
+    /// <summary>Ticks the replica may run ahead of or behind the host before it takes the host's tick.</summary>
+    public const long TickSlack = 5;
+
+    /// <summary>Metres the view must move before the host is told again.</summary>
+    public const float FocusStep = 50f;
+
+    /// <summary>Real seconds after which the host is told the view again even if it has not moved.</summary>
+    public const double FocusSeconds = 2.0;
+
     private readonly GameContent _content;
     private readonly INetworkTransport _transport;
     private readonly string _playerName;
     private readonly string? _wantedGod;
     private readonly List<PlayerSeat> _seats = [];
+    private readonly TrafficMeter _traffic = new();
     private int _nextRequestId = 1;
+    private Domain.World.GroundPosition? _sentFocus;
+    private double _sinceFocus;
 
     /// <summary>Starts joining a host over a transport that is connecting to it.</summary>
     /// <param name="content">Validated content; the host refuses content that differs from its own.</param>
@@ -80,13 +93,22 @@ public sealed class MultiplayerClient : IDisposable
     /// <summary>Traffic so far.</summary>
     public TransportStats Stats => _transport.Stats;
 
+    /// <summary>Traffic per second, smoothed.</summary>
+    public TrafficMeter Traffic => _traffic;
+
+    /// <summary>Section updates received, by section, for the debug panel.</summary>
+    public IDictionary<WorldSection, int> SectionsReceived { get; } = new Dictionary<WorldSection, int>();
+
     /// <summary>The round trip to the host in milliseconds, if known.</summary>
     public float? RoundTripMilliseconds => _transport.RoundTripMilliseconds(NetworkProtocol.HostPeerId);
 
     /// <summary>Handles what arrived from the host.</summary>
+    /// <param name="realDeltaSeconds">Real seconds since the last call, for the traffic meter.</param>
     /// <returns>Status lines: verdicts, joining, players coming and going, the end of the session.</returns>
-    public IReadOnlyList<string> Update()
+    public IReadOnlyList<string> Update(double realDeltaSeconds = 0.0)
     {
+        _traffic.Update(_transport.Stats, realDeltaSeconds);
+        _sinceFocus += realDeltaSeconds;
         var statuses = new List<string>();
         foreach (var happened in _transport.Poll())
         {
@@ -124,6 +146,23 @@ public sealed class MultiplayerClient : IDisposable
 
         Send(create(_nextRequestId++));
         return "Asking the host...";
+    }
+
+    /// <summary>Tells the host where the camera looks, when it has moved far enough or a while has passed (spec §95's interest).</summary>
+    /// <param name="focus">The point the camera looks at.</param>
+    public void SetFocus(Domain.World.GroundPosition focus)
+    {
+        if (Phase != ClientPhase.Joined)
+        {
+            return;
+        }
+
+        var moved = _sentFocus is not { } sent || MathF.Sqrt(MathF.Pow(focus.X - sent.X, 2) + MathF.Pow(focus.Z - sent.Z, 2)) >= FocusStep;
+        if (moved || _sinceFocus >= FocusSeconds)
+        {
+            Send(new ViewFocus(focus.X, focus.Z));
+            (_sentFocus, _sinceFocus) = (focus, 0.0);
+        }
     }
 
     /// <summary>Leaves the session.</summary>
@@ -172,6 +211,9 @@ public sealed class MultiplayerClient : IDisposable
             case EventBatch batch:
                 Session?.ReceiveEvents(EventCodec.Unwrap(batch.Events));
                 break;
+            case SectionUpdate update:
+                TakeSection(update);
+                break;
             case PlayerList list:
                 TakePlayers(list, statuses);
                 break;
@@ -214,6 +256,27 @@ public sealed class MultiplayerClient : IDisposable
         }
 
         Session.ApplySnapshot(world, snapshot.TimeScale, snapshot.Paused);
+    }
+
+    /// <summary>
+    /// A part of the host's world replaces the replica's. The gods' part carries the host's tick: a
+    /// replica that drifted more than <see cref="TickSlack"/> from it takes it, so cooldowns and
+    /// clocks read as the host's.
+    /// </summary>
+    private void TakeSection(SectionUpdate update)
+    {
+        if (Session is not { } session || Phase != ClientPhase.Joined)
+        {
+            return;
+        }
+
+        var hostTick = WorldSections.Apply(session.World, update.Section, update.Data);
+        SectionsReceived[update.Section] = SectionsReceived.TryGetValue(update.Section, out var count) ? count + 1 : 1;
+        HostTick = Math.Max(HostTick, update.Tick);
+        if (hostTick is { } tick && Math.Abs(session.World.Tick - tick) > TickSlack)
+        {
+            session.World.Tick = tick;
+        }
     }
 
     /// <summary>Who plays which god now; players who came or went are announced.</summary>

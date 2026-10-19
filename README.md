@@ -77,6 +77,11 @@ faith dented, and its god holds a grudge.
 over the network and each takes over a god the AI was playing. The host's computer runs the only
 real world. Everything a joined player does goes to the host, which checks it and answers.
 
+**Milestone 13 (Multiplayer Simulation)** lets four players share a world. Each part of the world
+travels at its own pace: Creatures near your camera often, settlements and weather once a second,
+diplomacy when something happens. Your own miracles show their cost and effect as soon as the host
+agrees.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -147,7 +152,8 @@ covers:
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
 - multiplayer: the messages and their encoding, a host and its players over an in-memory network
-  (joining, gods, refusals, intents checked by the host, snapshots, events, leaving), and that only
+  (joining, gods, refusals, intents checked by the host, snapshots, events, leaving), each part of
+  the world reaching players at its own rate, four players, coming back to one's god, and that only
   the host saves, keeps the clock or uses the debug tools;
 - the HUD model, alerts, map overlays, the diplomacy panel, the weather's and disasters' looks and
   tools, migration's walkers, overlay and alerts, Creatures' bonds on the card, panel and debug
@@ -591,13 +597,15 @@ godot --path game -- --join=192.168.1.20 --name=Ana --god=Seren
   - The HUD names who plays the other gods: "Ilyra (Roey)".
 - **The host decides** the speed and pausing, and only the host saves, loads, starts a new world
   or uses the debug keys.
-- **Leaving.** When a player leaves, the AI takes its god back. When the host quits, the session
+- **Leaving.** When a player leaves, the AI takes its god back until the player returns under the
+  same name. When the host quits, the session
   ends for everyone and the host's world is saved to `user://saves/hosted.json`.
 - **Seeing it.** F1 shows who plays which god, the round trip to each and the traffic.
 
 To play over the internet, the host forwards UDP port 7777 on its router (or uses `--upnp=on`)
-and gives the others its public address. The whole world travels once a second (about 45 KB/s
-per player), which suits a home connection; Milestone 13 sends less.
+and gives the others its public address. Each part of the world travels at its own pace: Creatures
+near your camera five times a second, gods four times, settlements and weather once, diplomacy when
+something happens, and the whole world every 20 seconds. That is about 13 KB/s per player.
 
 ## Saves
 

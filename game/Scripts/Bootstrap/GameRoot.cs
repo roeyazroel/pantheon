@@ -144,7 +144,7 @@ public partial class GameRoot : Node3D
     /// <param name="delta">Frame time in seconds.</param>
     public override void _Process(double delta)
     {
-        _network.Update(delta);
+        _network.Update(delta, new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y));
         _session.Update(delta);
         _presenter.Sync(_session.World);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
@@ -433,7 +433,8 @@ public partial class GameRoot : Node3D
 
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
     private string DescribeWorld() =>
-        $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}";
+        $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}"
+        + string.Concat(_network.Lines(_session).Select(line => "\n" + line));
 
     /// <summary>Remembers a status line for the overlay and echoes it to the log.</summary>
     private void SetStatus(string message)

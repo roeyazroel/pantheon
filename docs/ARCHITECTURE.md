@@ -245,10 +245,11 @@ files and compiled assemblies and fails when either rule is broken.
 
 - `NetworkProtocol`: the protocol version, the default port (7777), the host's peer id and the
   most players.
-- `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`, `EventBatch`,
-  `PlayerList`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent`, `RefugeeIntent`),
+- `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
+  `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
+  `ViewFocus`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent`, `RefugeeIntent`),
   `Verdict` and `Goodbye`. `MessageCodec` writes them as JSON tagged with their type, gzipped from
-  1 KB; `EventCodec` carries any `WorldEvent` by its type name.
+  512 bytes; `EventCodec` carries any `WorldEvent` by its type name.
 - `Transport/INetworkTransport`: connect, receive, send reliably or not, disconnect, round trip.
   `LoopbackNetwork` is an in-memory host and players for headless tests; the client's
   `Network/EnetTransport` is Godot's ENet. See [Multiplayer](#multiplayer).
@@ -509,8 +510,19 @@ has the measured run.
 - **Intents** (§73): a player's commands travel to the host as intents without a god. The host
   carries each out as the player's god through the same authorities as its own commands, and
   answers with a `Verdict`. Saving, loading, the clock and the debug tools are the host's alone.
-- **Replication** (§95): the whole world when a player joins and every second after; every event
-  as it is raised; the list of players when it changes.
+- **Replication** (§95–96, ADR-019): the whole world when a player joins, for a new host world
+  and as a correction every 20 s. In between, `Replicator` sends each `WorldSection` at its own
+  rate when it changed:
+  - Creature motion at 5 Hz near the player's view (`ViewFocus`) and 1 Hz elsewhere;
+  - gods at 4 Hz;
+  - migration at 2 Hz;
+  - settlements, weather and disasters at 1 Hz;
+  - whole Creatures and changed regions every 2 s;
+  - diplomacy when a status, proposal or memory changes.
+
+  Every event goes out as it is raised, and the list of players when it changes. After an intent
+  the sections it can change go out with the verdict. `WorldSections` writes a section in compact
+  save JSON and applies it to a replica in place.
 - **Replicas**: a player's session runs the same simulation between snapshots, only to predict.
   It discards its own events and takes each snapshot as its world.
 - **Leaving** (§71): a departed player's god goes back to the AI; a host that quits tells its
@@ -532,7 +544,9 @@ flowchart LR
     PClient -- "Hello, intents, Goodbye" --> HServer
     HServer -- "Welcome, Verdict, Players" --> PClient
     Outbox -- "EventBatch" --> PClient
-    World -- "Snapshot every second" --> PClient
+    World --> Rep["Replicator<br/>(rates, interest, changes)"]
+    Rep -- "SectionUpdate by rate; Snapshot every 20 s" --> PClient
+    PClient -- "ViewFocus" --> Rep
 ```
 
 ## Settlement simulation and population tiers
@@ -1149,7 +1163,10 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   their presentation and tools, and the version 10 → 11 migration (against `save-v10.json`). Since
   Milestone 12 it covers the protocol and its codecs, the loopback transport, a host and its players
   over the loopback (joining, refusals, intents and verdicts, snapshots, events, leaving), and the
-  multiplayer launch options and readouts. The tests load the shipped `game/Data/*.json`; rule tests
+  multiplayer launch options and readouts. Since Milestone 13 it covers every world section's trip
+  into a replica, the sections' rates, change detection, interest, intents reaching players with
+  their verdicts, replicas staying with the host, four players, and players coming back to their
+  gods. The tests load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
   `WeatherWorlds.Rules`, `DisasterWorlds.Rules`, `MigrationWorlds.Rules`)
   so retuning the data does not change their meaning.

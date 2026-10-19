@@ -22,6 +22,8 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(RefugeeIntent), "Refugees")]
 [JsonDerivedType(typeof(Verdict), "Verdict")]
 [JsonDerivedType(typeof(Goodbye), "Goodbye")]
+[JsonDerivedType(typeof(SectionUpdate), "Section")]
+[JsonDerivedType(typeof(ViewFocus), "Focus")]
 public abstract record NetMessage;
 
 /// <summary>A player asks to join: the protocol version, a fingerprint of its game data, its name and, if it has one, the god it wants.</summary>
@@ -95,6 +97,48 @@ public sealed record RefugeeIntent(int RequestId, RefugeePolicy Policy) : NetMes
 /// <param name="Accepted">Whether the world changed.</param>
 /// <param name="Text">What happened, or why not, as the player's status line.</param>
 public sealed record Verdict(int RequestId, bool Accepted, string Text) : NetMessage;
+
+/// <summary>A part of the world the host sends on its own schedule (spec §95–96, ADR-019).</summary>
+public enum WorldSection
+{
+    /// <summary>The gods (Divine Power, rank, cooldowns, policies), with the world's tick, random state and winners: a medium rate.</summary>
+    Gods,
+
+    /// <summary>Where Creatures are and what they do now: the highest rate near the player, a lower one elsewhere.</summary>
+    CreatureMotion,
+
+    /// <summary>Every Creature whole (needs, personality, learning, memories, relations): a low rate.</summary>
+    Creatures,
+
+    /// <summary>The settlements (people, food, houses, beliefs): a low rate.</summary>
+    Settlements,
+
+    /// <summary>The regions' changing values (soil water, fire, scorch, blessing, vegetation, fertility) that changed: a low rate.</summary>
+    Regions,
+
+    /// <summary>The weather cells and spell: a low rate.</summary>
+    Weather,
+
+    /// <summary>Earthquakes under way: a low rate.</summary>
+    Disasters,
+
+    /// <summary>Migration groups on the road: a medium rate.</summary>
+    Migration,
+
+    /// <summary>Relations, stances and proposals between gods: sent when they change.</summary>
+    Diplomacy,
+}
+
+/// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>
+/// <param name="Tick">The host's tick.</param>
+/// <param name="Section">Which part.</param>
+/// <param name="Data">The part, as JSON in the save format.</param>
+public sealed record SectionUpdate(long Tick, WorldSection Section, string Data) : NetMessage;
+
+/// <summary>Where a player's camera looks, so the host sends what is near it more often (spec §95's interest management).</summary>
+/// <param name="X">World X in metres.</param>
+/// <param name="Z">World Z in metres.</param>
+public sealed record ViewFocus(float X, float Z) : NetMessage;
 
 /// <summary>A peer leaves the session: a player quitting, or the host ending it (spec §71).</summary>
 /// <param name="Reason">Why, in words.</param>

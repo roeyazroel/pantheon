@@ -16,5 +16,5 @@ public static class NetworkProtocol
     public const int MaxClients = 3;
 
     /// <summary>Encoded messages at least this long are compressed.</summary>
-    public const int CompressFromBytes = 1024;
+    public const int CompressFromBytes = 512;
 }

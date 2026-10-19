@@ -119,7 +119,8 @@ rule is followed by the conventions that meet it in this repository.
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
   others, and how yours would meet the nearest one, the weather's spell and cells, earthquakes and fires,
-  migration groups and refugee policies, a shared session's players, round trips and traffic, the
+  migration groups and refugee policies, a shared session's players, round trips, traffic per
+  second and the sections a player received, the
   selected settlement's economy, tier, water, dangers, pressure to leave and belief),
   the P diplomacy panel (status, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and

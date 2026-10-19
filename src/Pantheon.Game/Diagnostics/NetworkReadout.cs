@@ -22,7 +22,7 @@ public static class NetworkReadout
         var seats = host.Seats;
         var lines = new List<string>
         {
-            Format("Network: hosting on port {0}, {1} of {2} players joined; {3}", port, seats.Count - 1, NetworkProtocol.MaxClients, Traffic(host.Stats)),
+            Format("Network: hosting on port {0}, {1} of {2} players joined; {3}", port, seats.Count - 1, NetworkProtocol.MaxClients, Traffic(host.Stats, host.Traffic)),
         };
         lines.AddRange(seats.Select(seat => Format(
             "  {0} plays {1}{2}",
@@ -54,9 +54,14 @@ public static class NetworkReadout
                 },
                 address,
                 client.HostTick,
-                Traffic(client.Stats),
+                Traffic(client.Stats, client.Traffic),
                 client.RoundTripMilliseconds is { } rtt ? Format(", round trip {0:0} ms", rtt) : string.Empty),
         };
+        if (client.SectionsReceived.Count > 0)
+        {
+            lines.Add("  received: " + string.Join(", ", client.SectionsReceived.OrderBy(p => p.Key).Select(p => Format("{0} {1}", p.Key, p.Value))));
+        }
+
         lines.AddRange(client.Seats.Select(seat => Format(
             "  {0} plays {1}{2}",
             seat.Name,
@@ -65,8 +70,13 @@ public static class NetworkReadout
         return lines;
     }
 
-    /// <summary>Traffic so far, in kilobytes.</summary>
-    private static string Traffic(TransportStats stats) => Format("sent {0:0} KB, received {1:0} KB", stats.BytesSent / 1024.0, stats.BytesReceived / 1024.0);
+    /// <summary>Traffic so far and per second, in kilobytes.</summary>
+    private static string Traffic(TransportStats stats, TrafficMeter rate) => Format(
+        "sent {0:0} KB ({1:0.0} KB/s), received {2:0} KB ({3:0.0} KB/s)",
+        stats.BytesSent / 1024.0,
+        rate.SentPerSecond / 1024.0,
+        stats.BytesReceived / 1024.0,
+        rate.ReceivedPerSecond / 1024.0);
 
     /// <summary>Invariant-culture string formatting.</summary>
     private static string Format(string format, params object?[] args) => string.Format(CultureInfo.InvariantCulture, format, args);

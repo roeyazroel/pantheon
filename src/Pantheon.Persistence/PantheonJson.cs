@@ -17,12 +17,15 @@ public static class PantheonJson
     /// <summary>Options for hand-edited content files: like <see cref="SaveOptions"/>, but comments and trailing commas are allowed.</summary>
     public static JsonSerializerOptions ContentOptions { get; } = CreateOptions(allowComments: true);
 
+    /// <summary>Options for the network (ADR-019): like <see cref="SaveOptions"/>, but compact.</summary>
+    public static JsonSerializerOptions WireOptions { get; } = CreateOptions(allowComments: false, indented: false);
+
     /// <summary>Builds a read-only options instance.</summary>
-    private static JsonSerializerOptions CreateOptions(bool allowComments)
+    private static JsonSerializerOptions CreateOptions(bool allowComments, bool indented = true)
     {
         var options = new JsonSerializerOptions
         {
-            WriteIndented = true,
+            WriteIndented = indented,
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
             ReadCommentHandling = allowComments ? JsonCommentHandling.Skip : JsonCommentHandling.Disallow,
             AllowTrailingCommas = allowComments,
