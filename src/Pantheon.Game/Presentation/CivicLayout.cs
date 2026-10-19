@@ -43,13 +43,14 @@ public static class CivicLayout
     /// <summary>The posts of the walls: a ring <see cref="WallMargin"/> beyond the farthest house, with four gates, on the ground and never in water.</summary>
     /// <param name="site">The settlement's layout.</param>
     /// <param name="terrain">Terrain.</param>
+    /// <param name="spacing">Metres between two posts: <see cref="PostSpacing"/> for the walls' course, less for a palisade's stakes (ADR-052).</param>
     /// <returns>The posts' feet.</returns>
-    public static IReadOnlyList<Vector3> Walls(SettlementSite site, TerrainField terrain)
+    public static IReadOnlyList<Vector3> Walls(SettlementSite site, TerrainField terrain, float spacing = PostSpacing)
     {
         ArgumentNullException.ThrowIfNull(site);
         ArgumentNullException.ThrowIfNull(terrain);
         var radius = site.HouseDiscRadius + WallMargin;
-        var count = Math.Max(8, (int)MathF.Round(MathF.Tau * radius / PostSpacing));
+        var count = Math.Max(8, (int)MathF.Round(MathF.Tau * radius / spacing));
         var posts = new List<Vector3>(count);
         for (var i = 0; i < count; i++)
         {
@@ -71,6 +72,43 @@ public static class CivicLayout
         }
 
         return posts;
+    }
+
+    /// <summary>The watchtowers of the walls (ADR-052): one at each side of each of the four gates, on dry ground.</summary>
+    /// <param name="site">The settlement's layout.</param>
+    /// <param name="terrain">Terrain.</param>
+    /// <returns>The towers' feet.</returns>
+    public static IReadOnlyList<Vector3> Towers(SettlementSite site, TerrainField terrain)
+    {
+        ArgumentNullException.ThrowIfNull(site);
+        ArgumentNullException.ThrowIfNull(terrain);
+        var radius = site.HouseDiscRadius + WallMargin;
+        var towers = new List<Vector3>(8);
+        for (var gate = 0; gate < 4; gate++)
+        {
+            foreach (var side in new[] { -1f, 1f })
+            {
+                var angle = ((gate / 4f) + (side * (GateShare + 0.015f))) * MathF.Tau;
+                var (x, z) = (site.Center.X + (MathF.Cos(angle) * radius), site.Center.Z + (MathF.Sin(angle) * radius));
+                var height = terrain.SampleHeight(x, z);
+                if (height >= 0f && !terrain.IsUnderFreshWater(x, z))
+                {
+                    towers.Add(new Vector3(x, height, z));
+                }
+            }
+        }
+
+        return towers;
+    }
+
+    /// <summary>The way a point on the walls' ring runs: the turn of a length of wall there, along the ring.</summary>
+    /// <param name="site">The settlement's layout.</param>
+    /// <param name="post">A point on the ring.</param>
+    /// <returns>The yaw that lays a length of wall's X axis along the ring.</returns>
+    public static float AlongRing(SettlementSite site, Vector3 post)
+    {
+        ArgumentNullException.ThrowIfNull(site);
+        return MathF.Atan2(post.X - site.Center.X, post.Z - site.Center.Z);
     }
 
     private const ulong TempleSalt = 31;

@@ -768,10 +768,15 @@ keep it in 0..1. A missing,
     (depth in the vertex colour; floods are muddy).
   - `Settlements/SettlementPresenter`: one `SettlementView` per settlement with the shrine and
     the name/population label, plus:
-    - `SiteView`: the houses (one MultiMesh per hut part) and the fields (crop rows tinted
-      through instance colours), rewritten only when their placements change;
-    - `ConstructionSiteView`: the house being built, as scaffold poles, a timber pile, walls
-      that rise during the first 70% of the work and a roof during the rest;
+    - `SiteView`: the houses in the village's look (ADR-052): one MultiMesh of the style's house
+      from `Buildings/BuildingAssets`, each house's walls in its colour and its roof and patterns
+      in its custom data, in its own shade; and the fields (crop rows tinted through instance
+      colours). Rewritten only when the placements or the look change;
+    - `ConstructionSiteView`: the house being built, as scaffold poles, a timber pile and the
+      village's house rising from the ground with the work (the building shader's `built`);
+    - `CivicView`: the temple in the style of its god's motif under the god's colour, and the
+      walls as a palisade of stakes with timber towers by the gates, or crenellated stone with
+      stone towers;
     - `CitizenView`: the settlement's Tier 2 representatives as people (ADR-049), in one
       MultiMesh of the person figure (`People/PersonAssets`, the simpler figure beyond
       `DetailDistance`). Each instance carries its clothes and skin tone in its colour and its
@@ -1426,6 +1431,14 @@ running for every settlement either way.
   runs with the game but never faster than `PaceCap` times real time, and stops when paused, so
   people keep a human pace at any game speed. It is never saved, and `VillagerCommands.Pick`
   poses the figures by it, as the client draws them.
+- `VillageArchitecture` (ADR-052) gives a village its look: the style its land builds in
+  (`StyleOf`: adobe, stilt houses, stone cottages, timber longhouses, round huts), longhouses and
+  an upper storey as it grows, colours from `Architecture` in `settlement_view.json`, and its
+  god's colours where its style (ADR-042) is strongly felt. `HouseMesh` and `CivicMesh` build the
+  houses, temples, stakes, stone walls and towers with `MeshBuilder`, tagging each vertex with its
+  `BuildingSlot`; `CivicLayout.Towers` places the towers by the gates. `Shaders/building.gdshader`
+  paints each slot with a pattern worked out in the building's own space (daub, planks, coursed
+  stone, thatch, slate, timber grain) and hides what is not yet built.
 - `PersonLooks` gives each person their skin, hair, clothes (by work), height and headwear (a
   straw hat, a scarf) and a dress from `PresentationHash`; prophets and elders wear a robe of their
   god's colour and carry a staff. `PersonMotions` maps what a figure does to a motion (sitting,

@@ -67,6 +67,7 @@ silently:
 | [ADR-049](ADR-049-people-that-look-and-move-like-people.md) | People that look and move like people | Accepted |
 | [ADR-050](ADR-050-world-streaming.md) | World streaming | Accepted |
 | [ADR-051](ADR-051-ground-textures-and-light.md) | Ground textures and light | Accepted |
+| [ADR-052](ADR-052-village-architecture.md) | Village architecture | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

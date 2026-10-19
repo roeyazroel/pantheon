@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Godot;
+using Pantheon.Client.Presentation.Buildings;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Population;
@@ -31,6 +32,7 @@ internal sealed class SettlementView
     private readonly SettlementLayoutSettings _layout;
     private readonly SiteView _siteView;
     private readonly CivicView _civicView;
+    private readonly BuildingAssets _buildings;
     private readonly StyleView _styleView;
     private readonly StyleSettings _style;
     private readonly SettlementCrowd _crowd;
@@ -61,8 +63,9 @@ internal sealed class SettlementView
         AddPart(root, "ShrineBase", assets.ShrineBase, center + SettlementAssets.ShrineBaseOffset);
         AddPart(root, "ShrinePillar", assets.ShrinePillar, center + SettlementAssets.ShrinePillarOffset);
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
-        _siteView = new SiteView(root, assets, _layout);
-        _civicView = new CivicView(root, assets);
+        _buildings = BuildingAssets.For(settings.Architecture);
+        _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id);
+        _civicView = new CivicView(root, _buildings);
         _style = settings.Style;
         _styleView = new StyleView(root, _style);
         _crowd = new SettlementCrowd(seed, settlement.Id, settings);
@@ -91,11 +94,15 @@ internal sealed class SettlementView
             fell.AddRange(DebrisLayout.Fallen(before, Site));
         }
 
-        var temple = settlement.Society.Buildings.Find(b => b.Kind == Domain.Society.BuildingKind.Temple);
-        _civicView.Show(settlement, Site, _terrain, temple?.GodId is { } god ? _divine.GodColor(god).ToGodot() : null);
-
-        // Religion's look (ADR-042): laid out again only when the style or the village's reach changes.
+        // Religion's look (ADR-042) and the village's architecture (ADR-052).
         var style = ReligiousStyles.Of(settlement, world, _style);
+        var look = VillageArchitecture.Of(settlement, world, Site.Houses.Count, _buildings.Settings, style);
+        _siteView.Dress(look);
+        var temple = settlement.Society.Buildings.Find(b => b.Kind == Domain.Society.BuildingKind.Temple);
+        var templeStyle = temple?.GodId is { } templeGod && style?.GodId == templeGod && style.Strength >= _buildings.Settings.MotifStrength ? style.Motif : (StyleMotif?)null;
+        _civicView.Show(settlement, Site, _terrain, temple?.GodId is { } god ? _divine.GodColor(god) : null, look, templeStyle);
+
+        // The god's pieces are laid out again only when the style or the village's reach changes.
         var count = style is null ? 0 : (int)System.MathF.Round(_style.MaxPieces * style.Strength * System.Math.Min(1f, (Site.Houses.Count + 2) / 14f));
         var key = StyleView.KeyOf(style, count, Site.HouseDiscRadius);
         _styleView.Show(style, style is null ? [] : key == _styleKey ? [] : ReligiousStyles.Layout(style, settlement, Site, _terrain, _style), key);

@@ -91,6 +91,37 @@
     "ArmSwing": 0.36
   },
 
+  // Architecture (spec section 61, ADR-052): how villages build. The land picks the style: adobe
+  // in the desert, stilt houses in the swamp, stone cottages in the highlands and on volcanic land,
+  // timber longhouses in forests and the tundra, and round huts elsewhere until a village has
+  // LonghouseHouses houses. At TwoStoreyHouses houses they build a second storey. A village picks
+  // one of its style's wall and roof colours, and each house varies by HouseVariation. Where the
+  // god most of a village follows shows at least MotifStrength (see Style), the houses take its
+  // colours: turf roofs for nature and growth, dark timber and roofs for war and death, whitewash
+  // and blue for learning.
+  "Architecture": {
+    "Styles": {
+      "RoundHut": { "Walls": ["#b8a07c", "#a88f6c", "#c2ab88"], "Roofs": ["#c9a24f", "#b8913f", "#d1ad5e"] },
+      "Longhouse": { "Walls": ["#8d6d4a", "#7c5e40", "#9a7a55"], "Roofs": ["#b8954a", "#a2833f", "#c4a35a"] },
+      "StoneCottage": { "Walls": ["#9d988f", "#8c877e", "#a8a296"], "Roofs": ["#4f5661", "#5c4b44", "#3f4752"] },
+      "Adobe": { "Walls": ["#d9b98a", "#cfa877", "#e2c59a"], "Roofs": ["#c9a678", "#bf9a6a"] },
+      "StiltHouse": { "Walls": ["#7d6347", "#6c543b", "#8a6f50"], "Roofs": ["#a8904a", "#93803f"] }
+    },
+    "Trim": "#4a3624",
+    "Door": "#3b2a1c",
+    "Window": "#1d1b19",
+    "Stone": "#807a71",
+    "GardenRoof": "#5d7a39",
+    "MonumentRoof": "#3d2626",
+    "MonumentWall": "#4a3a33",
+    "LoreWall": "#ebe5d7",
+    "LoreRoof": "#4b6a8c",
+    "MotifStrength": 0.35,
+    "LonghouseHouses": 18,
+    "TwoStoreyHouses": 40,
+    "HouseVariation": 0.08
+  },
+
   // Religion's look (spec section 61, ADR-042). The god most of a village follows gives it a motif:
   // gardens (Nature, Life, Prosperity, Ocean; compassion, mercy, generosity; nature worship,
   // pacifism, charity; love), monuments (War, Death, Fire, Storm, Chaos; cruelty, vengeance,

@@ -422,6 +422,18 @@ and ×16 speed it up. Each step:
   stone. A new house takes wood, and every building takes wood and stone. Cut forests grow back
   slowly. Fire burns them, a cleared forest holds fewer animals, and a cleared wet slope slides
   more easily.
+- **How villages build (spec §61, ADR-052).** The land picks the houses: round huts of wattle and
+  thatch on grassland and by rivers and coasts, timber longhouses in forests and the tundra, stone
+  cottages with slate roofs and chimneys in the highlands and on volcanic land, flat-roofed adobe
+  in the desert, and plank houses on stilts in the swamp. Villages of huts build longhouses as
+  they grow, and big villages an upper storey. Houses rise from the ground as they are built.
+  Where a god is strongly felt, the houses take its colours: turf roofs for a god of nature and
+  growth, dark timber and roofs for a god of war and death, whitewash and blue roofs for a god of
+  learning. A temple takes its god's style: a domed round temple, a dark stepped pyramid with a
+  brazier, a columned hall, or a plain hall. Walls are a palisade of pointed stakes with timber
+  watchtowers by the gates, or crenellated stone with stone towers where the village builds in
+  stone or follows a god of learning. The colours are in `Architecture` in
+  `game/Data/settlement_view.json`.
 - **Roads.** A village of 50 or more builds a road, with stone, to its nearest neighbour within
   700 m, one at a time. On a whole road, walkers (migrants and prophets) go 1.6 times as fast,
   both villages grow richer, and food travels to a hungry village from one with plenty. Floods,

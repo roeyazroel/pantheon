@@ -1,35 +1,48 @@
 using Godot;
+using Pantheon.Client.Presentation.Buildings;
 using Pantheon.Game.Presentation;
 
 namespace Pantheon.Client.Presentation.Settlements;
 
 /// <summary>
-/// The house under construction: a ring of scaffold poles and a timber pile, walls that rise with
-/// the work done, then the roof. Hidden while no house is under way.
+/// The house under construction (ADR-052): a ring of scaffold poles and a timber pile, and the
+/// village's house rising from the ground with the work done. Hidden while no house is under way.
 /// </summary>
 internal sealed class ConstructionSiteView
 {
-    // The walls are up at this share of the work; the roof is thatched during the rest.
-    private const float WallsDoneAt = 0.7f;
     private const int PoleCount = 6;
 
     private readonly Node3D _root;
-    private readonly MeshInstance3D _wall;
-    private readonly MeshInstance3D _roof;
+    private readonly MultiMeshInstance3D _house;
+    private readonly BuildingAssets _buildings;
 
     /// <summary>Creates the hidden building site under <paramref name="parent"/>.</summary>
     /// <param name="parent">The settlement's node.</param>
     /// <param name="assets">Shared meshes.</param>
-    public ConstructionSiteView(Node3D parent, SettlementAssets assets)
+    /// <param name="buildings">The buildings made in code.</param>
+    public ConstructionSiteView(Node3D parent, SettlementAssets assets, BuildingAssets buildings)
     {
+        _buildings = buildings;
         _root = new Node3D { Name = "ConstructionSite", Visible = false };
-        _wall = new MeshInstance3D { Name = "Wall", Mesh = assets.HutWall };
-        _roof = new MeshInstance3D { Name = "Roof", Mesh = assets.HutRoof };
-        _root.AddChild(_wall);
-        _root.AddChild(_roof);
+        var multimesh = BuildingAssets.NewMultiMesh();
+        multimesh.InstanceCount = 1;
+        _house = new MultiMeshInstance3D { Name = "House", Multimesh = multimesh };
+        _root.AddChild(_house);
         _root.AddChild(CreateScaffold(assets));
         _root.AddChild(new MeshInstance3D { Name = "Timber", Mesh = assets.TimberPile, Position = SettlementAssets.TimberPileOffset });
         parent.AddChild(_root);
+    }
+
+    /// <summary>Builds the house in the village's look.</summary>
+    /// <param name="look">The village's look.</param>
+    public void Dress(VillageLook look)
+    {
+        var multimesh = _house.Multimesh;
+        multimesh.Mesh = _buildings.House(look.Style, look.TwoStoreys);
+        var (walls, roof) = HouseMesh.PatternsOf(look.Style);
+        multimesh.SetInstanceTransform(0, Transform3D.Identity);
+        multimesh.SetInstanceColor(0, BuildingAssets.InstanceColor(look.Wall));
+        multimesh.SetInstanceCustomData(0, BuildingAssets.InstanceCustom(look.Roof, walls, roof));
     }
 
     /// <summary>Shows the building site at its progress, or hides it.</summary>
@@ -44,10 +57,7 @@ internal sealed class ConstructionSiteView
 
         var house = site.House;
         _root.Transform = new Transform3D(new Basis(Vector3.Up, house.Yaw).Scaled(Vector3.One * house.Scale), house.Position.ToGodot());
-        _wall.Transform = SettlementAssets.PartialWall(site.Progress / WallsDoneAt);
-        var roofBuilt = (site.Progress - WallsDoneAt) / (1f - WallsDoneAt);
-        _roof.Visible = roofBuilt > 0f;
-        _roof.Transform = SettlementAssets.PartialRoof(roofBuilt);
+        _house.SetInstanceShaderParameter("built", Mathf.Clamp(site.Progress, 0.02f, 0.999f));
     }
 
     /// <summary>Scaffold poles evenly spaced around the walls, drawn with one multimesh.</summary>

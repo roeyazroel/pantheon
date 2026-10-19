@@ -2,19 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Pantheon.Client.Presentation.Buildings;
 using Pantheon.Game.Presentation;
 
 namespace Pantheon.Client.Presentation.Settlements;
 
 /// <summary>
-/// The built part of a settlement: houses (one multimesh per hut part), the building site and the
-/// fields (one multimesh tinted per crop). Instances are only rewritten when the layout changes.
+/// The built part of a settlement: houses in the village's style (ADR-052, one multimesh), the
+/// building site and the fields (one multimesh tinted per crop). Instances are only rewritten when
+/// the layout or the village's look changes.
 /// </summary>
 internal sealed class SiteView
 {
-    private readonly MultiMesh _walls;
-    private readonly MultiMesh _roofs;
-    private readonly MultiMesh _doors;
+    private readonly MultiMesh _houses;
+    private readonly BuildingAssets _buildings;
+    private readonly int _settlementId;
+    private VillageLook? _look;
     private readonly MultiMesh _fields;
     private readonly MultiMesh _rubble;
     private readonly ConstructionSiteView _construction;
@@ -28,16 +31,33 @@ internal sealed class SiteView
     /// <param name="root">The settlement's node.</param>
     /// <param name="assets">Shared meshes.</param>
     /// <param name="layout">Layout settings, for the field size and crop colours.</param>
-    public SiteView(Node3D root, SettlementAssets assets, SettlementLayoutSettings layout)
+    /// <param name="buildings">The buildings made in code.</param>
+    /// <param name="settlementId">The settlement, for each house's shade.</param>
+    public SiteView(Node3D root, SettlementAssets assets, SettlementLayoutSettings layout, BuildingAssets buildings, int settlementId)
     {
-        _walls = AddMultiMesh(root, "HutWalls", assets.HutWall, useColors: false);
-        _roofs = AddMultiMesh(root, "HutRoofs", assets.HutRoof, useColors: false);
-        _doors = AddMultiMesh(root, "HutDoors", assets.HutDoor, useColors: false);
+        (_buildings, _settlementId) = (buildings, settlementId);
+        _houses = BuildingAssets.NewMultiMesh();
+        root.AddChild(new MultiMeshInstance3D { Name = "Houses", Multimesh = _houses });
         _fields = AddMultiMesh(root, "Fields", assets.FieldPlot, useColors: true);
         _rubble = AddMultiMesh(root, "Ruins", assets.Rubble, useColors: false);
-        _construction = new ConstructionSiteView(root, assets);
+        _construction = new ConstructionSiteView(root, assets, buildings);
         _fieldSize = layout.FieldSize;
         _cropColors = layout.CropColors.Select(color => color.ToGodot()).ToArray();
+    }
+
+    /// <summary>Dresses the houses and the building site in the village's look, when it changed.</summary>
+    /// <param name="look">The village's look.</param>
+    public void Dress(VillageLook look)
+    {
+        if (look == _look)
+        {
+            return;
+        }
+
+        _look = look;
+        _houses.Mesh = _buildings.House(look.Style, look.TwoStoreys);
+        PlaceHouses(_shownHouses);
+        _construction.Dress(look);
     }
 
     /// <summary>Shows a layout: houses and fields when they changed, and the building site's progress.</summary>
@@ -77,20 +97,23 @@ internal sealed class SiteView
         }
     }
 
-    /// <summary>Writes one transform per house into each part's multimesh.</summary>
+    /// <summary>Writes each house's place, its walls' and roof's colours in its own shade, and its patterns.</summary>
     private void PlaceHouses(IReadOnlyList<HutPlacement> houses)
     {
-        _walls.InstanceCount = houses.Count;
-        _roofs.InstanceCount = houses.Count;
-        _doors.InstanceCount = houses.Count;
+        if (_look is not { } look)
+        {
+            return;
+        }
+
+        var (walls, roof) = HouseMesh.PatternsOf(look.Style);
+        _houses.InstanceCount = houses.Count;
         for (var i = 0; i < houses.Count; i++)
         {
             var house = houses[i];
-            var basis = new Basis(Vector3.Up, house.Yaw).Scaled(Vector3.One * house.Scale);
-            var origin = house.Position.ToGodot();
-            _walls.SetInstanceTransform(i, new Transform3D(basis, origin + (basis * SettlementAssets.WallOffset)));
-            _roofs.SetInstanceTransform(i, new Transform3D(basis, origin + (basis * SettlementAssets.RoofOffset)));
-            _doors.SetInstanceTransform(i, new Transform3D(basis, origin + (basis * SettlementAssets.DoorOffset)));
+            var shade = VillageArchitecture.ShadeOf(_buildings.Settings, _settlementId, i);
+            _houses.SetInstanceTransform(i, new Transform3D(new Basis(Vector3.Up, house.Yaw).Scaled(Vector3.One * house.Scale), house.Position.ToGodot()));
+            _houses.SetInstanceColor(i, BuildingAssets.InstanceColor(look.Wall, shade));
+            _houses.SetInstanceCustomData(i, BuildingAssets.InstanceCustom(look.Roof, walls, roof, 2f - shade));
         }
     }
 
