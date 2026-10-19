@@ -121,5 +121,15 @@
     "RaidDeathsPerSecond": 0.002,
     "RaidConversionPerSecond": 0.004,
     "DiscourageLoveLoss": 0.1
+  },
+
+  // Knowing the other gods (spec section 11, ADR-036). With MeetFirst, a god may ally with, war on, sign with or
+  // ask of only the gods it has met. Gods meet when villages they lead lie within NeighbourMetres, when each is
+  // followed by SharedAdherence of one village, when a whole road joins their villages, when their Creatures meet,
+  // when one's deeds touch the other's people, and when they sit in the Divine Council.
+  "Acquaintance": {
+    "MeetFirst": true,
+    "NeighbourMetres": 500.0,
+    "SharedAdherence": 0.05
   }
 }

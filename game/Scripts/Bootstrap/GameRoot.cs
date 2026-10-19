@@ -450,6 +450,7 @@ public partial class GameRoot : Node3D
             .Where(god => god.Controller == GodController.Ai)
             .Select(god => (god.Id, _session.PreviewGodAi(god)))
             .ToList(),
+        GodGoalOptions = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodGoals(god)))],
         SelectedSettlementId = cursor is { } point
             ? SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance)?.Id
             : null,

@@ -21,8 +21,9 @@ namespace Pantheon.Simulation.Gods;
 /// <summary>
 /// The strategic utility AI of a god (spec §47–48, §87, ADR-011). Every evaluation it scores every
 /// miracle it may cast on every settlement, sending its Creature and waiting, by the goals its
-/// personality weighs; then it takes the best action through the same authority as a player. It
-/// also teaches its Creature what its personality values. Every score keeps its reasons.
+/// personality weighs and the goals it set itself in its last major plan (ADR-036); then it takes
+/// the best action through the same authority as a player. It also teaches its Creature what its
+/// personality values. Every score keeps its reasons.
 /// </summary>
 public sealed class GodAi
 {
@@ -44,6 +45,7 @@ public sealed class GodAi
     private readonly GodDiplomat? _diplomat;
     private readonly DomainAuthority? _domains;
     private readonly MiracleValuer _valuer;
+    private readonly GodPlanner _planner;
 
     /// <summary>Creates the AI over validated rules and the authorities it acts through.</summary>
     /// <param name="rules">AI rules.</param>
@@ -69,7 +71,11 @@ public sealed class GodAi
         _creatures = creatures;
         _creatureRules = creatureRules;
         _valuer = new MiracleValuer(rules, caster);
+        _planner = new GodPlanner(rules, diplomat?.Rules);
     }
+
+    /// <summary>The god's major planning (ADR-036), for previews in the debug view.</summary>
+    public GodPlanner Planner => _planner;
 
     /// <summary>The profile of a personality.</summary>
     /// <param name="personality">The personality.</param>
@@ -111,7 +117,9 @@ public sealed class GodAi
             }
         }
 
+        GoalFocus.AddSmites(_rules.Planning, world, god, profile, _book, _caster, cache, candidates);
         AddSendCreature(candidates, world, god, profile);
+        GoalFocus.Apply(_rules.Planning, world, god, _book, candidates);
         candidates.Sort(static (a, b) => b.Utility.CompareTo(a.Utility));
         return candidates;
     }
@@ -125,6 +133,11 @@ public sealed class GodAi
     public AiCandidate Act(WorldState world, GodState god, SimulationRandom random, List<WorldEvent> events)
     {
         ArgumentNullException.ThrowIfNull(random);
+        if (ProfileOf(god.Personality) is { } planned)
+        {
+            _planner.PlanIfDue(world, god, planned, events);
+        }
+
         var candidates = Evaluate(world, god);
         var best = candidates[0];
         var bestScore = float.NegativeInfinity;
@@ -341,6 +354,7 @@ public sealed class GodAi
 
         AddConfrontCreature(candidates, world, god, profile, creature);
         AddClaimHolySites(candidates, world, god, profile, creature);
+        GoalFocus.AddHunt(_rules.Planning, world, god, profile, creature, candidates);
     }
 
     /// <summary>

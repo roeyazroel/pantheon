@@ -40,7 +40,7 @@ internal sealed partial class PoliticsController : Node
         AddChild(_panel);
         _panel.ActionClicked += action => _setStatus(PoliticsCommands.Run(_session, action));
         diplomacy.ActionClicked += action => _setStatus(PoliticsCommands.Run(_session, action));
-        CallDeferred(nameof(ApplyOptions), options.Treaty is { } treaty ? (int)treaty : -1, options.SummonCouncil, options.CouncilPanel);
+        CallDeferred(nameof(ApplyOptions), options.Treaty is { } treaty ? (int)treaty : -1, options.SummonCouncil, options.CouncilPanel, options.GodsMet);
         CallDeferred(nameof(ApplyConflictOptions), options.WarGoal is { } goal ? (int)goal : -1, options.HolyWar, options.Veil);
     }
 
@@ -79,9 +79,14 @@ internal sealed partial class PoliticsController : Node
         }
     }
 
-    /// <summary>Signs a treaty, summons the council and opens its panel, as the launch options ask.</summary>
-    private void ApplyOptions(int treaty, bool summon, bool open)
+    /// <summary>Introduces the gods, signs a treaty, summons the council and opens its panel, as the launch options ask.</summary>
+    private void ApplyOptions(int treaty, bool summon, bool open, bool met)
     {
+        if (met)
+        {
+            _setStatus(PoliticsCommands.MeetAll(_session));
+        }
+
         if (treaty >= 0)
         {
             _setStatus(PoliticsCommands.SignTreaty(_session, (Domain.Politics.TreatyKind)treaty));

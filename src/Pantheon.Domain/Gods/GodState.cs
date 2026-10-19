@@ -56,4 +56,13 @@ public sealed class GodState
 
     /// <summary>What its Divine Hand holds now, if anything (spec §55, ADR-030).</summary>
     public Hand.HeldObject? Held { get; set; }
+
+    /// <summary>The gods it knows of (spec §11, ADR-036), by id: it has met their followers, seen their wonders, met their Creature or sat with them in council.</summary>
+    public List<int> KnownGods { get; init; } = [];
+
+    /// <summary>The goals an AI god holds now (spec §47, ADR-036).</summary>
+    public List<GodGoal> Goals { get; init; } = [];
+
+    /// <summary>When an AI god next makes its major plan (spec §87, ADR-036).</summary>
+    public long NextPlanTick { get; set; }
 }

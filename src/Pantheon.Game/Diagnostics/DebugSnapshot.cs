@@ -63,6 +63,9 @@ public sealed record DebugSnapshot
     /// <summary>Each AI god's diplomatic moves now, best first, by god id.</summary>
     public IReadOnlyList<(int GodId, IReadOnlyList<DiplomacyCandidate> Candidates)> GodDiplomacyCandidates { get; init; } = [];
 
+    /// <summary>The goals each AI god could set itself in its next plan, weightiest first (ADR-036).</summary>
+    public IReadOnlyList<(int GodId, IReadOnlyList<GoalOption> Options)> GodGoalOptions { get; init; } = [];
+
     /// <summary>The local Creature's options now, best first.</summary>
     public IReadOnlyList<CreatureOption> CreatureOptions { get; init; } = [];
 

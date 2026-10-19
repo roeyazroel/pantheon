@@ -98,6 +98,7 @@ public static class HistoryText
             HistoryKind.Beast => Format("{0} wakes", Capitalised(record.Name ?? "the beast")),
             HistoryKind.BeastSlain => Format("The Slaying of {0}", record.Name ?? "the beast"),
             HistoryKind.Anomaly => Format("{0} shimmers", Capitalised(record.Name ?? "the anomaly")),
+            HistoryKind.GodsMet => Format("The Meeting of {0} and {1}", god, other),
         };
     }
 
@@ -144,6 +145,7 @@ public static class HistoryText
             HistoryKind.GreatMigration => Format("{0} on the road", record.Count),
             HistoryKind.Eclipse or HistoryKind.GreatDrought or HistoryKind.Beast or HistoryKind.Anomaly => string.Empty,
             HistoryKind.BeastSlain => record.GodId is null ? "by no god" : record.Count > 1 ? Format("by {0} and {1} other god{2}", GodName(world, record.GodId), record.Count - 1, record.Count == 2 ? string.Empty : "s") : "by " + GodName(world, record.GodId),
+            HistoryKind.GodsMet => Gods.GoalText.Meeting((Domain.Events.MeetingWay)record.Count, world.Settlements.Find(s => s.Id == record.SettlementId)?.Name),
         };
     }
 

@@ -43,6 +43,19 @@ public static class DiplomacyRulesValidator
 
         ValidatePolitics(rules.Politics, errors);
         ValidateConflict(rules.Conflict, errors);
+        if (rules.Acquaintance is not { } acquaintance)
+        {
+            errors.Add("Acquaintance must not be null.");
+        }
+        else
+        {
+            errors.RequireNonNegative(acquaintance.NeighbourMetres, "Acquaintance.NeighbourMetres");
+            if (!(acquaintance.SharedAdherence is > 0f and <= 1f))
+            {
+                errors.Add("Acquaintance.SharedAdherence must be above 0 and at most 1.");
+            }
+        }
+
         errors.ThrowIfAny("diplomacy rules", nameof(rules));
     }
 

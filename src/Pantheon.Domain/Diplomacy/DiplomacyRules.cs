@@ -71,4 +71,7 @@ public sealed record DiplomacyRules
 
     /// <summary>War goals, intelligence, proxy wars and holy wars (ADR-026).</summary>
     public required Conflict.ConflictRules Conflict { get; init; }
+
+    /// <summary>How gods come to know of each other (ADR-036); every god knows every other when absent.</summary>
+    public AcquaintanceRules Acquaintance { get; init; } = AcquaintanceRules.None;
 }

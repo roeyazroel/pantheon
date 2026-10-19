@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using Pantheon.Domain.World;
 using Pantheon.Game.Divine;
@@ -27,6 +28,7 @@ internal static class GodAiReadout
             }
 
             lines.Add(Format("AI {0} ({1}): goal now: {2}", god.Name, DivineText.Personality(god.Personality), Describe(candidates[0], snapshot.World)));
+            AppendPlan(lines, snapshot, god);
             for (var i = 0; i < candidates.Count && i < CandidatesShown; i++)
             {
                 var candidate = candidates[i];
@@ -46,6 +48,25 @@ internal static class GodAiReadout
                     var other = snapshot.World.Gods.Find(g => g.Id == move.OtherGodId)?.Name ?? "?";
                     lines.Add(Format("  {0:+0.00;-0.00;0.00}  {1} {2} (acts above +0.25)  [{3}]", move.Utility, move.Kind, other, move.Reason));
                 }
+            }
+        }
+    }
+
+    /// <summary>The god's plan (ADR-036): the goals it holds, the next plan, the best options for it, and the gods it knows.</summary>
+    private static void AppendPlan(List<string> lines, DebugSnapshot snapshot, Domain.Gods.GodState god)
+    {
+        var world = snapshot.World;
+        var held = god.Goals.ConvertAll(g => Format("{0} {1:0.00} for {2:0}s", Gods.GoalText.Goal(g, world, null), g.Weight, (world.Tick - g.SinceTick) / (float)SimulationTime.TicksPerSecond));
+        lines.Add(Format(
+            "  plans: {0}; next plan in {1:0}s; {2}",
+            held.Count > 0 ? string.Join(", ", held) : "none",
+            System.Math.Max(0L, god.NextPlanTick - world.Tick) / (float)SimulationTime.TicksPerSecond,
+            Gods.GoalText.Known(god, world)));
+        foreach (var (plannerId, options) in snapshot.GodGoalOptions)
+        {
+            if (plannerId == god.Id && options.Count > 0)
+            {
+                lines.Add("  could: " + string.Join("; ", options.Take(CandidatesShown).Select(o => Format("{0:0.00} {1}", o.Weight, o.Reason))));
             }
         }
     }

@@ -139,7 +139,12 @@ public static class ConflictCommands
         }
 
         var aim = new WarAim(goal, goal == WarGoal.HolySite ? world.HolySites.Find(s => s.KeeperGodId == rival.Id)?.Id : null);
-        var verdict = session.Command((authorities, events) => authorities.Diplomacy.Execute(world, new Domain.Diplomacy.DiplomaticCommand(me, rival.Id, Domain.Diplomacy.DiplomaticCommandKind.DeclareWar, Aim: aim), null, events));
+        var verdict = session.Command((authorities, events) =>
+        {
+            // A debug driver: the gods meet first if they had not (ADR-036).
+            Simulation.Diplomacy.Acquaintance.Introduce(world, me, rival.Id, Domain.Events.MeetingWay.Diplomacy, null, events);
+            return authorities.Diplomacy.Execute(world, new Domain.Diplomacy.DiplomaticCommand(me, rival.Id, Domain.Diplomacy.DiplomaticCommandKind.DeclareWar, Aim: aim), null, events);
+        });
         return verdict == Simulation.Diplomacy.DiplomacyRejection.None
             ? ConflictText.Format("You declare war on {0} for {1}", rival.Name, ConflictText.Goal(Simulation.Conflict.WarBook.Find(world, me, rival.Id)?.Goal ?? goal))
             : Diplomacy.DiplomacyText.DescribeRejection(verdict, Domain.Diplomacy.DiplomaticCommandKind.DeclareWar, rival.Name);

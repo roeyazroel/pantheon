@@ -33,13 +33,16 @@ public sealed class GodDiplomat
     private readonly DiplomacyRules _rules;
     private readonly DivineRules _divine;
     private readonly DiplomacyAuthority _authority;
+    private readonly PlanningRules _planning;
 
     /// <summary>Creates the diplomat.</summary>
     /// <param name="rules">Diplomacy rules.</param>
     /// <param name="divine">Divine rules, for the victory share.</param>
     /// <param name="authority">The diplomacy authority it acts through.</param>
-    public GodDiplomat(DiplomacyRules rules, DivineRules divine, DiplomacyAuthority authority)
+    /// <param name="planning">How the gods' goals lean their diplomacy (ADR-036); none when <c>null</c>.</param>
+    public GodDiplomat(DiplomacyRules rules, DivineRules divine, DiplomacyAuthority authority, PlanningRules? planning = null)
     {
+        _planning = planning ?? PlanningRules.None;
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(divine);
         ArgumentNullException.ThrowIfNull(authority);
@@ -47,6 +50,9 @@ public sealed class GodDiplomat
         _divine = divine;
         _authority = authority;
     }
+
+    /// <summary>The diplomacy rules.</summary>
+    public DiplomacyRules Rules => _rules;
 
     /// <summary>Every move the god could make now, best first; including answers to proposals waiting for it.</summary>
     /// <param name="world">World state.</param>
@@ -61,7 +67,7 @@ public sealed class GodDiplomat
         var candidates = new List<DiplomacyCandidate>();
         foreach (var other in world.Gods)
         {
-            if (other.Id != god.Id)
+            if (other.Id != god.Id && Acquaintance.Knows(_rules.Acquaintance, world, god.Id, other.Id))
             {
                 AddMoves(candidates, world, god, other, profile);
             }
@@ -133,7 +139,9 @@ public sealed class GodDiplomat
         // War-weariness wears on a god that is not winning, and a third god's lead makes a war between
         // two others a gift to it (the balance of power, ADR-015).
         var weariness = WarSeconds(world, stance) / WarWearinessSeconds * (1f - Math.Max(0f, advantage));
-        var peace = (profile.Cooperation * (weariness + Math.Max(0f, -advantage) + threat)) + view.Fear - (0.5f * grudge) - 0.3f;
+        var peace = (profile.Cooperation * (weariness + Math.Max(0f, -advantage) + threat)) + view.Fear - (0.5f * grudge) - 0.3f
+            + GoalFocus.Diplomacy(_planning, god, other.Id, DiplomaticCommandKind.RequestPeace);
+        alliance += GoalFocus.Diplomacy(_planning, god, other.Id, DiplomaticCommandKind.OfferAlliance);
         if (DiplomacyAuthority.FindProposal(world, other.Id, god.Id) is { } proposal)
         {
             var accept = proposal.Kind switch
@@ -151,7 +159,8 @@ public sealed class GodDiplomat
             case DiplomaticStatus.Alliance:
                 // An ally dominating with this god is its path to a joint victory, not a threat.
                 var aloneDominant = theyDominate && !VictorySystem.StandingOf(_divine, world, other.Id).Allies.Contains(god.Id);
-                var betray = (profile.Treachery * (Math.Max(0f, advantage) + view.Rivalry)) + (aloneDominant ? 0.8f : 0f) + Endgame(world, god.Id, other.Id, profile) - view.Trust - goodwill - 0.4f;
+                var betray = (profile.Treachery * (Math.Max(0f, advantage) + view.Rivalry)) + (aloneDominant ? 0.8f : 0f) + Endgame(world, god.Id, other.Id, profile) - view.Trust - goodwill - 0.4f
+                    + GoalFocus.Diplomacy(_planning, god, other.Id, DiplomaticCommandKind.BreakAlliance);
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.BreakAlliance, other.Id, betray, why));
                 break;
             case DiplomaticStatus.War:
@@ -170,7 +179,8 @@ public sealed class GodDiplomat
                 // A fresh peace or past help holds a god back until the memory fades.
                 var war = (profile.Aggression * (view.Rivalry + grudge + Math.Max(0f, advantage) + otherLeads + (status == DiplomaticStatus.Hostile ? 0.3f : 0f)))
                     + (theyDominate ? 0.6f : 0f) + (Politics.CouncilModel.IsCondemned(world, other.Id) ? 0.3f : 0f)
-                    - (0.5f * view.Trust) - view.Fear - goodwill - (0.3f * profile.Cooperation) - (0.8f * threat) - 0.4f;
+                    - (0.5f * view.Trust) - view.Fear - goodwill - (0.3f * profile.Cooperation) - (0.8f * threat) - 0.4f
+                    + GoalFocus.Diplomacy(_planning, god, other.Id, DiplomaticCommandKind.DeclareWar);
                 candidates.Add(new DiplomacyCandidate(DiplomaticCommandKind.DeclareWar, other.Id, war, why));
                 break;
         }

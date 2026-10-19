@@ -29,6 +29,9 @@ public sealed record GodAiRules
 
     /// <summary>How the strategy of each personality weighs its goals.</summary>
     public required IReadOnlyList<GodProfile> Profiles { get; init; }
+
+    /// <summary>How the gods make their major plans (ADR-036); none when absent.</summary>
+    public PlanningRules Planning { get; init; } = PlanningRules.None;
 }
 
 /// <summary>The weights of one personality's goals (each 0..1, except where noted).</summary>

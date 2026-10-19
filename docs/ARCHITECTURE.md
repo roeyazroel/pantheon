@@ -169,8 +169,10 @@ files and compiled assemblies and fails when either rule is broken.
   (while it holds the victory share), `ConquestSinceTick` and `CulturalSinceTick` (while it holds
   a conquest's or a cultural victory's condition; ADR-027), `CreatureId`, `RefugeePolicy`, `Cooldowns` and `Domains`
   (the domains it has taken up, ADR-021), `Conduct` (`GodConduct`: what the world remembers of its
-  acts, fading) and `Traits` (what the world calls it, from that conduct; ADR-024). Followers and
-  influence are derived from the beliefs.
+  acts, fading) and `Traits` (what the world calls it, from that conduct; ADR-024), `KnownGods`
+  (the gods it has met, sorted), and for an AI god its `Goals` (`GodGoal`: kind, village or god,
+  since when and weight) and `NextPlanTick` (ADR-036). Followers and influence are derived from the
+  beliefs.
 - `CreatureState` (ADR-010): a Tier 3 entity saved whole: position and heading, level, experience,
   health, loyalty, morality, `Needs` (hunger, fatigue, boredom), `Personality` (kindness,
   aggression, laziness, curiosity), `Activity` (action, situation, phase, target, path, ticks
@@ -334,15 +336,18 @@ files and compiled assemblies and fails when either rule is broken.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
   `GodAiSystem`; `Gods/MiracleValuer` weighs what each miracle is worth to it, and
   `Gods/GodDiplomat` adds its diplomatic moves. It takes up its personality's domains and sends
-  its Creature to claim holy sites (ADR-021). `Belief/VictorySystem` tracks
+  its Creature to claim holy sites (ADR-021). `Gods/GodPlanner` makes its major plan every 30 s
+  and `Gods/GoalFocus` bends its choices towards the goals (ADR-036); see
+  [Known gods and plans](#known-gods-and-plans). `Belief/VictorySystem` tracks
   each god's standing (alone or with its bloc), dominance and victory, by the victories the world
   was made with. `GodAiSystem.IsTurn` lets the AI gods take turns across the evaluation interval,
   and `Belief/InfluenceCache` builds each god's influence field once per evaluation for
   `MiracleCaster.Check` (ADR-027). See [World sizes and victories](#world-sizes-and-victories).
 - `Diplomacy/`: `DiplomacyModel` (finding and creating relations and stances, grudge, warmth),
   `DiplomacyLedger` (the `IActRecorder` that miracles, Creature deeds and conversions report
-  acts to), `DiplomacySystem` (the diplomacy step) and `DiplomacyAuthority` (diplomatic commands,
-  checked). See [Diplomacy](#diplomacy).
+  acts to), `DiplomacySystem` (the diplomacy step), `Acquaintance` (who has met whom, run in the
+  diplomacy step, ADR-036) and `DiplomacyAuthority` (diplomatic commands, checked). See
+  [Diplomacy](#diplomacy).
 - `Politics/`: `TreatyModel` and `CouncilModel` (what treaties and decrees allow and forbid, asked
   by each system they change), `PoliticsChecks`, `TreatyBook` (signing, ending, breaking and
   revealing treaties), `FavourBook`, `PoliticsActions` (treaties, requests and absorption for the
@@ -408,7 +413,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (14 since ADR-035, whose GreatEvents section carries the
+- `NetworkProtocol`: the protocol version (15 since ADR-036, whose Gods section carries the gods
+  each knows and its goals; 14 since ADR-035, whose GreatEvents section carries the
   beast; 13 since ADR-034, which added the GreatEvents section; 12
   since ADR-033, which added the Roads section and regions' forest, timber and stone; 11 since
   ADR-032, which added the Notables section; 10
@@ -468,7 +474,8 @@ each region's forest from its biome and vegetation, gives each village a new wor
 starts with no roads. Version 24 → 25 (`GreatEventSaveMigration`) makes nobody sick or immune,
 starts no great event and sets the first eclipse on the first step. Version 25 → 26
 (`BeastSaveMigration`) leaves the beast's lair to be found, sets the first anomaly on the first step
-and gives the events under way no place. A missing,
+and gives the events under way no place. Version 26 → 27 (`PlanSaveMigration`) has every god know
+every other, hold no goal and plan on its next turn; `PlanIntegrity` checks known gods and goals. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -584,7 +591,10 @@ and gives the events under way no place. A missing,
   `Weather/WeatherCommands` drives the weather for debugging (F8 next spell, F10 a storm at the
   cursor). `Weather/SeasonText` words the seasons and `Weather/SeasonCommands` begins one (Y,
   `--season`); `Alerts/NatureAlerts` tells of seasons and scarred land (ADR-028).
-- `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (status, the rival's ties
+- `Gods/GoalText` words the AI gods' goals and how gods met; `Alerts/GodAlerts` tells the player
+  whom they met, and `PoliticsCommands.MeetAll` introduces every god (`--gods-met`, ADR-036).
+- `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (whether the player has met
+  the god, status, the rival's ties
   with the other gods, how the two gods' Creatures regard each other, its attitude and why, the
   player's grievances, the proposal waiting and the moves allowed now), and
   `DiplomacyText` words statuses, commands, memories and rejections.
@@ -1790,6 +1800,48 @@ flowchart LR
   `GreatEventWatch` begins and ends world wars, great droughts and great migrations from the
   world's state. The council answers a plague or a great drought as it answers a disaster.
 
+## Known gods and plans
+
+ADR-036 records the decisions, and the plan
+([.docs/milestone-15-part-16-known-gods-and-plans.md](../.docs/milestone-15-part-16-known-gods-and-plans.md))
+the numbers.
+
+```mermaid
+flowchart LR
+    villages[Neighbours, believers, roads] --> meet[Acquaintance.Step]
+    creatures[Creatures, deeds, council] --> meet
+    meet --> known[GodState.KnownGods]
+    known --> authority[DiplomacyAuthority: NotMet]
+    known --> planner[GodPlanner every 30 s]
+    world[Danger, doubt, plague, drought, the beast] --> planner
+    planner --> goals[GodState.Goals]
+    goals --> focus[GoalFocus]
+    focus --> casts[GodAi: boosts, smites, hunts]
+    focus --> diplomat[GodDiplomat: bias]
+    focus --> priorities[PriorityAdvisor: prepare]
+```
+
+- **Meeting.** `DiplomacySystem` runs `Acquaintance.Step` each second. It introduces gods whose
+  villages are neighbours, share believers or a whole road, whose Creatures have met, whose deeds
+  touched each other's people, who have dealings, or who sit in council (`GodsMet`).
+  - With `DiplomacyRules.Acquaintance.MeetFirst`, `DiplomacyAuthority.Check` refuses any move but
+    answering, peace and breaking with `NotMet` until the two have met.
+  - `GodDiplomat` and `GodPlanner` consider only known gods.
+- **Planning.** `GodAi.Act` asks `GodPlanner.PlanIfDue` first.
+  - The planner scores one best option of each `GodGoalKind` (`GoalOption`, with its reason) and
+    keeps young goals unless they are moot.
+  - It fills up to `MaxGoals` of weight `Threshold` or more, announcing each new one
+    (`GodGoalTaken`).
+- **Focus.** `GoalFocus` acts on what the AI does:
+  - `Apply` multiplies the utility of casts and sends that serve a goal by
+    `1 + (Boost − 1) × weight`;
+  - `AddSmites` and `AddHunt` aim smiting miracles and the Creature at the beast;
+  - `Diplomacy` biases `GodDiplomat`'s alliance, peace, war and betrayal;
+  - `Preparing` gives `PriorityAdvisor` health or food.
+- **Seen.** F1 shows each AI god's plans, its next plan, the gods it knows and its options
+  (`SessionPreviews.PreviewGodGoals`). The P panel and the top bar mark unmet gods, and the
+  intelligence line shows a well-informed player a rival's goals.
+
 ## Wood, stone and roads
 
 ADR-033 records the decisions, and the plan
@@ -1980,11 +2032,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 26 (current)
+    alt version 27 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 25
+    else versions 1 to 26
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 26, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly)
+        Mig-->>Save: JsonObject at version 27, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

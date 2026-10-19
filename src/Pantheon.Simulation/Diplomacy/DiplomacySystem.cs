@@ -14,7 +14,8 @@ namespace Pantheon.Simulation.Diplomacy;
 /// <item>fear and respect follow the other god's following and rank;</item>
 /// <item>proposals lapse;</item>
 /// <item>pairs that are neither allied nor at war warm to friendly or sour to hostile as both
-/// sides' feelings dictate.</item>
+/// sides' feelings dictate;</item>
+/// <item>gods that crossed paths meet (ADR-036).</item>
 /// </list>
 /// </summary>
 public sealed class DiplomacySystem : ISimulationSystem
@@ -60,6 +61,8 @@ public sealed class DiplomacySystem : ISimulationSystem
                 }
             }
         }
+
+        Acquaintance.Step(_rules.Acquaintance, world, context.Events);
     }
 
     /// <summary>Feelings drift back to rest and memories fade.</summary>

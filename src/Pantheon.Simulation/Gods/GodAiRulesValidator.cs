@@ -68,6 +68,32 @@ public static class GodAiRulesValidator
             }
         }
 
+        ValidatePlanning(rules.Planning, errors);
         errors.ThrowIfAny("god AI rules", nameof(rules));
+    }
+
+    /// <summary>Checks the major planning (ADR-036).</summary>
+    private static void ValidatePlanning(PlanningRules? planning, RuleErrors errors)
+    {
+        if (planning is null)
+        {
+            errors.Add("Planning must not be null.");
+            return;
+        }
+
+        errors.RequireNonNegative(planning.PlanSeconds, "Planning.PlanSeconds");
+        errors.RequireAtLeast(planning.MaxGoals, 0, "Planning.MaxGoals");
+        errors.RequireNonNegative(planning.MinGoalSeconds, "Planning.MinGoalSeconds");
+        errors.RequireShare(planning.Threshold, "Planning.Threshold");
+        if (!(planning.Boost >= 1f))
+        {
+            errors.Add("Planning.Boost must be at least 1.");
+        }
+
+        errors.RequireNonNegative(planning.DiplomacyBias, "Planning.DiplomacyBias");
+        errors.RequireShare(planning.HomeDanger, "Planning.HomeDanger");
+        errors.RequireNonNegative(planning.ConvertReach, "Planning.ConvertReach");
+        errors.RequireShare(planning.Doubt, "Planning.Doubt");
+        errors.RequireShare(planning.Dryness, "Planning.Dryness");
     }
 }

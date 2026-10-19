@@ -44,6 +44,9 @@ internal static class DiplomacyWorlds
         RaidDeathsPerSecond = 0.002f, RaidConversionPerSecond = 0.004f, DiscourageLoveLoss = 0.1f,
     };
 
+    /// <summary>How gods meet, as shipped with Milestone 15, part 16 (ADR-036), pinned; the pinned <see cref="Rules"/> leave it out, so in their worlds every god knows every other.</summary>
+    public static AcquaintanceRules Acquaintance { get; } = new() { MeetFirst = true, NeighbourMetres = 500f, SharedAdherence = 0.05f };
+
     /// <summary>Diplomacy rules with fixed values (the balance shipped with Milestone 6).</summary>
     public static DiplomacyRules Rules { get; } = new()
     {

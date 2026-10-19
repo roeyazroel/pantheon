@@ -42,6 +42,9 @@ public enum DiplomacyRejection
 
     /// <summary>The god cannot grant what is asked now.</summary>
     CannotGrant,
+
+    /// <summary>The gods have not met (ADR-036).</summary>
+    NotMet,
 }
 
 /// <summary>
@@ -101,6 +104,12 @@ public sealed class DiplomacyAuthority
         if (issuerGodId is { } issuer && issuer != command.GodId)
         {
             return DiplomacyRejection.NotAuthorized;
+        }
+
+        if (!Acquaintance.Knows(_rules.Acquaintance, world, command.GodId, command.OtherGodId)
+            && command.Kind is not (DiplomaticCommandKind.Accept or DiplomaticCommandKind.Decline or DiplomaticCommandKind.BreakAlliance or DiplomaticCommandKind.RequestPeace or DiplomaticCommandKind.BreakTreaty))
+        {
+            return DiplomacyRejection.NotMet;
         }
 
         var status = DiplomacyModel.StatusOf(world, command.GodId, command.OtherGodId);

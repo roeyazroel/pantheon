@@ -31,10 +31,12 @@ public sealed class PriorityAdvisor
     private readonly SettlementRules _settlementRules;
     private readonly DivineRules _divine;
     private readonly SocietyAuthority _authority;
+    private readonly PlanningRules _planning;
 
     /// <summary>Creates the advisor.</summary>
-    public PriorityAdvisor(SocietyRules rules, SettlementRules settlementRules, DivineRules divine, SocietyAuthority authority)
+    public PriorityAdvisor(SocietyRules rules, SettlementRules settlementRules, DivineRules divine, SocietyAuthority authority, PlanningRules? planning = null)
     {
+        _planning = planning ?? PlanningRules.None;
         SocietyRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
         ArgumentNullException.ThrowIfNull(divine);
@@ -77,6 +79,12 @@ public sealed class PriorityAdvisor
         if (SocietyModel.War(world, settlement) > Contested && Wants(world, settlement, god, SettlementPriority.Defence))
         {
             return (SettlementPriority.Defence, "war");
+        }
+
+        // A god that foresees the plague or a drought has its people make ready (ADR-036).
+        if (Gods.GoalFocus.Preparing(_planning, world, god) is { } ready && Wants(world, settlement, god, ready))
+        {
+            return (ready, ready == SettlementPriority.Health ? "preparing for the plague" : "preparing for the drought");
         }
 
         if (!CivicModel.HasTemple(settlement, god.Id))

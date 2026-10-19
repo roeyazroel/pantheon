@@ -39,6 +39,18 @@ public static class SessionPreviews
         return god.Controller == GodController.Ai ? session.Engine.Gods!.Ai.Evaluate(session.World, god) : [];
     }
 
+    /// <summary>The goals an AI god could set itself in its next plan, weightiest first (ADR-036).</summary>
+    /// <param name="session">The session.</param>
+    /// <param name="god">The god.</param>
+    /// <returns>Its options; none for a player's god.</returns>
+    public static IReadOnlyList<Simulation.Gods.GoalOption> PreviewGodGoals(this GameSession session, GodState god)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(god);
+        var ai = session.Engine.Gods!.Ai;
+        return god.Controller == GodController.Ai && ai.ProfileOf(god.Personality) is { } profile ? ai.Planner.Options(session.World, god, profile) : [];
+    }
+
     /// <summary>The pressure on a settlement's people to leave now (ADR-016).</summary>
     /// <param name="session">The session.</param>
     /// <param name="settlement">The settlement.</param>

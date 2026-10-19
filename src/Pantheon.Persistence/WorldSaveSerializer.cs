@@ -36,9 +36,10 @@ public static class WorldSaveSerializer
     /// and the land's life, hazards, and Creatures' paths and gods' hands; version 23 (part 12) added
     /// prophets and elders; version 24 (part 13) added the land's forests and stone, villages' wood
     /// and stone, and roads; version 25 (part 14) added the plague, villages' immunity and the great
-    /// events; version 26 (part 15) added the ancient beast, the anomaly and great events' places.
+    /// events; version 26 (part 15) added the ancient beast, the anomaly and great events' places;
+    /// version 27 (part 16) added the gods each god knows, its goals and its next plan.
     /// </summary>
-    public const int CurrentSaveVersion = 26;
+    public const int CurrentSaveVersion = 27;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

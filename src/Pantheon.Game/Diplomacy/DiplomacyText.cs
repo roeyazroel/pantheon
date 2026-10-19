@@ -171,6 +171,9 @@ public static class DiplomacyText
         return string.Join("; ", ties);
     }
 
+    /// <summary>What the panel says of a god the player has not met (ADR-036).</summary>
+    public const string Unmet = "You have not met this god. Your gods meet when your villages are neighbours, a road or believers join them, your Creatures meet, or you sit in the Divine Council.";
+
     /// <summary>Why a diplomatic command was refused.</summary>
     /// <param name="rejection">The authority's verdict.</param>
     /// <param name="kind">The command.</param>
@@ -189,6 +192,7 @@ public static class DiplomacyText
         DiplomacyRejection.InvalidTerms => "Those terms are not valid",
         DiplomacyRejection.NoTreaty => Format("There is no such treaty with {0}", other),
         DiplomacyRejection.CannotGrant => "You cannot grant that now",
+        DiplomacyRejection.NotMet => Format("You have not met {0} yet", other),
     };
 
     /// <summary>One act, with the places it concerned.</summary>

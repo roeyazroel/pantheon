@@ -51,6 +51,7 @@ silently:
 | [ADR-033](ADR-033-resources-gathering-forests-and-roads.md) | Wood and stone, gathering, forests and roads | Accepted |
 | [ADR-034](ADR-034-great-events-plague-eclipses-reformations-and-world-wars.md) | Great events: the plague, eclipses, reformations, world wars, great droughts and great migrations | Accepted |
 | [ADR-035](ADR-035-the-ancient-beast-and-the-magical-anomaly.md) | The ancient beast and the magical anomaly | Accepted |
+| [ADR-036](ADR-036-known-gods-and-the-gods-long-term-plans.md) | Known gods and the gods' long-term plans | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

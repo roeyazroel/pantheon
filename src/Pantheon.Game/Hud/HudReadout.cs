@@ -101,7 +101,7 @@ public static class HudReadout
             TargetValid = valid,
             TargetRadius = selected?.Radius ?? 0f,
             Creature = BuildCreatureCard(session),
-            Rivals = BuildRivals(session.Content.Diplomacy.Conflict, session.World, god.Id, session.Players),
+            Rivals = BuildRivals(session.Content.Diplomacy, session.World, god.Id, session.Players),
             Contest = DescribeContest(session, god, out var favours),
             ContestFavoursPlayer = favours,
             Weather = DescribeWeather(session, god.Id, out var warning),
@@ -228,8 +228,9 @@ public static class HudReadout
     }
 
     /// <summary>One line per other god: its player's name when a player plays it (ADR-018), else its personality.</summary>
-    private static IReadOnlyList<string> BuildRivals(Domain.Conflict.ConflictRules conflict, WorldState world, int localGodId, IReadOnlyDictionary<int, string> players)
+    private static IReadOnlyList<string> BuildRivals(Domain.Diplomacy.DiplomacyRules diplomacy, WorldState world, int localGodId, IReadOnlyDictionary<int, string> players)
     {
+        var conflict = diplomacy.Conflict;
         var lines = new List<string>();
         foreach (var rival in world.Gods)
         {
@@ -248,7 +249,9 @@ public static class HudReadout
                 rival.Name,
                 who,
                 Conflict.ConflictText.Following(intel, GodStanding.CountFollowers(world, rival.Id), VictorySystem.ShareOf(world, rival.Id)),
-                Diplomacy.DiplomacyText.Status(Simulation.Diplomacy.DiplomacyModel.StatusOf(world, localGodId, rival.Id))));
+                Simulation.Diplomacy.Acquaintance.Knows(diplomacy.Acquaintance, world, localGodId, rival.Id)
+                    ? Diplomacy.DiplomacyText.Status(Simulation.Diplomacy.DiplomacyModel.StatusOf(world, localGodId, rival.Id))
+                    : "not yet met"));
         }
 
         return lines;

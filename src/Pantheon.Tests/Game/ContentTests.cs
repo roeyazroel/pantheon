@@ -60,6 +60,10 @@ public sealed class ContentTests
     [InlineData("disasters.json", "\"Transmission\": 0.05", "\"Transmission\": 1.5", "GreatEvents.Plague.Transmission")]
     [InlineData("disasters.json", "\"FirstMaxSeconds\": 2100.0", "\"FirstMaxSeconds\": 600.0", "longest waits must be at least its shortest")]
     [InlineData("disasters.json", "{ \"Kind\": \"Eclipse\", \"Names\"", "{ \"Kind\": \"Plague\", \"Names\"", "GreatEvents.Names must list known kinds, each once")]
+    [InlineData("god_ai.json", "\"Boost\": 2.0", "\"Boost\": 0.5", "Planning.Boost")]
+    [InlineData("god_ai.json", "\"Doubt\": 0.3", "\"Doubt\": 1.3", "Planning.Doubt")]
+    [InlineData("diplomacy.json", "\"SharedAdherence\": 0.05", "\"SharedAdherence\": 0.0", "Acquaintance.SharedAdherence")]
+    [InlineData("diplomacy.json", "\"NeighbourMetres\": 500.0", "\"NeighbourMetres\": -1.0", "Acquaintance.NeighbourMetres")]
     public void DivineContent_WithOutOfRangeValue_FailsValidation(string file, string from, string to, string expected)
     {
         var text = TestContent.ReadText(file);

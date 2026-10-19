@@ -28,7 +28,7 @@ public sealed class ConflictPresentationTests
     public void TheDiplomacyPanel_ShowsTheWarIntelligenceAndWarAims()
     {
         var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(77));
-        var world = session.World;
+        var world = Meetings.All(session.World);
         world.Tick = 20_000;
         var me = session.LocalGodId!.Value;
         var rival = world.Gods.First(g => g.Id != me);

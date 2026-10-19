@@ -123,6 +123,7 @@ public sealed class HistoryTests
     public void ThePlayersOwnMoves_AndTheWorldsTicks_BothWriteHistory()
     {
         var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(1234));
+        Meetings.All(session.World);
 
         SessionCommands.CommandDiplomacy(session, 2, DiplomaticCommandKind.DeclareWar);
         session.RunTicks(6000);

@@ -20,6 +20,7 @@ public sealed class PoliticsMultiplayerTests
         var ana = shared.Join("Ana");
         var host = shared.Host;
         var me = ana.Session!.LocalGodId!.Value;
+        Meetings.All(host.World);
         host.World.Tick = 20_000;
         PoliticsCommands.Summon(host);
         shared.Exchange(ana);
@@ -39,7 +40,7 @@ public sealed class PoliticsMultiplayerTests
         var shared = SharedWorlds.Start();
         var ana = shared.Join("Ana");
         var host = shared.Host;
-        var world = host.World;
+        var world = Meetings.All(host.World);
         world.Tick = 20_000;
         var ais = world.Gods.Where(g => g.Id != host.LocalGodId && g.Id != ana.Session!.LocalGodId).Select(g => g.Id).ToList();
         var terms = PoliticsWorlds.Terms(TreatyKind.JointWar) with { TargetGodId = ana.Session!.LocalGodId, Secret = true };

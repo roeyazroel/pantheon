@@ -145,6 +145,9 @@ public sealed class HistoryRecorder
             case ElderTurned { Resented: true } turned:
                 Add(world, HistoryKind.ElderTurned, god: turned.FromGodId, other: turned.ToGodId, settlement: turned.SettlementId, name: world.Notables.Find(n => n.Id == turned.NotableId)?.Name);
                 break;
+            case GodsMet { Way: not MeetingWay.Council } met:
+                Add(world, HistoryKind.GodsMet, god: met.GodId, other: met.OtherGodId, settlement: met.SettlementId, count: (int)met.Way);
+                break;
             case BeastSlain slain:
                 Add(world, HistoryKind.BeastSlain, god: slain.SlayerGodIds.Count > 0 ? slain.SlayerGodIds[0] : null, count: slain.SlayerGodIds.Count, name: slain.Name);
                 break;

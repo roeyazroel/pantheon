@@ -85,6 +85,33 @@ public static class PoliticsCommands
             : "You vote " + PoliticsText.Vote(choice!.Value));
     }
 
+    /// <summary>Debug: every god meets every other now (ADR-036), as if they had sat in the Divine Council.</summary>
+    /// <param name="session">The session; only the host may do this.</param>
+    /// <returns>Status line.</returns>
+    public static string MeetAll(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var world = session.World;
+        session.Command((_, events) =>
+        {
+            foreach (var god in world.Gods)
+            {
+                foreach (var other in world.Gods)
+                {
+                    Simulation.Diplomacy.Acquaintance.Introduce(world, god.Id, other.Id, Domain.Events.MeetingWay.Council, null, events);
+                }
+            }
+
+            return true;
+        });
+        return "Every god has met every other";
+    }
+
     /// <summary>Debug: the council meets now on the first tabled motion, or to condemn the local player's strongest rival.</summary>
     /// <param name="session">The session; only the host may summon it.</param>
     /// <returns>Status line.</returns>
@@ -160,6 +187,8 @@ public static class PoliticsCommands
         var world = session.World;
         var verdict = session.Command((authorities, events) =>
         {
+            // A debug driver: the gods meet first if they had not (ADR-036).
+            Simulation.Diplomacy.Acquaintance.Introduce(world, me, rival, Domain.Events.MeetingWay.Diplomacy, null, events);
             var proposed = authorities.Diplomacy.Execute(world, new DiplomaticCommand(me, rival, DiplomaticCommandKind.ProposeTreaty, Terms: terms), null, events);
             return proposed != DiplomacyRejection.None ? proposed : authorities.Diplomacy.Execute(world, new DiplomaticCommand(rival, me, DiplomaticCommandKind.Accept), null, events);
         });

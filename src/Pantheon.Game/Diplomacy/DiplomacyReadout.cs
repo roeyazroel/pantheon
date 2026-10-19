@@ -19,6 +19,9 @@ public sealed record DiplomacyEntry
     /// <summary>Your status with it.</summary>
     public required DiplomaticStatus Status { get; init; }
 
+    /// <summary>Whether you have met it (ADR-036); until then you cannot deal with it.</summary>
+    public bool Met { get; init; } = true;
+
     /// <summary>How it feels about you.</summary>
     public required string Attitude { get; init; }
 
@@ -104,6 +107,7 @@ public static class DiplomacyReadout
                 GodId = god.Id,
                 Title = (personality.Length > 0 ? $"{god.Name} the {personality}" : god.Name) + Traits(god),
                 Status = DiplomacyModel.StatusOf(world, me, god.Id),
+                Met = Acquaintance.Knows(session.Content.Diplomacy.Acquaintance, world, me, god.Id),
                 Attitude = DiplomacyText.Attitude(view),
                 Explanation = DiplomacyText.Explain(view, world),
                 Grievances = DiplomacyText.Grievances(DiplomacyModel.FindRelation(world, me, god.Id), world, god.Name),
@@ -137,7 +141,8 @@ public static class DiplomacyReadout
         line += Conflict.ConflictText.Format(": its Divine Power is {0:0}", god.DivinePower);
         var plotting = DiplomacyModel.AreAllied(session.World, me, god.Id)
             && session.PreviewGodDiplomacy(god).Any(c => c.Kind is DiplomaticCommandKind.BreakAlliance or DiplomaticCommandKind.Absorb && c.OtherGodId == me && c.Utility > 0f);
-        return line + (plotting ? "; it is weighing betrayal." : ".");
+        var goals = Gods.GoalText.Goals(god, session.World, me);
+        return line + (plotting ? "; it is weighing betrayal" : string.Empty) + (goals.Length > 0 ? "; it means to " + goals : string.Empty) + ".";
     }
 
     /// <summary>How the world sees the god (ADR-024), for example " (seen as cruel, vengeful)", or empty.</summary>

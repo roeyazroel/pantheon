@@ -13,9 +13,10 @@ public static class NetworkProtocol
     /// landslides, the volcano, tornadoes, meteors, blight and locusts, version 10 (part 10) the
     /// Divine Hand, Creatures' paths and the Divine Acts, version 11 (part 12) the prophets and elders,
     /// version 12 (part 13) the roads and the land's timber and stone, version 13 (part 14) the great
-    /// events and the plague, version 14 (part 15) the ancient beast and the anomaly.
+    /// events and the plague, version 14 (part 15) the ancient beast and the anomaly, version 15
+    /// (part 16) the gods each god knows and its goals.
     /// </summary>
-    public const int Version = 14;
+    public const int Version = 15;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

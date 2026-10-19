@@ -40,7 +40,7 @@ public sealed class PoliticsPresentationTests
     public void TheDiplomacyPanel_ShowsTreatiesFavoursAndProposals_AndOffersWhatTheAuthorityAllows()
     {
         var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(77));
-        var world = session.World;
+        var world = Meetings.All(session.World);
         var me = session.LocalGodId!.Value;
         var others = world.Gods.Where(g => g.Id != me).Select(g => g.Id).ToList();
         world.Tick = 20_000;

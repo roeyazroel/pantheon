@@ -543,6 +543,26 @@ neutral, hostile or at war), how the rival feels about you and why ("remembers t
 Elar"), what your people hold against it, any proposal waiting for your answer, and a button for
 each move you can make now. Your status also ends the rival's line on the HUD.
 
+- **First you must meet a god** (ADR-036). You know only the gods your people have met. A god you
+  have not met reads "Not yet met" in the panel and "not yet met" on the HUD, and you can neither
+  ally with it, war on it, sign with it nor ask anything of it. Gods meet when:
+  - villages they lead lie within 500 m, or one village follows both;
+  - a road joins their villages;
+  - their Creatures meet;
+  - one's deeds touch the other's people;
+  - they sit in the Divine Council, which brings every god together at its first session.
+
+  An alert tells you whom you met and how, and the history keeps it.
+- **The AI gods make plans** (ADR-036). Every 30 seconds each AI god sets itself up to three
+  goals:
+  - protect its home from the beast, an enemy's Creature or the plague;
+  - convert a village within reach, or win back its doubting followers;
+  - befriend or weaken a god it knows;
+  - prepare its people for the plague or a drought, or slay the ancient beast.
+
+  Its miracles, Creature, diplomacy and villages lean towards its goals. Well informed of a rival,
+  you see its goals in the panel: "it means to weaken you and convert Brightwater".
+
 - **Every god keeps its own view of every other**: trust, fear, respect, rivalry, gratitude and
   suspicion. What you do shapes Vael's view of you:
   - feeding or healing its followers when they are in need earns gratitude;
@@ -1185,8 +1205,9 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   width and the world's victories ("Seed 42   4096 m island   Ascendancy, conquest and cultural
   victory"), terrain renderer,
   camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
-  goal now and its top candidate actions with their scores and reasons, its diplomatic moves
-  with the factors behind them, the climate (the season and what it and a heat or cold wave
+  goal now and its top candidate actions with their scores and reasons, its plans (the goals it
+  holds with their weights and ages, when it plans next, the gods it knows) and the goals it is
+  weighing, its diplomatic moves with the factors behind them, the climate (the season and what it and a heat or cold wave
   change), the weather (the spell, the wind and the strongest cells),
   disasters (earthquakes and the fiercest fires), hazards (the volcano, tornadoes, swarms, blighted
   and buried regions, and marks on the land), migration (the groups on the road and every
@@ -1287,6 +1308,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--treaty=<treaty>` | Sign a treaty with your strongest rival at the start (NonAggression, DefensivePact, JointWar, SharedInfluence, ReligiousAccess, CreatureNonAggression, DisasterAssistance, MutualDefense, TerritorialAgreement, Tribute, MigrationAgreement). |
 | `--council-panel=on\|off` | Open the council panel (U) at the start. |
 | `--summon-council=on\|off` | Summon the Divine Council at the start. |
+| `--gods-met=on\|off` | Every god has met every other at the start, so all can deal from the first moment. |
 | `--war-goal=conquest\|holysite\|tribute\|humiliation` | Declare war on your strongest rival at the start, for that goal. |
 | `--holy-war=on\|off` | Send the settlement the camera looks at to holy war on its nearest neighbour of another faith at the start. |
 | `--veil=on\|off` | Cast veiled miracles from the start. |
@@ -1386,7 +1408,8 @@ tornadoes, swarms or marks, and find their volcano when it is first needed. Save
 start with Creatures that have walked no path, empty hands and no hallowed land. Saves from before part 12
 start with no prophets or elders; their villages choose elders at once. Saves from before part 14
 start with nobody sick and no great event, and set their first eclipse when loaded. Saves from before part 15
-find their beast's lair and set their first anomaly when loaded. Saves from before part 13
+find their beast's lair and set their first anomaly when loaded. In saves from before part 16
+every god has met every other, and the AI gods make their first plans when loaded. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.

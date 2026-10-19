@@ -104,6 +104,7 @@ public sealed class MultiplayerSessionTests
     {
         var shared = SharedWorlds.Start();
         var ana = shared.Join("Ana");
+        Meetings.All(shared.Host.World);
 
         SessionCommands.CommandDiplomacy(ana.Session!, 1, DiplomaticCommandKind.DeclareWar);
         Pantheon.Game.Migration.MigrationCommands.SetPolicy(ana.Session!, Domain.Migration.RefugeePolicy.TurnAway);

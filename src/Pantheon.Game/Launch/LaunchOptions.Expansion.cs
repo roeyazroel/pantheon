@@ -22,6 +22,9 @@ public sealed partial record LaunchOptions
     /// <summary>Whether the Divine Council meets at the start, for captures.</summary>
     public bool SummonCouncil { get; init; }
 
+    /// <summary>Whether every god has met every other at the start (ADR-036), for captures.</summary>
+    public bool GodsMet { get; init; }
+
     /// <summary>A treaty the player's god signs with its strongest rival at the start (ADR-025).</summary>
     public TreatyKind? Treaty { get; init; }
 
@@ -81,7 +84,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -142,6 +145,8 @@ public sealed partial record LaunchOptions
                 return OnOff(value) is { } open ? options with { SettlementPanel = open } : Warn(options, warnings, $"'--settlement-panel' needs on or off, got '{value}'.");
             case "council-panel":
                 return OnOff(value) is { } council ? options with { CouncilPanel = council } : Warn(options, warnings, $"'--council-panel' needs on or off, got '{value}'.");
+            case "gods-met":
+                return OnOff(value) is { } met ? options with { GodsMet = met } : Warn(options, warnings, $"'--gods-met' needs on or off, got '{value}'.");
             case "summon-council":
                 return OnOff(value) is { } summon ? options with { SummonCouncil = summon } : Warn(options, warnings, $"'--summon-council' needs on or off, got '{value}'.");
             case "treaty":

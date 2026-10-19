@@ -23,8 +23,14 @@ public sealed class DiplomacyPresentationTests
     [Fact]
     public void Panel_ListsEveryRival_WithTheMovesTheAuthorityWouldAccept()
     {
+        var unmet = DiplomacyReadout.Build(_session)[0];
+        Assert.False(unmet.Met);
+        Assert.Empty(unmet.Available);
+        Meetings.All(_session.World);
+
         var entries = DiplomacyReadout.Build(_session);
         var entry = entries[0];
+        Assert.True(entry.Met);
 
         Assert.Equal(_session.World.Gods.Skip(1).Select(g => g.Id), entries.Select(e => e.GodId));
         Assert.Equal(Rival, entry.GodId);
@@ -38,6 +44,8 @@ public sealed class DiplomacyPresentationTests
     public void Commands_ReportWhatHappened_OrWhyNot()
     {
         var name = _session.World.Gods[1].Name;
+        Assert.Equal($"You have not met {name} yet", SessionCommands.CommandDiplomacy(_session, Rival, DiplomaticCommandKind.OfferAlliance));
+        Meetings.All(_session.World);
 
         Assert.Equal($"Offer alliance: {name}", SessionCommands.CommandDiplomacy(_session, Rival, DiplomaticCommandKind.OfferAlliance));
         Assert.Equal($"A proposal between you and {name} is already waiting", SessionCommands.CommandDiplomacy(_session, Rival, DiplomaticCommandKind.OfferAlliance));
@@ -84,19 +92,20 @@ public sealed class DiplomacyPresentationTests
     }
 
     [Fact]
-    public void Hud_ShowsTheStatusWithTheRival()
+    public void Hud_ShowsTheStatusWithTheRival_AndTheGodsNotYetMet()
     {
+        Acquaintance.Introduce(_session.World, 1, Rival, MeetingWay.Neighbours, null, []);
         SessionCommands.CommandDiplomacy(_session, Rival, DiplomaticCommandKind.DeclareWar);
 
         var rivals = Pantheon.Game.Hud.HudReadout.Build(_session, null, null).Rivals;
         Assert.EndsWith(", at war", rivals[0], StringComparison.Ordinal);
-        Assert.All(rivals.Skip(1), line => Assert.EndsWith(", neutral", line, StringComparison.Ordinal));
+        Assert.All(rivals.Skip(1), line => Assert.EndsWith(", not yet met", line, StringComparison.Ordinal));
     }
 
     [Fact]
     public void ShippedDiplomacyRules_Parse()
     {
-        Assert.Equal(DiplomacyWorlds.Rules, TestContent.Shipped.Diplomacy);
+        Assert.Equal(DiplomacyWorlds.Rules with { Acquaintance = DiplomacyWorlds.Acquaintance }, TestContent.Shipped.Diplomacy);
         var text = TestContent.ReadText(ContentJson.DiplomacyFileName).Replace("\"WarResistance\": 0.6", "\"WarResistance\": 1.6", StringComparison.Ordinal);
         var files = GameContentFiles.Read(n => n == ContentJson.DiplomacyFileName ? text : TestContent.ReadText(n));
 

@@ -105,13 +105,13 @@ public sealed class SimulationEngine
             new Conflict.ConflictAuthority(divineRules, diplomacyRules.Conflict, ledger),
             new Hand.HandAuthority(divineRules.Hand, divineRules, settlementRules));
         Politics = new Politics.PoliticsSystem(diplomacyRules, ledger, Authorities.Diplomacy);
-        var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
+        var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy, godAiRules.Planning);
         var ai = new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains);
         Gods = new GodAiSystem(
             ai,
             godAiRules.EvaluationIntervalTicks,
             new RefugeeAdvisor(migrationRules, Authorities.Migration),
-            societyRules is null ? null : new Society.PriorityAdvisor(societyRules, settlementRules, divineRules, Authorities.Society!),
+            societyRules is null ? null : new Society.PriorityAdvisor(societyRules, settlementRules, divineRules, Authorities.Society!, godAiRules.Planning),
             new TreatyAdvisor(diplomacyRules, Authorities.Diplomacy, ai.ProfileOf),
             new CouncilAdvisor(diplomacyRules.Politics, Authorities.Council!),
             new CovertAdvisor(diplomacyRules, Authorities.Conflict!));

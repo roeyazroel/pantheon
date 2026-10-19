@@ -130,8 +130,13 @@ public partial class DiplomacyPanel : CanvasLayer
         var header = new HBoxContainer();
         header.AddThemeConstantOverride("separation", 12);
         header.AddChild(Text(entry.Title, 18, Ink));
-        header.AddChild(Text(DiplomacyText.Status(entry.Status), 16, _statusColors[entry.Status]));
+        header.AddChild(entry.Met ? Text(DiplomacyText.Status(entry.Status), 16, _statusColors[entry.Status]) : Text("Not yet met", 16, Muted));
         card.AddChild(header);
+        if (!entry.Met)
+        {
+            card.AddChild(Text(DiplomacyText.Unmet, 13, Muted));
+            return card;
+        }
         var practice = MigrationText.Practice(entry.RefugeePolicy);
         card.AddChild(Text((entry.Ties.Length > 0 ? entry.Ties + ". " : string.Empty) + char.ToUpperInvariant(practice[0]) + practice[1..] + ".", 14, new Color(0.62f, 0.8f, 1f)));
         if (entry.Creatures.Length > 0)
@@ -326,7 +331,7 @@ public partial class DiplomacyPanel : CanvasLayer
         foreach (var entry in entries)
         {
             var politics = entry.Politics;
-            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Creatures}:{entry.Proposal}:{string.Join(",", entry.Available)}"
+            yield return $"{entry.GodId}:{entry.Met}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Creatures}:{entry.Proposal}:{string.Join(",", entry.Available)}"
                 + $":{entry.War}:{entry.Intelligence}:{string.Join(",", politics.Aims.Select(a => a.Label))}"
                 + $":{string.Join(",", politics.Treaties.Select(t => t.Text))}:{politics.Others}:{politics.Favours}:{politics.Proposal}:{string.Join(",", politics.Offers.Select(o => o.Label))}:{string.Join(",", politics.Requests.Select(r => r.Label))}";
         }

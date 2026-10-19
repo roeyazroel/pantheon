@@ -189,6 +189,9 @@ public enum HistoryKind
 
     /// <summary>A surge of power came to a place (ADR-035).</summary>
     Anomaly,
+
+    /// <summary>Two gods met (ADR-036); the count is the <see cref="Events.MeetingWay"/>.</summary>
+    GodsMet,
 }
 
 /// <summary>

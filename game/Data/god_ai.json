@@ -30,5 +30,25 @@
     { "Personality": "Trickster", "Protect": 0.4, "Convert": 0.9, "Intimidate": 0.3, "Bless": 0.2, "Opportunism": 1.0, "Thrift": 0.5, "SendCreature": 0.6, "CreatureKindness": 0.0, "Cooperation": 0.8, "Aggression": 0.4, "Treachery": 1.0, "Grudge": 0.3, "RefugeePolicy": "Welcome", "HolySites": 0.6, "Domains": ["Trickery", "Chaos", "Knowledge"] },
     { "Personality": "Isolationist", "Protect": 1.0, "Convert": 0.2, "Intimidate": 0.1, "Bless": 0.8, "Opportunism": 0.1, "Thrift": 0.7, "SendCreature": 0.1, "CreatureKindness": 0.5, "Cooperation": 0.2, "Aggression": 0.1, "Treachery": 0.1, "Grudge": 0.8, "RefugeePolicy": "TurnAway", "HolySites": 0.3, "Domains": ["Ocean", "Protection", "Nature"] },
     { "Personality": "Warlord", "Protect": 0.4, "Convert": 0.4, "Intimidate": 1.0, "Bless": 0.1, "Opportunism": 0.6, "Thrift": 0.3, "SendCreature": 0.9, "CreatureKindness": -0.6, "Cooperation": 0.4, "Aggression": 1.0, "Treachery": 0.4, "Grudge": 0.8, "RefugeePolicy": "DemandConversion", "HolySites": 0.6, "Domains": ["War", "Fire", "Death"] }
-  ]
+  ],
+
+  // Major planning (spec sections 47 and 87, ADR-036). Every PlanSeconds an AI god weighs its goals: protect its
+  // home from a danger of HomeDanger or more, convert a village within ConvertReach metres of its own, befriend or
+  // weaken a god it knows, prepare for the plague or a drought (the land's dryness past Dryness), slay the ancient
+  // beast, and win back its followers when their mean doubt reaches Doubt. It holds up to MaxGoals of weight
+  // Threshold or more, one of each kind, each for at least MinGoalSeconds unless it is moot. An action serving a
+  // goal is worth Boost times as much; a goal adds DiplomacyBias at full weight to an alliance with a god it means
+  // to befriend or a war on one it means to weaken.
+  "Planning": {
+    "PlanSeconds": 30.0,
+    "MaxGoals": 3,
+    "MinGoalSeconds": 90.0,
+    "Threshold": 0.35,
+    "Boost": 2.0,
+    "DiplomacyBias": 0.1,
+    "HomeDanger": 0.3,
+    "ConvertReach": 700.0,
+    "Doubt": 0.3,
+    "Dryness": 0.65
+  }
 }
