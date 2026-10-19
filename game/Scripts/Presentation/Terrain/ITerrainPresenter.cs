@@ -19,4 +19,11 @@ public interface ITerrainPresenter
 
     /// <summary>Removes the built terrain.</summary>
     void Clear();
+
+    /// <summary>Brings detail to the terrain near the camera and takes it from terrain left behind (spec §84, ADR-050).</summary>
+    /// <param name="camera">The camera's place.</param>
+    void Stream(Godot.Vector3 camera);
+
+    /// <summary>Chunks in full detail and all chunks, or <c>null</c> when the renderer brings its own detail by distance.</summary>
+    (int Detailed, int Chunks)? Detail { get; }
 }

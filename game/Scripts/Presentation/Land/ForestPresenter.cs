@@ -10,15 +10,16 @@ namespace Pantheon.Client.Presentation.Land;
 
 /// <summary>
 /// Draws the forests (spec §93, ADR-033): the trees <see cref="ForestLayout"/> places, in square
-/// chunks of the island, one MultiMesh per chunk and tree shape. Every second it looks for regions
-/// whose timber, snow, villages or roads have changed and redraws their chunks, a few a frame.
+/// chunks of the island, one MultiMesh per chunk and tree shape. The chunks stream (spec §84,
+/// ADR-050): only those near the camera are planted, nearest first and a few a frame, and those
+/// left far behind are cleared. Every second it looks for regions whose timber, snow, villages or
+/// roads have changed and redraws their planted chunks, a few a frame.
 /// </summary>
 public sealed class ForestPresenter
 {
     private const string ShaderPath = "res://Shaders/tree.gdshader";
     private const float ChunkMetres = 256f;
     private const float RefreshSeconds = 1f;
-    private const int ChunksPerFrame = 6;
     private const float HideDistance = 1600f;
     private const float FadeMargin = 300f;
 
@@ -30,13 +31,16 @@ public sealed class ForestPresenter
     private readonly SettlementRules _rules;
     private readonly SettlementLayoutSettings _layout;
     private readonly ShaderMaterial _material;
+    private readonly StreamingSettings _streaming;
     private readonly ArrayMesh _conifer = TreeMeshes.Conifer();
     private readonly ArrayMesh _broadleaf = TreeMeshes.Broadleaf();
     private readonly List<TreePlacement> _trees = [];
     private readonly HashSet<int> _dirty = [];
     private readonly Dictionary<int, int> _housesShown = [];
     private readonly HashSet<int> _roadsShown = [];
-    private (MultiMeshInstance3D Conifers, MultiMeshInstance3D Broadleaves)[] _chunks = [];
+    private (MultiMeshInstance3D Conifers, MultiMeshInstance3D Broadleaves)?[] _chunks = [];
+    private ChunkStreamer? _streamer;
+    private bool _firstStream;
     private int[] _shown = [];
     private List<Clearing> _clearings = [];
     private TerrainField? _terrain;
@@ -48,15 +52,20 @@ public sealed class ForestPresenter
     /// <param name="parent">Node that holds the forests.</param>
     /// <param name="rules">Settlement rules, for the villages' houses.</param>
     /// <param name="layout">Settlement layout, for the villages' clearings.</param>
-    public ForestPresenter(Node3D parent, SettlementRules rules, SettlementLayoutSettings layout)
+    /// <param name="streaming">How near the camera forests are planted.</param>
+    public ForestPresenter(Node3D parent, SettlementRules rules, SettlementLayoutSettings layout, StreamingSettings streaming)
     {
         _parent = parent;
         _rules = rules;
         _layout = layout;
+        _streaming = streaming;
         _material = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
     }
 
-    /// <summary>Draws every tree of a new or loaded world.</summary>
+    /// <summary>Planted chunks and all chunks, for the debug panel.</summary>
+    public (int Loaded, int Chunks) Streaming => (_streamer?.Loaded.Count ?? 0, _streamer?.Count ?? 0);
+
+    /// <summary>Prepares the forests of a new or loaded world; they are planted as the camera comes near.</summary>
     /// <param name="world">World to show.</param>
     /// <param name="terrain">Terrain derived from the world.</param>
     public void Rebuild(WorldState world, TerrainField terrain)
@@ -66,30 +75,47 @@ public sealed class ForestPresenter
         var grid = world.Regions;
         _regionsPerChunk = Math.Max(1, (int)MathF.Round(ChunkMetres / grid.RegionSize));
         _chunksPerSide = (grid.Columns + _regionsPerChunk - 1) / _regionsPerChunk;
-        _chunks = new (MultiMeshInstance3D, MultiMeshInstance3D)[_chunksPerSide * _chunksPerSide];
-        for (var i = 0; i < _chunks.Length; i++)
-        {
-            _chunks[i] = (Instance(_conifer, "Conifers_" + i), Instance(_broadleaf, "Broadleaves_" + i));
-        }
-
+        _chunks = new (MultiMeshInstance3D, MultiMeshInstance3D)?[_chunksPerSide * _chunksPerSide];
+        _streamer = new ChunkStreamer(_chunksPerSide, _regionsPerChunk * grid.RegionSize, _streaming.ForestLoadRadius, _streaming.ForestUnloadRadius);
+        _firstStream = true;
         _shown = new int[grid.Cells.Count];
+        _dirty.Clear();
         _housesShown.Clear();
         _roadsShown.Clear();
         _clearings = Clearings(world);
-        for (var i = 0; i < _chunks.Length; i++)
-        {
-            Draw(world, i);
-        }
     }
 
-    /// <summary>Redraws the chunks whose trees have changed, a few each frame.</summary>
+    /// <summary>Plants the chunks the camera has come near, clears those it has left, and redraws planted chunks whose trees have changed.</summary>
     /// <param name="world">Current world.</param>
     /// <param name="delta">Frame time in seconds.</param>
-    public void Sync(WorldState world, double delta)
+    /// <param name="camera">The camera's place.</param>
+    public void Sync(WorldState world, double delta, Vector3 camera)
     {
-        if (_terrain is null)
+        if (_terrain is null || _streamer is null)
         {
             return;
+        }
+
+        // The first frame of a world plants everything in view at once, so nothing pops in.
+        var step = _streamer.Update(new System.Numerics.Vector3(camera.X, camera.Y, camera.Z), _firstStream ? int.MaxValue : _streaming.ForestChunksPerFrame);
+        _firstStream = false;
+        foreach (var chunk in step.Unload)
+        {
+            if (_chunks[chunk] is { } nodes)
+            {
+                nodes.Conifers.QueueFree();
+                nodes.Broadleaves.QueueFree();
+                _chunks[chunk] = null;
+            }
+
+            _dirty.Remove(chunk);
+        }
+
+        foreach (var chunk in step.Load)
+        {
+            _chunks[chunk] = (Instance(_conifer, "Conifers_" + chunk), Instance(_broadleaf, "Broadleaves_" + chunk));
+            _dirty.Remove(chunk);
+            Draw(world, chunk);
         }
 
         _sinceRefresh += delta;
@@ -102,7 +128,7 @@ public sealed class ForestPresenter
         var drawn = 0;
         foreach (var chunk in new List<int>(_dirty))
         {
-            if (drawn++ >= ChunksPerFrame)
+            if (drawn++ >= _streaming.ForestChunksPerFrame)
             {
                 break;
             }
@@ -118,9 +144,9 @@ public sealed class ForestPresenter
         var grid = world.Regions;
         foreach (var region in grid.Cells)
         {
-            if (Signature(grid, region) != _shown[region.Id])
+            if (Signature(grid, region) != _shown[region.Id] && ChunkOf(grid, region.Id) is var chunk && _chunks[chunk] is not null)
             {
-                _dirty.Add(ChunkOf(grid, region.Id));
+                _dirty.Add(chunk);
             }
         }
 
@@ -137,7 +163,10 @@ public sealed class ForestPresenter
             _clearings = Clearings(world);
             for (var i = 0; i < _chunks.Length; i++)
             {
-                _dirty.Add(i);
+                if (_chunks[i] is not null)
+                {
+                    _dirty.Add(i);
+                }
             }
         }
     }
@@ -165,8 +194,13 @@ public sealed class ForestPresenter
             }
         }
 
-        Fill(_chunks[chunk].Conifers.Multimesh, TreeKind.Conifer, ConiferLeaves, snow);
-        Fill(_chunks[chunk].Broadleaves.Multimesh, TreeKind.Broadleaf, BroadLeaves, snow);
+        if (_chunks[chunk] is not { } nodes)
+        {
+            return;
+        }
+
+        Fill(nodes.Conifers.Multimesh, TreeKind.Conifer, ConiferLeaves, snow);
+        Fill(nodes.Broadleaves.Multimesh, TreeKind.Broadleaf, BroadLeaves, snow);
     }
 
     /// <summary>Sets a MultiMesh to the chunk's trees of one shape.</summary>

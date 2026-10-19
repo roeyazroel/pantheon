@@ -72,6 +72,15 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
     /// <inheritdoc />
     public void Clear() => _parent.FreeChildren();
 
+    /// <inheritdoc />
+    /// <remarks>Terrain3D's clipmap already draws the land near the camera in full detail and far land coarser.</remarks>
+    public void Stream(Vector3 camera)
+    {
+    }
+
+    /// <inheritdoc />
+    public (int Detailed, int Chunks)? Detail => null;
+
     /// <summary>
     /// Replaces Terrain3D's shader with a copy that fixes two Terrain3D 1.0 defects
     /// (<see cref="Terrain3DShaderPatch"/>, ADR-007), or keeps the stock shader when its code is not recognised.

@@ -1401,6 +1401,13 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   sound), and the performance lines count the debris pieces and those still moving.
   `--disaster=meteor` and the I key's falling star strike villages as a natural one does, and
   `--hand=throw` throws a rock or a tree at the focused settlement.
+- **World streaming (spec §84, ADR-050).** The land near the camera carries its detail and the
+  rest stays simulation data: forests are planted only within 2.1 km of the camera, a few chunks
+  a frame, the fallback terrain is drawn in 2 m detail within 650 m and coarser beyond, and fires
+  are drawn within 2.5 km (their villages' labels and the Danger overlay show the rest). A camera
+  high above loads only what it could see. The debug panel's streaming line, also printed by
+  unattended runs, says what is loaded; the radii are in `Streaming` in
+  `game/Data/settlement_view.json`.
 - **Stress testing (spec §104, ADR-044).** `--stress=on` makes the stress scenario: the vast island
   with 50 villages of 2,000 people (100,000 in all), 8 gods and their Creatures, 20 weather cells,
   and an earthquake, a fire and a flood at once, the camera over the busiest villages and thousands

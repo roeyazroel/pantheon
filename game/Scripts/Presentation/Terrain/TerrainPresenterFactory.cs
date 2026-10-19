@@ -10,8 +10,9 @@ public static class TerrainPresenterFactory
     /// <param name="preference">Preference from <c>--terrain</c>.</param>
     /// <param name="parent">Node that will hold the terrain.</param>
     /// <param name="camera">Rendering camera (Terrain3D centres its level of detail on it).</param>
+    /// <param name="streaming">How near the camera the fallback terrain is drawn in full detail (ADR-050).</param>
     /// <returns>The presenter.</returns>
-    public static ITerrainPresenter Create(TerrainBackendPreference preference, Node3D parent, Camera3D camera)
+    public static ITerrainPresenter Create(TerrainBackendPreference preference, Node3D parent, Camera3D camera, Pantheon.Game.Presentation.StreamingSettings streaming)
     {
         var available = Terrain3DTerrainPresenter.IsAvailable;
         var useTerrain3D = preference switch
@@ -29,12 +30,12 @@ public static class TerrainPresenterFactory
         if (preference == TerrainBackendPreference.Fallback)
         {
             GD.Print("Terrain: using the fallback mesh renderer (--terrain=fallback).");
-            return new FallbackMeshTerrainPresenter(parent, "forced by --terrain=fallback");
+            return new FallbackMeshTerrainPresenter(parent, "forced by --terrain=fallback", streaming);
         }
 
         GD.PushWarning(
             "Terrain: the Terrain3D GDExtension is not loaded, so the FALLBACK mesh renderer is used. " +
             "Open the project in the Godot editor once, or run 'godot --headless --path game --import', to register the extension.");
-        return new FallbackMeshTerrainPresenter(parent, "Terrain3D unavailable");
+        return new FallbackMeshTerrainPresenter(parent, "Terrain3D unavailable", streaming);
     }
 }

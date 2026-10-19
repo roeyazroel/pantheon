@@ -43,6 +43,7 @@ public sealed class DisasterPresenter
     private readonly Dictionary<int, Decal> _ashViews = [];
     private readonly Dictionary<int, MeshInstance3D> _domeViews = [];
     private readonly HashSet<int> _seenQuakes = [];
+    private readonly float _effectRadius;
     private TerrainField? _terrain;
     private float _regionSize;
     private double _time;
@@ -51,8 +52,10 @@ public sealed class DisasterPresenter
     /// <param name="parent">Node that holds the disaster visuals.</param>
     /// <param name="camera">The camera, shaken by earthquakes.</param>
     /// <param name="hazards">Hazard rules, for drawing tornadoes, swarms and marks.</param>
-    public DisasterPresenter(Node3D parent, GodCameraController camera, Domain.Disasters.HazardRules hazards)
+    /// <param name="effectRadius">How near the camera fires are drawn (spec §84, ADR-050); beyond it they are only simulation data.</param>
+    public DisasterPresenter(Node3D parent, GodCameraController camera, Domain.Disasters.HazardRules hazards, float effectRadius)
     {
+        _effectRadius = effectRadius;
         _hazards = new HazardPresenter(parent, hazards);
         _fires = parent.AddLayer("Fires");
         _ash = parent.AddLayer("Ash");
@@ -105,13 +108,19 @@ public sealed class DisasterPresenter
             : new Vector3(MathF.Sin((float)_time * 37f), 0.5f * MathF.Sin((float)_time * 53f), MathF.Cos((float)_time * 41f)) * (ShakeMetres * shaking);
     }
 
-    /// <summary>Fire views for burning regions and ash for scorched ones.</summary>
+    /// <summary>Burning regions, and those of them drawn near the camera, for the debug panel.</summary>
+    public (int Shown, int Burning) Fires { get; private set; }
+
+    /// <summary>Fire views for burning regions near the camera (ADR-050) and ash for scorched ones.</summary>
     private void SyncRegions(WorldState world)
     {
+        var camera = _camera.ViewCamera.GlobalPosition;
+        var burning = 0;
         foreach (var region in world.Regions.Cells)
         {
             var centre = world.Regions.GetRegionCenter(region.Id);
-            if (region.Fire > 0f)
+            burning += region.Fire > 0f ? 1 : 0;
+            if (region.Fire > 0f && camera.DistanceTo(new Vector3(centre.X, 0f, centre.Z)) <= _effectRadius)
             {
                 if (!_fireViews.TryGetValue(region.Id, out var fire))
                 {
@@ -143,6 +152,8 @@ public sealed class DisasterPresenter
                 regrown.QueueFree();
             }
         }
+
+        Fires = (_fireViews.Count, burning);
     }
 
     /// <summary>A dome over every shielded settlement.</summary>

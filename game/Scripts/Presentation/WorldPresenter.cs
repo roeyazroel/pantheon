@@ -45,11 +45,11 @@ public sealed class WorldPresenter
     public WorldPresenter(Node3D root, Camera3D camera, PresentationContent content, SettlementRules rules, TerrainBackendPreference terrainPreference)
     {
         _palette = content.Palette;
-        _terrain = TerrainPresenterFactory.Create(terrainPreference, root.AddLayer("Terrain"), camera);
+        _terrain = TerrainPresenterFactory.Create(terrainPreference, root.AddLayer("Terrain"), camera, content.SettlementView.Streaming);
         _water = new WaterPresenter(root.AddLayer("Water"));
         _freshWater = new FreshWaterPresenter(root.AddLayer("FreshWater"));
         _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
-        _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout);
+        _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout, content.SettlementView.Streaming);
         _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
         _greatEvents = new GreatEvents.GreatEventPresenter(root.AddLayer("GreatEvents"), content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
@@ -67,6 +67,9 @@ public sealed class WorldPresenter
 
     /// <summary>Pieces of debris flying or lying, and those still moving (ADR-048).</summary>
     public (int Pieces, int Moving) Debris => (_debris.Count, _debris.Moving);
+
+    /// <summary>What streams near the camera now (ADR-050): planted forest chunks, detailed terrain chunks.</summary>
+    public ((int Loaded, int Chunks) Forests, (int Detailed, int Chunks)? Terrain) Streaming => (_forests.Streaming, _terrain.Detail);
 
     /// <summary>Name of the active terrain renderer.</summary>
     public string TerrainBackend => _terrain.BackendName;
@@ -108,11 +111,12 @@ public sealed class WorldPresenter
     /// <param name="delta">Frame time in seconds.</param>
     public void Sync(WorldState world, double delta)
     {
+        _terrain.Stream(_camera.GlobalPosition);
         _settlements.Sync(world);
         _debris.Houses(_settlements.Fell, _camera.GlobalPosition);
         _debris.Sync(delta);
         _freshWater.Sync(world);
-        _forests.Sync(world, delta);
+        _forests.Sync(world, delta, _camera.GlobalPosition);
         _roads.Sync(world);
         _greatEvents.Sync(world, delta);
     }

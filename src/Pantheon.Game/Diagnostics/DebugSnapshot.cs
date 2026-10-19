@@ -90,6 +90,9 @@ public sealed record DebugSnapshot
     /// <summary>Simulation time scale.</summary>
     public required double TimeScale { get; init; }
 
+    /// <summary>What streams near the camera (ADR-050), when the client measured it.</summary>
+    public StreamingStatus? Streaming { get; init; }
+
     /// <summary>The crowds' clock (ADR-049), in seconds, and the most of it a real second holds.</summary>
     public (double Seconds, float PaceCap)? CrowdClock { get; init; }
 

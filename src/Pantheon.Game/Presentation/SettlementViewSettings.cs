@@ -26,6 +26,9 @@ public sealed record SettlementViewSettings
     /// <summary>How religion shows in villages (ADR-042).</summary>
     public required StyleSettings Style { get; init; }
 
+    /// <summary>World streaming (ADR-050).</summary>
+    public required StreamingSettings Streaming { get; init; }
+
     /// <summary>The debris that flies when houses fall or a thrown thing strikes (ADR-048).</summary>
     public required DebrisSettings Debris { get; init; }
 
@@ -58,6 +61,7 @@ public sealed record SettlementViewSettings
         Collect(errors, nameof(People), People.Validate);
         Collect(errors, nameof(Style), Style.Validate);
         Collect(errors, nameof(Debris), Debris.Validate);
+        Collect(errors, nameof(Streaming), Streaming.Validate);
         if (errors.Count > 0)
         {
             throw new ArgumentException(string.Join(" ", errors));

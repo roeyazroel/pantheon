@@ -743,7 +743,14 @@ keep it in 0..1. A missing,
     `FallbackMeshTerrainPresenter` (fallback, logged and labelled with its reason), chosen by
     `TerrainPresenterFactory` (ADR-005). The Terrain3D adapter switches Terrain3D to a copy of
     its generated shader with bounds-safe region lookups and a colour lookup that also covers the
-    world's east and south edges (ADR-007, which amends ADR-005).
+    world's east and south edges (ADR-007, which amends ADR-005). The terrain streams its detail
+    (§84, ADR-050): Terrain3D by its own clipmap, and the fallback by building every chunk from
+    every second sample and rebuilding those near the camera from every sample, their borders
+    matched to the coarse (`TerrainMeshBuilder.BuildChunk`'s `edgeStride`).
+  - `ChunkStreamer` (in `Pantheon.Game.Presentation`, ADR-050) plans what streams: square chunks
+    load within a radius of the camera, measured in three dimensions, nearest first and a few a
+    frame, and go beyond a wider radius. `StreamingSettings` (`Streaming` in
+    `settlement_view.json`) holds the radii, and F1's streaming line shows what is loaded.
   - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`)
     tinted by a baked depth map, so it does not read the depth buffer. Waves flatten and the
     surface gets rougher with camera distance, which avoids flickering sun glints.
@@ -777,7 +784,7 @@ keep it in 0..1. A missing,
   and drapes the snow lying on the land (`SnowCover`) over the terrain as one decal, redrawn every
   second (ADR-028).
 - `Presentation/Disasters/`: `DisasterPresenter` keeps a `FireView` (flames, smoke, glow) per
-  burning region, ash decals on scorched land and a dome over each shielded settlement, plays a
+  burning region within `EffectRadius` of the camera (ADR-050), ash decals on scorched land and a dome over each shielded settlement, plays a
   shock wave when an earthquake begins and shakes the camera while the ground under its focus
   shakes. `SiteView` draws ruins as rubble. Its `HazardPresenter` (ADR-029) drapes blight and
   rubble (`HazardCover`) over the land, keeps a funnel per tornado and a cloud per swarm
@@ -795,7 +802,8 @@ keep it in 0..1. A missing,
   "Beast" look, half-buried asleep, walking awake, on its side fallen, with its label) and the
   anomaly's column of light (ADR-035).
 - `Presentation/Land/`: `ForestPresenter` draws the trees in chunks of MultiMeshes (the low-poly
-  `TreeMeshes` with the `tree.gdshader` tint) and redraws a chunk when its timber, snow, villages
+  `TreeMeshes` with the `tree.gdshader` tint), planting only the chunks the camera is near and
+  clearing those it leaves (ADR-050), and redraws a planted chunk when its timber, snow, villages
   or roads change; `RoadPresenter` draws each road's ribbon (ADR-033).
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast

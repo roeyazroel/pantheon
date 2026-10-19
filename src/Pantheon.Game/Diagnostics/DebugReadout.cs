@@ -44,6 +44,7 @@ public static class DebugReadout
         };
 
         PerformanceReadout.Append(lines, snapshot);
+        StreamingReadout.Append(lines, snapshot);
         lines.AddRange(snapshot.NetworkLines);
         BeliefReadout.AppendGods(lines, snapshot);
         GodAiReadout.Append(lines, snapshot);

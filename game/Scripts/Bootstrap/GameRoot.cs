@@ -91,14 +91,14 @@ public partial class GameRoot : Node3D
         _divinePresenter = new DivinePresenter(worldNode.AddLayer("Divine"), presentation.DivineView);
         _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
         _weather = new WeatherPresenter(worldNode.AddLayer("Weather"), presentation.WeatherView, content.Weather, GetNodeOrNull<DirectionalLight3D>("Sun"), GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment);
-        _disasters = new DisasterPresenter(worldNode.AddLayer("Disasters"), _camera, content.Disasters.Hazards);
+        _disasters = new DisasterPresenter(worldNode.AddLayer("Disasters"), _camera, content.Disasters.Hazards, presentation.SettlementView.Streaming.EffectRadius);
         _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView, Pantheon.Client.Presentation.People.PersonAssets.For(presentation.SettlementView));
         var hand = DivineHand.Create();
         worldNode.AddChild(hand);
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
         _session = _network.Join(content, options) ?? CreateSession(content, options);
         _network.Host(_session, options);
-        _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette);
+        _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette, () => _disasters.Fires, presentation.SettlementView.Streaming);
         _nature = new NatureDebug(_session, _camera, SetStatus);
         var hud = new Hud { Name = "Hud" };
         AddChild(hud);

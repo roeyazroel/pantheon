@@ -136,5 +136,21 @@
     "Wood": "#8a6440",
     "Stone": "#8f8a82",
     "Thatch": "#c9a24f"
+  },
+
+  // World streaming (spec section 84, ADR-050): the land near the camera carries its detail, and
+  // the rest stays simulation data. Forests are planted in 256 m chunks within ForestLoadRadius of
+  // the camera, a few chunks a frame, and cleared beyond ForestUnloadRadius; the fallback terrain is
+  // drawn in full detail within TerrainDetailRadius and coarse again beyond TerrainCoarseRadius;
+  // fires are drawn within EffectRadius. Distances are measured from the camera itself, so a high
+  // camera loads only what it could see. Terrain3D brings its own detail by distance.
+  "Streaming": {
+    "ForestLoadRadius": 2100.0,
+    "ForestUnloadRadius": 2500.0,
+    "ForestChunksPerFrame": 6,
+    "TerrainDetailRadius": 650.0,
+    "TerrainCoarseRadius": 850.0,
+    "TerrainChunksPerFrame": 1,
+    "EffectRadius": 2500.0
   }
 }

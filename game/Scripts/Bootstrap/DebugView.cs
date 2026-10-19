@@ -43,10 +43,20 @@ internal sealed class DebugView
     /// <param name="overlay">The debug panel.</param>
     /// <param name="network">The network, for its lines.</param>
     /// <param name="palette">Biome colours, for the region map.</param>
-    public DebugView(GameSession session, WorldPresenter presenter, GodCameraController camera, DebugOverlay overlay, NetworkDriver network, BiomePalette palette)
+    /// <param name="fires">Fires drawn and burning, for the streaming line.</param>
+    /// <param name="streaming">Streaming settings, for the streaming line.</param>
+    public DebugView(GameSession session, WorldPresenter presenter, GodCameraController camera, DebugOverlay overlay, NetworkDriver network, BiomePalette palette, Func<(int Shown, int Burning)> fires, Pantheon.Game.Presentation.StreamingSettings streaming)
     {
         (_session, _presenter, _camera, _overlay, _network, _palette) = (session, presenter, camera, overlay, network, palette);
+        (_fires, _streaming) = (fires, streaming);
     }
+
+    private readonly Func<(int Shown, int Burning)> _fires;
+
+    /// <summary>What streams near the camera now.</summary>
+    private StreamingStatus Streaming() =>
+        new(_presenter.Streaming.Forests.Loaded, _presenter.Streaming.Forests.Chunks, _presenter.Streaming.Terrain, _fires().Shown, _fires().Burning, _streaming);
+    private readonly Pantheon.Game.Presentation.StreamingSettings _streaming;
 
     /// <summary>The client's performance measurements.</summary>
     public PerformanceMonitor Performance { get; } = new();
@@ -80,7 +90,7 @@ internal sealed class DebugView
     public string Report()
     {
         Performance.MeasureSave(_session);
-        return string.Join("\n", PerformanceReadout.Describe(Performance.Sample(_presenter.CrowdStatuses, _presenter.Debris)).Append(PerformanceReadout.Census(_session.World)));
+        return string.Join("\n", PerformanceReadout.Describe(Performance.Sample(_presenter.CrowdStatuses, _presenter.Debris)).Append(PerformanceReadout.Census(_session.World)).Append(StreamingReadout.Describe(Streaming())));
     }
 
     /// <summary>Redraws the region debug map when its layer, the cursor region, the tick or the world changed.</summary>
@@ -141,6 +151,7 @@ internal sealed class DebugView
         StatusMessage = status,
         Crowds = _presenter.CrowdStatuses,
         CrowdClock = (_session.Crowds.Seconds, _presenter.CrowdPace),
+        Streaming = Streaming(),
         HolySiteRules = _session.Content.HolySites,
         WaterRules = _session.Content.Water,
     };
