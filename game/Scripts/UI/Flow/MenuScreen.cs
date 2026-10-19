@@ -27,6 +27,13 @@ internal sealed partial class MenuScreen : CanvasLayer
     /// <summary>The Creature species the new-world page offers, first the default, with what sets each apart.</summary>
     public IReadOnlyList<(string Name, string Description)> Species { get; set; } = [];
 
+    /// <summary>The climates the new-world page offers: seasons first (ADR-028).</summary>
+    private static readonly IReadOnlyList<(string Name, string Description)> SeasonChoices =
+    [
+        ("Four seasons", "Snowy winters and stores to last them, harvests in autumn, heat and fire in summer."),
+        ("An even climate", "No seasons: the weather comes and goes the year round."),
+    ];
+
     /// <summary>The world sizes the new-world page offers, first the default, each in words.</summary>
     public IReadOnlyList<(string Name, string Description)> Sizes { get; set; } = [];
 
@@ -100,9 +107,12 @@ internal sealed partial class MenuScreen : CanvasLayer
         var victory = Choice(victories, out var victoryAbout);
         _column.AddChild(UiKit.Row("Victory", victory));
         _column.AddChild(victoryAbout);
+        var seasons = Choice(SeasonChoices, out var seasonsAbout);
+        _column.AddChild(UiKit.Row("Climate", seasons));
+        _column.AddChild(seasonsAbout);
         _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(
             ParseSeed(seedField.Text, seed),
-            new Pantheon.Game.NewWorldOptions(Chosen(Species, species), Chosen(Sizes, size), victory.Selected > 0 ? VictoryText.Choices[victory.Selected].Settings : null))));
+            new Pantheon.Game.NewWorldOptions(Chosen(Species, species), Chosen(Sizes, size), victory.Selected > 0 ? VictoryText.Choices[victory.Selected].Settings : null, seasons.Selected <= 0))));
         if (latest is not null)
         {
             _column.AddChild(UiKit.Button($"Continue: {Describe(latest, year)}", () => LoadChosen?.Invoke(latest.Path)));

@@ -88,13 +88,14 @@ public sealed class SimulationEngine
     /// <param name="holySiteRules">Holy sites (ADR-021); <c>null</c> for a world without them.</param>
     /// <param name="waterRules">Rivers and floods (ADR-022); <c>null</c> for still water.</param>
     /// <param name="societyRules">Settlements' society (ADR-023); <c>null</c> for settlements without one.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null, Domain.Water.WaterRules? waterRules = null, Domain.Society.SocietyRules? societyRules = null)
+    /// <param name="ecologyRules">The land's life (ADR-028); <c>null</c> for land that never changes.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null, Domain.Water.WaterRules? waterRules = null, Domain.Society.SocietyRules? societyRules = null, Domain.Ecology.EcologyRules? ecologyRules = null)
     {
         History = historyRules is null ? null : new History.HistoryRecorder(historyRules);
         var ledger = new DiplomacyLedger(diplomacyRules);
         Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger, domainRules);
         Authorities = new Authorities(
-            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules, creatureRules, domainRules, holySiteRules, diplomacyRules),
+            new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules, creatureRules, domainRules, holySiteRules, diplomacyRules, ecologyRules),
             new CreatureAuthority(creatureRules, Creatures.Brain, domainRules),
             new DiplomacyAuthority(diplomacyRules, ledger),
             new MigrationAuthority(),
@@ -113,11 +114,12 @@ public sealed class SimulationEngine
             new TreatyAdvisor(diplomacyRules, Authorities.Diplomacy, ai.ProfileOf),
             new CouncilAdvisor(diplomacyRules.Politics, Authorities.Council!),
             new CovertAdvisor(diplomacyRules, Authorities.Conflict!));
-        Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger);
+        Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger, weatherRules);
         HolySites = holySiteRules is null ? null : new HolySites.HolySiteSystem(holySiteRules, divineRules, creatureRules, ledger);
         var systems = new List<ISimulationSystem>
         {
             new IntervalSystem(new WeatherSystem(weatherRules, settlementRules), weatherRules.StepIntervalTicks),
+            new IntervalSystem(new SeasonSystem(weatherRules, weatherRules.StepIntervalTicks), weatherRules.StepIntervalTicks),
         };
         if (waterRules is not null)
         {
@@ -126,8 +128,16 @@ public sealed class SimulationEngine
 
         systems.AddRange(
         [
-            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules), disasterRules.StepIntervalTicks),
-            CreateSettlementStep(settlementRules),
+            new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules, ecologyRules), disasterRules.StepIntervalTicks),
+        ]);
+        if (ecologyRules is not null)
+        {
+            systems.Add(new IntervalSystem(new Ecology.EcologySystem(ecologyRules, settlementRules), ecologyRules.StepIntervalTicks));
+        }
+
+        systems.AddRange(
+        [
+            CreateSettlementStep(settlementRules, weatherRules, ecologyRules),
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
         ]);
         if (societyRules is not null)
@@ -228,9 +238,9 @@ public sealed class SimulationEngine
     }
 
     /// <summary>Wraps a validated <see cref="SettlementSystem"/> in its step interval.</summary>
-    private static IntervalSystem CreateSettlementStep(SettlementRules rules)
+    private static IntervalSystem CreateSettlementStep(SettlementRules rules, WeatherRules? weather = null, Domain.Ecology.EcologyRules? ecology = null)
     {
-        var settlements = new SettlementSystem(rules);
+        var settlements = new SettlementSystem(rules, weather, ecology);
         return new IntervalSystem(settlements, rules.StepIntervalTicks);
     }
 

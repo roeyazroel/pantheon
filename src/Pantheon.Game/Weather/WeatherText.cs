@@ -18,6 +18,8 @@ public static class WeatherText
         WeatherSpell.Normal => "Normal weather",
         WeatherSpell.Dry => "A dry spell",
         WeatherSpell.Wet => "A wet spell",
+        WeatherSpell.HeatWave => "A heat wave",
+        WeatherSpell.ColdWave => "A cold wave",
     };
 
     /// <summary>What a spell means for the land.</summary>
@@ -28,6 +30,8 @@ public static class WeatherText
         WeatherSpell.Normal => "showers come and go",
         WeatherSpell.Dry => "little rain, and the land dries out",
         WeatherSpell.Wet => "rain often, and storms are likely",
+        WeatherSpell.HeatWave => "the land bakes and burns, and the heat sickens",
+        WeatherSpell.ColdWave => "frost and snow, poor harvests, and the cold sickens",
     };
 
     /// <summary>The weather beneath a cell.</summary>
@@ -39,6 +43,9 @@ public static class WeatherText
         WeatherKind.Rain => "rain",
         WeatherKind.Thunderstorm => "a thunderstorm",
         WeatherKind.Windstorm => "a windstorm",
+        WeatherKind.Snow => "snow",
+        WeatherKind.Fog => "fog",
+        WeatherKind.Hurricane => "a hurricane",
     };
 
     /// <summary>

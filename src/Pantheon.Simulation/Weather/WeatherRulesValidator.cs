@@ -79,6 +79,7 @@ public static class WeatherRulesValidator
         errors.RequireShare(rules.GroundwaterPerSecond, nameof(rules.GroundwaterPerSecond));
         errors.RequireShare(rules.StormFoodLossPerSecond, nameof(rules.StormFoodLossPerSecond));
         errors.RequireShare(rules.StormConstructionLossPerSecond, nameof(rules.StormConstructionLossPerSecond));
+        ClimateRulesValidator.Check(errors, rules);
         errors.ThrowIfAny("weather rules", nameof(rules));
     }
 

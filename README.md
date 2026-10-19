@@ -173,6 +173,16 @@ alliance and war:
 - **Large worlds stay smooth.** The AI gods take turns to think, and village labels make way for
   each other.
 
+**Milestone 15, part 8 (Seasons and the land's life)** gives the world a year and a living land:
+
+- **Seasons.** A ten-minute year: summer's crops, heat waves and fires, autumn's harvest, rain and
+  hurricanes, and winter's snow, hunger and cold. Choose an even climate if you would rather not.
+- **Weather.** Snow lies on the hills and melts into the rivers in spring; fog, hurricanes that
+  tear houses down, and heat and cold waves.
+- **The land's life.** Fire, floods, earthquakes and lightning harm the land; it heals, but harm
+  done again and again scars it for good, and only a god of Nature heals scars. Villages hunt the
+  wild animals, and crowded villages pollute their land.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -198,8 +208,8 @@ godot --path game
 
 `godot` stands for the Godot 4.7.2 .NET executable. You can also open `game/project.godot` in the
 Godot .NET editor and press F5. Started without options, the game opens on its start screen: begin
-a new world (its seed is shown, so you can share it, and you choose its size, how it may be won and
-your Creature's species), continue your newest save, load a world, or
+a new world (its seed is shown, so you can share it, and you choose its size, how it may be won,
+its climate and your Creature's species), continue your newest save, load a world, or
 host or join a shared world (joining reloads the game with the host's address). A short guide
 walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
@@ -246,6 +256,10 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- seasons and the land's life: the season from the tick, seasons and waves combining, what each
+  season does to harvests, stores, health and migration, snow lying and melting, fog and
+  hurricanes, harm healing into scars and Nature's healing, wildlife and hunting, pollution, the
+  words, alerts, history, readouts and overlay, and the migration of part 7's saves;
 - world sizes and victories: the shipped sizes and what a larger one adds, the same world for the
   same seed and size, the checks on `world_sizes.json`, conquest, culture and the sandbox, the
   first victory being the only one, how each victory is told (alerts, history, end screen, HUD),
@@ -306,7 +320,7 @@ covers:
 | Toggle region boundaries | B |
 | Toggle the debug overlay | F1 |
 | Next region debug map layer, then off | F3 |
-| New world from a random seed (small, won by Divine Ascendancy) | F2 |
+| New world from a random seed (small, won by Divine Ascendancy, with four seasons) | F2 |
 | Quicksave / quickload | F5 / F9 |
 | Pause / resume the simulation | Space |
 | Simulation speed slower / faster (×1, ×4, ×16) | `[` / `]` |
@@ -315,8 +329,9 @@ covers:
 | Grant your god 500 Divine Power (debug) | F4 |
 | Spoil every settlement's food stores (debug) | F6 |
 | Settlers arrive: every settlement grows by half (debug) | F7 |
-| Start the next weather spell: normal, dry, wet (debug) | F8 |
-| Call a storm at the cursor (debug) | F10 |
+| Start the next weather spell: normal, dry, wet, heat wave, cold wave (debug) | F8 |
+| Call a storm at the cursor, short of a hurricane (debug) | F10 |
+| Begin the next season (debug) | Y |
 | Start an earthquake at the cursor (debug) | F11 (fn+F11 on Mac laptops) |
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
 | Flood the nearest river, or send a wave over the land at the cursor (debug) | L |
@@ -572,9 +587,18 @@ Weather comes and goes on its own. Clouds blow in from the sea on the prevailing
 island and thin away as they drift on. Storms are dark, windy and full of lightning. From afar you
 see the clouds; up close you see the rain, and the light dims under a storm.
 
-- **Spells.** The island is in normal weather, a dry spell (little rain, and the land dries out) or
-  a wet spell (frequent rain and storms). During a dry or wet spell the line under your HUD names
-  it and how long it lasts; an alert announces a dry spell and its end.
+- **Spells.** The island is in normal weather, a dry spell (little rain, and the land dries out), a
+  wet spell (frequent rain and storms), a heat wave or a cold wave. The line under your HUD names
+  the spell and how long it lasts; alerts announce dry spells, heat and cold waves and their end.
+- **Snow.** Rain on land cold enough (high ground, and lower land in winter or a cold wave) lies
+  as snow. Nothing grows or burns under it, and when the land warms it melts into the soil, which
+  swells the rivers in spring. Snowing clouds drop slow white flakes.
+- **Fog.** Calm, cool, humid weather is fog: mist and drizzle.
+- **Hurricanes.** A storm born over warm sea in summer or autumn may grow into a hurricane. It
+  keeps its winds far inland and tears down houses where it passes; shields, the Protection
+  domain, shelters and architecture spare some. Other storms never reach its strength.
+- **Heat and cold waves.** A heat wave bakes and dries the land, lights fires, spoils stores and
+  sickens the weak; a cold wave freezes and snows, spoils the harvest and sickens the homeless.
 - **Water in the soil.** Rain soaks the farmland, warmth dries it (faster in a dry spell), and
   springs refill it slowly. Press O until the Weather overlay shows: brown land is in drought,
   yellow has just enough water, blue is soaked.
@@ -589,6 +613,28 @@ see the clouds; up close you see the rain, and the light dims under a storm.
 
 The rules are in `game/Data/weather.json`; how dry the soil must be for drought is in
 `game/Data/settlement_rules.json`, and how the clouds look is in `game/Data/weather_view.json`.
+
+## Seasons
+
+A new world turns through four seasons unless you choose an even climate on the start screen
+(or `--seasons=off`). Each lasts two and a half minutes, so a year is ten minutes. (The history
+counts its years faster, a minute each.)
+
+| | Spring | Summer | Autumn | Winter |
+| --- | --- | --- | --- | --- |
+| Warmth | | warmer | | colder: snow on the hills |
+| Rain | more | less | most | |
+| Harvest | x0.9 | x1.25 | x1.3 | x0.5 |
+| Fire | | far more | | far less |
+| Stores | | spoil | spoil a little | |
+| Health | | | | the cold sickens, the homeless most |
+| Migration | | | | few set out |
+| Extremes | | heat waves, hurricanes | hurricanes | cold waves |
+
+Plan for winter: villages that come into it with full stores get through, and those that do not
+go hungry. The line under your HUD names the season and the time left in it ("Winter of year 2
+(1:20 left)"), and an alert marks each season. The seasons are in `Seasons` in
+`game/Data/weather.json`; heat and cold waves, snow, fog and hurricanes are in `Extremes`.
 
 ## Disasters
 
@@ -612,6 +658,24 @@ The rules are in `game/Data/weather.json`; how dry the soil must be for drought 
   scorched land in ash and shielded villages in blue.
 
 The rules are in `game/Data/disasters.json`.
+
+## The land's life
+
+- **Harm.** Fires, floods, earthquakes and lightning harm the life of the land they reach. Harmed
+  land yields less and holds fewer animals.
+- **Healing and scars.** Harm heals over time, but harm done again and again scars the land for
+  good: a scar never heals by itself. An alert tells you when the land around one of your villages
+  is scarred, and the history remembers it.
+- **Nature.** Land whose villages mostly follow a god of Nature heals three times as fast and
+  loses its scars, and Regrowth heals harm and scars wherever it falls.
+- **Wildlife.** Wild animals return as far as the land allows (its cover, unburned, unharmed and
+  unpolluted) and die in fires. Villages hunt the animals around them for food.
+- **Pollution.** Villages of more than 250 people pollute their land, which yields less until the
+  pollution clears, slowly.
+- **Seeing it.** The Nature overlay (O) paints the land from red (lifeless) to green (rich), scars
+  in dark violet and snow in white.
+
+The rules are in `game/Data/ecology.json`.
 
 ## Society and priorities
 
@@ -953,14 +1017,16 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   victory"), terrain renderer,
   camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now and its top candidate actions with their scores and reasons, its diplomatic moves
-  with the factors behind them, the weather (the spell, the wind and the strongest cells),
+  with the factors behind them, the climate (the season and what it and a heat or cold wave
+  change), the weather (the spell, the wind and the strongest cells),
   disasters (earthquakes and the fiercest fires), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
   view of every Creature it has met with their latest encounters, its learned preferences by
   situation and its latest memories), the region
-  under the cursor with its statistics, soil, rain and wind and every god's influence there, one
+  under the cursor with its statistics, soil, rain, wind, snow, wildlife, harm, scar, pollution and
+  biodiversity and every god's influence there, one
   line per settlement, and, for the settlement nearest the cursor:
   - its belief: the share that follows no god, its hardship and comfort, and for each god the
     followers, Faith, Love, Fear, Doubt, worshippers and the power they raise;
@@ -982,9 +1048,10 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   temperature, moisture, fertility, vegetation, then off. Numeric layers run from dark (the
   lowest value) to bright (the highest), and the legend gives the range. The region under the
   cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
-  vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water and
-  flood, all on a fixed 0 to 1 scale.
-- **O** cycles the map overlays: influence, religion, faith, food, weather, danger and migration.
+  vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water,
+  flood, snow, wildlife, damage, scar and pollution, all on a fixed 0 to 1 scale.
+- **O** cycles the map overlays: influence, religion, faith, food, weather, danger, migration,
+  culture and nature.
 - **K** brings the nearest other Creature beside yours, so they meet at once and you can watch them
   play, run or fight.
 - **F4** grants your god 500 Divine Power.
@@ -994,8 +1061,9 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   shows what one step changed.
 - **F6** spoils every settlement's food stores and **F7** brings settlers (every settlement
   grows by half, at least 10 people). Use them to drive famines and recoveries.
-- **F8** starts the next weather spell (normal, dry, wet) for its longest length, and **F10** calls
-  a storm at the cursor. Use them to drive droughts and storm damage.
+- **F8** starts the next weather spell (normal, dry, wet, heat wave, cold wave) for its longest
+  length, and **F10** calls a storm at the cursor, short of a hurricane. Use them to drive
+  droughts and storm damage. **Y** begins the next season.
 - **F11** starts an earthquake (magnitude 6.5) and **F12** a fire at the cursor.
 - **L** makes the nearest river within 400 m burst its banks, or sends a wave over the low land at
   the cursor. The debug panel lists the rivers' levels and the lakes, and a selected settlement's
@@ -1027,12 +1095,12 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture\|nature` | Start with a map overlay shown. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
-| `--weather=normal\|dry\|wet\|storm` | Start in a weather spell, or with a storm over the focused settlement. |
+| `--weather=normal\|dry\|wet\|storm\|heatwave\|coldwave\|hurricane` | Start in a weather spell, or with a storm or a hurricane over the focused settlement. |
 | `--disaster=quake\|fire\|flood` | Start an earthquake, a fire or a flood at the focused settlement. |
 | `--priority=<priority>` | Ask the focused settlement to put something first (Food, Health, Growth, Worship, Defence, Preparation, Expansion, Temple). |
 | `--settlement-panel=on\|off` | Open the Settlements panel (N) on the focused settlement at the start. |
@@ -1059,6 +1127,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--species=<name>` | The species of your Creature in a new world: Mossback, Stonehide, Swiftclaw or Lumen. |
 | `--world-size=small\|large\|huge\|vast` | The size of a new world (see [World sizes](#world-sizes)). An unknown size makes a small world. |
 | `--victory=all\|sandbox\|<list>` | How a new world may be won: every way, no way, or a list of `ascendancy`, `conquest` and `cultural` separated by commas, for example `--victory=conquest,cultural`. Default: ascendancy. |
+| `--seasons=on\|off` | Whether a new world turns through four seasons (default on; see [Seasons](#seasons)). |
+| `--season=spring\|summer\|autumn\|winter` | Begin this season at the start, giving an even-climate world seasons (debug). |
 | `--rank=<rank>` | Your god starts at this rank, such as LesserGod or God (debug). |
 | `--domains=<domain>[,<domain>...]` | Take up these domains at the start, as your rank allows. |
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
@@ -1114,7 +1184,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 19`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 20`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1131,7 +1201,9 @@ never dealt with each other: no combat skill, no scars and no views of the other
 Milestones 1 to 13 start with an empty history: the world remembers from then on. Saves from
 Milestones 1 to 14 start with gods who have chosen no domains and with no village split, and find
 their holy sites when they are loaded. Saves from before Milestone 15, part 7 are won by Divine
-Ascendancy alone. A save keeps its world's size and how it may be won.
+Ascendancy alone. Saves from before part 8 keep an even climate, without seasons, with no snow or
+harm and their land's animals at its cover. A save keeps its world's size, how it may be won and
+its seasons.
 
 Your settings are kept in `user://settings.json`; the start screen and the pause menu have a
 settings page.
@@ -1142,7 +1214,7 @@ settings page.
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
-                      history.json, domains.json, holy_sites.json, world_sizes.json,
+                      history.json, domains.json, holy_sites.json, world_sizes.json, ecology.json,
                       settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
@@ -1201,6 +1273,9 @@ and the definition of done.
 - The whole island is built at once rather than streamed in pieces: a huge world's heightfield
   takes 1.1 s to build. No world is larger than 12 km or holds more than eight gods.
 - A history record names two winners, so a pantheon of three or four is told by its first two.
+- Snow does not slow travel, grass and trees keep their colour through the year, and pollution
+  does not depend on a village's technology. Tsunamis, tornadoes, volcanoes, landslides, meteors,
+  crop disease and locusts are not in the game yet.
 - The representative citizens are presentation only: they show what the settlement's numbers
   say, but nothing can interact with an individual citizen until a later milestone adds full
   (Tier 3) agents ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).

@@ -1,0 +1,35 @@
+{
+  // The land's life (spec section 18, ADR-028). Rates are per simulated second.
+  "StepIntervalTicks": 10,
+
+  // Wild animals return towards what the land can hold (its cover, unburned, unharmed, unpolluted),
+  // closing this share of the gap per second; fire kills them. A hundred people hunt this much from
+  // their own region and the regions beside it, each unit giving FoodPerWildlife food.
+  "WildlifeGrowthPerSecond": 0.004,
+  "HuntPerHundredPerSecond": 0.004,
+  "FoodPerWildlife": 6.0,
+  "FireWildlifeLossPerSecond": 0.05,
+
+  // Harm to the land: full fires and floods per second, an earthquake at its epicentre, and each
+  // smiting miracle (Lightning) where it falls.
+  "FireDamagePerSecond": 0.01,
+  "FloodDamagePerSecond": 0.004,
+  "QuakeDamage": 0.4,
+  "HarmDamage": 0.08,
+
+  // Harm heals by this share per second, down to the scar; harm above ScarThreshold slowly becomes
+  // scar, which only a god of nature heals. Land whose villages follow a god of nature heals
+  // NatureHealFactor times faster. A village is told when its land's scar passes ScarNotice.
+  "HealPerSecond": 0.004,
+  "ScarThreshold": 0.5,
+  "ScarPerSecond": 0.004,
+  "NatureHealFactor": 3.0,
+  "NatureScarHealPerSecond": 0.0008,
+  "ScarNotice": 0.15,
+
+  // A village of more than PollutionFreePeople pollutes its region, per thousand people beyond them;
+  // pollution clears by this share per second.
+  "PollutionFreePeople": 250,
+  "PollutionPerThousandPerSecond": 0.002,
+  "PollutionClearPerSecond": 0.001
+}

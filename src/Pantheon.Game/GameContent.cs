@@ -53,9 +53,12 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
     /// <summary>The sizes a new world may be made at (ADR-027); only the default world when none are given.</summary>
     public WorldSizes Sizes { get; init; } = WorldSizes.Default;
 
+    /// <summary>The land's life (ADR-028); an ecology that changes nothing when none is given.</summary>
+    public Domain.Ecology.EcologyRules Ecology { get; init; } = Domain.Ecology.EcologyRules.Inert;
+
     /// <summary>The full simulation pipeline over this content.</summary>
     /// <returns>A new engine.</returns>
-    public SimulationEngine CreateEngine() => new(SettlementRules, DivineRules, Creatures, GodAi, Miracles, Diplomacy, Weather, Disasters, Migration, History, Domains, HolySites, Water, Society);
+    public SimulationEngine CreateEngine() => new(SettlementRules, DivineRules, Creatures, GodAi, Miracles, Diplomacy, Weather, Disasters, Migration, History, Domains, HolySites, Water, Society, Ecology);
 
     /// <summary>Parses and validates the content files.</summary>
     /// <param name="files">Text of each content file.</param>
@@ -81,6 +84,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         var water = ContentJson.ParseWater(files.Water);
         var society = ContentJson.ParseSociety(files.Society);
         var sizes = string.IsNullOrWhiteSpace(files.WorldSizes) ? WorldSizes.Default : ContentJson.ParseWorldSizes(files.WorldSizes);
+        var ecology = string.IsNullOrWhiteSpace(files.Ecology) ? Domain.Ecology.EcologyRules.Inert : ContentJson.ParseEcology(files.Ecology);
 
         Check(ContentJson.WorldGenFileName, () =>
         {
@@ -102,10 +106,11 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         Check(ContentJson.WaterFileName, () => Simulation.Water.WaterRulesValidator.Validate(water));
         Check(ContentJson.SocietyFileName, () => Simulation.Society.SocietyRulesValidator.Validate(society));
         Check(ContentJson.WorldSizesFileName, () => WorldMaker.Validate(sizes, worldGen, pantheon));
+        Check(ContentJson.EcologyFileName, () => Simulation.Ecology.EcologyRulesValidator.Validate(ecology));
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
         CheckAcrossFiles(pantheon, creatures, godAi, domains, book!);
-        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration, history, domains, holySites, water, society) { Fingerprint = FingerprintOf(files), Sizes = sizes };
+        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration, history, domains, holySites, water, society) { Fingerprint = FingerprintOf(files), Sizes = sizes, Ecology = ecology };
     }
 
     /// <summary>
@@ -152,7 +157,7 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
     /// <summary>The SHA-256 of every content file's text, in order, as lower-case hex.</summary>
     private static string FingerprintOf(GameContentFiles files)
     {
-        var text = string.Join('\0', files.WorldGen, files.SettlementRules, files.DivineRules, files.Miracles, files.Gods, files.Creatures, files.GodAi, files.Diplomacy, files.Weather, files.Disasters, files.Migration, files.History, files.Domains, files.HolySites, files.Water, files.Society, files.WorldSizes);
+        var text = string.Join('\0', files.WorldGen, files.SettlementRules, files.DivineRules, files.Miracles, files.Gods, files.Creatures, files.GodAi, files.Diplomacy, files.Weather, files.Disasters, files.Migration, files.History, files.Domains, files.HolySites, files.Water, files.Society, files.WorldSizes, files.Ecology);
         return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
@@ -188,7 +193,8 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
 /// <param name="Water"><c>water.json</c>.</param>
 /// <param name="Society"><c>society.json</c>.</param>
 /// <param name="WorldSizes"><c>world_sizes.json</c>; empty for the default world only (ADR-027).</param>
-public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather, string Disasters, string Migration, string History, string Domains, string HolySites, string Water, string Society, string WorldSizes = "")
+/// <param name="Ecology"><c>ecology.json</c>; empty for land that never changes (ADR-028).</param>
+public sealed record GameContentFiles(string WorldGen, string SettlementRules, string DivineRules, string Miracles, string Gods, string Creatures, string GodAi, string Diplomacy, string Weather, string Disasters, string Migration, string History, string Domains, string HolySites, string Water, string Society, string WorldSizes = "", string Ecology = "")
 {
     /// <summary>Reads every file through a function that returns a content file's text by name.</summary>
     /// <param name="read">Reads one file of <c>game/Data</c>.</param>
@@ -213,6 +219,7 @@ public sealed record GameContentFiles(string WorldGen, string SettlementRules, s
             read(ContentJson.HolySitesFileName),
             read(ContentJson.WaterFileName),
             read(ContentJson.SocietyFileName),
-            read(ContentJson.WorldSizesFileName));
+            read(ContentJson.WorldSizesFileName),
+            read(ContentJson.EcologyFileName));
     }
 }

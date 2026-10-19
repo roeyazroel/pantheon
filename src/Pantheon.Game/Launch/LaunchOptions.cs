@@ -301,7 +301,7 @@ public sealed partial record LaunchOptions
             case "weather":
                 return Enum.TryParse<WeatherAtStart>(value.Trim(), ignoreCase: true, out var weather) && Enum.IsDefined(weather)
                     ? options with { Weather = weather }
-                    : Warn(options, warnings, $"'--weather' needs normal, dry, wet or storm, got '{value}'.");
+                    : Warn(options, warnings, $"'--weather' needs normal, dry, wet, storm, heatwave, coldwave or hurricane, got '{value}'.");
             case "disaster":
                 return Enum.TryParse<DisasterAtStart>(value.Trim(), ignoreCase: true, out var disaster) && Enum.IsDefined(disaster)
                     ? options with { Disaster = disaster }

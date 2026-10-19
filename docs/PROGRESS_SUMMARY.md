@@ -126,6 +126,12 @@ followed or the target has been measured.
   - gods know rivals only through allies, treaties, spies and scouts;
   - miracles may be veiled, and rebels incited and propaganda spread, at the risk of being traced;
   - militarist villages wage holy wars of their own will.
+- The year turns and the land lives (part 8):
+  - optional seasons: summer's harvests and fires, autumn's rain and hurricanes, winter's snow,
+    hunger and cold;
+  - snow, fog, hurricanes, and heat and cold waves;
+  - wild animals that villages hunt, harm that heals or scars the land for good, and pollution; a
+    god of Nature heals scars.
 - Worlds come in four sizes and are won in more ways (part 7):
   - the start screen offers the size and the victories beside the Creature;
   - conquest brings every rival below 5% of belief, and culture leads three villages in four
@@ -139,7 +145,7 @@ followed or the target has been measured.
 - Every sound and the music are synthesized by the game, and the settings are kept between runs.
 - Not built: Steam networking, streaming the terrain in pieces, worlds beyond 12 km and picking
   things up with the hand.
-- 1084 xUnit tests pass headless (1040 at the end of part 6, 853 at the end of Milestone 15).
+- 1123 xUnit tests pass headless (1084 at the end of part 7, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -170,6 +176,7 @@ followed or the target has been measured.
 | 15.5 | Treaties and the Divine Council (§37–42, §54) | Implemented, on `main`: eleven treaties, secret agreements, betrayal of treaties, favours, requests and promises, the council and its decrees, absorbing an ally |
 | 15.6 | War and intrigue (§43–46) | Implemented, on `main`: war goals and dictated peace, intelligence, veiled miracles, proxy acts, mortal holy wars |
 | 15.7 | Larger worlds and victories (§6, §53, with §84) | Implemented, on `main`: Small, Large, Huge and Vast worlds with up to eight gods, conquest, cultural and sandbox victories, larger pantheons, the AI's cost cut and labels that give way |
+| 15.8 | Seasons and the land's life (§16–18) | Implemented, on `main`: optional seasons, snow, fog, hurricanes, heat and cold waves, wildlife and hunting, harm and scars, pollution, and Nature's healing |
 
 ADR-004 and ADR-008 cite an earlier working roadmap with different milestone numbers;
 [GAME_SPEC.md](GAME_SPEC.md#earlier-working-roadmap-superseded) maps them. Every other document
@@ -618,6 +625,28 @@ The plan is [.docs/milestone-15-part-6-conflict.md](../.docs/milestone-15-part-6
 
 The plan is [.docs/milestone-15-part-7-worlds.md](../.docs/milestone-15-part-7-worlds.md).
 
+### Milestone 15, part 8: Seasons and the land's life
+
+- **Seasons (§17):** an optional ten-minute year, chosen with the world (ADR-028).
+  - Summer grows crops, dries the land, spoils stores and brings heat waves and fire.
+  - Autumn brings the harvest, rain and hurricanes.
+  - Winter halves the harvest, lays snow on the hills, sickens the homeless and keeps people home.
+- **Weather (§16):** snow that lies until it melts into the soil and the rivers, fog, hurricanes that
+  tear houses down, and heat and cold waves.
+- **The land's life (§18):**
+  - Fires, floods, earthquakes and lightning harm the land; harm heals, but repeated harm scars it
+    for good.
+  - A god of Nature heals scars, and Regrowth heals both.
+  - Wildlife returns as the land allows and feeds the villages that hunt it.
+  - Crowded villages pollute.
+- **Balance:**
+  - 38 of 40 passive games with seasons found a winner, with a median of 24.9 and a mean of 27.0
+    minutes (part 7: 33, 25.9 and 30.8).
+  - Winters bring famine (74 begun in six 40-minute games, against 2 without seasons) and more
+    migration, and populations end as large.
+
+The plan is [.docs/milestone-15-part-8-nature.md](../.docs/milestone-15-part-8-nature.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -626,7 +655,7 @@ Sections that only state intent are summarised at the end of this part.
 
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
-| 5 | The world | Partial | One continuous world divided into regions. Regions have a biome, elevation, temperature, moisture, fertility, vegetation, soil water, fresh water from rivers and lakes (ADR-022) and a divine blessing, and religious influence and weather are derived for any point. Missing: wildlife, resources, ecological health and disaster risk. Grassland, forest and mountain (as Highland) exist, plus the sea; river valleys are not a biome of their own. |
+| 5 | The world | Partial | One continuous world divided into regions. Regions have a biome, elevation, temperature, moisture, fertility, vegetation, soil water, fresh water from rivers and lakes (ADR-022), snow, wildlife, harm, scars and pollution (ADR-028) and a divine blessing, and religious influence and weather are derived for any point. Missing: resources and disaster risk. Grassland, forest and mountain (as Highland) exist, plus the sea; river valleys are not a biome of their own. |
 | 6 | World scale | Implemented | Four sizes (ADR-027): 2, 4, 8 and 12 km across against 10–20 km, with 8, 20, 40 and 48 settlements at the start against 8 for the MVP and 20–50 in the full game, and four, six or eight gods against four, up to eight later. Villages found more as they grow. In an hour the larger worlds reach 10,000–26,000 people against 10,000–100,000+. Hundreds of visible citizens, and no heavyweight object per citizen. The small island's 8 settlements grow to about 16 (ADR-023), with up to about 10,000 people after an hour. |
 | 84 | World streaming | Partial | Citizens are shown only near the camera (Tier 2), and labels give way to bigger villages from afar (ADR-027). The whole heightfield is still built at once: 1.1 s for the 8 and 12 km islands. |
 | 93 | Procedural generation | Partial | Elevation, moisture, temperature, fertility, vegetation, biome, rivers and lakes (ADR-022), holy sites and settlement sites come from the seed (tested). Missing: trees and resources. |
@@ -657,7 +686,7 @@ Sections that only state intent are summarised at the end of this part.
 | 12 | God domains | Implemented | All thirteen. One domain per rank tier up to three; each gives 0.8-cost miracles, a boon that changes a rule of the world and a signature miracle; AI gods choose by personality (ADR-021, ADR-022). |
 | 13 | Divine rank | Implemented (followers only) | Six ranks by followers, never lost, unlocking miracles. Achievements, holy places and the Creature do not count yet. |
 | 14 | Miracles | Partial | Twenty-three: Food, Heal, Bless Crops, Lightning, Rain, Fire, Shield, Mass Healing, Earthquake and Water, and thirteen domain miracles (Regrowth, Gift of Life, Redirect Storm, Firestorm, Spear of Heaven, Dread, Abundance, Sanctuary, Enlighten, Sow Discord, Upheaval, Tidal Wave, Judgement). No Divine Acts yet. |
-| 15 | Systemic consequences | Partial | Bless Crops raises the yield of the land; Food and Heal change hunger and health, which drive doubt and love; Lightning kills and frightens; Rain calls a cloud that waters the land as it drifts on, and as §15's example has it, raises the rivers until they flood downstream (ADR-022); Fire spreads across dry land and scorches it; Earthquake starts fires and ruins. Ecology beyond scorch and silt is not modelled. |
+| 15 | Systemic consequences | Partial | Bless Crops raises the yield of the land; Food and Heal change hunger and health, which drive doubt and love; Lightning kills and frightens; Rain calls a cloud that waters the land as it drifts on, and as §15's example has it, raises the rivers until they flood downstream (ADR-022); Fire spreads across dry land and scorches it; Earthquake starts fires and ruins. Fire, flood, quakes and lightning harm the land's life, and repeated harm scars it for good, which a god of Nature or Regrowth heals (ADR-028). |
 | 47 | AI gods | Partial | All eight of §47's personalities, with risk, aggression, cooperation, treachery and grudge as profile weights, diplomatic memory, preferred domains taken up in order, and holy sites claimed and held by their Creatures (ADR-021). Long-term goals are not modelled. |
 | 48 | God AI model | Implemented | Utility AI that continuously scores candidate actions, miracles and diplomatic moves alike, with explainable factors. |
 | 49 | AI betrayal | Implemented | An AI god breaks an alliance when it is far ahead, its ally dominates alone, its view has soured, or, near a joint victory, it outweighs its ally, weighted by its `Treachery` and held back by the goodwill of the alliance. The clues are visible beforehand: its attitude and grievances in the diplomacy panel and its weighed moves in the F1 AI view. |
@@ -684,10 +713,10 @@ Sections that only state intent are summarised at the end of this part.
 
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
-| 16 | Weather | Partial | Cells with §16's fields that move across regions at 2 Hz; clear, rain, thunderstorm and windstorm. Snow, heat and cold waves, fog and hurricanes are not modelled. |
-| 17 | Seasons | Not started (optional) | Dry, wet and normal spells of seeded length stand in for seasons. |
-| 18 | Ecology | Partial | Regions carry fixed temperature, climate moisture, fertility and vegetation, soil water that the weather changes and rivers keep up, water availability from rivers and lakes, scorch that fires leave and that regrows, silt from floods, and a blessing that miracles set and that fades. No vegetation, wildlife or pollution processes yet. |
-| 19 | Natural disasters | Partial | Earthquakes, wildfires and floods (ADR-022) as processes; drought (Milestone 7), storms and a god's tidal wave. Volcanoes, landslides, disease and locusts are not modelled. |
+| 16 | Weather | Implemented | Cells with §16's fields that move across regions at 2 Hz; clear, rain, snow, thunderstorm, windstorm, fog and hurricanes, and heat and cold waves as spells (ADR-028). Snow lies on the land until it melts into the soil; hurricanes tear houses down. |
+| 17 | Seasons | Implemented (optional) | A ten-minute year of four seasons, chosen with the world (ADR-028). They change temperature, rainfall, the harvest, fire risk, snow, the wish to leave, sickness (§17's disease) and stores spoiling, and bring heat waves, cold waves and hurricanes. Dry, wet and normal spells go on within them. |
+| 18 | Ecology | Implemented | Regions carry temperature (shifted by the season), moisture, fertility (soil quality), vegetation, soil water, water availability from rivers and lakes, scorch and harm from fires (fire damage), wildlife, pollution and scars; biodiversity is derived (ADR-028). Fire, flood, quakes and lightning harm the land; repeated harm scars it for good; a god of Nature heals scars and Regrowth heals harm. Villages hunt the wildlife, and crowded villages pollute. Vegetation itself is fixed. |
+| 19 | Natural disasters | Partial | Earthquakes, wildfires and floods (ADR-022) as processes; drought (Milestone 7), storms, hurricanes and extreme winters as cold waves (ADR-028), and a god's tidal wave. Tsunamis, tornadoes, volcanoes, landslides, meteors, crop disease and locusts are not modelled. |
 | 20 | Earthquake example | Partial | Shaking, structural checks, collapse, fire, panic (fear and doubt), religious interpretation in its simplest form, god intervention, and survivors leaving their ruins (migration). Road blockage is not modelled. |
 | 21 | Disaster preparation | Partial | Granaries, cisterns, firebreaks, shelters and levees, raised under a "prepare for disaster" priority, and architecture and engineering, spare a village part of a disaster (ADR-023). Dams, sea walls, irrigation works and evacuation routes are not built. |
 | 94 | Physics and disasters | Partial | Houses carry earthquake and fire resistance; destruction is simulated and shown as rubble. No debris physics. |
@@ -736,7 +765,7 @@ Sections that only state intent are summarised at the end of this part.
 | 64 | Terrain destruction | Not started | Earthquakes damage settlements, not the terrain. |
 | 88 | Threading model | Followed | Everything runs on the main thread. |
 | 85 | Navigation | Partial | Strategic: A* over land regions, smoothed (the Creature and migration groups). Local navigation meshes do not exist; citizens walk in straight lines. |
-| 89 | Update frequencies | Partial | Weather steps at 2 Hz; disasters, settlements, belief and diplomacy at 1 Hz; the god AI evaluates every 3 s; the Creature decides at 5 Hz and moves every tick. Citizen poses are evaluated every frame from simulation time. |
+| 89 | Update frequencies | Partial | Weather and the seasons step at 2 Hz; disasters, ecology, settlements, belief and diplomacy at 1 Hz; the god AI evaluates every 3 s; the Creature decides at 5 Hz and moves every tick. Citizen poses are evaluated every frame from simulation time. |
 | 104 | Performance testing | Partial | Repeatable measurements: unattended runs print frame times, `--speed` and `--advance-ticks` set up a grown world at speed, and headless probes measure ticks (shipped world and 21 settlements), traffic, saves and loads. Part 7 measured each world size's tick and the AI's cost by system (ADR-027). No scripted 100,000-citizen or 50-settlement scenario. |
 | 105 | Target performance | Measured (Mac) | 1080p on an Apple M3 Pro: 150 FPS uncapped (6.7 ms) at x16 thirty minutes into a game, Terrain3D or fallback. At 1600 × 900 (vsync), a Huge world holds about 120 FPS from 2.6 km up ten minutes in (part 7). Not measured on Windows or Linux; graphics options since Milestone 15 (shadows, render scale with FSR, citizens shown). |
 
@@ -757,15 +786,15 @@ Sections that only state intent are summarised at the end of this part.
 | 98 | Cheating model | Implemented (as specified) | The host is trusted; no anti-cheat. |
 | 70 | No required server infrastructure | Implemented | |
 | 75 | Save architecture | Partial | A save holds the seed, generation settings, tick, random state, regions (with soil water, fire and scorch), settlements (with ruins, shields, the wish to leave, Old Faiths and sanctuaries), gods (with refugee policies and domains), beliefs, Creatures (with their views of each other), diplomacy, weather, disasters, migration groups, the history and the holy sites. Named slots, an autosave and the quicksave. No GameTime. |
-| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 19 and migrations from versions 1 to 18, each tested against a save written by the previous build. |
+| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 20 and migrations from versions 1 to 19, each tested against a save written by the previous build. |
 | 77–78 | Core rule, layered architecture | Implemented | The core projects never reference Godot (tested). |
 | 79 | Simulation systems | Partial | Weather, disaster, settlement, population, belief, victory, diplomacy, migration, Creature and god AI systems, and the miracle, Creature, diplomacy and migration authorities. |
 | 90 | Core data models | Partial | `GodState` (subset), `SettlementState` with belief, love, fear and doubt per god, `CreatureState` (with combat skill, scars and relationships), `RegionState` (soil water, fire and scorch; no wildlife or pollution), `WeatherState` with §90's weather cells, `DisasterState` with earthquakes, `MigrationState` with §82's groups, and `GodRelation` and `GodStance` for §90's DiplomacyRelation (no treaties). No WorldEvent records with duration. |
 | 100 | Repository structure | Implemented, with differences | As recommended, plus `World/` and `Miracles/` in `Pantheon.Domain`, `game/Data/`, `game/addons/`, `.docs/` and `AGENTS.md`. |
-| 101 | Architecture decision records | Implemented | ADR-001 to ADR-027. |
+| 101 | Architecture decision records | Implemented | ADR-001 to ADR-028. |
 | 102–103 | Testing, deterministic testing | Implemented | Every rule has tests, including §102's "Fear decreases after prolonged safety" and "God cannot cast miracle without enough power". Randomness is seeded and checked. |
 | 106 | Debug tools | Partial | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons, and relationship reasoning: the diplomatic moves weighed with their factors), weather cells (spell, wind, the strongest cells, soil and rain under the cursor, a settlement's water), disasters (earthquakes, the fiercest fires, a settlement's dangers), migration routes (groups on the road, refugee policies with the AI's reasons, a settlement's pressure to leave, the Migration overlay), and Creatures' relationships (views, encounters, combat skill, scars, power and how the player's Creature would meet the nearest one; K and `--meet` bring two together). Missing: navmesh, network authority and other performance metrics. |
-| 107 | Content data | Partial | World generation, settlement and divine balance, miracles, the gods of a new world, Creature rules, AI personalities, diplomacy rules, weather and disaster rules and presentation are data files, parsed strictly. Domains, holy sites, schisms and Creature species are data too (ADR-021), and so are world sizes and the extra gods (ADR-027). |
+| 107 | Content data | Partial | World generation, settlement and divine balance, miracles, the gods of a new world, Creature rules, AI personalities, diplomacy rules, weather and disaster rules and presentation are data files, parsed strictly. Domains, holy sites, schisms and Creature species are data too (ADR-021), and so are world sizes and the extra gods (ADR-027), and the seasons, weather extremes and the land's life (ADR-028). |
 | 108 | MVP world | Implemented | One map, three land biomes, 8 settlements, four gods (1 human, 3 AI) and four Creatures. |
 | 131 | Non-goals | Respected | |
 | 132 | Validation priorities | Partly testable | "Is converting populations fun?", "Is raising the Creature fun?", "Are rival gods interesting?" and "Does diplomacy generate stories?" and "Do disasters create meaningful decisions?" can be tried now: rain or shield, rebuild trust after a quake, shake a rival, side with one rival against another, take in or turn away a rival's refugees. |
@@ -816,46 +845,48 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-025](ADR/ADR-025-treaties-secrets-favours-and-the-divine-council.md) | Treaties, secret agreements, favours and the Divine Council (Milestone 15, part 5) | Accepted |
 | [ADR-026](ADR/ADR-026-war-goals-intelligence-proxy-wars-and-holy-wars.md) | War goals, intelligence, proxy wars and mortal holy wars (Milestone 15, part 6) | Accepted |
 | [ADR-027](ADR/ADR-027-world-sizes-victories-and-large-worlds.md) | World sizes, conquest, cultural and sandbox victories, and large worlds (Milestone 15, part 7) | Accepted |
+| [ADR-028](ADR/ADR-028-seasons-extremes-and-ecology.md) | Seasons, weather extremes and the land's life (Milestone 15, part 8) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 1084 tests, and they all pass headless in about twelve
+The xUnit suite in `src/Pantheon.Tests` has 1123 tests, and they all pass headless in about twelve
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | 15.5 | 15.6 | Now |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
-| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
-| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
-| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
-| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
-| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 |
-| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 | 25 | 25 |
-| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 |
-| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 | 41 | 41 |
-| War and intrigue | `WarTests`, `CovertTests`, `HolyWarTests`, `ConflictPresentationTests`, `ConflictMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 24 | 24 |
-| World sizes and victories | `VictoryKindTests`, `WorldSizeTests`, `VictoryPresentationTests`, `AiCostTests`, `LabelDeclutterTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 |
-| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
-| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
-| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
-| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 | 40 | 40 |
-| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 | 15 | 15 |
-| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 | 13 | 13 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V18Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 | 132 | 138 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 27 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
-| **Total** |  | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** | **1040** | **1084** |
+| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | M12 | M13 | M14 | M15 | 15.2 | 15.3 | 15.4 | 15.5 | 15.6 | 15.7 | Now |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
+| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 | 18 |
+| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
+| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 | 32 |
+| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Rivers, floods and drinking water | `HydrologyTests`, `WaterSystemTests`, `SettlementWaterTests`, `WaterMiracleTests`, `WaterPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 | 33 | 33 |
+| Society, priorities and technology | `SocietyModelTests`, `SocietySystemTests`, `PriorityTests`, `CivicTests`, `SocietyPresentationTests`, `SocietyMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 25 | 25 | 25 | 25 | 25 | 25 |
+| Culture, doctrines and traits | `ConductTests`, `CultureModelTests`, `CultureSystemTests`, `WitnessCultureTests`, `CulturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 | 33 | 33 | 33 |
+| Treaties, favours and the council | `TreatyTests`, `FavourTests`, `CouncilTests`, `TreatyAdvisorTests`, `PoliticsPresentationTests`, `PoliticsMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 41 | 41 | 41 | 41 |
+| War and intrigue | `WarTests`, `CovertTests`, `HolyWarTests`, `ConflictPresentationTests`, `ConflictMultiplayerTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 24 | 24 | 24 |
+| World sizes and victories | `VictoryKindTests`, `WorldSizeTests`, `VictoryPresentationTests`, `AiCostTests`, `LabelDeclutterTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 33 | 33 |
+| Seasons, extremes and the land's life | `ClimateTests`, `EcologyTests`, `NaturePresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 30 |
+| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
+| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
+| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests`, `MultiplayerReplicationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 | 39 | 39 | 40 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
+| History and the game's flow | `HistoryTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| Domains and signature miracles | `DomainTests`, `SignatureMiracleTests`, `DomainPresentationTests`, `ExpansionContentTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 36 | 40 | 40 | 40 | 40 | 40 | 40 | 40 |
+| Holy sites and schisms | `HolySiteTests`, `SchismTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 15 | 15 | 15 | 15 | 15 | 15 | 15 | 15 |
+| Settings and sound | `GameSettingsTests`, `AudioTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 13 | 13 | 13 | 13 | 13 | 13 | 13 | 13 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V19Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 | 92 | 98 | 105 | 112 | 117 | 122 | 127 | 132 | 138 | 144 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 | 104 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 27 | 30 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 | 12 |
+| **Total** |  | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** | **764** | **781** | **853** | **897** | **927** | **965** | **1011** | **1040** | **1084** | **1123** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -974,8 +1005,8 @@ The [README](../README.md) lists every control and option.
 
 ### Weather
 
-- Clear, rain, thunderstorm and windstorm only; no snow, heat or cold waves, fog or hurricanes,
-  and spells instead of seasons (§16–17).
+- Every state of §16, and optional seasons (§17, ADR-028). Snow does not slow travel, and grass
+  and trees keep their colour through the year.
 - Weather touches harvests, stores and building work, dry storms start fires, and rain swells the
   rivers until they flood (Milestone 15, part 2).
 - Clouds fade out near the camera, so up close the weather shows as rain, dim light and
@@ -983,8 +1014,8 @@ The [README](../README.md) lists every control and option.
 
 ### Disasters
 
-- Earthquakes, wildfires and floods only; no volcanoes, disease or locusts, and no disaster
-  preparation (§19, §21). Survivors leave their ruins (Milestone 10), but roads are not blocked.
+- Earthquakes, wildfires, floods and hurricanes only; no tsunamis, tornadoes, volcanoes,
+  landslides, meteors, crop disease or locusts, and only part of §21's disaster preparation. Survivors leave their ruins (Milestone 10), but roads are not blocked.
 - Fire spread is sensitive to dryness: the shipped numbers sit between runs where nothing spread
   and runs where the island burned (see the plan).
 - Smoke is faint and fires read mostly as flames and glow.

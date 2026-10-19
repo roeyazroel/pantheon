@@ -20,14 +20,17 @@ namespace Pantheon.Tests.Domains;
 public sealed class SignatureMiracleTests
 {
     [Fact]
-    public void Regrowth_PutsOutFires_HealsBurnedLand_AndWatersIt()
+    public void Regrowth_PutsOutFires_HealsBurnedAndScarredLand_AndWatersIt()
     {
         var (world, caster) = Create(GodDomain.Nature);
         var region = world.Regions.Cells[world.Settlements[0].RegionId];
-        (region.Fire, region.Scorch, region.SoilMoisture) = (0.7f, 0.9f, 0.1f);
+        (region.Fire, region.Scorch, region.SoilMoisture, region.Damage, region.Scar) = (0.7f, 0.9f, 0.1f, 0.8f, 0.6f);
 
         Cast(world, caster, "regrowth", world.Settlements[0].Position);
 
+        // It also heals the land's harm and its scars (ADR-028).
+        Assert.Equal(0.6f * 0.2f, region.Scar, 4);
+        Assert.Equal(0.8f * 0.2f, region.Damage, 4);
         Assert.Equal(0f, region.Fire);
         Assert.Equal(0.9f * (1f - 0.8f), region.Scorch, 4);
         Assert.Equal(0.8f, region.SoilMoisture, 4);

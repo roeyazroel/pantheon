@@ -91,7 +91,7 @@ public static class DisasterModel
         }
 
         var dryness = 1f - Math.Min(1f, SimMath.Clamp01(region.SoilMoisture) / rules.WetSoil);
-        return SimMath.Clamp01(region.Vegetation) * (1f - SimMath.Clamp01(region.Scorch)) * dryness * dryness;
+        return SimMath.Clamp01(region.Vegetation) * (1f - SimMath.Clamp01(region.Scorch)) * (1f - SimMath.Clamp01(region.Snow)) * dryness * dryness;
     }
 
     /// <summary>Sets a region alight, when it can burn; a burning region only grows fiercer.</summary>

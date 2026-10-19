@@ -71,6 +71,8 @@ public static class HistoryText
             HistoryKind.HolyWar => Format("The Holy War against {0}, for {1}", place, god),
             HistoryKind.DictatedPeace => Format("{0} dictates peace to {1}", god, other),
             HistoryKind.Exposure => Format("The Plot of {0} against {1} is uncovered", god, other),
+            HistoryKind.Hurricane => Format("The Great Storm of {0}", place),
+            HistoryKind.Scar => Format("The Scarring of {0}", place),
         };
     }
 
@@ -87,6 +89,7 @@ public static class HistoryText
             HistoryKind.Earthquake => record.Count > 0 ? Format("{0} dead", record.Count) : "houses fell",
             HistoryKind.Fire => Format("{0} houses lost", record.Count),
             HistoryKind.Flood => record.Count > 0 ? Format("{0} houses lost", record.Count) : "people drowned",
+            HistoryKind.Hurricane => Format("{0} houses lost", record.Count),
             HistoryKind.Founding => Format("{0} settlers", record.Count),
             HistoryKind.Revolt => Format("{0} renounced their god", record.Count),
             HistoryKind.Absorption => Format("{0} turned", record.Count),
@@ -99,7 +102,7 @@ public static class HistoryText
             HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
                 or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine
-                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure => string.Empty,
+                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure or HistoryKind.Scar => string.Empty,
         };
     }
 

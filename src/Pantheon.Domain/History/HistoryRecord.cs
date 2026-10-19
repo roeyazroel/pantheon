@@ -108,6 +108,12 @@ public enum HistoryKind
 
     /// <summary>A god was caught working in secret against another (ADR-026).</summary>
     Exposure,
+
+    /// <summary>A hurricane tore houses down in a settlement; <see cref="HistoryRecord.Count"/> is how many (ADR-028).</summary>
+    Hurricane,
+
+    /// <summary>The land a settlement lives from was scarred for good (ADR-028).</summary>
+    Scar,
 }
 
 /// <summary>

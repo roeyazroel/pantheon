@@ -121,7 +121,7 @@ public sealed class CulturePresentationTests
         var image = OverlayMap.Build(world, OverlayKind.Culture, 1, DivineWorlds.Rules, SettlementWorlds.Rules, view);
 
         Assert.StartsWith("Culture overlay", image.Legend, StringComparison.Ordinal);
-        Assert.Null(OverlayMap.Next(OverlayKind.Culture));
+        Assert.Equal(OverlayKind.Nature, OverlayMap.Next(OverlayKind.Culture));
         var warlike = world.Settlements[0].RegionId * 4;
         var godless = world.Settlements[1].RegionId * 4;
         Assert.True(image.Rgba[warlike] > 2 * image.Rgba[warlike + 2], "militarist lands are red");

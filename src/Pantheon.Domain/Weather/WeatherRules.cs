@@ -140,4 +140,10 @@ public sealed record WeatherRules
 
     /// <summary>Share of the work on a settlement's house under construction a full storm undoes per second.</summary>
     public required float StormConstructionLossPerSecond { get; init; }
+
+    /// <summary>The seasons, for worlds made with them (spec §17, ADR-028); none when absent.</summary>
+    public SeasonRules Seasons { get; init; } = SeasonRules.None;
+
+    /// <summary>Snow, fog, hurricanes and heat and cold waves (spec §16, ADR-028); none when absent.</summary>
+    public ExtremeRules Extremes { get; init; } = ExtremeRules.None;
 }

@@ -183,13 +183,14 @@ public static class HudReadout
             }
         }
 
-        warning = world.Weather.Spell == WeatherSpell.Dry || dry.Count > 0 || stormy.Count > 0 || burning.Count > 0 || shaken.Count > 0 || flooded.Count > 0 || thirsty.Count > 0;
-        if (world.Weather.Spell == WeatherSpell.Normal && !warning)
+        warning = world.Weather.Spell is WeatherSpell.Dry or WeatherSpell.HeatWave or WeatherSpell.ColdWave || dry.Count > 0 || stormy.Count > 0 || burning.Count > 0 || shaken.Count > 0 || flooded.Count > 0 || thirsty.Count > 0;
+        var season = SeasonText.Describe(session.Content.Weather, world);
+        if (world.Weather.Spell == WeatherSpell.Normal && !warning && season is null)
         {
             return null;
         }
 
-        var line = WeatherText.Describe(world.Weather, world.Tick);
+        var line = (season is null ? string.Empty : season + ". ") + WeatherText.Describe(world.Weather, world.Tick);
         if (dry.Count > 0)
         {
             line += " Drought in " + string.Join(", ", dry) + ".";

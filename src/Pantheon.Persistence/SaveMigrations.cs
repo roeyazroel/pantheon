@@ -121,6 +121,9 @@ internal static class SaveMigrations
             case 18:
                 VictorySaveMigration.UpgradeFrom18(root);
                 break;
+            case 19:
+                NatureSaveMigration.UpgradeFrom19(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

@@ -136,7 +136,7 @@ public sealed class DisasterPresentationTests
         Assert.Equal(RegionDebugLayer.Scorch, RegionDebugMap.Next(RegionDebugLayer.Fire));
         Assert.Equal(RegionDebugLayer.FreshWater, RegionDebugMap.Next(RegionDebugLayer.Scorch));
         Assert.Equal(RegionDebugLayer.Flood, RegionDebugMap.Next(RegionDebugLayer.FreshWater));
-        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.Flood));
+        Assert.Equal(RegionDebugLayer.Snow, RegionDebugMap.Next(RegionDebugLayer.Flood));
     }
 
     [Fact]

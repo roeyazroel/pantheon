@@ -40,6 +40,12 @@ public sealed partial record LaunchOptions
     /// <summary>How a new world may be won (ADR-027); ascendancy only when <c>null</c>.</summary>
     public Domain.World.VictorySettings? Victory { get; init; }
 
+    /// <summary>Whether a new world turns through four seasons (ADR-028); it does when <c>null</c>.</summary>
+    public bool? Seasons { get; init; }
+
+    /// <summary>The season that begins at the start (ADR-028), for captures.</summary>
+    public Domain.Weather.Season? Season { get; init; }
+
     /// <summary>How to make the world these options ask for, with names the content knows.</summary>
     /// <param name="content">Validated content.</param>
     /// <returns>The species, size and victories; an unknown species or size is left to the content's own.</returns>
@@ -49,11 +55,12 @@ public sealed partial record LaunchOptions
         return new NewWorldOptions(
             Simulation.Creatures.CreatureModel.FindSpecies(content.Creatures, Species)?.Name,
             WorldMaker.Find(content, WorldSize)?.Name,
-            Victory);
+            Victory,
+            Seasons ?? true);
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -130,6 +137,12 @@ public sealed partial record LaunchOptions
                 return OnOff(value) is { } veil ? options with { Veil = veil } : Warn(options, warnings, $"'--veil' needs on or off, got '{value}'.");
             case "world-size":
                 return trimmed.Length > 0 ? options with { WorldSize = trimmed } : Warn(options, warnings, "'--world-size' needs a size such as Small, Large or Huge.");
+            case "seasons":
+                return OnOff(value) is { } seasons ? options with { Seasons = seasons } : Warn(options, warnings, $"'--seasons' needs on or off, got '{value}'.");
+            case "season":
+                return Enum.TryParse<Domain.Weather.Season>(trimmed, ignoreCase: true, out var season) && Enum.IsDefined(season) && !int.TryParse(trimmed, out _)
+                    ? options with { Season = season }
+                    : Warn(options, warnings, $"'--season' needs spring, summer, autumn or winter, got '{value}'.");
             case "victory":
                 return ParseVictory(trimmed) is { } victory
                     ? options with { Victory = victory }

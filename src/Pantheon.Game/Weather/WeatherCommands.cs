@@ -15,14 +15,16 @@ public static class WeatherCommands
     /// <summary>Radius of a storm called by <see cref="SummonStorm"/>, in metres.</summary>
     public const float StormRadius = 320f;
 
-    /// <summary>The spell after <paramref name="spell"/> in the debug cycle: normal, dry, wet, normal.</summary>
+    /// <summary>The spell after <paramref name="spell"/> in the debug cycle: normal, dry, wet, heat wave, cold wave, normal.</summary>
     /// <param name="spell">The current spell.</param>
     /// <returns>The next one.</returns>
     public static WeatherSpell Next(WeatherSpell spell) => spell switch
     {
         WeatherSpell.Normal => WeatherSpell.Dry,
         WeatherSpell.Dry => WeatherSpell.Wet,
-        WeatherSpell.Wet => WeatherSpell.Normal,
+        WeatherSpell.Wet => WeatherSpell.HeatWave,
+        WeatherSpell.HeatWave => WeatherSpell.ColdWave,
+        WeatherSpell.ColdWave => WeatherSpell.Normal,
     };
 
     /// <summary>Starts the next spell of the debug cycle, for its longest length.</summary>
@@ -58,11 +60,12 @@ public static class WeatherCommands
         return WeatherText.Describe(world.Weather, world.Tick);
     }
 
-    /// <summary>Calls a storm over a point: a deep, wet low moving with the prevailing wind.</summary>
+    /// <summary>Calls a storm over a point: a deep, wet low moving with the prevailing wind, short of a hurricane unless asked for one (ADR-028).</summary>
     /// <param name="session">Session whose world is changed.</param>
     /// <param name="target">Where the storm starts.</param>
+    /// <param name="hurricane">Whether it is a hurricane.</param>
     /// <returns>Status line.</returns>
-    public static string SummonStorm(GameSession session, GroundPosition target)
+    public static string SummonStorm(GameSession session, GroundPosition target, bool hurricane = false)
     {
         ArgumentNullException.ThrowIfNull(session);
         if (SessionCommands.HostOnly(session) is { } refusal)
@@ -81,7 +84,7 @@ public static class WeatherCommands
             VelocityX = windX * rules.CellSpeed,
             VelocityZ = windZ * rules.CellSpeed,
             Radius = StormRadius,
-            Pressure = 1f,
+            Pressure = hurricane || rules.Extremes.HurricaneWind >= 1f ? 1f : Math.Min(1f, (rules.Extremes.HurricaneWind / Math.Max(rules.WindFromPressure, 1e-3f)) - 0.01f),
             Temperature = WeatherModel.GroundTemperature(session.World.Regions, target.X, target.Z, 0.6f),
             Humidity = 1f,
             Precipitation = 0f,

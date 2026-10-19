@@ -100,6 +100,12 @@ public sealed class HistoryRecorder
             case SettlementDamaged { Cause: DisasterKind.Flood } flood when flood.Deaths >= _rules.EarthquakeDeaths || flood.HousesLost >= _rules.HousesLost:
                 Once(world, HistoryKind.Flood, flood.SettlementId, null, flood.HousesLost);
                 break;
+            case SettlementDamaged { Cause: DisasterKind.Hurricane } hurricane when hurricane.HousesLost >= _rules.HousesLost:
+                Once(world, HistoryKind.Hurricane, hurricane.SettlementId, null, hurricane.HousesLost);
+                break;
+            case LandScarred scarred:
+                Once(world, HistoryKind.Scar, scarred.SettlementId, null, 0);
+                break;
             case ThirstStarted thirst:
                 Once(world, HistoryKind.Thirst, thirst.SettlementId, null, 0);
                 break;

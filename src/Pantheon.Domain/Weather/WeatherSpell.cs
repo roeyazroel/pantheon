@@ -11,4 +11,10 @@ public enum WeatherSpell
 
     /// <summary>Weather arrives often and storms are more likely.</summary>
     Wet,
+
+    /// <summary>A heat wave: the land bakes, dries and burns, and the heat sickens (ADR-028).</summary>
+    HeatWave,
+
+    /// <summary>A cold wave: frost and snow, poor harvests, and the cold sickens (ADR-028).</summary>
+    ColdWave,
 }

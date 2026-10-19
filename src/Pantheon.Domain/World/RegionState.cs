@@ -53,4 +53,22 @@ public sealed class RegionState
 
     /// <summary>How deep the region lies under a flood now (0 = dry, 1 = drowned; ADR-022).</summary>
     public required float Flood { get; set; }
+
+    /// <summary>Snow lying on the land (0..1, ADR-028): nothing grows or burns under it, and it melts into the soil.</summary>
+    public float Snow { get; set; }
+
+    /// <summary>The wild animals the land holds (0..1, spec §18, ADR-028): they follow its cover and health, and villages hunt them.</summary>
+    public float Wildlife { get; set; }
+
+    /// <summary>
+    /// Harm to the land's life (0..1, spec §18, ADR-028) from destructive miracles and disasters. It
+    /// heals over time, but never below <see cref="Scar"/>, and lowers the land's yield and wildlife.
+    /// </summary>
+    public float Damage { get; set; }
+
+    /// <summary>The permanent part of <see cref="Damage"/> (0..1): repeated harm scars the land, and only a god of nature heals it.</summary>
+    public float Scar { get; set; }
+
+    /// <summary>Pollution (0..1, spec §18, ADR-028) from crowded, working villages; it lowers yield and wildlife and clears slowly.</summary>
+    public float Pollution { get; set; }
 }

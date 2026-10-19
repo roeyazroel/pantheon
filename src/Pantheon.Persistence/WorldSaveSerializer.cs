@@ -34,7 +34,7 @@ public static class WorldSaveSerializer
     /// treaties, favours, promises and the Divine Council; version 18 (part 6) added wars' goals and
     /// scores and settlements' holy wars.
     /// </summary>
-    public const int CurrentSaveVersion = 19;
+    public const int CurrentSaveVersion = 20;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

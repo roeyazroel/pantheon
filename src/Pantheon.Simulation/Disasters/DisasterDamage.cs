@@ -54,6 +54,7 @@ internal sealed class DisasterDamage
             DisasterKind.Fire => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Firebreak) ? prepared.FirebreakDamage : 0f,
             DisasterKind.Flood => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Levee) ? prepared.LeveeDamage : 0f,
             DisasterKind.Earthquake => 0f,
+            DisasterKind.Hurricane => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Shelter) ? prepared.ShelterDeaths : 0f,
         };
         var engineering = kind == DisasterKind.Earthquake ? 0f : prepared.EngineeringPerLevel * settlement.Society.Technology.Engineering;
         return 1f - Math.Clamp(works + engineering, 0f, MaxPrepared);

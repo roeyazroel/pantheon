@@ -67,5 +67,45 @@
 
   // Storm winds above StormWind ruin these shares per second at full strength.
   "StormFoodLossPerSecond": 0.012,
-  "StormConstructionLossPerSecond": 0.02
+  "StormConstructionLossPerSecond": 0.02,
+
+  // The seasons (spec section 17, ADR-028), for worlds made with them; four make a year. Each season
+  // shifts every region's temperature and scales the weather that blows in, the harvest, how readily
+  // the land burns and dries, the spoiling of stores, the cold's or the heat's toll on health and the
+  // wish to leave; it also sets the chance of a heat or a cold wave after an ordinary spell and the
+  // share of storms over warm sea that grow into hurricanes. "Steady" is a world without seasons.
+  "Seasons": {
+    "SeasonSeconds": 150.0,
+    "Steady": { "HeatWaveChance": 0.06, "ColdWaveChance": 0.03, "HurricaneShare": 0.15 },
+    "Spring": { "TemperatureShift": 0.0, "RainFactor": 1.2, "YieldFactor": 0.9, "FireFactor": 0.8, "DryingFactor": 0.9, "SpoilagePerSecond": 0.0005, "HeatWaveChance": 0.02, "ColdWaveChance": 0.04 },
+    "Summer": { "TemperatureShift": 0.15, "RainFactor": 0.75, "YieldFactor": 1.25, "FireFactor": 1.6, "DryingFactor": 1.4, "SpoilagePerSecond": 0.002, "MigrationFactor": 1.1, "HeatWaveChance": 0.5, "HurricaneShare": 0.25 },
+    "Autumn": { "TemperatureShift": 0.0, "RainFactor": 1.3, "YieldFactor": 1.3, "FireFactor": 0.9, "DryingFactor": 0.9, "SpoilagePerSecond": 0.001, "HeatWaveChance": 0.03, "ColdWaveChance": 0.05, "HurricaneShare": 0.5 },
+    "Winter": { "TemperatureShift": -0.25, "RainFactor": 1.0, "YieldFactor": 0.5, "FireFactor": 0.3, "DryingFactor": 0.5, "HealthLossPerSecond": 0.0006, "MigrationFactor": 0.4, "ColdWaveChance": 0.5 }
+  },
+
+  // Snow, fog, hurricanes and heat and cold waves (spec section 16, ADR-028). Rain on land colder than
+  // SnowTemperature lies as snow; snow on land warmer than MeltTemperature melts into the soil. A
+  // calm, cool, humid cell is fog: mist and drizzle. Ordinary storms stay below HurricaneWind; a
+  // storm born over sea at least HurricaneSeaTemperature warm may grow into a hurricane, which fills
+  // over land at HurricaneLandFilling of a storm's pace and whose winds tear down
+  // HurricaneHouseLossPerSecond of a village's houses per second at full strength.
+  "Extremes": {
+    "SnowTemperature": 0.35,
+    "MeltTemperature": 0.4,
+    "SnowPerSecond": 0.08,
+    "MeltPerSecond": 0.05,
+    "MeltWater": 0.5,
+    "FogHumidity": 0.75,
+    "FogPressure": 0.15,
+    "FogTemperature": 0.45,
+    "HurricanePressure": 0.95,
+    "HurricaneWind": 0.9,
+    "HurricaneLandFilling": 0.25,
+    "HurricaneSeaTemperature": 0.5,
+    "HurricaneHouseLossPerSecond": 0.01,
+    "HeatWave": { "TemperatureShift": 0.2, "RainFactor": 0.4, "YieldFactor": 0.75, "FireFactor": 2.0, "DryingFactor": 2.0, "SpoilagePerSecond": 0.003, "HealthLossPerSecond": 0.0008, "MigrationFactor": 1.2 },
+    "ColdWave": { "TemperatureShift": -0.25, "RainFactor": 0.9, "YieldFactor": 0.5, "FireFactor": 0.4, "DryingFactor": 0.6, "HealthLossPerSecond": 0.001, "MigrationFactor": 0.6 },
+    "WaveMinSeconds": 60.0,
+    "WaveMaxSeconds": 120.0
+  }
 }

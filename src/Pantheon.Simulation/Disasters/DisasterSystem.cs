@@ -18,7 +18,8 @@ namespace Pantheon.Simulation.Disasters;
 /// One disaster step (spec §19–21 and §94, ADR-014): natural earthquakes strike, earthquakes shake
 /// the settlements around them, wildfires burn and spread, and both destroy houses (which become
 /// ruins), kill people, ruin stores and frighten the people out of their trust in their gods.
-/// Shielded settlements take a fraction of the damage. It raises <see cref="EarthquakeStruck"/>,
+/// Shielded settlements take a fraction of the damage. Hurricanes tear houses down, and earthquakes
+/// harm the land's life (ADR-028). It raises <see cref="EarthquakeStruck"/>,
 /// <see cref="WildfireStarted"/> and <see cref="SettlementDamaged"/>.
 /// </summary>
 /// <remarks>
@@ -31,6 +32,8 @@ public sealed class DisasterSystem : ISimulationSystem
     public const string RandomStream = "disasters";
 
     private readonly DisasterRules _rules;
+    private readonly WeatherRules _weather;
+    private readonly EcologyRules? _ecology;
     private readonly Wildfires _fires;
     private readonly DisasterDamage _damage;
 
@@ -40,13 +43,16 @@ public sealed class DisasterSystem : ISimulationSystem
     /// <param name="divine">Divine rules, for how disasters shake belief.</param>
     /// <param name="weather">Weather rules, for lightning, rain and wind.</param>
     /// <param name="domains">Domain rules, for the houses the Protection domain saves (ADR-021); <c>null</c> for none.</param>
-    public DisasterSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, Domain.Gods.DomainRules? domains = null)
+    /// <param name="ecology">The land's life, which earthquakes harm (ADR-028); <c>null</c> for land that never changes.</param>
+    public DisasterSystem(DisasterRules rules, SettlementRules settlementRules, DivineRules divine, WeatherRules weather, Domain.Gods.DomainRules? domains = null, EcologyRules? ecology = null)
     {
         DisasterRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
         ArgumentNullException.ThrowIfNull(divine);
         ArgumentNullException.ThrowIfNull(weather);
         _rules = rules;
+        _weather = weather;
+        _ecology = ecology;
         _fires = new Wildfires(rules, weather);
         _damage = new DisasterDamage(rules, settlementRules, divine, domains);
     }
@@ -60,8 +66,56 @@ public sealed class DisasterSystem : ISimulationSystem
         var seconds = _rules.StepIntervalTicks * SimulationTime.SecondsPerTick;
         NaturalQuake(world, random, seconds, context.Events);
         Shake(world, random, seconds, context.Events);
+        HarmLand(world, seconds);
         _fires.Step(world, random, seconds, context.Events);
         BurnSettlements(world, random, seconds, context.Events);
+        Hurricanes(world, random, seconds, context.Events);
+    }
+
+    /// <summary>Every earthquake under way harms the life of the land it shakes, by its shaking (ADR-028).</summary>
+    private void HarmLand(WorldState world, float seconds)
+    {
+        if (_ecology is not { QuakeDamage: > 0f } ecology || world.Disasters.Earthquakes.Count == 0)
+        {
+            return;
+        }
+
+        var share = seconds / _rules.ShakingSeconds;
+        foreach (var quake in world.Disasters.Earthquakes)
+        {
+            foreach (var region in world.Regions.Cells)
+            {
+                var shaking = region.Biome == Biome.Sea ? 0f : DisasterModel.Shaking(quake, world.Regions.GetRegionCenter(region.Id));
+                if (shaking > 0f)
+                {
+                    region.Damage = SimMath.Clamp01(region.Damage + (ecology.QuakeDamage * shaking * share));
+                }
+            }
+        }
+    }
+
+    /// <summary>A hurricane over a settlement tears its houses down and frightens its people (ADR-028).</summary>
+    private void Hurricanes(WorldState world, SimulationRandom random, float seconds, List<WorldEvent> events)
+    {
+        var extremes = _weather.Extremes;
+        if (extremes.HurricaneWind >= 1f)
+        {
+            return;
+        }
+
+        foreach (var settlement in world.Settlements)
+        {
+            var wind = Weather.WeatherModel.At(_weather, world.Weather, settlement.Position).Wind;
+            if (wind < extremes.HurricaneWind || settlement.Population <= 0)
+            {
+                continue;
+            }
+
+            var severity = (0.5f + (0.5f * (wind - extremes.HurricaneWind) / (1f - extremes.HurricaneWind))) * _damage.Protection(settlement, world.Tick);
+            var houses = _damage.Destroy(settlement, random, extremes.HurricaneHouseLossPerSecond * severity * seconds * _damage.Fragility(world, settlement) * _damage.Exposure(settlement, DisasterKind.Hurricane));
+            _damage.Frighten(settlement, severity * seconds * _rules.FireDreadPerSecond);
+            DisasterDamage.Report(world, settlement, DisasterKind.Hurricane, houses, 0, events);
+        }
     }
 
     /// <summary>Perhaps an earthquake strikes under a random land region, usually a small one.</summary>

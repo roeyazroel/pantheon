@@ -166,7 +166,11 @@ public sealed class AlertFeed
             case WarGoalAchieved or PeaceDictated or CovertActExposed or HolyWarDeclared or HolyWarEnded:
                 return ConflictAlerts.Describe(worldEvent, world, localGodId);
             case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
-                return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
+                return (Key("storm", settlement.Id), storm.Hurricane
+                    ? Format("A hurricane strikes {0}: its houses are torn down and its stores ruined.", settlement.Name)
+                    : Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
+            case SeasonChanged or LandScarred:
+                return NatureAlerts.Describe(worldEvent, world, localGodId);
             default:
                 return null;
         }
@@ -283,9 +287,15 @@ public sealed class AlertFeed
     {
         WeatherSpell.Dry => (Key("spell", (int)spell.Spell), "A dry spell begins: little rain will fall, and the land will dry out.", AlertSeverity.Warning, null),
         WeatherSpell.Wet => (Key("spell", (int)spell.Spell), "A wet spell begins: rain will fall often, and storms are likely.", AlertSeverity.Info, null),
-        WeatherSpell.Normal => spell.Previous == WeatherSpell.Dry
-            ? (Key("spell", (int)spell.Spell), "The dry spell is over: the rains return.", AlertSeverity.Good, null)
-            : null,
+        WeatherSpell.HeatWave => (Key("spell", (int)spell.Spell), "A heat wave begins: the land will bake, fires will catch easily, and the heat will sicken the weak.", AlertSeverity.Warning, null),
+        WeatherSpell.ColdWave => (Key("spell", (int)spell.Spell), "A cold wave begins: frost and snow will spoil the harvest, and the cold will sicken the homeless.", AlertSeverity.Warning, null),
+        WeatherSpell.Normal => spell.Previous switch
+        {
+            WeatherSpell.Dry => (Key("spell", (int)spell.Spell), "The dry spell is over: the rains return.", AlertSeverity.Good, null),
+            WeatherSpell.HeatWave => (Key("spell", (int)spell.Spell), "The heat wave breaks.", AlertSeverity.Good, null),
+            WeatherSpell.ColdWave => (Key("spell", (int)spell.Spell), "The cold wave passes.", AlertSeverity.Good, null),
+            WeatherSpell.Normal or WeatherSpell.Wet => null,
+        },
     };
 
     /// <summary>

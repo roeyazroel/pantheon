@@ -30,6 +30,17 @@ public static class WeatherReadout
         }
 
         var weather = snapshot.World.Weather;
+        var climate = ClimateModel.Now(rules, snapshot.World);
+        lines.Add(Format(
+            "Climate: {0}; warmth {1:+0.00;-0.00;0}, rain x{2:0.00}, harvest x{3:0.00}, fire x{4:0.00}, spoiling {5:0.0000}/s, sickness {6:0.0000}/s, leaving x{7:0.00}.",
+            SeasonText.Describe(rules, snapshot.World) ?? "no seasons",
+            climate.TemperatureShift,
+            climate.RainFactor,
+            climate.YieldFactor,
+            climate.FireFactor,
+            climate.SpoilagePerSecond,
+            climate.HealthLossPerSecond,
+            climate.MigrationFactor));
         lines.Add(Format("Weather: {0} {1} cells.", WeatherText.Describe(weather, snapshot.World.Tick), weather.Cells.Count));
         foreach (var cell in weather.Cells.OrderByDescending(c => Math.Max(c.Wind, c.Precipitation)).ThenBy(c => c.Id).Take(ListedCells))
         {
@@ -104,13 +115,20 @@ public static class WeatherReadout
         var now = WeatherModel.At(rules, snapshot.World.Weather, point);
         var region = snapshot.World.Regions.GetRegion(regionId);
         return Format(
-            "  soil {0:0.00}  rain {1:0.00}  wind {2:0.00}  lightning {3:0.00}  fire {4:0.00}  scorch {5:0.00}",
+            "  soil {0:0.00}  rain {1:0.00}  wind {2:0.00}  lightning {3:0.00}  fire {4:0.00}  scorch {5:0.00}  snow {6:0.00}\n  wildlife {7:0.00} of {8:0.00}  damage {9:0.00} (scar {10:0.00})  pollution {11:0.00}  biodiversity {12:0.00}",
             region.SoilMoisture,
             now.Rain,
             now.Wind,
             now.Lightning,
             region.Fire,
-            region.Scorch);
+            region.Scorch,
+            region.Snow,
+            region.Wildlife,
+            Simulation.Ecology.EcologyModel.WildlifeCapacity(region),
+            region.Damage,
+            region.Scar,
+            region.Pollution,
+            Simulation.Ecology.EcologyModel.Biodiversity(region));
     }
 
     /// <summary>Invariant-culture string formatting.</summary>

@@ -26,4 +26,7 @@ public enum OverlayKind
 
     /// <summary>Each settlement's lands by the doctrine it holds most, grey where it has turned from the gods (ADR-024).</summary>
     Culture,
+
+    /// <summary>The land's life, its scars and its snow (ADR-028).</summary>
+    Nature,
 }

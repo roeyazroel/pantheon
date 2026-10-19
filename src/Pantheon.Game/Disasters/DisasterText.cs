@@ -31,6 +31,7 @@ public static class DisasterText
         DisasterKind.Earthquake => "the earthquake",
         DisasterKind.Fire => "the fire",
         DisasterKind.Flood => "the flood",
+        DisasterKind.Hurricane => "the hurricane",
     };
 
     /// <summary>

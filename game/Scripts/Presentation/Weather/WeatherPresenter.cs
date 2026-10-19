@@ -28,6 +28,12 @@ public sealed class WeatherPresenter
     private readonly DirectionalLight3D? _sun;
     private readonly float _sunEnergy;
     private TerrainField? _terrain;
+    private readonly Divine.MapOverlay _snow;
+    private float _snowWorldSize;
+    private double _snowAge = SnowRefreshSeconds;
+
+    // The snow on the land changes slowly: it is redrawn this often.
+    private const double SnowRefreshSeconds = 1.0;
 
     /// <summary>Creates the presenter's nodes under a parent.</summary>
     /// <param name="parent">Node that holds the weather visuals.</param>
@@ -38,6 +44,7 @@ public sealed class WeatherPresenter
     {
         _clouds = parent.AddLayer("Clouds");
         _strikes = parent.AddLayer("Lightning");
+        _snow = new Divine.MapOverlay(parent.AddLayer("Snow"));
         _view = view;
         _rules = rules;
         _sun = sun;
@@ -52,6 +59,8 @@ public sealed class WeatherPresenter
         _clouds.FreeChildren();
         _strikes.FreeChildren();
         _views.Clear();
+        _snowWorldSize = 0f;
+        _snowAge = SnowRefreshSeconds;
     }
 
     /// <summary>Brings the clouds in line with the weather, plays new lightning strikes and dims the sun under storms.</summary>
@@ -61,6 +70,7 @@ public sealed class WeatherPresenter
     /// <param name="focus">The ground point the camera looks at.</param>
     public void Sync(WorldState world, double seconds, float delta, GroundPosition focus)
     {
+        SyncSnow(world, delta);
         if (_sun is not null)
         {
             var target = _sunEnergy * (1f - (_view.StormGloom * CloudLayout.Gloom(_rules, world.Weather, focus)));
@@ -91,6 +101,24 @@ public sealed class WeatherPresenter
                 _views[id].QueueFree();
                 _views.Remove(id);
             }
+        }
+    }
+
+    /// <summary>Drapes the snow lying on the land over the terrain, redrawn once a second (ADR-028).</summary>
+    private void SyncSnow(WorldState world, float delta)
+    {
+        var size = world.Regions.Columns * world.Regions.RegionSize;
+        if (size != _snowWorldSize)
+        {
+            _snowWorldSize = size;
+            _snow.Fit(size);
+        }
+
+        _snowAge += delta;
+        if (_snowAge >= SnowRefreshSeconds)
+        {
+            _snowAge = 0.0;
+            _snow.Show(SnowCover.Build(world));
         }
     }
 

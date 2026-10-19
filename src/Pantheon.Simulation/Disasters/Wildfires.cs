@@ -29,6 +29,9 @@ internal sealed class Wildfires
     private readonly DisasterRules _rules;
     private readonly WeatherRules _weather;
 
+    // The season's and a heat or cold wave's factor on how readily the land catches (ADR-028), for this step.
+    private float _season = 1f;
+
     /// <summary>Creates the fire step.</summary>
     /// <param name="rules">Disaster rules.</param>
     /// <param name="weather">Weather rules, for the rain and the wind over a region.</param>
@@ -45,6 +48,7 @@ internal sealed class Wildfires
     /// <param name="events">Receives <see cref="WildfireStarted"/> for fires lit by lightning.</param>
     public void Step(WorldState world, SimulationRandom random, float seconds, List<WorldEvent> events)
     {
+        _season = Weather.ClimateModel.Now(_weather, world).FireFactor;
         Lightning(world, random, seconds, events);
         Hearths(world, random, seconds, events);
         var burning = new List<(int RegionId, float Fire)>();
@@ -93,7 +97,7 @@ internal sealed class Wildfires
                 }
 
                 var coverage = WeatherModel.Coverage(_weather, cell, world.Regions.GetRegionCenter(region.Id));
-                var flammability = coverage > 0f ? DisasterModel.Flammability(_rules, region) : 0f;
+                var flammability = coverage > 0f ? DisasterModel.Flammability(_rules, region) * _season : 0f;
                 var chance = _rules.LightningIgnitionPerSecond * cell.ElectricalActivity * coverage * flammability * seconds;
                 if (chance > 0f && random.NextDouble() < chance && DisasterModel.Ignite(_rules, region, _rules.IgnitionIntensity))
                 {
@@ -113,7 +117,7 @@ internal sealed class Wildfires
             var c = Math.Clamp(column + random.NextInt(-1, 2), 0, grid.Columns - 1);
             var r = Math.Clamp(row + random.NextInt(-1, 2), 0, grid.Rows - 1);
             var region = grid.Cells[(r * grid.Columns) + c];
-            var chance = _rules.HearthFirePerSecond * Math.Max(0, settlement.Population) / 100f * DisasterModel.Flammability(_rules, region) * seconds;
+            var chance = _rules.HearthFirePerSecond * Math.Max(0, settlement.Population) / 100f * DisasterModel.Flammability(_rules, region) * _season * seconds;
             if (region.Fire <= 0f && chance > 0f && random.NextDouble() < chance && DisasterModel.Ignite(_rules, region, _rules.IgnitionIntensity))
             {
                 events.Add(new WildfireStarted { Tick = world.Tick, RegionId = region.Id, Cause = FireCause.Hearth });
@@ -150,7 +154,7 @@ internal sealed class Wildfires
                 var alignment = ((dc * windX) + (dr * windZ)) / length;
                 var downwind = 1f + (_rules.WindSpread * wind * Math.Max(0f, alignment));
                 var diagonal = dr != 0 && dc != 0 ? DiagonalSpread : 1f;
-                var chance = _rules.SpreadPerSecond * fire * DisasterModel.Flammability(_rules, neighbour) * downwind * diagonal * seconds;
+                var chance = _rules.SpreadPerSecond * fire * DisasterModel.Flammability(_rules, neighbour) * _season * downwind * diagonal * seconds;
                 if (chance > 0f && random.NextDouble() < chance)
                 {
                     DisasterModel.Ignite(_rules, neighbour, _rules.IgnitionIntensity);

@@ -71,6 +71,9 @@ public static class ContentJson
     /// <summary>World sizes file name (ADR-027).</summary>
     public const string WorldSizesFileName = "world_sizes.json";
 
+    /// <summary>File name of the land's life (ADR-028).</summary>
+    public const string EcologyFileName = "ecology.json";
+
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
     /// <param name="json">File text.</param>
@@ -170,6 +173,12 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The world sizes.</returns>
     public static Domain.World.WorldSizes ParseWorldSizes(string json) => Parse<Domain.World.WorldSizes>(json, WorldSizesFileName);
+
+    /// <summary>Parses <c>ecology.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The rules.</returns>
+    /// <exception cref="ContentFormatException">The JSON is malformed or members are unknown or missing.</exception>
+    public static Domain.Ecology.EcologyRules ParseEcology(string json) => Parse<Domain.Ecology.EcologyRules>(json, EcologyFileName);
 
     /// <summary>Parses <c>water.json</c>.</summary>
     /// <param name="json">File text.</param>

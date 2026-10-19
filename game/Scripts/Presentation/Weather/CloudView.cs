@@ -3,6 +3,7 @@ using Godot;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
+using Pantheon.Simulation.Weather;
 
 namespace Pantheon.Client.Presentation.Weather;
 
@@ -16,7 +17,12 @@ internal sealed partial class CloudView : Node3D
     // How quickly the view catches up with the simulated position (per second).
     private const float FollowRate = 3f;
 
+    // Snow falls white and slow (ADR-028).
+    private const float SnowSpeed = 0.25f;
+    private static readonly Color SnowColor = new(0.96f, 0.97f, 1f, 0.85f);
+
     private StandardMaterial3D _material = null!;
+    private StandardMaterial3D _streak = null!;
     private GpuParticles3D _rain = null!;
     private int _maxDrops;
     private long _lastStrikeSlot = long.MinValue;
@@ -52,6 +58,9 @@ internal sealed partial class CloudView : Node3D
         var (color, opacity) = CloudLayout.Look(cell, view);
         _material.AlbedoColor = color.ToGodot(opacity);
         var drops = CloudLayout.RainDrops(cell, view);
+        var snowing = WeatherModel.Classify(rules, cell) == WeatherKind.Snow;
+        _streak.AlbedoColor = snowing ? SnowColor : view.RainColor.ToGodot(0.55f);
+        _rain.SpeedScale = snowing ? SnowSpeed : 1f;
         _rain.Emitting = drops > 0;
         _rain.AmountRatio = _maxDrops > 0 ? Math.Clamp((float)drops / _maxDrops, 0f, 1f) : 0f;
 
@@ -120,7 +129,7 @@ internal sealed partial class CloudView : Node3D
             Gravity = Vector3.Zero,
         };
         // Streaks are seen up close only: from afar thousands of them would merge into a grey sheet.
-        var streak = new StandardMaterial3D
+        _streak = new StandardMaterial3D
         {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
@@ -137,7 +146,7 @@ internal sealed partial class CloudView : Node3D
             Lifetime = fall / speed,
             Position = new Vector3(0f, view.CloudHeight, 0f),
             ProcessMaterial = process,
-            DrawPass1 = new QuadMesh { Size = new Vector2(0.35f, 6f), Material = streak },
+            DrawPass1 = new QuadMesh { Size = new Vector2(0.35f, 6f), Material = _streak },
             LocalCoords = false,
             VisibilityAabb = new Aabb(new Vector3(-cell.Radius, -fall - 10f, -cell.Radius), new Vector3(2f * cell.Radius, fall + 20f, 2f * cell.Radius)),
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,

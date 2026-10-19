@@ -11,7 +11,8 @@ namespace Pantheon.Game;
 /// <param name="Species">The species of the player's Creature; <c>gods.json</c>'s when <c>null</c>.</param>
 /// <param name="Size">The world size's name; the first (the world <c>worldgen.json</c> describes) when <c>null</c>.</param>
 /// <param name="Victory">How it may be won; ascendancy only when <c>null</c>.</param>
-public sealed record NewWorldOptions(string? Species = null, string? Size = null, VictorySettings? Victory = null);
+/// <param name="Seasons">Whether the year turns through four seasons (spec §17, ADR-028).</param>
+public sealed record NewWorldOptions(string? Species = null, string? Size = null, VictorySettings? Victory = null, bool Seasons = true);
 
 /// <summary>Makes new worlds at a size, with their gods and victories (spec §6, §53, ADR-027).</summary>
 public static class WorldMaker
@@ -37,6 +38,7 @@ public static class WorldMaker
         var victory = options.Victory ?? VictorySettings.Default;
         var preset = Find(content, options.Size) ?? (content.Sizes.Sizes.Count > 0 ? content.Sizes.Sizes[0] : null);
         generated.State.Victory = victory with { PantheonMaxGods = victory.PantheonMaxGods ?? preset?.PantheonMaxGods };
+        generated.State.Seasons = options.Seasons ? new Domain.Weather.SeasonState { OriginTick = 0 } : null;
         return generated;
     }
 

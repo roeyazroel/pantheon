@@ -173,7 +173,7 @@ public sealed class WeatherPresentationTests
     [Fact]
     public void Hud_ShowsTheWeatherOnlyWhenItMatters_AndNamesYourParchedSettlements()
     {
-        var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(77));
+        var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(77), new NewWorldOptions(Seasons: false));
         var world = session.World;
         world.Weather.Spell = WeatherSpell.Normal;
         world.Weather.SpellEndsTick = world.Tick + 600;
@@ -224,7 +224,9 @@ public sealed class WeatherPresentationTests
         Assert.Equal((500f, 600f), (cell.X, cell.Z));
         Assert.Equal(WeatherKind.Thunderstorm, WeatherModel.Classify(session.Content.Weather, cell));
         Assert.Contains("a thunderstorm", storm, StringComparison.Ordinal);
-        Assert.Equal([WeatherSpell.Dry, WeatherSpell.Wet, WeatherSpell.Normal], new[] { WeatherSpell.Normal, WeatherSpell.Dry, WeatherSpell.Wet }.Select(WeatherCommands.Next));
+        Assert.Equal(
+            [WeatherSpell.Dry, WeatherSpell.Wet, WeatherSpell.HeatWave, WeatherSpell.ColdWave, WeatherSpell.Normal],
+            new[] { WeatherSpell.Normal, WeatherSpell.Dry, WeatherSpell.Wet, WeatherSpell.HeatWave, WeatherSpell.ColdWave }.Select(WeatherCommands.Next));
     }
 
     [Theory]

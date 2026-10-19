@@ -41,4 +41,19 @@ public enum RegionDebugLayer
 
     /// <summary>How deep the region lies under a flood now (ADR-022).</summary>
     Flood,
+
+    /// <summary>The snow lying on it (ADR-028).</summary>
+    Snow,
+
+    /// <summary>Its wild animals (ADR-028).</summary>
+    Wildlife,
+
+    /// <summary>The harm to its life (ADR-028).</summary>
+    Damage,
+
+    /// <summary>The permanent part of the harm (ADR-028).</summary>
+    Scar,
+
+    /// <summary>Its pollution (ADR-028).</summary>
+    Pollution,
 }

@@ -16,7 +16,11 @@ public static class SettlementEconomy
     /// <param name="grid">Region grid.</param>
     /// <param name="regionId">The settlement's region.</param>
     /// <param name="radius">Farmland radius in regions; 0 is the settlement's own region only.</param>
-    /// <returns>The number of farmable regions and their mean fertility, blessing, soil moisture and scorch. The square is clipped at the grid edge.</returns>
+    /// <returns>
+    /// The number of farmable regions and their mean fertility, blessing, soil moisture, scorch, flood
+    /// and snow. The land's fertility counts as far as its life is unharmed and unpolluted (ADR-028).
+    /// The square is clipped at the grid edge.
+    /// </returns>
     public static FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius)
     {
         ArgumentNullException.ThrowIfNull(grid);
@@ -30,6 +34,7 @@ public static class SettlementEconomy
         var soil = 0f;
         var scorch = 0f;
         var flood = 0f;
+        var snow = 0f;
         for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
         {
             for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
@@ -38,16 +43,17 @@ public static class SettlementEconomy
                 if (IsFarmland(region))
                 {
                     count++;
-                    fertility += SimMath.Clamp01(region.Fertility);
+                    fertility += SimMath.Clamp01(region.Fertility) * (1f - SimMath.Clamp01(region.Damage)) * (1f - SimMath.Clamp01(region.Pollution));
                     blessing += SimMath.Clamp01(region.Blessing);
                     soil += SimMath.Clamp01(region.SoilMoisture);
                     scorch += SimMath.Clamp01(region.Scorch);
                     flood += SimMath.Clamp01(region.Flood);
+                    snow += SimMath.Clamp01(region.Snow);
                 }
             }
         }
 
-        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count, flood / count) : new FarmlandSurvey(0, 0f);
+        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count, flood / count, snow / count) : new FarmlandSurvey(0, 0f);
     }
 
     /// <summary>Whether a region can be farmed: dry land with fertile soil.</summary>
@@ -240,8 +246,9 @@ public static class SettlementEconomy
     /// Food harvested in one step with diminishing returns:
     /// <c>FoodPerFarmerPerStep * meanFertility * capacity * (1 - e^(-farmers / capacity))</c>, where
     /// <c>capacity = FarmersPerRegion * land regions</c>, times <c>1 + BlessingYieldBonus * meanBlessing</c>,
-    /// the water yield (<see cref="ComputeWaterYield"/>), <c>1 - ScorchYieldLoss * meanScorch</c> and
-    /// <c>1 - FloodYieldLoss * meanFlood</c>. A few farmers each harvest about
+    /// the water yield (<see cref="ComputeWaterYield"/>), <c>1 - ScorchYieldLoss * meanScorch</c>,
+    /// <c>1 - FloodYieldLoss * meanFlood</c> and <c>1 - meanSnow</c>: nothing grows under snow
+    /// (ADR-028). A few farmers each harvest about
     /// <c>FoodPerFarmerPerStep * meanFertility</c>; the land caps the total.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
@@ -261,7 +268,8 @@ public static class SettlementEconomy
         var blessing = 1f + (rules.BlessingYieldBonus * SimMath.Clamp01(land.MeanBlessing));
         var scorch = 1f - (rules.ScorchYieldLoss * SimMath.Clamp01(land.MeanScorch));
         var flood = 1f - (rules.FloodYieldLoss * SimMath.Clamp01(land.MeanFlood));
-        return maximumYield * blessing * ComputeWaterYield(rules, land) * scorch * flood * (1f - MathF.Exp(-farmers / capacity));
+        var snow = 1f - SimMath.Clamp01(land.MeanSnow);
+        return maximumYield * blessing * ComputeWaterYield(rules, land) * scorch * flood * snow * (1f - MathF.Exp(-farmers / capacity));
     }
 
     /// <summary>
@@ -377,8 +385,10 @@ public static class SettlementEconomy
     /// <param name="rules">Settlement rules.</param>
     /// <param name="settlement">Settlement state before the step.</param>
     /// <param name="regions">Region grid, for the farmland.</param>
+    /// <param name="climateYield">The season's and a heat or cold wave's factor on the harvest (ADR-028).</param>
+    /// <param name="hunted">Food the people hunted this step (ADR-028).</param>
     /// <returns>The step's outlook.</returns>
-    public static SettlementOutlook Assess(SettlementRules rules, SettlementState settlement, RegionGrid regions)
+    public static SettlementOutlook Assess(SettlementRules rules, SettlementState settlement, RegionGrid regions, float climateYield = 1f, float hunted = 0f)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(settlement);
@@ -386,7 +396,7 @@ public static class SettlementEconomy
 
         var land = SurveyFarmland(regions, settlement.RegionId, rules.FarmlandRadius);
         var labour = AllocateLabour(rules, settlement);
-        var production = ComputeProduction(rules, labour.Farmers, land) * CivicModel.YieldFactor(rules, settlement);
+        var production = (ComputeProduction(rules, labour.Farmers, land) * CivicModel.YieldFactor(rules, settlement) * Math.Max(0f, climateYield)) + Math.Max(0f, hunted);
         var consumption = ComputeConsumption(rules, settlement.Population);
         var storage = StorageOf(rules, settlement);
         var available = settlement.Food + production;

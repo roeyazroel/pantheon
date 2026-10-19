@@ -52,10 +52,10 @@ game/                         Godot 4.7.2 project (res://)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
-  Pantheon.Domain/            State and content contracts: World, Ecology, Settlements, Gods, Belief, Miracles,
+  Pantheon.Domain/            State and content contracts: World, Ecology (biomes, EcologyRules), Settlements, Gods, Belief, Miracles,
                               Creatures, Diplomacy, Weather, Disasters, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Navigation, Gods (AI), Diplomacy, Weather, Disasters, Systems,
+                              Creatures, Navigation, Gods (AI), Diplomacy, Weather, Ecology, Disasters, Systems,
                               SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
@@ -131,7 +131,9 @@ files and compiled assemblies and fails when either rule is broken.
   regions, surface) (ADR-022). Since ADR-027, `Victory` (`VictorySettings`) records how the world
   may be won (ascendancy, conquest, cultural victory; none of them makes a sandbox), and
   `VictoryAchieved.Kind` (`VictoryKind`: ascendancy, pantheon, conquest, cultural) how it was. A
-  world's size lives only in `Generation` and its gods.
+  world's size lives only in `Generation` and its gods. Since ADR-028, `Seasons` (`SeasonState`:
+  the tick the year began) is present when the world turns through seasons, and regions carry
+  `Snow`, `Wildlife`, `Damage`, `Scar` and `Pollution`.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -188,13 +190,17 @@ files and compiled assemblies and fails when either rule is broken.
   radius, end and the god who caused it) and `NextEarthquakeId`.
 - `WeatherState` (ADR-013): `Cells` (`WeatherCell`: position, velocity, radius, pressure,
   temperature, humidity, precipitation, wind, electrical activity and the god who called it),
-  `NextCellId`, `Spell` (normal, dry or wet), `SpellEndsTick` and `WindDirection`.
+  `NextCellId`, `Spell` (normal, dry, wet, heat wave or cold wave, ADR-028), `SpellEndsTick` and
+  `WindDirection`. A cell's weather is clear, rain, snow, fog, thunderstorm, windstorm or a
+  hurricane (`WeatherKind`).
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
   `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
   `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged`, `MigrationStarted`, `MigrationEnded`,
   `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded`, `DomainChosen`, `HolySiteContested`,
   `HolySiteClaimed`, `SchismStarted`, `SchismEnded`, `FloodStarted`, `ThirstStarted`,
-  `PriorityChanged`, `BuildingCompleted`, `TechnologyAdvanced`, `SettlementFounded` and others)
+  `PriorityChanged`, `BuildingCompleted`, `TechnologyAdvanced`, `SettlementFounded`,
+  `SeasonChanged`, `LandScarred` and others; `StormStruck.Hurricane` and `DisasterKind.Hurricane`
+  tell of hurricanes)
   raised during a tick or a command
   and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
@@ -216,7 +222,9 @@ files and compiled assemblies and fails when either rule is broken.
   (ADR-021). `WorldSizes` lists the `WorldSizePreset`s a new world may be made at, with extra
   settlement and river names (`world_sizes.json`), `PantheonSetup.ExtraGods` the gods larger
   worlds add, and `DivineRules.ConquestShare` and `CulturalShare` the other victories' thresholds
-  (ADR-027).
+  (ADR-027). `WeatherRules.Seasons` (`SeasonRules`: the season's length and each season's
+  `ClimateEffects`) and `WeatherRules.Extremes` (`ExtremeRules`: snow, fog, hurricanes, heat and
+  cold waves), and `EcologyRules` (`ecology.json`), shape the year and the land's life (ADR-028).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -290,6 +298,11 @@ files and compiled assemblies and fails when either rule is broken.
   side (ADR-026). See [War, intrigue and holy wars](#war-intrigue-and-holy-wars).
 - `Weather/`: `WeatherModel` (cells' rain, wind and lightning, coverage, the weather at a point,
   soil water, summoned rain) and `WeatherSystem` (the weather step). See [Weather](#weather).
+  `ClimateModel` (the season from the tick, a season's and a wave's effects together, the next
+  spell) and `SeasonSystem` (the season step: new seasons, spoiling, sickness) since ADR-028.
+- `Ecology/`: `EcologyModel` (the land's capacity for animals, health, biodiversity, healing and
+  scars, hunting) and `EcologySystem` (the ecology step). See
+  [Seasons, extremes and the land's life](#seasons-extremes-and-the-lands-life).
 - `Disasters/`: `DisasterModel` (quakes, shaking, flammability, ignition, fire threat, danger,
   shields), `Wildfires` (lighting, burning, spreading, regrowth), `DisasterDamage` (what a quake,
   fire or flood does to a settlement) and `DisasterSystem` (the disaster step). `Belief/Hazards`
@@ -323,7 +336,7 @@ files and compiled assemblies and fails when either rule is broken.
   `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration, domain, society,
   council and conflict authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  water step, the disaster step, the settlement step, the belief step, the society step, the culture step, the holy war step, the domains' boons, the holy sites, the
+  season step, the water step, the disaster step, the ecology step, the settlement step, the belief step, the society step, the culture step, the holy war step, the domains' boons, the holy sites, the
   victory check, the diplomacy step, the politics step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods, each once every
   `EvaluationIntervalTicks`, in turn across it) with a
@@ -333,8 +346,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (7 since ADR-027, whose world and victory event carry
-  new members), the default port (7777), the host's peer id and the most players.
+- `NetworkProtocol`: the protocol version (8 since ADR-028, whose world and regions carry the
+  seasons and the land's life), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
   `ViewFocus`, the intents (`CastIntent`, veiled or not, `CreatureIntent`, `DiplomacyIntent` with a
@@ -348,7 +361,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 19, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 20, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -378,7 +391,9 @@ migration group's) no dependency or resentment, and every god no conduct or trai
 (`PoliticsSaveMigration`) gives the world no treaties, favours or promises and a council that has
 not met. Version 17 → 18 gives the world no war records and every settlement no holy war. Version
 18 → 19 (`VictorySaveMigration`) makes the world won by ascendancy alone and starts no god's
-conquest or cultural clock. A missing,
+conquest or cultural clock. Version 19 → 20 (`NatureSaveMigration`) keeps the world's even
+climate, without seasons, and gives its regions no snow, harm, scars or pollution and their
+animals at their cover. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -465,7 +480,8 @@ conquest or cultural clock. A missing,
   `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging.
 - `Weather/WeatherText` words spells, kinds, the wind's direction and droughts;
   `Weather/WeatherCommands` drives the weather for debugging (F8 next spell, F10 a storm at the
-  cursor).
+  cursor). `Weather/SeasonText` words the seasons and `Weather/SeasonCommands` begins one (Y,
+  `--season`); `Alerts/NatureAlerts` tells of seasons and scarred land (ADR-028).
 - `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (status, the rival's ties
   with the other gods, how the two gods' Creatures regard each other, its attitude and why, the
   player's grievances, the proposal waiting and the moves allowed now), and
@@ -561,8 +577,10 @@ conquest or cultural clock. A missing,
 - `UI/Hud`: the player HUD, built in code: the top bar, the miracle bar with the target hint and
   the clickable alerts. It shows `HudModel`s and reports clicks.
 - `Presentation/Weather/`: `WeatherPresenter` keeps one `CloudView` per weather cell (soft
-  camera-facing puffs that fade near the camera, rain streaks seen nearby) and plays lightning
-  bolts; it dims the sun under storms over the camera's focus.
+  camera-facing puffs that fade near the camera, rain streaks seen nearby, falling white and slow
+  when it snows) and plays lightning bolts; it dims the sun under storms over the camera's focus,
+  and drapes the snow lying on the land (`SnowCover`) over the terrain as one decal, redrawn every
+  second (ADR-028).
 - `Presentation/Disasters/`: `DisasterPresenter` keeps a `FireView` (flames, smoke, glow) per
   burning region, ash decals on scorched land and a dome over each shielded settlement, plays a
   shock wave when an earthquake begins and shakes the camera while the ground under its focus
@@ -637,10 +655,12 @@ sequenceDiagram
         Sched->>Engine: Step(world)
         Engine->>Settle: Update(tick context)
         opt last tick of each 5-tick interval (2 Hz at x1)
-            Engine->>State: weather step (spell, cells, soil water, storms, droughts)
+            Engine->>State: weather step (spell, cells, soil water, snow, storms, droughts)
+            Engine->>State: season step (new season, spoiling, sickness)
         end
         opt last tick of each 10-tick interval
-            Engine->>State: disaster step (earthquakes, wildfires, destruction, fear)
+            Engine->>State: disaster step (earthquakes, wildfires, hurricanes, destruction, fear)
+            Engine->>State: ecology step (harm, scars, wildlife, pollution)
         end
         opt last tick of each 10-tick interval (1 Hz at x1)
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
@@ -935,6 +955,70 @@ flowchart LR
   host page (`--host` with `--world-size` hosts any size), victories chosen per player, and history
   records of more than two winners.
 
+
+## Seasons, extremes and the land's life
+
+ADR-028 records the decisions, and the plan
+([.docs/milestone-15-part-8-nature.md](../.docs/milestone-15-part-8-nature.md)) the numbers.
+
+```mermaid
+flowchart LR
+    tick[The tick and SeasonState.OriginTick] --> season[ClimateModel.SeasonOf]
+    season --> effects[ClimateModel.Now: season and wave combined]
+    spell[WeatherSpell: heat or cold wave] --> effects
+    effects --> weather[WeatherSystem: warmth, rain, snow, hurricanes]
+    effects --> harvest[SettlementSystem: harvest]
+    effects --> fire[Wildfires: fire risk]
+    effects --> leave[MigrationSystem: wish to leave]
+    effects --> step[SeasonSystem: spoiling, sickness, SeasonChanged]
+    weather --> snow[RegionState.Snow]
+    snow --> harvest
+    snow --> soil[Melt into the soil and the rivers]
+    harm[Fire, flood, quakes, lightning] --> land[EcologySystem: damage, scar, wildlife, pollution]
+    nature[A god of Nature, Regrowth] --> land
+    land --> harvest
+    land --> hunt[EcologyModel.Hunt in the settlement step]
+```
+
+- **The year.** A world made with seasons has a `SeasonState`; the season follows from the tick
+  and the year's origin, so nothing else is saved. `ClimateModel.Now` combines the season's and a
+  heat or cold wave's `ClimateEffects`: shifts and losses add, factors multiply. A world without
+  seasons uses `Seasons.Steady`. Each step that a season changes reads the factor it needs:
+  - the weather step: warmth for cells and soil, how often cells blow in, hurricanes;
+  - the settlement step: the harvest (`SettlementEconomy.Assess`'s climate yield);
+  - the fire step: how readily land catches;
+  - the migration step: the wish to leave.
+
+  `SeasonSystem` spoils stores, lets the cold or heat sicken and raises `SeasonChanged`.
+- **Extremes.**
+  - Rain on land below the snow line lies as snow; snow above the melt line melts into the soil,
+    which the rivers follow. Farmland under snow yields nothing, and snow does not burn.
+  - Fog is a calm, cool, humid cell.
+  - A storm born over warm sea grows into a hurricane by the season's share; other storms are
+    capped below its winds. A hurricane fills slowly over land, and the disaster step tears down
+    the houses under it (`DisasterKind.Hurricane`).
+  - Heat and cold waves are spells chosen after an ordinary one by the season's chances.
+- **The land's life.**
+  - `EcologySystem` harms land that burns or floods, heals harm down to the scar, turns harm
+    above the threshold into scar, heals faster and lifts scars where a god of Nature holds the
+    villages, regrows wildlife towards the land's capacity and clears pollution. Crowded villages
+    pollute.
+  - The disaster step harms land an earthquake shakes; lightning harms the land it strikes;
+    Regrowth heals harm and scars.
+  - Villages hunt in their own settlement step (`EcologyModel.Hunt`), so the food lands in the
+    same step's stores.
+  - Harmed and polluted farmland counts for less in `SurveyFarmland`.
+  - Gaps under `EcologyModel.Settled` close at once, so settled land stops changing and is not
+    sent again in the regions section.
+- **Presentation.**
+  - The HUD's weather line starts with the season (`SeasonText`).
+  - `NatureAlerts` tells of seasons and scarred land; the history keeps great storms and scars.
+  - F1 shows the climate and the land's life at the cursor; F3 has its layers.
+  - The Nature overlay (`NatureOverlay`) paints biodiversity, scars and snow.
+  - The client drapes `SnowCover` over the terrain.
+- **Cost:** a tenth more per tick: 0.09 ms on a small world, 0.68 ms on a huge one.
+- **Not modelled:** the rest of §19's disasters (part 9), snow slowing travel, grass and trees
+  changing colour with the seasons, and pollution by technology.
 ## Sound and settings
 
 ```mermaid
@@ -1391,7 +1475,9 @@ numbers and the measured droughts and storms.
 
 - **Cells** drift on the prevailing wind. Over the sea they take up water; over land they rain it
   out, their lows fill and they thin away. Rain, wind and lightning follow humidity, the depth of
-  the low and warmth, and name the weather: clear, rain, thunderstorm or windstorm.
+  the low and warmth, and name the weather: clear, rain, thunderstorm or windstorm, and since
+  ADR-028 snow, fog and hurricanes (see
+  [Seasons, extremes and the land's life](#seasons-extremes-and-the-lands-life)).
 - **Spells** (normal, dry, wet) of seeded length set how often cells blow in and how stormy they
   are; the prevailing wind turns between them.
 - **Soil water** per land region rises with rain, falls with warmth (faster in a dry spell) and is
@@ -1497,8 +1583,12 @@ the client.
   its attitude and memories, and drives every diplomatic move. `--diplomacy-panel=on` opens it in scripted runs.
 - The F1 panel's weather lines (`WeatherReadout`, §106) show the spell and its time left, the wind,
   the strongest cells with their state, the soil and weather under the cursor and the selected
-  settlement's water and yield. F8 starts the next spell (normal, dry, wet), F10 calls a storm at
-  the cursor, and `--weather=normal|dry|wet|storm` sets either up at the start.
+  settlement's water and yield. F8 starts the next spell (normal, dry, wet, heat wave, cold wave),
+  F10 calls a storm at the cursor, and `--weather=normal|dry|wet|storm|heatwave|coldwave|hurricane`
+  sets one up at the start. Since ADR-028 a climate line gives the season and what it and a wave
+  change, the cursor line the snow and the land's life, F3 has snow, wildlife, damage, scar and
+  pollution layers, O has the Nature overlay, Y begins the next season and `--season` one at the
+  start.
 - The F1 panel's disaster lines (`DisasterReadout`) list the earthquakes under way, the fiercest
   fires and the selected settlement's dangers (fire threat, shaking, ruins, homeless, scorched
   land, shield). F3 has fire and scorch layers, the Danger overlay shows fires, ash and shields,
@@ -1543,11 +1633,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 19 (current)
+    alt version 20 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 18
+    else versions 1 to 19
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 19, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories)
+        Mig-->>Save: JsonObject at version 20, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

@@ -17,12 +17,19 @@ public sealed class SettlementSystem : ISimulationSystem
 {
     private readonly SettlementRules _rules;
 
+    private readonly Domain.Weather.WeatherRules? _weather;
+    private readonly Domain.Ecology.EcologyRules? _ecology;
+
     /// <summary>Creates the system with validated rules.</summary>
     /// <param name="rules">Data-driven settlement tuning.</param>
-    public SettlementSystem(SettlementRules rules)
+    /// <param name="weather">Weather rules, for the seasons' and the waves' harvests (ADR-028); <c>null</c> for an even climate.</param>
+    /// <param name="ecology">Ecology rules, for the game the people hunt (ADR-028); <c>null</c> for no hunting.</param>
+    public SettlementSystem(SettlementRules rules, Domain.Weather.WeatherRules? weather = null, Domain.Ecology.EcologyRules? ecology = null)
     {
         SettlementRulesValidator.Validate(rules);
         _rules = rules;
+        _weather = weather;
+        _ecology = ecology;
     }
 
     /// <inheritdoc />
@@ -30,11 +37,13 @@ public sealed class SettlementSystem : ISimulationSystem
     {
         ArgumentNullException.ThrowIfNull(context);
         var regions = context.World.Regions;
+        var climateYield = _weather is null ? 1f : Weather.ClimateModel.Now(_weather, context.World).YieldFactor;
 
         // List order is stable, so the random draws happen in the same order on every run.
         foreach (var settlement in context.World.Settlements)
         {
-            var outlook = SettlementEconomy.Assess(_rules, settlement, regions);
+            var hunted = _ecology is null || settlement.Population <= 0 ? 0f : Ecology.EcologyModel.Hunt(_ecology, regions, settlement, _rules.StepIntervalTicks * Domain.World.SimulationTime.SecondsPerTick);
+            var outlook = SettlementEconomy.Assess(_rules, settlement, regions, climateYield, hunted);
             if (outlook.IsStarving && settlement.Food > 0f && settlement.Population > 0)
             {
                 context.Events.Add(new FamineStarted { Tick = context.World.Tick, SettlementId = settlement.Id });

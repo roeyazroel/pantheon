@@ -97,6 +97,7 @@ public static class RegionBuilder
         var landFraction = (float)(landSamples / sampleCount);
         var biome = MajorityBiome(biomeCounts);
         var rule = classifier.GetRule(biome);
+        var vegetation = ComputeVegetation(rule, meanMoisture, landFraction);
 
         return new RegionState
         {
@@ -106,7 +107,7 @@ public static class RegionBuilder
             Temperature = meanTemperature,
             Moisture = meanMoisture,
             Fertility = ComputeFertility(rule, meanMoisture, meanTemperature, landFraction),
-            Vegetation = ComputeVegetation(rule, meanMoisture, landFraction),
+            Vegetation = vegetation,
             Blessing = 0f,
 
             // A new world starts after ordinary weather: the soil holds as much water as the climate gives it.
@@ -115,6 +116,9 @@ public static class RegionBuilder
             Scorch = 0f,
             FreshWater = SimMath.Clamp01((float)(waterSamples / sampleCount) / fullWaterShare),
             Flood = 0f,
+
+            // The land starts with as many wild animals as its cover holds (ADR-028).
+            Wildlife = biome == Biome.Sea ? 0f : SimMath.Clamp01(vegetation),
         };
     }
 

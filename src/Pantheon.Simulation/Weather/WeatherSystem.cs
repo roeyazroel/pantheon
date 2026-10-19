@@ -14,7 +14,9 @@ namespace Pantheon.Simulation.Weather;
 /// <summary>
 /// One weather step (spec §16, ADR-013): the spell runs its course, cells take up water over the sea,
 /// rain it out over land and drift with the wind, new cells blow in from upwind, the soil of every
-/// land region gets wetter or drier, and storm winds ruin stores and building work. It raises
+/// land region gets wetter or drier, and storm winds ruin stores and building work. The season and a
+/// heat or cold wave warm or cool the land, change how often weather comes, let storms grow into
+/// hurricanes over warm sea, and turn rain to snow that lies until it melts (ADR-028). It raises
 /// <see cref="WeatherSpellChanged"/>, <see cref="StormStruck"/> and <see cref="DroughtChanged"/>.
 /// <see cref="IntervalSystem"/> runs it once every <see cref="WeatherRules.StepIntervalTicks"/> ticks.
 /// </summary>
@@ -56,9 +58,11 @@ public sealed class WeatherSystem : ISimulationSystem
         var windBefore = SettlementWinds(world);
         var droughtBefore = Droughts(world);
         UpdateSpell(world, random, context.Events);
-        UpdateCells(world, seconds);
-        SpawnCell(world, random, seconds);
-        Rain(world, seconds);
+        var climate = ClimateModel.Now(_rules, world);
+        var season = ClimateModel.OfSeason(_rules, ClimateModel.SeasonOf(_rules, world));
+        UpdateCells(world, seconds, climate.TemperatureShift);
+        SpawnCell(world, random, seconds, climate, season);
+        Rain(world, seconds, climate);
         Storms(world, windBefore, seconds, context.Events);
         ReportDroughts(world, droughtBefore, context.Events);
     }
@@ -88,9 +92,13 @@ public sealed class WeatherSystem : ISimulationSystem
         if (weather.SpellEndsTick is not { } ends)
         {
             weather.SpellEndsTick = world.Tick + SpellTicks(weather.Spell, random);
+            var start = ClimateModel.OfSeason(_rules, ClimateModel.SeasonOf(_rules, world));
+            var shift = ClimateModel.Now(_rules, world).TemperatureShift;
             for (var i = weather.Cells.Count; i < _rules.InitialCells; i++)
             {
-                weather.Cells.Add(CreateCell(world, random, scattered: true));
+                var cell = CreateCell(world, random, scattered: true);
+                Strengthen(cell, random, shift, start);
+                weather.Cells.Add(cell);
             }
 
             return;
@@ -102,7 +110,8 @@ public sealed class WeatherSystem : ISimulationSystem
         }
 
         var previous = weather.Spell;
-        weather.Spell = NextSpell(_rules, previous, random.NextDouble());
+        var season = ClimateModel.OfSeason(_rules, ClimateModel.SeasonOf(_rules, world));
+        weather.Spell = ClimateModel.NextSpell(_rules, season, previous, random.NextDouble(), random.NextDouble());
         weather.SpellEndsTick = world.Tick + SpellTicks(weather.Spell, random);
         var turn = ((random.NextFloat() * 2f) - 1f) * _rules.WindTurnDegrees * (MathF.PI / 180f);
         weather.WindDirection = NormalizeAngle(weather.WindDirection + turn);
@@ -121,7 +130,7 @@ public sealed class WeatherSystem : ISimulationSystem
     /// Every cell rains, takes up water over the sea, fills and thins over land, takes on the ground's
     /// warmth and moves; cells that have thinned away or left the world vanish.
     /// </summary>
-    private void UpdateCells(WorldState world, float seconds)
+    private void UpdateCells(WorldState world, float seconds, float shift)
     {
         var regions = world.Regions;
         var cells = world.Weather.Cells;
@@ -136,11 +145,12 @@ public sealed class WeatherSystem : ISimulationSystem
             }
             else
             {
-                cell.Pressure = Math.Max(0f, cell.Pressure - (_rules.LandFillingPerSecond * seconds));
+                var filling = cell.Wind >= _rules.Extremes.HurricaneWind ? _rules.Extremes.HurricaneLandFilling : 1f;
+                cell.Pressure = Math.Max(0f, cell.Pressure - (_rules.LandFillingPerSecond * filling * seconds));
                 cell.Humidity = Math.Max(0f, cell.Humidity - (_rules.LandDissipationPerSecond * seconds));
             }
 
-            var ground = WeatherModel.GroundTemperature(regions, cell.X, cell.Z, cell.Temperature);
+            var ground = WeatherModel.GroundTemperature(regions, cell.X, cell.Z, cell.Temperature - shift, shift);
             cell.Temperature = SimMath.Clamp01(cell.Temperature + ((ground - cell.Temperature) * Math.Min(1f, _rules.TemperatureFollowPerSecond * seconds)));
             cell.X += cell.VelocityX * seconds;
             cell.Z += cell.VelocityZ * seconds;
@@ -163,17 +173,44 @@ public sealed class WeatherSystem : ISimulationSystem
     }
 
     /// <summary>
-    /// Perhaps lets a new cell blow in at the upwind edge of the map: more often in a wet spell, rarely
-    /// in a dry one.
+    /// Perhaps lets a new cell blow in at the upwind edge of the map: more often in a wet spell or a
+    /// rainy season, rarely in a dry one.
     /// </summary>
-    private void SpawnCell(WorldState world, SimulationRandom random, float seconds)
+    private void SpawnCell(WorldState world, SimulationRandom random, float seconds, ClimateEffects climate, ClimateEffects season)
     {
         var weather = world.Weather;
-        var chance = _rules.CellsPerSecond * WeatherModel.CellFactor(_rules, weather.Spell) * seconds;
+        var chance = _rules.CellsPerSecond * WeatherModel.CellFactor(_rules, weather.Spell) * climate.RainFactor * seconds;
         if (weather.Cells.Count < _rules.MaxCells && random.NextDouble() < chance)
         {
-            weather.Cells.Add(CreateCell(world, random, scattered: false));
+            var cell = CreateCell(world, random, scattered: false);
+            Strengthen(cell, random, climate.TemperatureShift, season);
+            weather.Cells.Add(cell);
         }
+    }
+
+    /// <summary>
+    /// A storm born over sea warm enough grows into a hurricane by the season's share; any other
+    /// storm stays below a hurricane's winds (ADR-028).
+    /// </summary>
+    private void Strengthen(WeatherCell cell, SimulationRandom random, float shift, ClimateEffects season)
+    {
+        var extremes = _rules.Extremes;
+        if (extremes.HurricaneWind >= 1f || cell.Pressure < _rules.StormPressure)
+        {
+            return;
+        }
+
+        if (cell.Temperature + shift >= extremes.HurricaneSeaTemperature && random.NextDouble() < season.HurricaneShare)
+        {
+            cell.Pressure = Math.Max(cell.Pressure, extremes.HurricanePressure + (random.NextFloat() * (1f - extremes.HurricanePressure)));
+            cell.Humidity = 1f;
+        }
+        else
+        {
+            cell.Pressure = Math.Min(cell.Pressure, (extremes.HurricaneWind / Math.Max(_rules.WindFromPressure, 1e-3f)) - 0.01f);
+        }
+
+        WeatherModel.Refresh(_rules, cell);
     }
 
     /// <summary>
@@ -219,10 +256,14 @@ public sealed class WeatherSystem : ISimulationSystem
         return cell;
     }
 
-    /// <summary>Wets or dries the soil of every land region by the rain over its centre.</summary>
-    private void Rain(WorldState world, float seconds)
+    /// <summary>
+    /// Wets or dries the soil of every land region by the rain over its centre; on land colder than
+    /// the snow line the rain lies as snow instead, and snow on warmer land melts into the soil (ADR-028).
+    /// </summary>
+    private void Rain(WorldState world, float seconds, ClimateEffects climate)
     {
         var regions = world.Regions;
+        var extremes = _rules.Extremes;
         foreach (var region in regions.Cells)
         {
             if (region.Biome == Biome.Sea)
@@ -231,11 +272,24 @@ public sealed class WeatherSystem : ISimulationSystem
             }
 
             var rain = WeatherModel.At(_rules, world.Weather, regions.GetRegionCenter(region.Id)).Rain;
-            region.SoilMoisture = WeatherModel.NextSoilMoisture(_rules, region, rain, world.Weather.Spell, seconds);
+            var warmth = region.Temperature + climate.TemperatureShift;
+            if (warmth < extremes.SnowTemperature)
+            {
+                region.Snow = SimMath.Clamp01(region.Snow + (extremes.SnowPerSecond * rain * seconds));
+                rain = 0f;
+            }
+            else if (region.Snow > 0f && warmth > extremes.MeltTemperature)
+            {
+                var melt = Math.Min(region.Snow, extremes.MeltPerSecond * (warmth - extremes.MeltTemperature) * seconds);
+                region.Snow -= melt;
+                region.SoilMoisture = SimMath.Clamp01(region.SoilMoisture + (melt * extremes.MeltWater));
+            }
+
+            region.SoilMoisture = WeatherModel.NextSoilMoisture(_rules, region, rain, world.Weather.Spell, seconds, climate);
         }
     }
 
-    /// <summary>Storm winds ruin part of the stores and the building work of every settlement they reach, and are reported as they arrive.</summary>
+    /// <summary>Storm winds ruin part of the stores and the building work of every settlement they reach, and are reported as they arrive and again if they grow to a hurricane's.</summary>
     private void Storms(WorldState world, float[] windBefore, float seconds, List<WorldEvent> events)
     {
         for (var i = 0; i < world.Settlements.Count; i++)
@@ -250,9 +304,10 @@ public sealed class WeatherSystem : ISimulationSystem
             var severity = (weather.Wind - _rules.StormWind) / (1f - _rules.StormWind);
             settlement.Food *= Math.Max(0f, 1f - (_rules.StormFoodLossPerSecond * severity * seconds));
             settlement.ConstructionProgress *= Math.Max(0f, 1f - (_rules.StormConstructionLossPerSecond * severity * seconds));
-            if (windBefore[i] < _rules.StormWind && weather.CellId is { } cellId)
+            var hurricane = weather.Wind >= _rules.Extremes.HurricaneWind;
+            if ((windBefore[i] < _rules.StormWind || (hurricane && windBefore[i] < _rules.Extremes.HurricaneWind)) && weather.CellId is { } cellId)
             {
-                events.Add(new StormStruck { Tick = world.Tick, SettlementId = settlement.Id, CellId = cellId, Wind = weather.Wind });
+                events.Add(new StormStruck { Tick = world.Tick, SettlementId = settlement.Id, CellId = cellId, Wind = weather.Wind, Hurricane = hurricane });
             }
         }
     }

@@ -68,7 +68,10 @@ public static class WeatherModel
         cell.ElectricalActivity = ComputeLightning(rules, cell.Pressure, cell.Precipitation, cell.Temperature);
     }
 
-    /// <summary>What the weather beneath a cell is like: a thunderstorm, a windstorm, rain or clear.</summary>
+    /// <summary>
+    /// What the weather beneath a cell is like: a hurricane, a thunderstorm, a windstorm, snow (a cold
+    /// cell's rain), fog (a humid, calm, cool cell: mist and drizzle), rain or clear (ADR-028).
+    /// </summary>
     /// <param name="rules">Weather rules.</param>
     /// <param name="cell">The cell.</param>
     /// <returns>Its kind.</returns>
@@ -76,9 +79,14 @@ public static class WeatherModel
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(cell);
-        return cell.ElectricalActivity >= rules.ThunderActivity ? WeatherKind.Thunderstorm
+        var extremes = rules.Extremes;
+        var raining = cell.Precipitation >= rules.VisibleRain;
+        return cell.Wind >= extremes.HurricaneWind ? WeatherKind.Hurricane
+            : cell.ElectricalActivity >= rules.ThunderActivity ? WeatherKind.Thunderstorm
             : cell.Wind >= rules.StormWind ? WeatherKind.Windstorm
-            : cell.Precipitation >= rules.VisibleRain ? WeatherKind.Rain
+            : raining && cell.Temperature < extremes.SnowTemperature ? WeatherKind.Snow
+            : cell.Humidity >= extremes.FogHumidity && cell.Pressure <= extremes.FogPressure && cell.Temperature <= extremes.FogTemperature ? WeatherKind.Fog
+            : raining ? WeatherKind.Rain
             : WeatherKind.Clear;
     }
 
@@ -142,16 +150,18 @@ public static class WeatherModel
     /// <param name="rain">Rain over it (0..1).</param>
     /// <param name="spell">The spell; the soil dries faster in a dry one.</param>
     /// <param name="seconds">Simulated seconds.</param>
+    /// <param name="climate">The season's and the wave's effects (ADR-028): warmth and drying; snow cover keeps the soil from drying.</param>
     /// <returns>Soil moisture (0..1).</returns>
-    public static float NextSoilMoisture(WeatherRules rules, RegionState region, float rain, WeatherSpell spell, float seconds)
+    public static float NextSoilMoisture(WeatherRules rules, RegionState region, float rain, WeatherSpell spell, float seconds, ClimateEffects? climate = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(region);
+        climate ??= ClimateEffects.None;
         var soil = SimMath.Clamp01(region.SoilMoisture);
         var room = 1f - soil;
         var soak = rules.RainSoakPerSecond * SimMath.Clamp01(rain) * room;
-        var heat = spell == WeatherSpell.Dry ? rules.DrySpellDryingFactor : 1f;
-        var drying = rules.EvaporationPerSecond * heat * (0.5f + SimMath.Clamp01(region.Temperature)) * soil;
+        var heat = (spell == WeatherSpell.Dry ? rules.DrySpellDryingFactor : 1f) * climate.DryingFactor * (1f - SimMath.Clamp01(region.Snow));
+        var drying = rules.EvaporationPerSecond * heat * (0.5f + SimMath.Clamp01(region.Temperature + climate.TemperatureShift)) * soil;
         var springs = rules.GroundwaterPerSecond * SimMath.Clamp01(region.Moisture) * room;
         return SimMath.Clamp01(soil + ((soak - drying + springs) * seconds));
     }
@@ -168,6 +178,7 @@ public static class WeatherModel
             WeatherSpell.Normal => (rules.NormalSpellMinSeconds, rules.NormalSpellMaxSeconds),
             WeatherSpell.Dry => (rules.DrySpellMinSeconds, rules.DrySpellMaxSeconds),
             WeatherSpell.Wet => (rules.WetSpellMinSeconds, rules.WetSpellMaxSeconds),
+            WeatherSpell.HeatWave or WeatherSpell.ColdWave => (rules.Extremes.WaveMinSeconds, rules.Extremes.WaveMaxSeconds),
         };
     }
 
@@ -180,7 +191,7 @@ public static class WeatherModel
         ArgumentNullException.ThrowIfNull(rules);
         return spell switch
         {
-            WeatherSpell.Normal => 1f,
+            WeatherSpell.Normal or WeatherSpell.HeatWave or WeatherSpell.ColdWave => 1f,
             WeatherSpell.Dry => rules.DrySpellCellFactor,
             WeatherSpell.Wet => rules.WetSpellCellFactor,
         };
@@ -195,7 +206,7 @@ public static class WeatherModel
         ArgumentNullException.ThrowIfNull(rules);
         return spell switch
         {
-            WeatherSpell.Normal or WeatherSpell.Dry => rules.StormShare,
+            WeatherSpell.Normal or WeatherSpell.Dry or WeatherSpell.HeatWave or WeatherSpell.ColdWave => rules.StormShare,
             WeatherSpell.Wet => rules.WetSpellStormShare,
         };
     }
@@ -259,15 +270,16 @@ public static class WeatherModel
         return cell;
     }
 
-    /// <summary>Temperature of the region under a point, or a fallback beyond the grid.</summary>
+    /// <summary>Temperature of the region under a point, or a fallback beyond the grid, warmed or cooled by the season (ADR-028).</summary>
     /// <param name="regions">Region grid.</param>
     /// <param name="x">East-west position in metres.</param>
     /// <param name="z">North-south position in metres.</param>
     /// <param name="fallback">Temperature beyond the grid.</param>
+    /// <param name="shift">The season's and the wave's shift.</param>
     /// <returns>Temperature (0..1).</returns>
-    public static float GroundTemperature(RegionGrid regions, float x, float z, float fallback)
+    public static float GroundTemperature(RegionGrid regions, float x, float z, float fallback, float shift = 0f)
     {
         ArgumentNullException.ThrowIfNull(regions);
-        return regions.TryGetRegionIdAt(x, z, out var id) ? SimMath.Clamp01(regions.Cells[id].Temperature) : fallback;
+        return SimMath.Clamp01((regions.TryGetRegionIdAt(x, z, out var id) ? regions.Cells[id].Temperature : fallback) + shift);
     }
 }

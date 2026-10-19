@@ -43,6 +43,7 @@ public sealed class MiracleCaster
     private readonly DiplomacyRules? _diplomacy;
     private InfluenceCache? _cache;
     private readonly MiracleEffects _effects;
+    private readonly float _smiteHarm;
 
     /// <summary>Creates a caster over validated content.</summary>
     /// <param name="rules">Divine rules.</param>
@@ -55,8 +56,10 @@ public sealed class MiracleCaster
     /// <param name="domains">Domain rules, for domain costs and boons (ADR-021); <c>null</c> for none. A signature miracle always needs its domain.</param>
     /// <param name="holySites">Holy site rules, for the cheaper miracles of a site's keeper (ADR-021); <c>null</c> for none.</param>
     /// <param name="diplomacy">Diplomacy rules, for the council's decrees (ADR-025) and veiled miracles (ADR-026); <c>null</c> for none, and miracles cannot be veiled.</param>
-    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null, DiplomacyRules? diplomacy = null)
+    /// <param name="ecology">Ecology rules, for the harm smiting does to the land (ADR-028); <c>null</c> for none.</param>
+    public MiracleCaster(DivineRules rules, SettlementRules settlementRules, MiracleBook book, IActRecorder? ledger = null, WeatherRules? weather = null, DisasterRules? disasters = null, CreatureRules? creatures = null, DomainRules? domains = null, HolySiteRules? holySites = null, DiplomacyRules? diplomacy = null, Domain.Ecology.EcologyRules? ecology = null)
     {
+        _smiteHarm = ecology?.HarmDamage ?? 0f;
         _diplomacy = diplomacy;
         _ledger = ledger;
         _disasters = disasters;
@@ -245,7 +248,7 @@ public sealed class MiracleCaster
             Conflict.Covert.Expose(_ledger, world, god.Id, victim, miracle.Id, affected[0], events);
         }
 
-        MiracleEffects.ApplyToRegions(miracle, world.Regions, request.Target);
+        MiracleEffects.ApplyToRegions(miracle, world.Regions, request.Target, _smiteHarm);
         _effects.ApplyToWorld(world, miracle, god.Id, request.Target, affected, events);
         events.Add(new MiracleCast
         {

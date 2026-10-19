@@ -11,4 +11,7 @@ public enum DisasterKind
 
     /// <summary>A flood: a river over its banks or a wave from the sea (ADR-022).</summary>
     Flood,
+
+    /// <summary>A hurricane's winds (ADR-028).</summary>
+    Hurricane,
 }

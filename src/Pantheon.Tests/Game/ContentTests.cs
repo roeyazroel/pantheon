@@ -49,6 +49,9 @@ public sealed class ContentTests
     [InlineData("world_sizes.json", "\"Settlements\": 8,", "\"Settlements\": 9,", "must describe the world")]
     [InlineData("world_sizes.json", "\"Settlements\": 40,", "\"Settlements\": 400,", "Names must hold a name for every settlement")]
     [InlineData("world_sizes.json", "\"PantheonMaxGods\": 3", "\"PantheonMaxGods\": 7", "between 2 and its 6 gods win together")]
+    [InlineData("weather.json", "\"SnowTemperature\": 0.35", "\"SnowTemperature\": 1.5", "Extremes.SnowTemperature")]
+    [InlineData("weather.json", "\"SeasonSeconds\": 150.0", "\"SeasonSeconds\": 0.0", "Seasons.SeasonSeconds")]
+    [InlineData("ecology.json", "\"ScarThreshold\": 0.5", "\"ScarThreshold\": 2.0", "ScarThreshold")]
     public void DivineContent_WithOutOfRangeValue_FailsValidation(string file, string from, string to, string expected)
     {
         var text = TestContent.ReadText(file);

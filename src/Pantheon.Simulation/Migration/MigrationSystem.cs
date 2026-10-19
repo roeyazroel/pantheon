@@ -38,13 +38,18 @@ public sealed class MigrationSystem : ISimulationSystem
     private readonly SettlementRules _settlementRules;
     private readonly DivineRules _divine;
     private readonly IActRecorder? _ledger;
+    private readonly Domain.Weather.WeatherRules? _weather;
+
+    // The season's factor on the wish to leave, for this step (ADR-028).
+    private float _season = 1f;
 
     /// <summary>Creates the system with validated rules.</summary>
     /// <param name="rules">Migration rules.</param>
     /// <param name="settlementRules">Settlement rules, for the farmland's hazards.</param>
     /// <param name="divine">Divine rules, for the settlements' conditions.</param>
     /// <param name="ledger">Where the gods' acts towards each other's migrants are recorded; <c>null</c> for none.</param>
-    public MigrationSystem(MigrationRules rules, SettlementRules settlementRules, DivineRules divine, IActRecorder? ledger = null)
+    /// <param name="weather">Weather rules, for the seasons: few set out in winter (ADR-028); <c>null</c> for an even climate.</param>
+    public MigrationSystem(MigrationRules rules, SettlementRules settlementRules, DivineRules divine, IActRecorder? ledger = null, Domain.Weather.WeatherRules? weather = null)
     {
         MigrationRulesValidator.Validate(rules);
         ArgumentNullException.ThrowIfNull(settlementRules);
@@ -53,6 +58,7 @@ public sealed class MigrationSystem : ISimulationSystem
         _settlementRules = settlementRules;
         _divine = divine;
         _ledger = ledger;
+        _weather = weather;
     }
 
     /// <inheritdoc />
@@ -61,6 +67,7 @@ public sealed class MigrationSystem : ISimulationSystem
         ArgumentNullException.ThrowIfNull(context);
         var world = context.World;
         var seconds = _rules.StepIntervalTicks * SimulationTime.SecondsPerTick;
+        _season = _weather is null ? 1f : Weather.ClimateModel.Now(_weather, world).MigrationFactor;
         foreach (var settlement in world.Settlements)
         {
             BuildUrge(world, settlement, seconds, context.Events);
@@ -109,7 +116,7 @@ public sealed class MigrationSystem : ISimulationSystem
         }
 
         var excess = (pressure.Value - _rules.PressureThreshold) / (1f - _rules.PressureThreshold);
-        settlement.Emigration = Math.Min(cap, settlement.Emigration + (settlement.Population * _rules.EmigrationPerSecond * excess * seconds));
+        settlement.Emigration = Math.Min(cap, settlement.Emigration + (settlement.Population * _rules.EmigrationPerSecond * excess * _season * seconds));
         if (settlement.Emigration >= Math.Max(_rules.MinGroupSize, settlement.Population * _rules.GroupShare) && world.Migration.Groups.Count < _rules.MaxGroups)
         {
             var people = Math.Min((int)settlement.Emigration, settlement.Population - _rules.MinRemaining);

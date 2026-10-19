@@ -73,4 +73,7 @@ public sealed class WorldState
 
     /// <summary>How the world may be won (spec §53, ADR-027); Divine Ascendancy only by default.</summary>
     public VictorySettings Victory { get; set; } = VictorySettings.Default;
+
+    /// <summary>The world's seasons (spec §17, ADR-028), or <c>null</c> for a world made without them.</summary>
+    public Weather.SeasonState? Seasons { get; set; }
 }

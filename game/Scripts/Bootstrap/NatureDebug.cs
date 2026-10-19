@@ -14,9 +14,9 @@ using Pantheon.Game.Weather;
 namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
-/// The debug drivers of weather, disasters, migration and Creature meetings (ADR-013, ADR-014,
-/// ADR-016, ADR-017, ADR-022): the F8, F10, F11, F12, L, M and K hotkeys and the <c>--weather</c>,
-/// <c>--disaster</c>, <c>--migrate</c>, <c>--refugees</c> and <c>--meet</c> launch options. Every
+/// The debug drivers of weather, seasons, disasters, migration and Creature meetings (ADR-013, ADR-014,
+/// ADR-016, ADR-017, ADR-022, ADR-028): the F8, F10, F11, F12, L, M, K and Y hotkeys and the
+/// <c>--weather</c>, <c>--season</c>, <c>--disaster</c>, <c>--migrate</c>, <c>--refugees</c> and <c>--meet</c> launch options. Every
 /// change goes through the engine-agnostic commands; this class only wires them to input.
 /// </summary>
 internal sealed class NatureDebug
@@ -47,6 +47,7 @@ internal sealed class NatureDebug
         (InputActions.DebugFlood, () => AtCursor("start a flood", point => DisasterCommands.StartFlood(_session, point))),
         (InputActions.DebugMigrate, () => AtCursor("send people away", point => MigrationCommands.SendFrom(_session, point))),
         (InputActions.DebugMeet, () => _setStatus(CreatureCommands.BringOther(_session))),
+        (InputActions.DebugSeason, () => _setStatus(SeasonCommands.NextSeason(_session))),
     ];
 
     /// <summary>Sets up the weather, disaster, refugee policy and migration the launch options ask for, at the focused settlement where a place is needed.</summary>
@@ -55,6 +56,11 @@ internal sealed class NatureDebug
     public void ApplyStartOptions(LaunchOptions options, GroundPosition? focus)
     {
         ArgumentNullException.ThrowIfNull(options);
+        if (options.Season is { } season)
+        {
+            _setStatus(SeasonCommands.SetSeason(_session, season));
+        }
+
         if (options.Weather is { } weather && Weather(weather, focus) is { } status)
         {
             _setStatus(status);
@@ -93,6 +99,9 @@ internal sealed class NatureDebug
         WeatherAtStart.Dry => WeatherCommands.SetSpell(_session, WeatherSpell.Dry),
         WeatherAtStart.Wet => WeatherCommands.SetSpell(_session, WeatherSpell.Wet),
         WeatherAtStart.Storm => focus is { } place ? WeatherCommands.SummonStorm(_session, place) : null,
+        WeatherAtStart.HeatWave => WeatherCommands.SetSpell(_session, WeatherSpell.HeatWave),
+        WeatherAtStart.ColdWave => WeatherCommands.SetSpell(_session, WeatherSpell.ColdWave),
+        WeatherAtStart.Hurricane => focus is { } eye ? WeatherCommands.SummonStorm(_session, eye, hurricane: true) : null,
     };
 
     /// <summary>Runs a command at the ground point under the cursor, or says to point at the ground.</summary>

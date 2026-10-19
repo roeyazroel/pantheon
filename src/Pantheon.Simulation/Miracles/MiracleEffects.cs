@@ -130,19 +130,24 @@ internal sealed class MiracleEffects
         return deaths;
     }
 
-    /// <summary>Applies the land's effects to every region whose centre the miracle reaches: blessing, soaking, and regrowth after fire.</summary>
-    public static void ApplyToRegions(MiracleDefinition miracle, RegionGrid grid, GroundPosition target)
+    /// <summary>
+    /// Applies the land's effects to every region whose centre the miracle reaches: blessing, soaking,
+    /// regrowth after fire and harm (which also heals damage and scars, ADR-028), and smiting, which
+    /// harms the land's life by <paramref name="smiteHarm"/> where it falls, even in a narrow strike.
+    /// </summary>
+    public static void ApplyToRegions(MiracleDefinition miracle, RegionGrid grid, GroundPosition target, float smiteHarm = 0f)
     {
+        var struck = grid.TryGetRegionIdAt(target.X, target.Z, out var under) ? under : -1;
         foreach (var effect in miracle.Effects)
         {
-            if (effect.Kind is not (MiracleEffectKind.Bless or MiracleEffectKind.Regrow or MiracleEffectKind.Soak))
+            if (effect.Kind is not (MiracleEffectKind.Bless or MiracleEffectKind.Regrow or MiracleEffectKind.Soak) && !(effect.Kind == MiracleEffectKind.Smite && smiteHarm > 0f))
             {
                 continue;
             }
 
             foreach (var region in grid.Cells)
             {
-                if (Distance(grid.GetRegionCenter(region.Id), target) > miracle.Radius)
+                if (Distance(grid.GetRegionCenter(region.Id), target) > miracle.Radius && !(effect.Kind == MiracleEffectKind.Smite && region.Id == struck))
                 {
                     continue;
                 }
@@ -155,11 +160,18 @@ internal sealed class MiracleEffects
                 {
                     region.SoilMoisture = Math.Max(region.SoilMoisture, SimMath.Clamp01(effect.Amount));
                 }
+                else if (effect.Kind == MiracleEffectKind.Smite)
+                {
+                    region.Damage = SimMath.Clamp01(region.Damage + smiteHarm);
+                }
                 else
                 {
+                    var amount = SimMath.Clamp01(effect.Amount);
                     region.Fire = 0f;
-                    region.Scorch *= 1f - SimMath.Clamp01(effect.Amount);
-                    region.SoilMoisture = Math.Max(region.SoilMoisture, SimMath.Clamp01(effect.Amount));
+                    region.Scorch *= 1f - amount;
+                    region.SoilMoisture = Math.Max(region.SoilMoisture, amount);
+                    region.Scar *= 1f - amount;
+                    region.Damage = Math.Max(region.Scar, region.Damage * (1f - amount));
                 }
             }
         }
