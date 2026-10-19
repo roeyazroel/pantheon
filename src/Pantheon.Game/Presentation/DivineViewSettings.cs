@@ -28,6 +28,9 @@ public sealed record DivineViewSettings
     /// <summary>The look of each Creature species (ADR-021).</summary>
     public required IReadOnlyList<CreatureLook> CreatureLooks { get; init; }
 
+    /// <summary>The colour of the magical anomaly's column of light (ADR-035).</summary>
+    public RgbColor AnomalyColor { get; init; } = RgbColor.ParseHex("#b78cff");
+
     /// <summary>Parses and validates the divine view content file.</summary>
     /// <param name="json">Text of <c>divine_view.json</c>.</param>
     /// <returns>The validated settings.</returns>

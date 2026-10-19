@@ -14,6 +14,12 @@ public sealed record GreatEventRules
         Names = [],
     };
 
+    /// <summary>The ancient beast (ADR-035); none when absent.</summary>
+    public BeastRules Beast { get; init; } = BeastRules.None;
+
+    /// <summary>The magical anomaly (ADR-035); none when absent.</summary>
+    public AnomalyRules Anomaly { get; init; } = AnomalyRules.None;
+
     /// <summary>The plague.</summary>
     public required PlagueRules Plague { get; init; }
 

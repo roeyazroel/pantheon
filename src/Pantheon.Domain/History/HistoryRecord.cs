@@ -180,6 +180,15 @@ public enum HistoryKind
 
     /// <summary>Many of the island's people took to the road at once (ADR-034).</summary>
     GreatMigration,
+
+    /// <summary>The ancient beast woke (ADR-035); <see cref="HistoryRecord.Name"/> is the beast.</summary>
+    Beast,
+
+    /// <summary>The ancient beast was slain (ADR-035); the god is the one who harmed it most, the count how many shared the glory.</summary>
+    BeastSlain,
+
+    /// <summary>A surge of power came to a place (ADR-035).</summary>
+    Anomaly,
 }
 
 /// <summary>

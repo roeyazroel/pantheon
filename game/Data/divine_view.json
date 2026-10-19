@@ -39,6 +39,10 @@
     { "Species": "Mossback", "Hide": "#6b5c45", "Belly": "#c7b085", "Tufts": "#4d8038", "Width": 1.0, "Height": 1.0, "Horns": 1.0, "Glow": 0.0 },
     { "Species": "Stonehide", "Hide": "#6e6c67", "Belly": "#a19d93", "Tufts": "#58554f", "Width": 1.25, "Height": 0.95, "Horns": 0.6, "Glow": 0.0 },
     { "Species": "Swiftclaw", "Hide": "#7a4630", "Belly": "#c99a6a", "Tufts": "#3a2a22", "Width": 0.82, "Height": 1.1, "Horns": 1.5, "Glow": 0.0 },
-    { "Species": "Lumen", "Hide": "#b5c4d4", "Belly": "#eaf0f6", "Tufts": "#8fe0ff", "Width": 0.9, "Height": 1.0, "Horns": 0.7, "Glow": 0.5 }
-  ]
+    { "Species": "Lumen", "Hide": "#b5c4d4", "Belly": "#eaf0f6", "Tufts": "#8fe0ff", "Width": 0.9, "Height": 1.0, "Horns": 0.7, "Glow": 0.5 },
+    // The ancient beast's look (ADR-035): no Creature is of this species.
+    { "Species": "Beast", "Hide": "#2e2622", "Belly": "#5a4a3e", "Tufts": "#b0361e", "Width": 3.2, "Height": 3.0, "Horns": 1.8, "Glow": 0.35 }
+  ],
+  // The magical anomaly's column of light (ADR-035).
+  "AnomalyColor": "#b78cff"
 }

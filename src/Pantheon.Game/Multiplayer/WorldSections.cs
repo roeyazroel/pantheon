@@ -167,6 +167,7 @@ public static class WorldSections
                 var great = Read<Domain.GreatEvents.GreatEventsState>(data);
                 Replace(world.GreatEvents.Events, great.Events);
                 (world.GreatEvents.NextId, world.GreatEvents.NextEclipseTick, world.GreatEvents.DrySinceTick) = (great.NextId, great.NextEclipseTick, great.DrySinceTick);
+                (world.GreatEvents.Beast, world.GreatEvents.NextAnomalyTick) = (great.Beast, great.NextAnomalyTick);
                 world.GreatEvents.LastReformations.Clear();
                 foreach (var (god, tick) in great.LastReformations)
                 {

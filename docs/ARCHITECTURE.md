@@ -181,7 +181,9 @@ files and compiled assemblies and fails when either rule is broken.
   (`GreatEventsState`, with the next id, the next eclipse, each god's last reformation and since
   when the land has been dry): its kind, name, start, set end, god and peak.
   `DisasterRules.GreatEvents` (`GreatEventRules`: `PlagueRules`, `EclipseRules`, `ReformationRules`,
-  the watch's thresholds and the names) holds their numbers.
+  the watch's thresholds and the names) holds their numbers. Since ADR-035 the state also holds the
+  ancient beast (`BeastState`: name, lair, phase, position, health, hunt, way, harm by god) and the
+  next anomaly, and an event may have a place; `BeastRules` and `AnomalyRules` hold theirs.
 - `Roads/RoadState` (ADR-033): a road between two villages in `WorldState.Roads` (with
   `NextRoadId`): its villages, its way, its length, the metres built and its wear.
   `SettlementRules.Resources` (`ResourceRules`) and `SettlementRules.Roads` (`RoadRules`) hold
@@ -315,7 +317,9 @@ files and compiled assemblies and fails when either rule is broken.
   (ADR-030), applied by `MiracleEffects`.
 - `GreatEvents/`: `PlagueModel` (ripeness, course, shield, catching, cure), `EclipseModel`,
   `ReformationModel`, `GreatEventWatch` (world war, great drought, great migration),
-  `GreatEventModel` (beginning, ending, names and an eclipse's awe) and `GreatEventSystem`. See
+  `GreatEventModel` (beginning, ending, names and an eclipse's awe) and `GreatEventSystem`;
+  `BeastModel` (the lair, waking, harm and the fall), `BeastSystem` (its rampage, fights and calls)
+  and `AnomalyModel` (the surge, the gods' power and cheaper miracles, ADR-035). See
   [Great events](#great-events).
 - `Resources/`: `ResourceModel` (what a village wants in store, its gatherers, what they bring in
   and take from the land, the wood a house takes) and `ResourceSystem` (timber growing back and
@@ -404,7 +408,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (13 since ADR-034, which adds the GreatEvents section; 12
+- `NetworkProtocol`: the protocol version (14 since ADR-035, whose GreatEvents section carries the
+  beast; 13 since ADR-034, which added the GreatEvents section; 12
   since ADR-033, which added the Roads section and regions' forest, timber and stone; 11 since
   ADR-032, which added the Notables section; 10
   since ADR-030, which added `HandIntent` and whose Creatures, gods and regions carry paths, what
@@ -461,7 +466,9 @@ nothing and no land hallowed. Version 22 → 23 (`NotableSaveMigration`) starts 
 elders and gives the history's records no name. Version 23 → 24 (`ResourceSaveMigration`) grows
 each region's forest from its biome and vegetation, gives each village a new world's stores and
 starts with no roads. Version 24 → 25 (`GreatEventSaveMigration`) makes nobody sick or immune,
-starts no great event and sets the first eclipse on the first step. A missing,
+starts no great event and sets the first eclipse on the first step. Version 25 → 26
+(`BeastSaveMigration`) leaves the beast's lair to be found, sets the first anomaly on the first step
+and gives the events under way no place. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -491,7 +498,8 @@ starts no great event and sets the first eclipse on the first step. A missing,
   stone in 0..1 with timber within the forest, stores not negative, unique road ids below the next
   between two known villages, ways of two points or more, built within the length, wear in 0..1),
   and great events (`GreatEventIntegrity`: plague and immunity in 0..1, unique event ids below the
-  next with known kinds and gods, names and possible ticks, reformations of known gods).
+  next with known kinds and gods, names and possible ticks, reformations of known gods, and the
+  beast's name, lair, health, village and harm by known gods).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -682,6 +690,9 @@ starts no great event and sets the first eclipse on the first step. A missing,
   rubble (`HazardCover`) over the land, keeps a funnel per tornado and a cloud per swarm
   (`HazardViews`), raises the volcano's plume while it rumbles or erupts, and lays a fading decal
   for each crack, slide and crater.
+- `Presentation/GreatEvents/GreatEventPresenter` draws the beast (the Creature body with the
+  "Beast" look, half-buried asleep, walking awake, on its side fallen, with its label) and the
+  anomaly's column of light (ADR-035).
 - `Presentation/Land/`: `ForestPresenter` draws the trees in chunks of MultiMeshes (the low-poly
   `TreeMeshes` with the `tree.gdshader` tint) and redraws a chunk when its timber, snow, villages
   or roads change; `RoadPresenter` draws each road's ribbon (ADR-033).
@@ -1768,6 +1779,13 @@ flowchart LR
 - **Eclipses.** `EclipseModel` sets each eclipse from the seed and the tick, darkens and lights the
   sun, and gives the dread. `MiracleCaster` multiplies the witnesses' closeness by
   `GreatEventModel.Awe`.
+- **The beast (ADR-035).** `BeastSystem` finds its lair the first time, wakes it after its first
+  sleep (a great quake, the volcano, or by itself), walks it to the nearest village, strikes through
+  `DisasterDamage` with `DisasterKind.Beast`, lets nearby Creatures fight it, calls the AI gods'
+  Creatures through `CreatureBrain.Command`, and sends it home tired. `MiracleEffects` lets smiting
+  harm it, and `BeastModel.Fall` shares the glory.
+- **The anomaly (ADR-035).** `AnomalyModel` surges power at a seeded land region; the gods draw power
+  there by `InfluenceField`, and `MiracleCaster` prices miracles within its reach at its factor.
 - **Reformations and the watch.** `ReformationModel` measures and reforms each god's faith.
   `GreatEventWatch` begins and ends world wars, great droughts and great migrations from the
   world's state. The council answers a plague or a great drought as it answers a disaster.
@@ -1962,11 +1980,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 25 (current)
+    alt version 26 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 24
+    else versions 1 to 25
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 25, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events)
+        Mig-->>Save: JsonObject at version 26, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

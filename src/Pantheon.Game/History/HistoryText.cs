@@ -95,6 +95,9 @@ public static class HistoryText
             HistoryKind.WorldWar => Format("{0} begins", Capitalised(record.Name ?? "the world war")),
             HistoryKind.GreatDrought => Format("{0} begins", Capitalised(record.Name ?? "the great drought")),
             HistoryKind.GreatMigration => Format("{0} begins", Capitalised(record.Name ?? "the great migration")),
+            HistoryKind.Beast => Format("{0} wakes", Capitalised(record.Name ?? "the beast")),
+            HistoryKind.BeastSlain => Format("The Slaying of {0}", record.Name ?? "the beast"),
+            HistoryKind.Anomaly => Format("{0} shimmers", Capitalised(record.Name ?? "the anomaly")),
         };
     }
 
@@ -139,7 +142,8 @@ public static class HistoryText
             HistoryKind.Reformation => record.Count > 0 ? Format("{0} left the faith rather than reform", record.Count) : string.Empty,
             HistoryKind.WorldWar => Format("{0} gods at war", record.Count),
             HistoryKind.GreatMigration => Format("{0} on the road", record.Count),
-            HistoryKind.Eclipse or HistoryKind.GreatDrought => string.Empty,
+            HistoryKind.Eclipse or HistoryKind.GreatDrought or HistoryKind.Beast or HistoryKind.Anomaly => string.Empty,
+            HistoryKind.BeastSlain => record.GodId is null ? "by no god" : record.Count > 1 ? Format("by {0} and {1} other god{2}", GodName(world, record.GodId), record.Count - 1, record.Count == 2 ? string.Empty : "s") : "by " + GodName(world, record.GodId),
         };
     }
 

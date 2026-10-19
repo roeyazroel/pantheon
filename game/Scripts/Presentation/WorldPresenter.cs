@@ -28,6 +28,7 @@ public sealed class WorldPresenter
     private readonly SettlementPresenter _settlements;
     private readonly ForestPresenter _forests;
     private readonly RoadPresenter _roads;
+    private readonly GreatEvents.GreatEventPresenter _greatEvents;
     private readonly RegionBoundaryOverlay _regions;
 
     /// <summary>Creates one child layer per kind of visual under <paramref name="root"/>.</summary>
@@ -45,6 +46,7 @@ public sealed class WorldPresenter
         _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
         _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout);
         _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
+        _greatEvents = new GreatEvents.GreatEventPresenter(root.AddLayer("GreatEvents"), content.DivineView);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
     }
 
@@ -73,6 +75,7 @@ public sealed class WorldPresenter
         _settlements.Build(world, terrain);
         _forests.Rebuild(world, terrain);
         _roads.Rebuild(world, terrain);
+        _greatEvents.Rebuild(terrain);
         _regions.Build(world.Regions, terrain);
         GD.Print($"World visuals for seed {world.Seed} built in {stopwatch.ElapsedMilliseconds} ms ({TerrainBackend}).");
     }
@@ -89,6 +92,7 @@ public sealed class WorldPresenter
         _freshWater.Sync(world);
         _forests.Sync(world, delta);
         _roads.Sync(world);
+        _greatEvents.Sync(world, delta);
     }
 
     /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens near it.</summary>

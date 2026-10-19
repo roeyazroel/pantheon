@@ -179,7 +179,7 @@ public sealed class AlertFeed
                 return NotableAlerts.Describe(worldEvent, world, localGodId);
             case RoadBuilt or RoadChanged:
                 return RoadAlerts.Describe(worldEvent, world, localGodId);
-            case GreatEventBegan or GreatEventEnded or PlagueStruck:
+            case GreatEventBegan or GreatEventEnded or PlagueStruck or BeastSlain:
                 return GreatEventAlerts.Describe(worldEvent, world, localGodId);
             default:
                 return null;

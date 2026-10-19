@@ -31,7 +31,47 @@ public static class GreatEventText
             GreatEventKind.WorldWar => Format("{0}: {1} at war", name, Count(GreatEventWatch.GodsAtWar(world), "god")),
             GreatEventKind.GreatDrought => Format("{0}: the land's soil at {1:0%}", name, GreatEventWatch.LandSoil(world)),
             GreatEventKind.GreatMigration => Format("{0}: {1} on the road", name, world.Migration.Groups.Sum(g => g.Population)),
+            GreatEventKind.Beast => Beast(world),
+            GreatEventKind.Anomaly => Format("{0} shimmers near {1}: miracles there cost less ({2} left)", name, Nearest(world, great.Position), Clock(Math.Max(0L, (great.EndTick ?? world.Tick) - world.Tick))),
         };
+    }
+
+    /// <summary>The awake beast in a line: its name, health and what it does.</summary>
+    /// <param name="world">World state.</param>
+    /// <returns>For example "Gharos the Ancient is awake (64%): ravaging Elar".</returns>
+    public static string Beast(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        if (world.GreatEvents.Beast is not { } beast)
+        {
+            return "The beast sleeps";
+        }
+
+        var doing = beast.Phase switch
+        {
+            BeastPhase.Sleeping => "asleep in its lair",
+            BeastPhase.Slain => "slain",
+            BeastPhase.Returning => "going back to its lair",
+            BeastPhase.Awake => beast.TargetSettlementId is { } target && world.Settlements.Find(s => s.Id == target) is { } village
+                ? (Distance(beast.Position, village.Position) <= 40f ? "ravaging " : "coming for ") + village.Name
+                : "looking for a village",
+        };
+        return Format("{0} is {1} ({2:0%})", Capitalised(beast.Name), doing, beast.Health / Math.Max(1f, beast.MaxHealth));
+    }
+
+    /// <summary>The name of the village nearest a point.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="point">The point.</param>
+    /// <returns>The village's name, or "the wilds".</returns>
+    public static string Nearest(WorldState world, GroundPosition? point)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        if (point is not { } place)
+        {
+            return "the wilds";
+        }
+
+        return world.Settlements.Where(s => s.Population > 0).OrderBy(s => Distance(s.Position, place)).FirstOrDefault()?.Name ?? "the wilds";
     }
 
     /// <summary>Every great event under way, in a line for the top bar; empty when none.</summary>
@@ -82,6 +122,9 @@ public static class GreatEventText
         var seconds = ticks / SimulationTime.TicksPerSecond;
         return Format("{0}:{1:00}", seconds / 60, seconds % 60);
     }
+
+    /// <summary>The distance between two points.</summary>
+    private static float Distance(GroundPosition a, GroundPosition b) => MathF.Sqrt(((a.X - b.X) * (a.X - b.X)) + ((a.Z - b.Z) * (a.Z - b.Z)));
 
     /// <summary>A god's name.</summary>
     internal static string God(WorldState world, int? godId) => world.Gods.Find(g => g.Id == godId)?.Name ?? "a forgotten god";

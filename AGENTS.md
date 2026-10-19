@@ -129,8 +129,8 @@ rule is followed by the conventions that meet it in this repository.
   water, society and technology, culture, dangers, pressure to leave, belief, Old Faith and
   sanctuary, every prophet's walk, last deed and time left, with the selected village's elder,
   the forest standing and the roads, with the selected village's stores, land and roads, and the
-  great events, the next eclipse, the sick villages and each faith's doubt, with the selected
-  village's plague),
+  great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the
+  selected village's plague),
   the H history panel (the world's chronicle), the start screen and pause menu (Esc), the P
   diplomacy panel (status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and

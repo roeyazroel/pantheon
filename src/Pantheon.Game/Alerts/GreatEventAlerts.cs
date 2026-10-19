@@ -1,3 +1,4 @@
+using System.Linq;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.GreatEvents;
 using Pantheon.Domain.World;
@@ -29,8 +30,18 @@ internal static class GreatEventAlerts
                     GreatEventKind.WorldWar => (GreatEventText.Format("{0}: {1} are at war at once, and fear grows everywhere.", name, GreatEventText.Count(reach, "god")), AlertSeverity.Danger),
                     GreatEventKind.GreatDrought => (GreatEventText.Format("{0}: the whole island is parched.", name), AlertSeverity.Warning),
                     GreatEventKind.GreatMigration => (GreatEventText.Format("{0}: {1} people are on the road.", name, reach), AlertSeverity.Info),
+                    GreatEventKind.Beast => (GreatEventText.Format("{0} wakes and comes down from its lair! It will ravage the villages until it is slain or tires: send your Creature, and smite it.", name), AlertSeverity.Danger),
+                    GreatEventKind.Anomaly => (GreatEventText.Format("{0} shimmers near {1}: miracles there cost less, and gods draw power there by their influence.", name, GreatEventText.Nearest(world, world.GreatEvents.Events.Find(e => e.Id == began.EventId)?.Position)), AlertSeverity.Info),
                 };
                 return (GreatEventText.Format("great:{0}", began.EventId), text, severity, null);
+            case GreatEventEnded { Kind: GreatEventKind.Beast } when world.GreatEvents.Beast is { Phase: BeastPhase.Slain }:
+                return null;
+            case GreatEventEnded { Kind: GreatEventKind.Beast } slept:
+                return (GreatEventText.Format("great-end:{0}", slept.EventId), GreatEventText.Format("{0} goes back to its lair to sleep.", GreatEventText.Capitalised(slept.Name)), AlertSeverity.Info, null);
+            case BeastSlain slain:
+                var glory = slain.SlayerGodIds.Count == 0 ? "nobody's glory" : slain.SlayerGodIds.Contains(localGodId ?? -1) ? "and the glory is yours, with every god who fought it" : "and the glory goes to " + GreatEventText.God(world, slain.SlayerGodIds[0]);
+                return (GreatEventText.Format("slain:{0}", slain.Tick), GreatEventText.Format("{0} is slain, {1}.", GreatEventText.Capitalised(slain.Name), glory),
+                    slain.SlayerGodIds.Contains(localGodId ?? -1) ? AlertSeverity.Good : AlertSeverity.Info, slain.Position);
             case GreatEventEnded ended:
                 return (GreatEventText.Format("great-end:{0}", ended.EventId), ended.Kind == GreatEventKind.Eclipse
                     ? "The sun returns."

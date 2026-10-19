@@ -142,6 +142,9 @@ public sealed record Preparedness
     /// <summary>Share of the deaths in every disaster that evacuation routes prevent (ADR-029).</summary>
     public float EvacuationDeaths { get; init; }
 
+    /// <summary>Share of the ancient beast's harm that walls prevent (ADR-035).</summary>
+    public float BeastWalls { get; init; }
+
     /// <summary>No preparedness at all.</summary>
     public static Preparedness None { get; } = new()
     {

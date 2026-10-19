@@ -64,7 +64,9 @@
     // the deaths in every disaster (ADR-029).
     "SeaWallDamage": 0.6,
     "DamDamage": 0.3,
-    "EvacuationDeaths": 0.5
+    "EvacuationDeaths": 0.5,
+    // Walls spare a village BeastWalls of the beast's harm (ADR-035).
+    "BeastWalls": 0.5
   },
 
   // The rest of spec section 19's disasters (ADR-029), each a process. Rates are per second.
@@ -158,7 +160,55 @@
       { "Kind": "Reformation", "Names": ["the Great Reformation", "the Second Covenant", "the Cleansing", "the New Rite"] },
       { "Kind": "WorldWar", "Names": ["the War of the Gods", "the Great War", "the Godswar"] },
       { "Kind": "GreatDrought", "Names": ["the Great Drought", "the Dust Years", "the Thirsting"] },
-      { "Kind": "GreatMigration", "Names": ["the Great Wandering", "the Exodus", "the Long Road"] }
-    ]
+      { "Kind": "GreatMigration", "Names": ["the Great Wandering", "the Exodus", "the Long Road"] },
+      { "Kind": "Anomaly", "Names": ["the Shimmering", "the Wellspring", "the Unbinding", "the Bright Rift"] }
+    ],
+    // The ancient beast (ADR-035) sleeps far from the villages on the highest land. After
+    // FirstSleepSeconds it wakes by itself WakePerHour times an hour, or when a quake of WakeMagnitude
+    // or more, or the volcano erupting, comes within WakeRange metres of its lair. Awake for AwakeSeconds, it walks
+    // at Speed to the nearest village and ravages it for RavageSeconds, striking every StrikeSeconds
+    // (StrikeHousing of the houses and StrikeDeaths of the people, before protection), then the next.
+    // A Creature within FightRange harms it CreatureHarm a second per unit of power and loses Bite
+    // health a second, flying beaten at FleeHealth; a smiting miracle harms it SmiteHarm per unit of
+    // smiting, and fire FireHarmPerSecond. It heals RegenPerSecond while nothing harms it. AI gods send
+    // their Creatures within CallRange metres to the villages it ravages. When it falls, each god's
+    // followers feel Renown by the god's share of the harm.
+    "Beast": {
+      "Names": ["Gharos the Ancient", "Vhorun the Deep", "Ysgra the Stoneback", "Mordrakh the Old"],
+      "FirstSleepSeconds": 1500.0,
+      "WakePerHour": 0.5,
+      "WakeMagnitude": 6.0,
+      "WakeRange": 900.0,
+      "Health": 100.0,
+      "RegenPerSecond": 0.15,
+      "Speed": 3.0,
+      "AwakeSeconds": 600.0,
+      "RavageSeconds": 60.0,
+      "StrikeSeconds": 10.0,
+      "StrikeHousing": 0.06,
+      "StrikeDeaths": 0.03,
+      "FightRange": 25.0,
+      "CreatureHarm": 0.6,
+      "Bite": 0.025,
+      "FleeHealth": 0.2,
+      "SmiteHarm": 2.0,
+      "FireHarmPerSecond": 0.5,
+      "CallRange": 700.0,
+      "Renown": { "Faith": 0.12, "Love": 0.15, "Fear": 0.0, "Doubt": -0.08 }
+    },
+    // The magical anomaly (ADR-035): power surges at a land region drawn from the seed, first between
+    // FirstMinSeconds and FirstMaxSeconds, then every IntervalMinSeconds to IntervalMaxSeconds, for
+    // Seconds. Within Radius metres miracles cost CostFactor as much, and each god draws
+    // PowerPerSecond Divine Power a second times its influence at its heart.
+    "Anomaly": {
+      "FirstMinSeconds": 900.0,
+      "FirstMaxSeconds": 1500.0,
+      "IntervalMinSeconds": 1500.0,
+      "IntervalMaxSeconds": 2400.0,
+      "Seconds": 180.0,
+      "Radius": 250.0,
+      "PowerPerSecond": 4.0,
+      "CostFactor": 0.5
+    }
   }
 }

@@ -46,9 +46,18 @@ internal static class GreatEventIntegrity
             }
         }
 
-        if (state.DrySinceTick > world.Tick)
+        if (state.DrySinceTick > world.Tick || state.NextAnomalyTick < 0)
         {
-            errors.Add("The land has been dry since a tick in the future.");
+            errors.Add("The land has been dry since a tick in the future, or the next anomaly is invalid.");
+        }
+
+        if (state.Beast is { } beast && (string.IsNullOrWhiteSpace(beast.Name) || beast.LairRegionId < 0 || beast.LairRegionId >= world.Regions.Cells.Count
+            || !Enum.IsDefined(beast.Phase) || !(beast.MaxHealth > 0f) || beast.Health is < 0f || beast.Health > beast.MaxHealth || beast.Path is null || beast.HarmByGod is null
+            || !float.IsFinite(beast.Position.X) || !float.IsFinite(beast.Position.Z) || beast.RavagedTicks < 0 || beast.WokeTick > world.Tick
+            || (beast.TargetSettlementId is { } target && !world.Settlements.Exists(s => s.Id == target))
+            || System.Linq.Enumerable.Any(beast.HarmByGod, p => !godIds.Contains(p.Key) || !(p.Value >= 0f))))
+        {
+            errors.Add("The beast has no name, an unknown lair, phase or village, impossible health or ticks, or harm by unknown gods.");
         }
     }
 }

@@ -163,7 +163,8 @@ public sealed class MiracleCaster
         var reach = Reach(miracle);
         var cost = ComputeCost(_rules, miracle, influence, rivals) * DomainModel.CostFactor(_domains, god, miracle) * HolySiteModel.CostFactor(_holySites, world, god.Id)
             * Politics.CouncilModel.CostFactor(_diplomacy?.Politics, world, miracle, request.Target, reach)
-            * (request.Veiled && _diplomacy is not null ? _diplomacy.Conflict.VeilCostFactor : 1f);
+            * (request.Veiled && _diplomacy is not null ? _diplomacy.Conflict.VeilCostFactor : 1f)
+            * GreatEvents.AnomalyModel.CostFactor(_disasters?.GreatEvents, world, request.Target);
         var rejection =
             issuerGodId is { } issuer && issuer != god.Id ? CastRejection.NotAuthorized
             : miracle.RequiresDomain && !DomainModel.Holds(god, miracle.Domain) ? CastRejection.DomainRequired

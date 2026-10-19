@@ -25,6 +25,19 @@ public static class GreatEventReadout
             state.Events.Count == 0 ? "none" : string.Join(", ", state.Events.Select(e => GreatEventText.Describe(e, world))),
             state.NextEclipseTick > 0 ? "in " + GreatEventText.Clock(Math.Max(0L, state.NextEclipseTick - world.Tick)) : "not set",
             sick.Count == 0 ? "none" : string.Join(", ", sick)));
+        if (world.GreatEvents.Beast is { } beast)
+        {
+            lines.Add(GreatEventText.Format(
+                "  beast: {0}; health {1:0}/{2:0} at ({3:0}, {4:0}), lair region #{5}; harm by god: {6}",
+                GreatEventText.Beast(world),
+                beast.Health,
+                beast.MaxHealth,
+                beast.Position.X,
+                beast.Position.Z,
+                beast.LairRegionId,
+                beast.HarmByGod.Count == 0 ? "none" : string.Join(", ", beast.HarmByGod.OrderBy(p => p.Key).Select(p => GreatEventText.Format("{0} {1:0}", GreatEventText.God(world, p.Key), p.Value)))));
+        }
+
         lines.Add("  faiths: " + string.Join("   ", world.Gods.Select(g =>
         {
             var (doubt, learning, villages) = ReformationModel.Measure(world, g.Id);

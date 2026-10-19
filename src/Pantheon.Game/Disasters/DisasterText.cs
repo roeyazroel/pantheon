@@ -72,6 +72,7 @@ public static class DisasterText
         DisasterKind.Eruption => "the eruption",
         DisasterKind.Tornado => "the tornado",
         DisasterKind.Meteor => "the falling star",
+            DisasterKind.Beast => "the beast",
     };
 
     /// <summary>

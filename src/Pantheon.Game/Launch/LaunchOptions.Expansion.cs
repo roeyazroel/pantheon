@@ -173,7 +173,7 @@ public sealed partial record LaunchOptions
             case "great-event":
                 return Enum.TryParse<GreatEvents.GreatEventAtStart>(trimmed, ignoreCase: true, out var great) && Enum.IsDefined(great) && !int.TryParse(trimmed, out _)
                     ? options with { GreatEvent = great }
-                    : Warn(options, warnings, $"'--great-event' needs plague, eclipse or reformation, got '{value}'.");
+                    : Warn(options, warnings, $"'--great-event' needs plague, eclipse, reformation, beast or anomaly, got '{value}'.");
             case "roads":
                 return OnOff(value) is { } roads ? options with { Roads = roads } : Warn(options, warnings, $"'--roads' needs on or off, got '{value}'.");
             case "stores":

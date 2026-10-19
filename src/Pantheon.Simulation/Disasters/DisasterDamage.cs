@@ -63,6 +63,7 @@ internal sealed class DisasterDamage
             DisasterKind.Hurricane => (Has(Domain.Society.BuildingKind.Shelter) ? prepared.ShelterDeaths : 0f) + (Has(Domain.Society.BuildingKind.SeaWall) ? prepared.SeaWallDamage : 0f),
             DisasterKind.Tsunami => Has(Domain.Society.BuildingKind.SeaWall) ? prepared.SeaWallDamage : 0f,
             DisasterKind.Landslide or DisasterKind.Eruption or DisasterKind.Tornado or DisasterKind.Meteor => 0f,
+            DisasterKind.Beast => Has(Domain.Society.BuildingKind.Walls) ? prepared.BeastWalls : 0f,
         };
         var engineering = kind == DisasterKind.Earthquake ? 0f : prepared.EngineeringPerLevel * settlement.Society.Technology.Engineering;
         return 1f - Math.Clamp(works + engineering, 0f, MaxPrepared);

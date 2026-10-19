@@ -139,6 +139,9 @@ internal static class SaveMigrations
             case 24:
                 GreatEventSaveMigration.UpgradeFrom24(root);
                 break;
+            case 25:
+                BeastSaveMigration.UpgradeFrom25(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

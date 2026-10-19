@@ -18,9 +18,15 @@ public enum GreatEventAtStart
 
     /// <summary>The player's god's faith reforms.</summary>
     Reformation,
+
+    /// <summary>The ancient beast wakes (ADR-035).</summary>
+    Beast,
+
+    /// <summary>Power surges at the point (ADR-035).</summary>
+    Anomaly,
 }
 
-/// <summary>Debug drivers for the great events (ADR-034): the ; key and <c>--great-event</c>. Each returns a status line; only the host changes its world.</summary>
+/// <summary>Debug drivers for the great events (ADR-034, ADR-035): the ; key and <c>--great-event</c>. Each returns a status line; only the host changes its world.</summary>
 public static class GreatEventCommands
 {
     /// <summary>The great event after another in the ; cycle.</summary>
@@ -30,7 +36,9 @@ public static class GreatEventCommands
     {
         GreatEventAtStart.Plague => GreatEventAtStart.Eclipse,
         GreatEventAtStart.Eclipse => GreatEventAtStart.Reformation,
-        GreatEventAtStart.Reformation => GreatEventAtStart.Plague,
+        GreatEventAtStart.Reformation => GreatEventAtStart.Beast,
+        GreatEventAtStart.Beast => GreatEventAtStart.Anomaly,
+        GreatEventAtStart.Anomaly => GreatEventAtStart.Plague,
     };
 
     /// <summary>Starts a great event.</summary>
@@ -57,7 +65,32 @@ public static class GreatEventCommands
             GreatEventAtStart.Reformation => session.LocalGodId is { } god
                 ? GreatEventText.Capitalised(session.Command((_, events) => GreatEventSystem.Reform(rules, world, god, events)).Name) + ": your faith reforms"
                 : "No god to reform",
+            GreatEventAtStart.Beast => Beast(session, world, rules),
+            GreatEventAtStart.Anomaly => GreatEventModel.Active(world, GreatEventKind.Anomaly) is not null
+                ? "Power already surges somewhere"
+                : GreatEventText.Capitalised(session.Command((_, events) => AnomalyModel.Surge(rules, world, target, events)).Name) + " shimmers near " + GreatEventText.Nearest(world, target),
         };
+    }
+
+    /// <summary>The ancient beast wakes, if it sleeps.</summary>
+    private static string Beast(GameSession session, WorldState world, GreatEventRules rules)
+    {
+        if (BeastModel.Find(rules.Beast, world) is not { } beast)
+        {
+            return "This world has no beast";
+        }
+
+        if (beast.Phase != Pantheon.Domain.GreatEvents.BeastPhase.Sleeping)
+        {
+            return GreatEventText.Beast(world);
+        }
+
+        session.Command((_, events) =>
+        {
+            BeastModel.Wake(rules, world, beast, events);
+            return 0;
+        });
+        return GreatEventText.Capitalised(beast.Name) + " wakes";
     }
 
     /// <summary>The plague breaks out in the village nearest a point.</summary>

@@ -31,14 +31,16 @@ public static class GreatEventModel
     /// <param name="godId">The god it concerns, if any.</param>
     /// <param name="peak">What it reaches at once.</param>
     /// <param name="events">Receives <see cref="GreatEventBegan"/>.</param>
+    /// <param name="name">Its name; one from the rules' list when <c>null</c>.</param>
+    /// <param name="position">Where it is, for one with a place.</param>
     /// <returns>The event.</returns>
-    public static GreatEventState Begin(GreatEventRules rules, WorldState world, GreatEventKind kind, long? endTick, int? godId, int peak, ICollection<WorldEvent> events)
+    public static GreatEventState Begin(GreatEventRules rules, WorldState world, GreatEventKind kind, long? endTick, int? godId, int peak, ICollection<WorldEvent> events, string? name = null, GroundPosition? position = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(events);
         var id = world.GreatEvents.NextId++;
-        var great = new GreatEventState { Id = id, Kind = kind, Name = NameFor(rules, kind, id), StartTick = world.Tick, EndTick = endTick, GodId = godId, Peak = peak };
+        var great = new GreatEventState { Id = id, Kind = kind, Name = name ?? NameFor(rules, kind, id), StartTick = world.Tick, EndTick = endTick, GodId = godId, Peak = peak, Position = position };
         world.GreatEvents.Events.Add(great);
         events.Add(new GreatEventBegan { Tick = world.Tick, EventId = id, Kind = kind, Name = great.Name, GodId = godId });
         return great;
@@ -91,6 +93,8 @@ public static class GreatEventModel
             GreatEventKind.WorldWar => "the World War",
             GreatEventKind.GreatDrought => "the Great Drought",
             GreatEventKind.GreatMigration => "the Great Migration",
+            GreatEventKind.Beast => "the Beast",
+            GreatEventKind.Anomaly => "the Shimmering",
         };
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Pantheon.Domain.World;
 
 namespace Pantheon.Domain.GreatEvents;
 
@@ -22,6 +23,12 @@ public enum GreatEventKind
 
     /// <summary>Many of the island's people are on the road at once.</summary>
     GreatMigration,
+
+    /// <summary>The ancient beast is awake (ADR-035).</summary>
+    Beast,
+
+    /// <summary>A surge of power at a place (ADR-035).</summary>
+    Anomaly,
 }
 
 /// <summary>A great event under way (ADR-034): what it is, its name, when it began and whom it concerns.</summary>
@@ -47,6 +54,9 @@ public sealed class GreatEventState
 
     /// <summary>The most villages (a plague's), gods (a war's) or people (a migration's) it has reached.</summary>
     public int Peak { get; set; }
+
+    /// <summary>Where it is, for one with a place (an anomaly, ADR-035).</summary>
+    public GroundPosition? Position { get; init; }
 }
 
 /// <summary>The world's great events (ADR-034): those under way, the next id, and when the sun goes dark next.</summary>
@@ -66,4 +76,10 @@ public sealed class GreatEventsState
 
     /// <summary>Since when the whole land has been dry enough for a great drought; <c>null</c> while it is not.</summary>
     public long? DrySinceTick { get; set; }
+
+    /// <summary>The ancient beast (ADR-035); <c>null</c> until its lair is first found.</summary>
+    public BeastState? Beast { get; set; }
+
+    /// <summary>When the next anomaly comes; 0 until the first step sets it from the seed (ADR-035).</summary>
+    public long NextAnomalyTick { get; set; }
 }

@@ -215,6 +215,9 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Redirect when FindCloud(world, target, effect.Amount) is { } cloud:
                     (cloud.X, cloud.Z) = (target.X, target.Z);
                     break;
+                case MiracleEffectKind.Smite when _disasters is not null:
+                    GreatEvents.BeastModel.Smite(_disasters.GreatEvents.Beast, world, godId, target, miracle.Radius, effect.Amount);
+                    break;
                 case MiracleEffectKind.Ignite when _disasters is not null:
                     Ignite(world, miracle.Radius, effect.Amount, target, events);
                     break;

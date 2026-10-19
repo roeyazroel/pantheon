@@ -43,3 +43,16 @@ public sealed record PlagueStruck : WorldEvent
     /// <summary>The village it came from, or <c>null</c> for an outbreak.</summary>
     public int? FromSettlementId { get; init; }
 }
+
+/// <summary>The ancient beast was slain (ADR-035).</summary>
+public sealed record BeastSlain : WorldEvent
+{
+    /// <summary>Its name.</summary>
+    public required string Name { get; init; }
+
+    /// <summary>Where it fell.</summary>
+    public required Pantheon.Domain.World.GroundPosition Position { get; init; }
+
+    /// <summary>The gods who harmed it, the most first.</summary>
+    public required System.Collections.Generic.IReadOnlyList<int> SlayerGodIds { get; init; }
+}

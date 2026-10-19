@@ -45,6 +45,22 @@ internal static class GreatEventRulesValidator
         }
 
         Impulse(errors, rules.Eclipse.Dread, "GreatEvents.Eclipse.Dread");
+        Beast(errors, rules.Beast);
+        var anomaly = rules.Anomaly;
+        foreach (var (value, name) in new[]
+        {
+            (anomaly.FirstMinSeconds, "GreatEvents.Anomaly.FirstMinSeconds"), (anomaly.IntervalMinSeconds, "GreatEvents.Anomaly.IntervalMinSeconds"),
+            (anomaly.Seconds, "GreatEvents.Anomaly.Seconds"), (anomaly.Radius, "GreatEvents.Anomaly.Radius"), (anomaly.PowerPerSecond, "GreatEvents.Anomaly.PowerPerSecond"),
+        })
+        {
+            errors.RequireNonNegative(value, name);
+        }
+
+        errors.RequireShare(anomaly.CostFactor, "GreatEvents.Anomaly.CostFactor");
+        if (anomaly.FirstMaxSeconds < anomaly.FirstMinSeconds || anomaly.IntervalMaxSeconds < anomaly.IntervalMinSeconds)
+        {
+            errors.Add("GreatEvents.Anomaly's longest waits must be at least its shortest.");
+        }
         if (!rules.Equals(GreatEventRules.None))
         {
             Active(errors, rules);
@@ -73,6 +89,35 @@ internal static class GreatEventRulesValidator
         errors.RequireShare(rules.Reformation.Faith, "GreatEvents.Reformation.Faith");
         errors.RequireShare(rules.Reformation.Leaving, "GreatEvents.Reformation.Leaving");
         errors.RequireAtLeast(rules.Reformation.MinVillages, 1, "GreatEvents.Reformation.MinVillages");
+    }
+
+    /// <summary>Checks the beast's rules.</summary>
+    private static void Beast(RuleErrors errors, BeastRules beast)
+    {
+        if (System.Linq.Enumerable.Any(beast.Names, string.IsNullOrWhiteSpace))
+        {
+            errors.Add("GreatEvents.Beast.Names must not be blank.");
+        }
+
+        foreach (var (value, name) in new[]
+        {
+            (beast.FirstSleepSeconds, "GreatEvents.Beast.FirstSleepSeconds"), (beast.WakePerHour, "GreatEvents.Beast.WakePerHour"),
+            (beast.WakeRange, "GreatEvents.Beast.WakeRange"), (beast.RegenPerSecond, "GreatEvents.Beast.RegenPerSecond"), (beast.Speed, "GreatEvents.Beast.Speed"),
+            (beast.AwakeSeconds, "GreatEvents.Beast.AwakeSeconds"), (beast.RavageSeconds, "GreatEvents.Beast.RavageSeconds"),
+            (beast.FightRange, "GreatEvents.Beast.FightRange"), (beast.CreatureHarm, "GreatEvents.Beast.CreatureHarm"), (beast.SmiteHarm, "GreatEvents.Beast.SmiteHarm"),
+            (beast.FireHarmPerSecond, "GreatEvents.Beast.FireHarmPerSecond"), (beast.CallRange, "GreatEvents.Beast.CallRange"),
+        })
+        {
+            errors.RequireNonNegative(value, name);
+        }
+
+        errors.RequirePositive(beast.Health, "GreatEvents.Beast.Health");
+        errors.RequirePositive(beast.StrikeSeconds, "GreatEvents.Beast.StrikeSeconds");
+        errors.RequireShare(beast.StrikeHousing, "GreatEvents.Beast.StrikeHousing");
+        errors.RequireShare(beast.StrikeDeaths, "GreatEvents.Beast.StrikeDeaths");
+        errors.RequireShare(beast.Bite, "GreatEvents.Beast.Bite");
+        errors.RequireShare(beast.FleeHealth, "GreatEvents.Beast.FleeHealth");
+        Impulse(errors, beast.Renown, "GreatEvents.Beast.Renown");
     }
 
     /// <summary>Checks a feeling's change.</summary>

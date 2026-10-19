@@ -87,7 +87,7 @@ public sealed class GreatEventPresentationTests
         Assert.EndsWith(": the sun goes dark", GreatEventCommands.Start(session, GreatEventAtStart.Eclipse, home.Position), StringComparison.Ordinal);
         Assert.Equal("The sun is already dark", GreatEventCommands.Start(session, GreatEventAtStart.Eclipse, home.Position));
         Assert.EndsWith(": your faith reforms", GreatEventCommands.Start(session, GreatEventAtStart.Reformation, home.Position), StringComparison.Ordinal);
-        Assert.Equal([GreatEventAtStart.Eclipse, GreatEventAtStart.Reformation, GreatEventAtStart.Plague], new GreatEventAtStart?[] { GreatEventAtStart.Plague, GreatEventAtStart.Eclipse, GreatEventAtStart.Reformation }.Select(GreatEventCommands.Next));
+        Assert.Equal([GreatEventAtStart.Eclipse, GreatEventAtStart.Reformation, GreatEventAtStart.Beast, GreatEventAtStart.Anomaly, GreatEventAtStart.Plague], new GreatEventAtStart?[] { GreatEventAtStart.Plague, GreatEventAtStart.Eclipse, GreatEventAtStart.Reformation, GreatEventAtStart.Beast, GreatEventAtStart.Anomaly }.Select(GreatEventCommands.Next));
 
         var eclipse = GreatEventModel.Active(world, GreatEventKind.Eclipse)!;
         Assert.Contains("the sun is dark (0:45 left)", GreatEventText.Bar(world), StringComparison.Ordinal);
@@ -116,7 +116,7 @@ public sealed class GreatEventPresentationTests
         WorldSections.Apply(replica, WorldSection.GreatEvents, WorldSections.Write(host, WorldSection.GreatEvents));
 
         Assert.Equal(System.Text.Json.JsonSerializer.Serialize(host.GreatEvents), System.Text.Json.JsonSerializer.Serialize(replica.GreatEvents));
-        Assert.Equal(6, Rules.Names.Count);
+        Assert.Equal(7, Rules.Names.Count);
         Assert.Equal(1f, TestContent.WeatherView.EclipseDarkness + 0.15f, 4);
         var view = TestContent.ReadText(Pantheon.Game.Presentation.WeatherViewSettings.FileName).Replace("\"EclipseDarkness\": 0.85", "\"EclipseDarkness\": 1.85", StringComparison.Ordinal);
         Assert.Contains("EclipseDarkness", Assert.ThrowsAny<Exception>(() => Pantheon.Game.Presentation.WeatherViewSettings.Parse(view)).Message, StringComparison.Ordinal);

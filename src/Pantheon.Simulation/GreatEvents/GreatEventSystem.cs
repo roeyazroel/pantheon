@@ -23,19 +23,23 @@ public sealed class GreatEventSystem : ISimulationSystem
 
     private readonly GreatEventRules _rules;
     private readonly RoadRules _roads;
+    private readonly Domain.Belief.DivineRules _divine;
     private readonly int _intervalTicks;
 
     /// <summary>Creates the system.</summary>
     /// <param name="rules">Great event rules.</param>
     /// <param name="roads">Road rules, for the plague's spread along roads.</param>
+    /// <param name="divine">Divine rules, for the gods' influence at an anomaly.</param>
     /// <param name="intervalTicks">Ticks between its steps.</param>
-    public GreatEventSystem(GreatEventRules rules, RoadRules roads, int intervalTicks)
+    public GreatEventSystem(GreatEventRules rules, RoadRules roads, Domain.Belief.DivineRules divine, int intervalTicks)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(roads);
+        ArgumentNullException.ThrowIfNull(divine);
         ArgumentOutOfRangeException.ThrowIfLessThan(intervalTicks, 1);
         _rules = rules;
         _roads = roads;
+        _divine = divine;
         _intervalTicks = intervalTicks;
     }
 
@@ -48,6 +52,7 @@ public sealed class GreatEventSystem : ISimulationSystem
         var random = new SimulationRandom(SeedMixer.Derive(world.Seed, RandomStream, world.Tick));
         Plague(world, random, seconds, context.Events);
         EclipseModel.Step(_rules, world, context.Events);
+        AnomalyModel.Step(_rules, _divine, world, seconds, context.Events);
         Reformations(world, context.Events);
         GreatEventWatch.Step(_rules, world, seconds, context.Events);
     }

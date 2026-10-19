@@ -298,6 +298,10 @@ covers:
   great migrations, the same world across a save, their alerts, history, bar, book, labels,
   readouts, commands, options and section, the checks on their rules, and the migration of part 13's
   saves;
+- the beast and the anomaly: the beast's lair and name, its waking, its ravages, Creatures and
+  miracles fighting it, its fall and the glory, its going home, the AI gods sending their Creatures,
+  the anomaly's power and cheaper miracles, their alerts, history, commands and section, the checks
+  on their rules, and the migration of part 14's saves;
 - hazards: the volcano, its lava and ash, waves from coastal quakes and sea walls, landslides and
   the rubble that blocks the way, meteors, tornadoes, locusts and rain, blight and what cures it,
   evacuation routes, dams and irrigation, marks fading, the same hazards across a save and load,
@@ -379,7 +383,7 @@ covers:
 | Call a storm at the cursor, short of a hurricane (debug) | F10 |
 | Begin the next season (debug) | Y |
 | Start the next hazard at the cursor: tornado, landslide, meteor, blight, locusts, tsunami, eruption (debug) | I |
-| Start the next great event: the plague at the village nearest the cursor, an eclipse, your faith's reformation (debug) | ; |
+| Start the next great event: the plague at the village nearest the cursor, an eclipse, your faith's reformation, the beast's waking, the anomaly at the cursor (debug) | ; |
 | Start an earthquake at the cursor (debug) | F11 (fn+F11 on Mac laptops) |
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
 | Flood the nearest river, or send a wave over the land at the cursor (debug) | L |
@@ -796,6 +800,14 @@ in the top bar and the book, and remembered in the history.
   miracle worked in the dark awes its witnesses twice as much.
 - **Reformation:** when your followers doubt you and their villages have learned enough, your faith
   reforms. Most of the doubt goes and faith grows, but some of the doubters leave you.
+- **The ancient beast** sleeps in a lair on the island's heights. Once the world has grown, a great
+  quake or the volcano may wake it, or it wakes by itself. It walks to the nearest village and
+  ravages it, then the next. Fight it with your Creature (send it with V) and with Lightning and
+  other smiting miracles; walls spare a village half its harm. No god easily brings it down alone,
+  so the council's response makes help cheaper. When it falls, every god who harmed it shares the
+  glory with its followers.
+- **The magical anomaly:** now and then power surges at a place, a column of violet light, for three
+  minutes. Miracles there cost half, and each god draws power there by its influence.
 - **World war, great drought and great migration:** when most of the gods are at war at once,
   everyone grows afraid. When the whole island stays parched, the council is called. And when a
   fifth of the people are on the road, the world remembers it.
@@ -1262,7 +1274,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--roads=on\|off` | Every road the villages would plan is built at the start (for captures). |
 | `--stores=full\|empty` | Every village's wood and stone start full or empty. |
-| `--great-event=plague\|eclipse\|reformation` | Start a great event at the start: the plague in the focused settlement, an eclipse, or your faith's reformation. |
+| `--great-event=plague\|eclipse\|reformation\|beast\|anomaly` | Start a great event at the start: the plague in the focused settlement, an eclipse, your faith's reformation, the beast's waking or the anomaly at the focused settlement; the camera looks at the beast or the anomaly. |
 | `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
 | `--hand=villagers\|creature` | Your hand lifts villagers of the focused settlement, or your Creature, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
@@ -1351,7 +1363,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 25`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 26`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1373,7 +1385,8 @@ harm and their land's animals at its cover. Saves from before part 9 start with 
 tornadoes, swarms or marks, and find their volcano when it is first needed. Saves from before part 10
 start with Creatures that have walked no path, empty hands and no hallowed land. Saves from before part 12
 start with no prophets or elders; their villages choose elders at once. Saves from before part 14
-start with nobody sick and no great event, and set their first eclipse when loaded. Saves from before part 13
+start with nobody sick and no great event, and set their first eclipse when loaded. Saves from before part 15
+find their beast's lair and set their first anomaly when loaded. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.

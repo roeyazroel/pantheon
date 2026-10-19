@@ -118,14 +118,14 @@ public sealed class GreatEventTests
 
         world.Tick = first;
         var events = Step(world, 1);
-        Assert.Equal(GreatEventKind.Eclipse, Assert.Single(events.OfType<GreatEventBegan>()).Kind);
+        Assert.Single(events.OfType<GreatEventBegan>(), e => e.Kind == GreatEventKind.Eclipse);
         Assert.True(belief.Fear > 0f);
         Assert.Equal(Rules.Eclipse.Awe, GreatEventModel.Awe(Rules, world));
         var next = world.GreatEvents.NextEclipseTick;
         Assert.InRange(next - first, (long)((Rules.Eclipse.Seconds + Rules.Eclipse.IntervalMinSeconds) * 10) - 10, (long)((Rules.Eclipse.Seconds + Rules.Eclipse.IntervalMaxSeconds) * 10) + 10);
 
         events = Step(world, (int)Rules.Eclipse.Seconds + 1);
-        Assert.Single(events.OfType<GreatEventEnded>());
+        Assert.Single(events.OfType<GreatEventEnded>(), e => e.Kind == GreatEventKind.Eclipse);
         Assert.Equal(1f, GreatEventModel.Awe(Rules, world));
     }
 
@@ -228,7 +228,7 @@ public sealed class GreatEventTests
     /// <summary>Runs one-second steps of the great events, gathering the events.</summary>
     private static List<WorldEvent> Step(WorldState world, int steps)
     {
-        var system = new GreatEventSystem(Rules, ResourceWorlds.Roads, 10);
+        var system = new GreatEventSystem(Rules, ResourceWorlds.Roads, DivineWorlds.Rules, 10);
         var events = new List<WorldEvent>();
         for (var i = 0; i < steps; i++)
         {

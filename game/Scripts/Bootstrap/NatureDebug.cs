@@ -112,6 +112,16 @@ internal sealed class NatureDebug
         if (options.GreatEvent is { } great && focus is { } site)
         {
             _setStatus(Pantheon.Game.GreatEvents.GreatEventCommands.Start(_session, great, site));
+            var spot = great switch
+            {
+                Pantheon.Game.GreatEvents.GreatEventAtStart.Beast => _session.World.GreatEvents.Beast?.Position,
+                Pantheon.Game.GreatEvents.GreatEventAtStart.Anomaly => _session.World.GreatEvents.Events.Find(e => e.Position is not null)?.Position,
+                _ => null,
+            };
+            if (spot is { } seen)
+            {
+                _camera.FocusOn(seen, options.CameraDistance ?? 160f, snap: true);
+            }
         }
 
         if (options.Roads)

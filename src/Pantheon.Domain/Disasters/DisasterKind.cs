@@ -29,4 +29,7 @@ public enum DisasterKind
 
     /// <summary>A meteor's impact (ADR-029).</summary>
     Meteor,
+
+    /// <summary>The ancient beast ravaging a village (ADR-035).</summary>
+    Beast,
 }
