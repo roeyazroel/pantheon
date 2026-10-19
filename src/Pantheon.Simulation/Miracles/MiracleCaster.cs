@@ -364,6 +364,9 @@ public sealed class MiracleCaster
         }
 
         closeness *= Culture.CultureModel.WitnessFactor(_rules.Culture, settlement.Culture, miracle);
+
+        // A miracle worked while the sun is dark moves its witnesses the more (ADR-034).
+        closeness *= GreatEvents.GreatEventModel.Awe(_disasters?.GreatEvents, world);
         var trickery = _domains is not null && DomainModel.Holds(world, godId, GodDomain.Trickery) ? 1f + _domains.Boons.TrickeryDoubt : 1f;
         foreach (var other in settlement.Beliefs)
         {

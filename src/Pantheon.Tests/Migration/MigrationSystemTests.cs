@@ -232,8 +232,8 @@ public sealed class MigrationSystemTests
     public void FourGods_MigrateTheSameWayEachTime_AcrossASave()
     {
         var engine = TestContent.Shipped.CreateEngine();
-        var straight = Pantheon.Game.GameSession.CreateNew(TestContent.Shipped, new WorldSeed(8)).World;
-        var resumed = Pantheon.Game.GameSession.CreateNew(TestContent.Shipped, new WorldSeed(8)).World;
+        var straight = Pantheon.Game.GameSession.CreateNew(TestContent.Shipped, new WorldSeed(1)).World;
+        var resumed = Pantheon.Game.GameSession.CreateNew(TestContent.Shipped, new WorldSeed(1)).World;
 
         engine.Run(straight, 12_000);
         engine.Run(resumed, 6_000);

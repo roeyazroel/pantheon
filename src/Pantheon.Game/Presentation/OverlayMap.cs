@@ -28,6 +28,7 @@ public static class OverlayMap
     private static readonly RgbColor Flames = RgbColor.ParseHex("#ff5a1f");
     private static readonly RgbColor Ash = RgbColor.ParseHex("#3a2e26");
     private static readonly RgbColor Shielded = RgbColor.ParseHex("#7fc8ff");
+    private static readonly RgbColor Plagued = RgbColor.ParseHex("#9fbf3a");
     private static readonly RgbColor Floodwater = RgbColor.ParseHex("#123f8c");
     private static readonly RgbColor Blighted = RgbColor.ParseHex("#7a2a8c");
     private static readonly RgbColor Rubble = RgbColor.ParseHex("#8a7f72");
@@ -96,7 +97,7 @@ public static class OverlayMap
                 break;
             case OverlayKind.Danger:
                 PaintDanger(world, view.OverlayOpacity, rgba);
-                legend = "Danger: fires in orange (brighter when fiercer), floods in deep blue, rubble in grey, blight in purple, scorched land in ash, shielded settlements in blue";
+                legend = "Danger: fires in orange (brighter when fiercer), floods in deep blue, rubble in grey, blight in purple, scorched land in ash, shielded settlements in blue, villages with the plague in sickly green";
                 break;
             case OverlayKind.Migration:
                 PaintMigration(world, view, pressure, rgba);
@@ -175,6 +176,10 @@ public static class OverlayMap
             if (Simulation.Disasters.DisasterModel.IsShielded(settlement, world.Tick))
             {
                 PaintTerritory(world.Regions, settlement.RegionId, rgba, Shielded, 0.6f * opacity);
+            }
+            else if (settlement.Plague > 0f)
+            {
+                PaintTerritory(world.Regions, settlement.RegionId, rgba, Plagued, (0.35f + (0.65f * Math.Clamp(settlement.Plague * 3f, 0f, 1f))) * opacity);
             }
         }
 

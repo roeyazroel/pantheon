@@ -187,7 +187,8 @@ public static class HudReadout
 
         warning = world.Weather.Spell is WeatherSpell.Dry or WeatherSpell.HeatWave or WeatherSpell.ColdWave || dry.Count > 0 || stormy.Count > 0 || burning.Count > 0 || shaken.Count > 0 || flooded.Count > 0 || thirsty.Count > 0;
         var season = SeasonText.Describe(session.Content.Weather, world);
-        if (world.Weather.Spell == WeatherSpell.Normal && !warning && season is null)
+        var great = GreatEvents.GreatEventText.Bar(world);
+        if (world.Weather.Spell == WeatherSpell.Normal && !warning && season is null && great.Length == 0)
         {
             return null;
         }
@@ -223,7 +224,7 @@ public static class HudReadout
             line += " The wells are dry at " + string.Join(", ", thirsty) + ".";
         }
 
-        return line;
+        return great.Length == 0 ? line : great + " " + line;
     }
 
     /// <summary>One line per other god: its player's name when a player plays it (ADR-018), else its personality.</summary>

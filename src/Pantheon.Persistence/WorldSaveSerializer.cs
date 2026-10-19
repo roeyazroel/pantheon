@@ -35,9 +35,10 @@ public static class WorldSaveSerializer
     /// scores and settlements' holy wars; versions 19 to 22 (parts 7 to 10) added victories, seasons
     /// and the land's life, hazards, and Creatures' paths and gods' hands; version 23 (part 12) added
     /// prophets and elders; version 24 (part 13) added the land's forests and stone, villages' wood
-    /// and stone, and roads.
+    /// and stone, and roads; version 25 (part 14) added the plague, villages' immunity and the great
+    /// events.
     /// </summary>
-    public const int CurrentSaveVersion = 24;
+    public const int CurrentSaveVersion = 25;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

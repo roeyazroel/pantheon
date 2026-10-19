@@ -93,5 +93,72 @@
     "Locusts": { "SwarmsPerHour": 1.0, "MinTemperature": 0.55, "MaxSoil": 0.3, "Radius": 220.0, "Speed": 5.0, "MinSeconds": 90.0, "MaxSeconds": 180.0, "FoodEatenPerSecond": 0.004, "RainLossPerSecond": 0.05, "DamagePerSecond": 0.002 },
     // The cracks, slide scars and craters disasters leave stay this long.
     "MarkSeconds": 600.0
+  },
+  // Great events (spec section 52, ADR-034).
+  // The plague breaks out OutbreakPerHour in a village at its worst: crowded beyond Crowding (people
+  // over housing), sick, polluted and not immune. The sick infect Transmission of the healthy who are
+  // not immune a second and recover immune at RecoveryPerSecond; immunity fades ImmunityLossPerSecond;
+  // the sick lose HealthLossPerSecond health. A neighbour within ContactRange metres catches it at
+  // ContactPerSecond a second, at full sickness, and one along an open road at RoadPerSecond. A
+  // hospital stops HospitalShield of the spread and each level of medicine MedicinePerLevel; a healing
+  // miracle cures HealCure times its healing. EventVillages sick at once make a great event.
+  // The sun goes dark for Seconds between FirstMinSeconds and FirstMaxSeconds into the world, then
+  // every IntervalMinSeconds to IntervalMaxSeconds: every believer feels Dread, and a miracle worked
+  // in the dark moves its witnesses Awe times as much.
+  // A god's faith reforms when its followers' mean doubt reaches Doubt in villages whose learning is
+  // at least Learning, in MinVillages or more, at most once every CooldownSeconds: they keep DoubtKept
+  // of their doubt and gain Faith, and Leaving of the doubting leave the god.
+  // A world war is WorldWarShare of the gods (at least WorldWarMinGods) at war at once, and lasts
+  // while all but one of them still fight; every believer gains WarFearPerSecond fear a second. A
+  // great drought is the land's mean soil water at DroughtSoil or below for DroughtSeconds. A great
+  // migration is MigrationShare of the people on the road, until fewer than half as many are.
+  "GreatEvents": {
+    "Plague": {
+      "OutbreakPerHour": 3.0,
+      "Crowding": 0.9,
+      "Transmission": 0.05,
+      "RecoveryPerSecond": 0.02,
+      "ImmunityLossPerSecond": 0.0002,
+      "HealthLossPerSecond": 0.008,
+      "ContactRange": 500.0,
+      "ContactPerSecond": 0.01,
+      "RoadPerSecond": 0.02,
+      "HospitalShield": 0.4,
+      "MedicinePerLevel": 0.08,
+      "HealCure": 2.0,
+      "EventVillages": 3
+    },
+    "Eclipse": {
+      "FirstMinSeconds": 1200.0,
+      "FirstMaxSeconds": 2100.0,
+      "IntervalMinSeconds": 1800.0,
+      "IntervalMaxSeconds": 2700.0,
+      "Seconds": 45.0,
+      "Dread": { "Faith": 0.0, "Love": 0.0, "Fear": 0.12, "Doubt": 0.06 },
+      "Awe": 2.0
+    },
+    "Reformation": {
+      "Doubt": 0.45,
+      "Learning": 0.25,
+      "MinVillages": 3,
+      "CooldownSeconds": 1800.0,
+      "DoubtKept": 0.4,
+      "Faith": 0.15,
+      "Leaving": 0.3
+    },
+    "WorldWarShare": 0.8,
+    "WorldWarMinGods": 3,
+    "WarFearPerSecond": 0.0005,
+    "DroughtSoil": 0.25,
+    "DroughtSeconds": 120.0,
+    "MigrationShare": 0.2,
+    "Names": [
+      { "Kind": "Plague", "Names": ["the Grey Plague", "the Red Fever", "the Sweating Sickness", "the Black Cough", "the Pale Death", "the Burning Flux"] },
+      { "Kind": "Eclipse", "Names": ["the Dark Noon", "the Swallowed Sun", "the Black Sun", "the Long Shadow"] },
+      { "Kind": "Reformation", "Names": ["the Great Reformation", "the Second Covenant", "the Cleansing", "the New Rite"] },
+      { "Kind": "WorldWar", "Names": ["the War of the Gods", "the Great War", "the Godswar"] },
+      { "Kind": "GreatDrought", "Names": ["the Great Drought", "the Dust Years", "the Thirsting"] },
+      { "Kind": "GreatMigration", "Names": ["the Great Wandering", "the Exodus", "the Long Road"] }
+    ]
   }
 }

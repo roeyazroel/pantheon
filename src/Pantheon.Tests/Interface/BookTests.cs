@@ -28,7 +28,7 @@ public sealed class BookTests
         var page = BookReadout.Build(session, BookTab.World);
         var text = page.Lines.Select(l => l.Text).ToList();
 
-        Assert.Equal(["The world", "The gods", "The race", "Prophets and elders", "Dangers", "Holy sites"], page.Lines.Where(l => l.Tone == BookTone.Heading).Select(l => l.Text));
+        Assert.Equal(["The world", "The gods", "The race", "Great events", "Prophets and elders", "Dangers", "Holy sites"], page.Lines.Where(l => l.Tone == BookTone.Heading).Select(l => l.Text));
         Assert.StartsWith("Seed 77, an island", text[1], StringComparison.Ordinal);
         Assert.All(world.Gods, god => Assert.Contains(text, t => t.StartsWith(god.Name, StringComparison.Ordinal) && t.Contains(" follower", StringComparison.Ordinal)));
         Assert.Contains(text, t => t.StartsWith(session.LocalGod!.Name + " (you): ", StringComparison.Ordinal));

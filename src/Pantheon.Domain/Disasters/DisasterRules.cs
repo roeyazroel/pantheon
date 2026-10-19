@@ -107,6 +107,9 @@ public sealed record DisasterRules
 
     /// <summary>Tsunamis, landslides, the volcano, tornadoes, meteors, blight and locusts (ADR-029); none when absent.</summary>
     public HazardRules Hazards { get; init; } = HazardRules.None;
+
+    /// <summary>The plague, eclipses, reformations and the world's other great events (ADR-034); none when absent.</summary>
+    public GreatEvents.GreatEventRules GreatEvents { get; init; } = Pantheon.Domain.GreatEvents.GreatEventRules.None;
 }
 
 /// <summary>How a settlement's buildings and technology lessen what disasters do to it (spec §21, §36, ADR-023).</summary>

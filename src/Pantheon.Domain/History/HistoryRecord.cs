@@ -162,6 +162,24 @@ public enum HistoryKind
 
     /// <summary>A settlement's elder turned from their god (ADR-032); <see cref="HistoryRecord.Name"/> is the elder.</summary>
     ElderTurned,
+
+    /// <summary>A plague reached several villages at once (ADR-034).</summary>
+    Plague,
+
+    /// <summary>The sun went dark (ADR-034).</summary>
+    Eclipse,
+
+    /// <summary>A god's faith reformed itself (ADR-034).</summary>
+    Reformation,
+
+    /// <summary>Most of the gods went to war at once (ADR-034).</summary>
+    WorldWar,
+
+    /// <summary>The whole island dried out (ADR-034).</summary>
+    GreatDrought,
+
+    /// <summary>Many of the island's people took to the road at once (ADR-034).</summary>
+    GreatMigration,
 }
 
 /// <summary>

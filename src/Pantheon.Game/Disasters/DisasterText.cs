@@ -128,6 +128,11 @@ public static class DisasterText
             marks.Add("shielded");
         }
 
+        if (settlement.Plague > 0f)
+        {
+            marks.Add("plague");
+        }
+
         return marks;
     }
 }

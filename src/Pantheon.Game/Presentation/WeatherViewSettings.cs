@@ -38,6 +38,9 @@ public sealed record WeatherViewSettings
     /// <summary>Share of the sunlight the darkest storm over the camera's focus takes away (0..1).</summary>
     public required float StormGloom { get; init; }
 
+    /// <summary>Share of the sunlight an eclipse takes away (0..1, ADR-034).</summary>
+    public float EclipseDarkness { get; init; } = 0.85f;
+
     /// <summary>Distance from the camera within which clouds are invisible, so they never block the view up close.</summary>
     public required float FadeNearDistance { get; init; }
 
@@ -67,11 +70,11 @@ public sealed record WeatherViewSettings
     {
         var settings = ContentJson.Parse<WeatherViewSettings>(json, FileName);
         if (!(settings.CloudHeight > 0f) || !(settings.CloudThickness >= 0f) || !(settings.PuffSpacing > 0f) || settings.MaxPuffs < 1
-            || !(settings.PuffSize > 0f) || !(settings.CloudOpacity is > 0f and <= 1f) || !(settings.StormGloom is >= 0f and <= 1f) || !(settings.FadeNearDistance >= 0f)
+            || !(settings.PuffSize > 0f) || !(settings.CloudOpacity is > 0f and <= 1f) || !(settings.StormGloom is >= 0f and <= 1f) || !(settings.EclipseDarkness is >= 0f and <= 1f) || !(settings.FadeNearDistance >= 0f)
             || !(settings.FadeFarDistance > settings.FadeNearDistance) || settings.MaxRainDrops < 0 || !(settings.FullRainRadius > 0f)
             || !(settings.FlashesPerSecond >= 0f))
         {
-            throw new ContentFormatException($"{FileName}: heights, sizes and counts must be positive, CloudOpacity must lie above 0 and at most 1, StormGloom in 0..1, and FadeFarDistance must exceed FadeNearDistance.");
+            throw new ContentFormatException($"{FileName}: heights, sizes and counts must be positive, CloudOpacity must lie above 0 and at most 1, StormGloom and EclipseDarkness in 0..1, and FadeFarDistance must exceed FadeNearDistance.");
         }
 
         return settings;

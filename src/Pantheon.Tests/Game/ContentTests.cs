@@ -57,6 +57,9 @@ public sealed class ContentTests
     [InlineData("settlement_rules.json", "\"Speed\": 1.6", "\"Speed\": 0.5", "Roads.Speed")]
     [InlineData("worldgen.json", "\"PatchStrength\": 0.6", "\"PatchStrength\": 1.6", "Resources.PatchStrength")]
     [InlineData("society.json", "\"Wood\": 25.0, \"Stone\": 15.0", "\"Wood\": 25.0, \"Stone\": 15.0, \"Iron\": 3", "Iron")]
+    [InlineData("disasters.json", "\"Transmission\": 0.05", "\"Transmission\": 1.5", "GreatEvents.Plague.Transmission")]
+    [InlineData("disasters.json", "\"FirstMaxSeconds\": 2100.0", "\"FirstMaxSeconds\": 600.0", "longest waits must be at least its shortest")]
+    [InlineData("disasters.json", "{ \"Kind\": \"Eclipse\", \"Names\"", "{ \"Kind\": \"Plague\", \"Names\"", "GreatEvents.Names must list known kinds, each once")]
     public void DivineContent_WithOutOfRangeValue_FailsValidation(string file, string from, string to, string expected)
     {
         var text = TestContent.ReadText(file);

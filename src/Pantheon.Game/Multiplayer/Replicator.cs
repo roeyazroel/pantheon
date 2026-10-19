@@ -43,6 +43,7 @@ public sealed class Replicator
         [WorldSection.Water] = 1.0,
         [WorldSection.Notables] = 1.0,
         [WorldSection.Roads] = 2.0,
+        [WorldSection.GreatEvents] = 1.0,
     };
 
     // Sections an intent can change at once, sent in the same update as the verdict.
@@ -134,7 +135,7 @@ public sealed class Replicator
                     WorldSection.Regions => WorldSections.WriteRegions(world, peer.Regions),
                     WorldSection.Diplomacy => Diplomacy(world, peer, interval, Shared),
                     WorldSection.Gods or WorldSection.Creatures or WorldSection.Settlements or WorldSection.Weather
-                        or WorldSection.Disasters or WorldSection.Migration or WorldSection.History or WorldSection.HolySites or WorldSection.Water or WorldSection.Notables or WorldSection.Roads => Changed(peer, section, Shared(section)),
+                        or WorldSection.Disasters or WorldSection.Migration or WorldSection.History or WorldSection.HolySites or WorldSection.Water or WorldSection.Notables or WorldSection.Roads or WorldSection.GreatEvents => Changed(peer, section, Shared(section)),
                 };
                 if (data is not null)
                 {

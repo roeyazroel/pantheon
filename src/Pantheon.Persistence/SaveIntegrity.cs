@@ -55,6 +55,7 @@ internal static class SaveIntegrity
         ConflictIntegrity.Validate(world, godIds, errors);
         NotableIntegrity.Validate(world, godIds, errors);
         RoadIntegrity.Validate(world, errors);
+        GreatEventIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {

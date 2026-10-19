@@ -53,6 +53,7 @@ public static class DisasterRulesValidator
         errors.RequireShare(rules.HouseFireResistance, nameof(rules.HouseFireResistance));
         errors.RequireShare(rules.ShieldedDamage, nameof(rules.ShieldedDamage));
         HazardRulesValidator.Check(errors, rules);
+        GreatEvents.GreatEventRulesValidator.Check(errors, rules.GreatEvents);
         errors.ThrowIfAny("disaster rules", nameof(rules));
     }
 }

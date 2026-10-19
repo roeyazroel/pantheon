@@ -104,7 +104,7 @@ public sealed class CouncilChamber
                 return (new CouncilMotion { Kind = CouncilMotionKind.PantheonWar, TargetGodId = dominant, Secret = true }, CouncilTrigger.Dominance);
             }
 
-            if (world.History.Exists(r => r.Tick > since && r.Kind is HistoryKind.Earthquake or HistoryKind.Flood or HistoryKind.Fire)
+            if (world.History.Exists(r => r.Tick > since && r.Kind is HistoryKind.Earthquake or HistoryKind.Flood or HistoryKind.Fire or HistoryKind.Plague or HistoryKind.GreatDrought)
                 && !council.Decrees.Exists(d => d.Motion.Kind == CouncilMotionKind.CoordinateDisasterResponse))
             {
                 return (new CouncilMotion { Kind = CouncilMotionKind.CoordinateDisasterResponse, Secret = false }, CouncilTrigger.Disaster);

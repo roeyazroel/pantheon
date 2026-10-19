@@ -91,6 +91,11 @@ internal sealed class MiracleEffects
                     break;
                 case MiracleEffectKind.Heal:
                     settlement.Health = Math.Min(1f, settlement.Health + effect.Amount);
+                    if (_disasters is not null)
+                    {
+                        GreatEvents.PlagueModel.Cure(_disasters.GreatEvents.Plague, settlement, effect.Amount);
+                    }
+
                     break;
                 case MiracleEffectKind.Smite:
                     var killed = Math.Min(settlement.Population, (int)MathF.Round(effect.Amount));

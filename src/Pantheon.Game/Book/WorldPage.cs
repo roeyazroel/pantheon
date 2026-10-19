@@ -50,6 +50,10 @@ public static class WorldPage
 
         lines.Add(new("The race", BookTone.Heading));
         lines.AddRange(Race(session));
+        lines.Add(new("Great events", BookTone.Heading));
+        lines.AddRange(world.GreatEvents.Events.Count == 0
+            ? [new BookLine("No great event is under way.", BookTone.Muted)]
+            : world.GreatEvents.Events.Select(e => new BookLine(GreatEvents.GreatEventText.Describe(e, world), BookTone.Warning)));
         lines.Add(new("Prophets and elders", BookTone.Heading));
         lines.AddRange(NotableSection.World(world, session.LocalGodId));
         lines.Add(new("Dangers", BookTone.Heading));

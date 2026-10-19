@@ -72,4 +72,10 @@ public sealed class SettlementState
 
     /// <summary>Stone in store (ADR-033): quarried from the land around, spent on buildings and roads.</summary>
     public float Stone { get; set; }
+
+    /// <summary>The share of its people sick with the plague (0..1, ADR-034).</summary>
+    public float Plague { get; set; }
+
+    /// <summary>The share of its people immune, having lived through the plague (0..1, ADR-034); it fades.</summary>
+    public float Immunity { get; set; }
 }

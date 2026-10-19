@@ -88,4 +88,7 @@ public sealed class WorldState
 
     /// <summary>Id for the next road.</summary>
     public int NextRoadId { get; set; } = 1;
+
+    /// <summary>The great events under way and the next eclipse (spec §52, ADR-034).</summary>
+    public GreatEvents.GreatEventsState GreatEvents { get; init; } = new();
 }

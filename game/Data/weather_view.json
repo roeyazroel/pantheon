@@ -12,6 +12,8 @@
   "CloudOpacity": 0.4,
   // Up close the sky is out of view: the light dims by up to StormGloom under the darkest storm.
   "StormGloom": 0.55,
+  // An eclipse (ADR-034) takes EclipseDarkness of the sunlight away.
+  "EclipseDarkness": 0.85,
   "FadeNearDistance": 300.0,
   "FadeFarDistance": 600.0,
   // Rain: MaxRainDrops for a cloud of FullRainRadius in the heaviest rain.

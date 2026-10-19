@@ -25,6 +25,7 @@ internal sealed class NatureDebug
     private readonly GodCameraController _camera;
     private readonly Action<string> _setStatus;
     private HazardKind? _lastHazard;
+    private Pantheon.Game.GreatEvents.GreatEventAtStart? _lastGreatEvent;
 
     /// <summary>Creates the drivers.</summary>
     /// <param name="session">The session whose world they change.</param>
@@ -50,7 +51,17 @@ internal sealed class NatureDebug
         (InputActions.DebugMeet, () => _setStatus(CreatureCommands.BringOther(_session))),
         (InputActions.DebugSeason, () => _setStatus(SeasonCommands.NextSeason(_session))),
         (InputActions.DebugHazard, NextHazard),
+        (InputActions.DebugGreatEvent, NextGreatEvent),
     ];
+
+    /// <summary>Starts the next great event of the cycle (;): the plague at the village nearest the cursor, an eclipse, a reformation.</summary>
+    private void NextGreatEvent()
+    {
+        var kind = Pantheon.Game.GreatEvents.GreatEventCommands.Next(_lastGreatEvent);
+        _lastGreatEvent = kind;
+        var point = _camera.CursorGroundPoint is { } cursor ? new GroundPosition(cursor.X, cursor.Z) : new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);
+        _setStatus(Pantheon.Game.GreatEvents.GreatEventCommands.Start(_session, kind, point));
+    }
 
     /// <summary>Starts the next hazard of the cycle at the cursor (I).</summary>
     private void NextHazard()
@@ -96,6 +107,11 @@ internal sealed class NatureDebug
         if (options.Hand is { } hand && (hand == HandAtStart.Creature ? _session.LocalCreature?.Position : focus) is { } grip)
         {
             _setStatus(Pantheon.Game.Hand.HandCommands.Use(_session, Pantheon.Domain.Hand.HandAction.PickUp, grip));
+        }
+
+        if (options.GreatEvent is { } great && focus is { } site)
+        {
+            _setStatus(Pantheon.Game.GreatEvents.GreatEventCommands.Start(_session, great, site));
         }
 
         if (options.Roads)

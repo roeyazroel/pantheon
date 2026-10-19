@@ -128,7 +128,9 @@ rule is followed by the conventions that meet it in this repository.
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier,
   water, society and technology, culture, dangers, pressure to leave, belief, Old Faith and
   sanctuary, every prophet's walk, last deed and time left, with the selected village's elder,
-  and the forest standing and the roads, with the selected village's stores, land and roads),
+  the forest standing and the roads, with the selected village's stores, land and roads, and the
+  great events, the next eclipse, the sick villages and each faith's doubt, with the selected
+  village's plague),
   the H history panel (the world's chronicle), the start screen and pause menu (Esc), the P
   diplomacy panel (status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
@@ -141,12 +143,12 @@ rule is followed by the conventions that meet it in this repository.
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
   F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
   flood), M
-  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), R and Shift+R (the hand lifts, sets down and throws), Tab (the Book of the World: world, religion, miracles, Creature), ` (the strategic overview), the launch
+  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), ; (the next great event), R and Shift+R (the hand lifts, sets down and throws), Tab (the Book of the World: world, religion, miracles, Creature), ` (the strategic overview), the launch
   options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
-  `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--roads`, `--stores`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
+  `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
   `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with

@@ -53,10 +53,11 @@ game/                         Godot 4.7.2 project (res://)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology (biomes, EcologyRules), Settlements, Gods, Belief, Miracles,
-                              Creatures, Notables, Roads, Diplomacy, Weather, Disasters, Events (+ reserved folders)
+                              Creatures, Notables, Roads, GreatEvents, Diplomacy, Weather, Disasters, Events
+                              (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Notables, Resources, Roads, Navigation, Gods (AI), Diplomacy, Weather,
-                              Ecology, Disasters, Systems, SimulationEngine
+                              Creatures, Notables, Resources, Roads, GreatEvents, Navigation, Gods (AI), Diplomacy,
+                              Weather, Ecology, Disasters, Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -156,7 +157,8 @@ files and compiled assemblies and fails when either rule is broken.
   `ShieldedUntilTick` (while a Shield miracle protects it), `OldFaith` (the share of its people
   who broke away from their god in a schism, with how many have returned or fallen away; ADR-021),
   `SanctuaryGodId` and `SanctuaryUntilTick` (whose followers cannot fall away for now),
-  `Beliefs`, and `Wood` and `Stone` in store (ADR-033). These aggregates are the canonical
+  `Beliefs`, `Wood` and `Stone` in store (ADR-033), and `Plague` and `Immunity` (ADR-034). These
+  aggregates are the canonical
   population (Tier 1, ADR-004 and ADR-008).
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
   follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt`,
@@ -175,6 +177,11 @@ files and compiled assemblies and fails when either rule is broken.
   left), `Preferences` (learned weight per situation and action) and `Memories` (recent deeds with
   the god's feedback). `CreatureCommand` (reward, punish, go to) is the intent the authority
   checks. `World/SimulationTime` fixes 10 ticks per simulated second.
+- `GreatEvents/GreatEventState` (ADR-034): a great event under way in `WorldState.GreatEvents`
+  (`GreatEventsState`, with the next id, the next eclipse, each god's last reformation and since
+  when the land has been dry): its kind, name, start, set end, god and peak.
+  `DisasterRules.GreatEvents` (`GreatEventRules`: `PlagueRules`, `EclipseRules`, `ReformationRules`,
+  the watch's thresholds and the names) holds their numbers.
 - `Roads/RoadState` (ADR-033): a road between two villages in `WorldState.Roads` (with
   `NextRoadId`): its villages, its way, its length, the metres built and its wear.
   `SettlementRules.Resources` (`ResourceRules`) and `SettlementRules.Roads` (`RoadRules`) hold
@@ -306,6 +313,10 @@ files and compiled assemblies and fails when either rule is broken.
   Creature lifted). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
 - `Miracles/DivineActs`: hallowing the land, waking the volcano and stilling every disaster
   (ADR-030), applied by `MiracleEffects`.
+- `GreatEvents/`: `PlagueModel` (ripeness, course, shield, catching, cure), `EclipseModel`,
+  `ReformationModel`, `GreatEventWatch` (world war, great drought, great migration),
+  `GreatEventModel` (beginning, ending, names and an eclipse's awe) and `GreatEventSystem`. See
+  [Great events](#great-events).
 - `Resources/`: `ResourceModel` (what a village wants in store, its gatherers, what they bring in
   and take from the land, the wood a house takes) and `ResourceSystem` (timber growing back and
   burning). `Roads/`: `RoadModel` (open roads, the way along one, a walker's speed, the next road
@@ -393,8 +404,9 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (12 since ADR-033, which adds the Roads section and
-  regions' forest, timber and stone; 11 since ADR-032, which added the Notables section; 10
+- `NetworkProtocol`: the protocol version (13 since ADR-034, which adds the GreatEvents section; 12
+  since ADR-033, which added the Roads section and regions' forest, timber and stone; 11 since
+  ADR-032, which added the Notables section; 10
   since ADR-030, which added `HandIntent` and whose Creatures, gods and regions carry paths, what
   hands hold and hallowed land), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
@@ -448,7 +460,8 @@ be found. Version 21 → 22 (`CallingSaveMigration`) gives Creatures no paths or
 nothing and no land hallowed. Version 22 → 23 (`NotableSaveMigration`) starts with no prophets or
 elders and gives the history's records no name. Version 23 → 24 (`ResourceSaveMigration`) grows
 each region's forest from its biome and vegetation, gives each village a new world's stores and
-starts with no roads. A missing,
+starts with no roads. Version 24 → 25 (`GreatEventSaveMigration`) makes nobody sick or immune,
+starts no great event and sets the first eclipse on the first step. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -476,7 +489,9 @@ starts with no roads. A missing,
   notables (`NotableIntegrity`: unique ids below the next, known kinds, gods and villages,
   finite places and possible lives), and resources and roads (`RoadIntegrity`: forest, timber and
   stone in 0..1 with timber within the forest, stores not negative, unique road ids below the next
-  between two known villages, ways of two points or more, built within the length, wear in 0..1).
+  between two known villages, ways of two points or more, built within the length, wear in 0..1),
+  and great events (`GreatEventIntegrity`: plague and immunity in 0..1, unique event ids below the
+  next with known kinds and gods, names and possible ticks, reformations of known gods).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -540,6 +555,10 @@ starts with no roads. A missing,
   `MiraclesPage`, `CreaturePage`: `BookPage` of `BookLine`s, ADR-031); `Presentation/StateOverlays`
   paints the population, disaster risk and political control overlays; `Camera/GodCameraModel`
   toggles the strategic overview.
+- `GreatEvents/GreatEventText` words the great events and the plague, and the eclipse's darkness
+  for the client; `GreatEvents/GreatEventCommands` starts one (`;`, `--great-event`);
+  `Alerts/GreatEventAlerts` tells of them and `Diagnostics/GreatEventReadout` gives their F1 lines
+  (ADR-034).
 - `Resources/ResourceText` words the stores, roads and forests, and `Resources/ResourceCommands`
   builds every planned road (`--roads`) or sets the stores (`--stores`); `Alerts/RoadAlerts` tells
   of roads, `Diagnostics/ResourceReadout` gives their F1 lines, and `Presentation/ForestLayout` and
@@ -1717,6 +1736,42 @@ flowchart LR
 - **Not modelled:** acts that change the terrain, carried offerings, Creatures above level 10 and
   the AI using the hand.
 
+## Great events
+
+ADR-034 records the decisions, and the plan
+([.docs/milestone-15-part-14-great-events.md](../.docs/milestone-15-part-14-great-events.md)) the
+numbers.
+
+```mermaid
+flowchart LR
+    state[Crowding, health, pollution] --> outbreak[PlagueModel.Ripeness]
+    outbreak --> sick[SettlementState.Plague]
+    sick --> spread[Neighbours and roads]
+    spread --> sick
+    sick --> health[Health and deaths]
+    heal[Healing miracles, hospitals] --> sick
+    seed[Seed and tick] --> eclipse[EclipseModel]
+    eclipse --> dread[Dread and awe]
+    doubt[Doubt and learning] --> reform[ReformationModel]
+    wars[Wars, soil, migrants] --> watch[GreatEventWatch]
+    sick --> great[GreatEventSystem: great events]
+    eclipse --> great
+    reform --> great
+    watch --> great
+    great --> history[History, alerts, council]
+```
+
+- **The plague.** `GreatEventSystem` breaks villages out by their ripeness, spreads the sick to
+  neighbours and along open roads, and lets `PlagueModel.Advance` run each village's course. Three
+  villages sick at once make a great event. `MiracleEffects` cures by a heal's amount, and
+  `CouncilModel.Struck` counts a sick village as struck.
+- **Eclipses.** `EclipseModel` sets each eclipse from the seed and the tick, darkens and lights the
+  sun, and gives the dread. `MiracleCaster` multiplies the witnesses' closeness by
+  `GreatEventModel.Awe`.
+- **Reformations and the watch.** `ReformationModel` measures and reforms each god's faith.
+  `GreatEventWatch` begins and ends world wars, great droughts and great migrations from the
+  world's state. The council answers a plague or a great drought as it answers a disaster.
+
 ## Wood, stone and roads
 
 ADR-033 records the decisions, and the plan
@@ -1870,6 +1925,10 @@ the client.
   and the roads built, being built and cut, and the selected village's stores, gatherers, land and
   roads; F3 adds Timber and Stone layers; `--roads=on` builds every road the villages would plan,
   and `--stores=full|empty` sets their stores.
+- The F1 panel's great event lines (`GreatEventReadout`) give the events under way, the next
+  eclipse, the sick villages and every faith's doubt and learning, and the selected village's
+  sickness, immunity and shield; `;` starts the next of the plague at the cursor, an eclipse and the
+  player's reformation, and `--great-event` one at the start.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
 - O cycles the player map overlays (influence, religion, faith, food, weather, danger, migration),
   which double as debug views.
@@ -1903,11 +1962,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 24 (current)
+    alt version 25 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 23
+    else versions 1 to 24
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 24, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads)
+        Mig-->>Save: JsonObject at version 25, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

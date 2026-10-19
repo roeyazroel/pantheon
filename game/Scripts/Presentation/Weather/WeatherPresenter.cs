@@ -27,6 +27,9 @@ public sealed class WeatherPresenter
     private readonly HashSet<int> _seen = [];
     private readonly DirectionalLight3D? _sun;
     private readonly float _sunEnergy;
+    private readonly Godot.Environment? _environment;
+    private readonly float _ambientEnergy;
+    private readonly float _skyEnergy;
     private TerrainField? _terrain;
     private readonly Divine.MapOverlay _snow;
     private float _snowWorldSize;
@@ -40,7 +43,8 @@ public sealed class WeatherPresenter
     /// <param name="view">Weather view settings.</param>
     /// <param name="rules">Weather rules, for when a cell is a thunderstorm.</param>
     /// <param name="sun">The sun, dimmed under storms; <c>null</c> for none.</param>
-    public WeatherPresenter(Node3D parent, WeatherViewSettings view, WeatherRules rules, DirectionalLight3D? sun)
+    /// <param name="environment">The scene's environment, whose sky and ambient light an eclipse dims (ADR-034); <c>null</c> for none.</param>
+    public WeatherPresenter(Node3D parent, WeatherViewSettings view, WeatherRules rules, DirectionalLight3D? sun, Godot.Environment? environment = null)
     {
         _clouds = parent.AddLayer("Clouds");
         _strikes = parent.AddLayer("Lightning");
@@ -49,6 +53,9 @@ public sealed class WeatherPresenter
         _rules = rules;
         _sun = sun;
         _sunEnergy = sun?.LightEnergy ?? 1f;
+        _environment = environment;
+        _ambientEnergy = environment?.AmbientLightEnergy ?? 1f;
+        _skyEnergy = environment?.BackgroundEnergyMultiplier ?? 1f;
     }
 
     /// <summary>Forgets the old world's clouds.</summary>
@@ -73,8 +80,17 @@ public sealed class WeatherPresenter
         SyncSnow(world, delta);
         if (_sun is not null)
         {
-            var target = _sunEnergy * (1f - (_view.StormGloom * CloudLayout.Gloom(_rules, world.Weather, focus)));
+            var target = _sunEnergy * (1f - (_view.StormGloom * CloudLayout.Gloom(_rules, world.Weather, focus)))
+                * (1f - (_view.EclipseDarkness * Pantheon.Game.GreatEvents.GreatEventText.Darkness(world)));
             _sun.LightEnergy = Mathf.Lerp(_sun.LightEnergy, target, 1f - Mathf.Exp(-GloomRate * delta));
+        }
+
+        if (_environment is not null)
+        {
+            // An eclipse darkens the sky and its light on the land too (ADR-034).
+            var eclipse = 1f - (_view.EclipseDarkness * Pantheon.Game.GreatEvents.GreatEventText.Darkness(world));
+            _environment.AmbientLightEnergy = _ambientEnergy * eclipse;
+            _environment.BackgroundEnergyMultiplier = _skyEnergy * eclipse;
         }
 
         _seen.Clear();

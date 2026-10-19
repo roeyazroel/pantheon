@@ -48,6 +48,7 @@ public static class WorldSections
             WorldSection.Notables => Json(new NotablesPart(world.Notables, world.NextNotableId)),
             WorldSection.Water => Json(world.Water),
             WorldSection.Roads => Json(new RoadsPart(world.Roads, world.NextRoadId)),
+            WorldSection.GreatEvents => Json(world.GreatEvents),
             WorldSection.Regions => throw new ArgumentException("Regions are written as changes, by WriteRegions.", nameof(section)),
         };
     }
@@ -161,6 +162,17 @@ public static class WorldSections
                 return null;
             case WorldSection.HolySites:
                 Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
+                return null;
+            case WorldSection.GreatEvents:
+                var great = Read<Domain.GreatEvents.GreatEventsState>(data);
+                Replace(world.GreatEvents.Events, great.Events);
+                (world.GreatEvents.NextId, world.GreatEvents.NextEclipseTick, world.GreatEvents.DrySinceTick) = (great.NextId, great.NextEclipseTick, great.DrySinceTick);
+                world.GreatEvents.LastReformations.Clear();
+                foreach (var (god, tick) in great.LastReformations)
+                {
+                    world.GreatEvents.LastReformations[god] = tick;
+                }
+
                 return null;
             case WorldSection.Roads:
                 var roads = Read<RoadsPart>(data);

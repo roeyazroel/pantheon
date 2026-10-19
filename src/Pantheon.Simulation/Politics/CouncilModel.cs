@@ -131,7 +131,7 @@ public static class CouncilModel
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(settlement);
-        return settlement.Ruins > 0 || world.History.Exists(r => r.SettlementId == settlement.Id && r.Tick >= sinceTick
+        return settlement.Ruins > 0 || settlement.Plague >= 0.05f || world.History.Exists(r => r.SettlementId == settlement.Id && r.Tick >= sinceTick
             && r.Kind is HistoryKind.Earthquake or HistoryKind.Fire or HistoryKind.Flood or HistoryKind.Famine or HistoryKind.Thirst);
     }
 

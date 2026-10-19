@@ -89,8 +89,17 @@ public static class HistoryText
             HistoryKind.Prophet => Format("{0}, prophet of {1}, arises in {2}", record.Name ?? "A prophet", god, place),
             HistoryKind.Martyrdom => Format("The Martyrdom of {0} at {1}", record.Name ?? "a prophet", place),
             HistoryKind.ElderTurned => Format("{0}, elder of {1}, turns from {2} to {3}", record.Name ?? "The elder", place, god, other),
+            HistoryKind.Plague => Format("{0} breaks out", Capitalised(record.Name ?? "the plague")),
+            HistoryKind.Eclipse => Format("{0}: the sun goes dark", Capitalised(record.Name ?? "the eclipse")),
+            HistoryKind.Reformation => Format("{0} of {1}", Capitalised(record.Name ?? "the reformation"), god),
+            HistoryKind.WorldWar => Format("{0} begins", Capitalised(record.Name ?? "the world war")),
+            HistoryKind.GreatDrought => Format("{0} begins", Capitalised(record.Name ?? "the great drought")),
+            HistoryKind.GreatMigration => Format("{0} begins", Capitalised(record.Name ?? "the great migration")),
         };
     }
+
+    /// <summary>A name with its first letter in capitals, to begin a title.</summary>
+    private static string Capitalised(string name) => name.Length == 0 ? name : char.ToUpperInvariant(name[0]) + name[1..];
 
     /// <summary>What a record's title leaves out, if anything worth saying.</summary>
     /// <param name="record">The record.</param>
@@ -126,6 +135,11 @@ public static class HistoryText
                 or HistoryKind.Calling or HistoryKind.Hallowing or HistoryKind.Awakening or HistoryKind.Stillness
                 or HistoryKind.Martyrdom or HistoryKind.ElderTurned => string.Empty,
             HistoryKind.Prophet => record.Count > 0 ? "anointed by their god" : "called by the faithful",
+            HistoryKind.Plague => Format("{0} villages sick at once", record.Count),
+            HistoryKind.Reformation => record.Count > 0 ? Format("{0} left the faith rather than reform", record.Count) : string.Empty,
+            HistoryKind.WorldWar => Format("{0} gods at war", record.Count),
+            HistoryKind.GreatMigration => Format("{0} on the road", record.Count),
+            HistoryKind.Eclipse or HistoryKind.GreatDrought => string.Empty,
         };
     }
 

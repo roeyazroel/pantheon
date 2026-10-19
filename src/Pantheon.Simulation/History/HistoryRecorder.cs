@@ -145,6 +145,17 @@ public sealed class HistoryRecorder
             case ElderTurned { Resented: true } turned:
                 Add(world, HistoryKind.ElderTurned, god: turned.FromGodId, other: turned.ToGodId, settlement: turned.SettlementId, name: world.Notables.Find(n => n.Id == turned.NotableId)?.Name);
                 break;
+            case GreatEventBegan great:
+                Add(world, great.Kind switch
+                {
+                    Domain.GreatEvents.GreatEventKind.Plague => HistoryKind.Plague,
+                    Domain.GreatEvents.GreatEventKind.Eclipse => HistoryKind.Eclipse,
+                    Domain.GreatEvents.GreatEventKind.Reformation => HistoryKind.Reformation,
+                    Domain.GreatEvents.GreatEventKind.WorldWar => HistoryKind.WorldWar,
+                    Domain.GreatEvents.GreatEventKind.GreatDrought => HistoryKind.GreatDrought,
+                    Domain.GreatEvents.GreatEventKind.GreatMigration => HistoryKind.GreatMigration,
+                }, god: great.GodId, count: world.GreatEvents.Events.Find(e => e.Id == great.EventId)?.Peak ?? 0, name: great.Name);
+                break;
             case DivineActDone act:
                 Add(world, act.Act switch
                 {
