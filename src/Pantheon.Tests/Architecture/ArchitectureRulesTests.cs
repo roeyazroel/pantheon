@@ -57,8 +57,8 @@ public sealed class ArchitectureRulesTests
     [InlineData("Pantheon.Domain")]
     [InlineData("Pantheon.Simulation", "Pantheon.Domain")]
     [InlineData("Pantheon.Persistence", "Pantheon.Domain")]
-    [InlineData("Pantheon.Game", "Pantheon.Domain", "Pantheon.Simulation", "Pantheon.Persistence")]
-    [InlineData("Pantheon.Networking")]
+    [InlineData("Pantheon.Game", "Pantheon.Domain", "Pantheon.Simulation", "Pantheon.Persistence", "Pantheon.Networking")]
+    [InlineData("Pantheon.Networking", "Pantheon.Domain")]
     public void CoreProject_ReferencesOnlyLowerLayersAndNeverGodot(string project, params string[] allowedProjects)
     {
         var projectFile = XDocument.Load(RepositoryRoot.Combine("src", project, project + ".csproj"));
@@ -75,6 +75,7 @@ public sealed class ArchitectureRulesTests
     [InlineData("Pantheon.Simulation")]
     [InlineData("Pantheon.Persistence")]
     [InlineData("Pantheon.Game")]
+    [InlineData("Pantheon.Networking")]
     public void CoreAssembly_HasNoGodotClockOrUnseededRandomness(string assemblyName)
     {
         var references = ReadReferences(Assembly.Load(assemblyName));

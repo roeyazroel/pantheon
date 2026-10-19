@@ -53,6 +53,7 @@ public partial class GameRoot : Node3D
     private DisasterPresenter _disasters = null!;
     private Pantheon.Client.Presentation.Migration.MigrationPresenter _migrants = null!;
     private NatureDebug _nature = null!;
+    private Pantheon.Client.Network.NetworkDriver _network = null!;
     private DiplomacyPanel _diplomacy = null!;
     private DivineController _divine = null!;
     private int _focusIndex = -1;
@@ -93,7 +94,9 @@ public partial class GameRoot : Node3D
         _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView);
         var hand = DivineHand.Create();
         worldNode.AddChild(hand);
-        _session = CreateSession(content, options);
+        _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
+        _session = _network.Join(content, options) ?? CreateSession(content, options);
+        _network.Host(_session, options);
         _nature = new NatureDebug(_session, _camera, SetStatus);
         var hud = new Hud { Name = "Hud" };
         AddChild(hud);
@@ -134,10 +137,14 @@ public partial class GameRoot : Node3D
         }
     }
 
+    /// <summary>Ends a shared session on the way out: a host saves its world for later (spec §71).</summary>
+    public override void _ExitTree() => _network?.Shutdown(_session, ProjectSettings.GlobalizePath("user://saves/hosted.json"));
+
     /// <summary>Advances the fixed-step simulation, then refreshes the visuals, the citizens and the overlay.</summary>
     /// <param name="delta">Frame time in seconds.</param>
     public override void _Process(double delta)
     {
+        _network.Update(delta);
         _session.Update(delta);
         _presenter.Sync(_session.World);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
@@ -283,7 +290,7 @@ public partial class GameRoot : Node3D
     /// <summary>Applies the divine debug options: starting power, focus, casts and overlay.</summary>
     private void ApplyDivineOptions(LaunchOptions options)
     {
-        if (options.DivinePower is { } power && _session.LocalGod is { } god)
+        if (options.DivinePower is { } power && _session.LocalGod is { } god && !_session.IsReplica)
         {
             god.DivinePower = power;
         }
@@ -392,7 +399,8 @@ public partial class GameRoot : Node3D
         LocalGodId = _session.LocalGodId,
         LocalCreatureId = _session.LocalCreature?.Id,
         CreatureOptions = _session.PreviewCreatureOptions(),
-        CreatureResponses = _session.PreviewCreatureResponses(),
+        CreatureResponses = Pantheon.Game.Creatures.CreatureCommands.PreviewResponses(_session),
+        NetworkLines = _network.Lines(_session),
         GodDiplomacyCandidates = _session.World.Gods
             .Where(god => god.Controller == GodController.Ai)
             .Select(god => (god.Id, _session.PreviewGodDiplomacy(god)))

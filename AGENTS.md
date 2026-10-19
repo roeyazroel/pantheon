@@ -28,8 +28,8 @@ rule is followed by the conventions that meet it in this repository.
 - The core projects (`src/Pantheon.Domain`, `Simulation`, `Persistence`, `Game` and
   `Networking`) never reference Godot. Godot code lives only in `game/Scripts`
   (namespace `Pantheon.Client`).
-- References point down the layers only: Domain has no references, Simulation and Persistence
-  use Domain, and Game uses all three. `ArchitectureRulesTests` enforces this.
+- References point down the layers only: Domain has no references; Simulation, Persistence and
+  Networking use Domain; and Game uses all four. `ArchitectureRulesTests` enforces this.
 - Simulation behaviour is tested headless with xUnit in `src/Pantheon.Tests`.
 
 ### `WorldState` is authoritative; SceneTree nodes are never canonical domain objects
@@ -119,8 +119,8 @@ rule is followed by the conventions that meet it in this repository.
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
   others, and how yours would meet the nearest one, the weather's spell and cells, earthquakes and fires,
-  migration groups and refugee policies, the selected settlement's economy, tier, water, dangers,
-  pressure to leave and belief),
+  migration groups and refugee policies, a shared session's players, round trips and traffic, the
+  selected settlement's economy, tier, water, dangers, pressure to leave and belief),
   the P diplomacy panel (status, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the B region grid, the F3 region
@@ -132,8 +132,8 @@ rule is followed by the conventions that meet it in this repository.
   options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement or `creature`), `--judge`,
-  `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees` and
-  `--meet`,
+  `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
+  `--meet`, and for shared sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`. The README lists them.
 
@@ -144,6 +144,7 @@ rule is followed by the conventions that meet it in this repository.
 | State and content contracts | `src/Pantheon.Domain` |
 | World generation and tick systems | `src/Pantheon.Simulation`, registered in `SimulationEngine` |
 | Saves and content parsing | `src/Pantheon.Persistence` |
+| Multiplayer protocol, codecs and transport contract | `src/Pantheon.Networking` (the host and player logic in `src/Pantheon.Game/Multiplayer`, ENet in `game/Scripts/Network`) |
 | Session, commands, scheduler, camera maths, debug readouts, presentation data, Tier 2 citizens | `src/Pantheon.Game` |
 | Nodes, input, UI | `game/Scripts`, with scenes in `game/Scenes` and actions in `game/project.godot` |
 | Content | `game/Data/*.json` |

@@ -38,6 +38,11 @@ public static class SessionCommands
     public static string QuickSave(GameSession session, string path)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         try
         {
             session.SaveTo(path);
@@ -56,6 +61,11 @@ public static class SessionCommands
     public static string QuickLoad(GameSession session, string path)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         if (!File.Exists(path))
         {
             return Format("No save found at {0}", Path.GetFileName(path));
@@ -79,6 +89,11 @@ public static class SessionCommands
     public static string NewWorld(GameSession session, WorldSeed seed)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         session.StartNewWorld(seed);
         return Format("New world from seed {0}", seed);
     }
@@ -89,6 +104,11 @@ public static class SessionCommands
     public static string TogglePause(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         session.Scheduler.IsPaused = !session.Scheduler.IsPaused;
         return session.Scheduler.IsPaused ? "Simulation paused" : "Simulation resumed";
     }
@@ -100,6 +120,11 @@ public static class SessionCommands
     public static string SetSpeedPreset(GameSession session, int preset)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         ArgumentOutOfRangeException.ThrowIfNegative(preset);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(preset, SpeedPresets.Count);
 
@@ -115,6 +140,11 @@ public static class SessionCommands
     public static string ChangeSpeed(GameSession session, int step)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         var current = 0;
         for (var i = 0; i < SpeedPresets.Count; i++)
         {
@@ -127,26 +157,52 @@ public static class SessionCommands
         return SetSpeedPreset(session, Math.Clamp(current + Math.Sign(step), 0, SpeedPresets.Count - 1));
     }
 
-    /// <summary>Casts a miracle for the local player's god; the session checks it first (spec §73).</summary>
+    /// <summary>The words for a command only the host may give, on a joined player's replica (ADR-018).</summary>
+    public const string HostOnlyText = "Only the host can do that";
+
+    /// <summary>The refusal of a command only the host may give: saving, loading, the clock and the debug tools.</summary>
+    /// <param name="session">The session.</param>
+    /// <returns><see cref="HostOnlyText"/> on a replica, <c>null</c> on the host or alone.</returns>
+    public static string? HostOnly(GameSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return session.IsReplica ? HostOnlyText : null;
+    }
+
+    /// <summary>Casts a miracle for the local player's god; the session checks it first (spec §73), or the host does for a joined player.</summary>
     /// <param name="session">Session to cast in.</param>
     /// <param name="miracleId">The miracle.</param>
     /// <param name="target">Where to cast it.</param>
-    /// <returns>Status line: the result, or why it was refused.</returns>
+    /// <returns>Status line: the result, or why it was refused, or that the host was asked.</returns>
     public static string CastMiracle(GameSession session, string miracleId, GroundPosition target)
     {
         ArgumentNullException.ThrowIfNull(session);
-        var power = session.LocalGod?.DivinePower ?? 0f;
-        var check = session.CastMiracle(miracleId, target);
+        return session.Client is { } client
+            ? client.Request(id => new Networking.Protocol.CastIntent(id, miracleId, target))
+            : CastMiracleAs(session, session.LocalGodId ?? 0, miracleId, target).Text;
+    }
+
+    /// <summary>Casts a miracle for a god, as its player's intent: the local player's, or a joined player's on the host.</summary>
+    /// <param name="session">Session to cast in.</param>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="miracleId">The miracle.</param>
+    /// <param name="target">Where to cast it.</param>
+    /// <returns>Whether it was cast, and the status line: the result, or why it was refused.</returns>
+    public static CommandOutcome CastMiracleAs(GameSession session, int godId, string miracleId, GroundPosition target)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var power = session.World.Gods.Find(g => g.Id == godId)?.DivinePower ?? 0f;
+        var check = session.CastMiracleAs(godId, miracleId, target);
         if (!check.IsAccepted || check.Miracle is not { } miracle)
         {
-            return DivineText.DescribeCheck(check, miracleId, power, session.Scheduler.TicksPerSecond);
+            return new CommandOutcome(false, DivineText.DescribeCheck(check, miracleId, power, session.Scheduler.TicksPerSecond));
         }
 
         var cast = session.PeekLastCast();
         var names = cast is null
             ? string.Empty
             : string.Join(", ", session.World.Settlements.Where(s => cast.AffectedSettlementIds.Contains(s.Id)).Select(s => s.Name));
-        return DivineText.DescribeCast(miracle, check.Cost, names, cast?.Deaths ?? 0);
+        return new CommandOutcome(true, DivineText.DescribeCast(miracle, check.Cost, names, cast?.Deaths ?? 0));
     }
 
     /// <summary>Sends a command to the local player's Creature; the session checks it first.</summary>
@@ -157,9 +213,24 @@ public static class SessionCommands
     public static string CommandCreature(GameSession session, CreatureCommandKind kind, GroundPosition target = default)
     {
         ArgumentNullException.ThrowIfNull(session);
-        var name = session.LocalCreature?.Name ?? "Your Creature";
-        var result = session.CommandCreature(kind, target);
-        return CreatureText.DescribeCommand(result, kind, name);
+        return session.Client is { } client
+            ? client.Request(id => new Networking.Protocol.CreatureIntent(id, kind, target))
+            : CommandCreatureAs(session, session.LocalGodId ?? 0, kind, target).Text;
+    }
+
+    /// <summary>Sends a command to a god's Creature, as its player's intent.</summary>
+    /// <param name="session">Session to command in.</param>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="kind">Reward, punish or go to.</param>
+    /// <param name="target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>.</param>
+    /// <returns>Whether it was carried out, and the status line.</returns>
+    public static CommandOutcome CommandCreatureAs(GameSession session, int godId, CreatureCommandKind kind, GroundPosition target = default)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var creatureId = session.World.Gods.Find(g => g.Id == godId)?.CreatureId;
+        var name = session.World.Creatures.Find(c => c.Id == creatureId)?.Name ?? "Your Creature";
+        var result = session.CommandCreatureAs(godId, kind, target);
+        return new CommandOutcome(result.IsAccepted, CreatureText.DescribeCommand(result, kind, name));
     }
 
     /// <summary>Sends a diplomatic command to another god; the session checks it first.</summary>
@@ -170,11 +241,25 @@ public static class SessionCommands
     public static string CommandDiplomacy(GameSession session, int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind)
     {
         ArgumentNullException.ThrowIfNull(session);
+        return session.Client is { } client
+            ? client.Request(id => new Networking.Protocol.DiplomacyIntent(id, otherGodId, kind))
+            : CommandDiplomacyAs(session, session.LocalGodId ?? 0, otherGodId, kind).Text;
+    }
+
+    /// <summary>Sends a diplomatic command from a god to another, as its player's intent.</summary>
+    /// <param name="session">Session to command in.</param>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="otherGodId">The other god.</param>
+    /// <param name="kind">What to do.</param>
+    /// <returns>Whether it was carried out, and the status line.</returns>
+    public static CommandOutcome CommandDiplomacyAs(GameSession session, int godId, int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind)
+    {
+        ArgumentNullException.ThrowIfNull(session);
         var other = session.World.Gods.Find(g => g.Id == otherGodId)?.Name ?? "that god";
-        var rejection = session.CommandDiplomacy(otherGodId, kind);
+        var rejection = session.CommandDiplomacyAs(godId, otherGodId, kind);
         return rejection == Simulation.Diplomacy.DiplomacyRejection.None
-            ? Format("{0}: {1}", DiplomacyText.Command(kind), other)
-            : DiplomacyText.DescribeRejection(rejection, kind, other);
+            ? new CommandOutcome(true, Format("{0}: {1}", DiplomacyText.Command(kind), other))
+            : new CommandOutcome(false, DiplomacyText.DescribeRejection(rejection, kind, other));
     }
 
     /// <summary>Debug: grants the local player's god <see cref="GrantedPower"/> Divine Power.</summary>
@@ -183,6 +268,11 @@ public static class SessionCommands
     public static string GrantPower(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         if (session.LocalGod is not { } god)
         {
             return "No god to grant power to";
@@ -198,6 +288,11 @@ public static class SessionCommands
     public static string StepTick(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         session.Scheduler.IsPaused = true;
         session.StepOneTick();
         return Format("Stepped to tick {0} (paused)", session.World.Tick);
@@ -209,6 +304,11 @@ public static class SessionCommands
     public static string StepSettlement(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         session.Scheduler.IsPaused = true;
         var ticks = session.StepToNextSettlementStep();
         return Format("Settlement step: ran {0} tick(s) to tick {1} (paused)", ticks, session.World.Tick);
@@ -221,6 +321,11 @@ public static class SessionCommands
     public static string AdvanceTicks(GameSession session, int ticks)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         session.RunTicks(ticks);
         return Format("Advanced {0} ticks to tick {1}", ticks, session.World.Tick);
     }
@@ -231,6 +336,11 @@ public static class SessionCommands
     public static string SpoilFood(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         var changes = new List<string>();
         foreach (var settlement in session.World.Settlements)
         {
@@ -250,6 +360,11 @@ public static class SessionCommands
     public static string AddSettlers(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         var changes = new List<string>();
         foreach (var settlement in session.World.Settlements)
         {
@@ -264,3 +379,8 @@ public static class SessionCommands
     /// <summary>Invariant-culture string formatting.</summary>
     private static string Format(string format, params object?[] args) => string.Format(CultureInfo.InvariantCulture, format, args);
 }
+
+/// <summary>What a player's command came to: whether the world changed, and the status line that says so or why not.</summary>
+/// <param name="Accepted">Whether it was carried out.</param>
+/// <param name="Text">The status line.</param>
+public readonly record struct CommandOutcome(bool Accepted, string Text);

@@ -1,6 +1,6 @@
 # PANTHEON — Progress Summary
 
-This document sums up the work so far, Milestones 1 to 11, against the owner's complete
+This document sums up the work so far, Milestones 1 to 12, against the owner's complete
 specification, [PANTHEON_SPEC.md](PANTHEON_SPEC.md), which is the source of truth. Section numbers
 (§) refer to it. It describes `main` on 2026-10-19.
 
@@ -19,11 +19,11 @@ followed or the target has been measured.
 
 ## In short
 
-- Eleven of the specification's fifteen milestones are implemented: 1 Foundation (§116),
+- Twelve of the specification's fifteen milestones are implemented: 1 Foundation (§116),
   2 Living Settlement (§117), 3 First God (§118), 4 Creature (§119), 5 Rival God (§120),
   6 Diplomacy (§121), 7 Weather (§122), 8 Disaster Simulation (§123), 9 Four Gods (§124),
-  10 Population Movement (§125) and 11 Creature Relationships (§126). Their playable outcomes
-  hold (§126 names deliverables rather than an outcome):
+  10 Population Movement (§125), 11 Creature Relationships (§126) and 12 Multiplayer Foundation
+  (§127). Their playable outcomes hold (§126 and §127 name deliverables rather than an outcome):
   - the player can explore a seeded island;
   - its settlements visibly live and change;
   - the player can gain and spend belief;
@@ -34,7 +34,8 @@ followed or the target has been measured.
   - disasters produce emergent consequences;
   - basic politics emerges;
   - populations can abandon gods;
-  - rival Creatures befriend, fight and remember each other.
+  - rival Creatures befriend, fight and remember each other;
+  - two players share a world over ENet.
 - The world is one 2 km island with eight settlements. Each settlement is simulated
   statistically (Tier 1) and, near the camera, shown by up to 300 representative citizens
   (Tier 2).
@@ -74,8 +75,12 @@ followed or the target has been measured.
   rivalry, respect and trust. Allies' Creatures become friends, friends refuse to fight when their
   gods go to war, and a beaten Creature is banished with a scar, shaken loyalty and its people's
   doubt.
-- Not built yet: history, audio, multiplayer, and picking things up with the hand.
-- 724 xUnit tests pass headless (683 at the end of Milestone 10). The solution builds with no
+- Friends can share a world. One player hosts; others join over the network and each takes over a
+  god the AI played. The host's world is the only real one: joined players' commands are intents
+  that the host checks and answers. Players receive the world every second and every event at once.
+- Not built yet: history, audio, efficient replication for larger sessions, and picking things up
+  with the hand.
+- 756 xUnit tests pass headless (724 at the end of Milestone 11). The solution builds with no
   warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -96,8 +101,8 @@ followed or the target has been measured.
 | 9 | Four Gods (§124) | Implemented, on `main` |
 | 10 | Population Movement (§125) | Implemented, on `main` |
 | 11 | Creature Relationships (§126) | Implemented, on `main` |
-| 12 | Multiplayer Foundation (§127) | Not started; next. Decided in ADR-003. Miracles, Creature commands, diplomatic moves and refugee policies are already requests that an authority checks (§73). |
-| 13 | Multiplayer Simulation (§128) | Not started |
+| 12 | Multiplayer Foundation (§127) | Implemented, on `main` |
+| 13 | Multiplayer Simulation (§128) | Not started; next. Everything already reaches players in whole-world snapshots (ADR-018). |
 | 14 | Complete Vertical Slice (§129) | Not started |
 | 15 | Polish and Expansion (§130) | Not started |
 
@@ -321,6 +326,22 @@ Poses, scars, labels, the card's bonds, the panel's line, alerts, F1 lines, K an
 and drive it. The plan is
 [.docs/milestone-11-creature-relationships.md](../.docs/milestone-11-creature-relationships.md).
 
+### Milestone 12: Multiplayer Foundation (§127)
+
+| §127 deliverable | Status | What exists |
+| --- | --- | --- |
+| ENet host | Implemented | `--host` listens on UDP 7777 (or a chosen port) through Godot's ENet behind `INetworkTransport` (ADR-018). `--upnp=on` asks the router to forward it (§68). The protocol is tagged JSON in `Pantheon.Networking`, gzipped from 1 KB. |
+| Join | Implemented | `--join=<address>[:<port>]`, with `--name` and `--god`. Players with other game data (content fingerprint), another protocol, or no free god are refused. A player that cannot join plays alone. |
+| Player assignment | Implemented | A joining player takes the god it asks for, or the first god the AI plays. Its controller becomes `Remote`, and the AI leaves it alone. Leaving gives it back to the AI. |
+| Action authority | Implemented | Joined players' miracles, Creature commands, diplomatic moves and refugee policies are intents. The host checks them as the player's god through the same authorities as its own commands (§73) and answers with the status line. Only the host saves, loads, keeps the clock or uses debug tools. |
+| Synchronized god state | Implemented | Divine Power, cooldowns, rank, followers, relations and stances arrive with the whole world every second, and every event as it is raised. Between snapshots, a player's replica predicts by running the same simulation. |
+
+First target, two players: played by two instances on one Mac over ENet. The joined player's
+miracle was checked and cast by the host, with its cost and cooldown showing on the player's HUD.
+A cast outside the player's influence was refused with its reason. The host's quit ended the
+session and saved its world (§71). The plan is
+[.docs/milestone-12-multiplayer-foundation.md](../.docs/milestone-12-multiplayer-foundation.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -445,8 +466,15 @@ Sections that only state intent are summarised at the end of this part.
 | --- | --- | --- | --- |
 | 65 | Local-first architecture | Implemented | Fully offline. |
 | 66 | Single-player architecture | Implemented | The local host (`GameSession`) runs the world with one player and three AI gods. |
-| 67–69, 71–72, 95–98 | Multiplayer, ENet, Steam, host disconnect and migration, replication, prediction, cheating | Not started | ADR-003 decides host-authoritative ENet without lockstep. |
-| 73 | Network authority | Partial (local) | Miracle, Creature and diplomatic commands and refugee policies are intents. `MiracleCaster`, `CreatureAuthority`, `DiplomacyAuthority` and `MigrationAuthority` check them (power, location, influence, cooldown, rank, authorisation, reachability, diplomatic status and proposals) before anything changes. AI gods use the same path. There is no network yet. |
+| 67 | Multiplayer architecture | Implemented | Host-authoritative (ADR-003, ADR-018): the host's computer runs the canonical world; players hold replicas that never own state. |
+| 68 | Networking technology | Implemented | Godot ENet over UDP, LAN and direct IP, UPnP when asked. Our own messages travel as packets rather than Godot RPCs, so the protocol stays engine-agnostic and testable. |
+| 69 | Optional Steam networking | Not started | Milestone 15. |
+| 71 | Host disconnect | Implemented | The session ends for every player, whose replicas pause with the reason; the host's world is saved to `user://saves/hosted.json`. |
+| 72 | Future host migration | Not started | Not for the MVP. |
+| 73 | Network authority | Implemented | Miracle, Creature and diplomatic commands and refugee policies are intents, the host's and the AI's as well as joined players'. `MiracleCaster`, `CreatureAuthority`, `DiplomacyAuthority` and `MigrationAuthority` check them (power, location, influence, cooldown, rank, authorisation, reachability, diplomatic status and proposals) before anything changes. A joined player's intents act only for its own god, and it receives the verdict. |
+| 95–96 | Network replication and frequency | Partial | Events as they are raised and the list of players on change; the whole world on joining and every second (about 45 KB/s per player). No interest management or per-kind frequencies yet (Milestone 13). |
+| 97 | Client prediction | Implemented | Camera, UI and the hand are local. Miracle results wait for the host. A replica predicts the world between snapshots by running the same simulation, and never applies a player's intent itself. |
+| 98 | Cheating model | Implemented (as specified) | The host is trusted; no anti-cheat. |
 | 70 | No required server infrastructure | Implemented | |
 | 75 | Save architecture | Partial | One quicksave holds the seed, generation settings, tick, random state, regions (with soil water, fire and scorch), settlements (with ruins, shields and the wish to leave), gods (with refugee policies), beliefs, Creatures (with their views of each other), diplomacy, weather, disasters and migration groups. No GameTime; the other listed state does not exist yet. |
 | 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 10 and migrations from versions 1 to 9, each tested against a save written by the previous build. |
@@ -482,7 +510,7 @@ Sections that only state intent are summarised at the end of this part.
 | --- | --- | --- |
 | [ADR-001](ADR/ADR-001-godot-dotnet-pinned-version.md) | Godot 4.x .NET, pinned to 4.7.2-stable | Accepted |
 | [ADR-002](ADR/ADR-002-csharp-primary-language.md) | C# as the primary language | Accepted |
-| [ADR-003](ADR/ADR-003-host-authoritative-enet-networking.md) | Host-authoritative networking over ENet, no lockstep | Accepted; implementation in Milestones 12 and 13 |
+| [ADR-003](ADR/ADR-003-host-authoritative-enet-networking.md) | Host-authoritative networking over ENet, no lockstep | Accepted; implemented from Milestone 12 (ADR-018) |
 | [ADR-004](ADR/ADR-004-statistical-population-simulation-with-tiering.md) | Statistical population simulation with tiering | Accepted; amended by ADR-008 |
 | [ADR-005](ADR/ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 |
 | [ADR-006](ADR/ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
@@ -497,35 +525,37 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-015](ADR/ADR-015-four-gods-coalitions-and-pantheon-victory.md) | Four gods: coalitions, allies' memory and pantheon victory (Milestone 9) | Accepted; amends ADR-011 |
 | [ADR-016](ADR/ADR-016-migration-groups-and-refugee-policies.md) | Migration as groups on the road, and gods' refugee policies (Milestone 10) | Accepted |
 | [ADR-017](ADR/ADR-017-creature-relationships-and-combat.md) | Creature relationships, meetings and combat (Milestone 11) | Accepted |
+| [ADR-018](ADR/ADR-018-multiplayer-host-snapshots-and-intents.md) | Multiplayer sessions: a host's world, players' intents and replicas kept by snapshots (Milestone 12) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 724 tests, and they all pass headless in about ten
+The xUnit suite in `src/Pantheon.Tests` has 756 tests, and they all pass headless in about ten
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | Now |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
-| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
-| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 |
-| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 |
-| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 |
-| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 |
-| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 |
-| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V10Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** |
+| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | M11 | Now |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
+| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 | 18 |
+| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 | 14 |
+| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 | 32 |
+| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 | 27 |
+| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 | 23 |
+| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 | 28 |
+| Multiplayer | `ProtocolTests`, `MultiplayerSessionTests`, `MultiplayerPresentationTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 31 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V10Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 | 92 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 | 104 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 12 |
+| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** | **756** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -662,6 +692,17 @@ The [README](../README.md) lists every control and option.
   treaties, shared enemies or council votes (§38, §42), and absorbing an ally's believers is not a
   move of its own (§54).
 
+### Multiplayer
+
+- Every player receives the whole world once a second (about 45 KB/s), and reading it costs about
+  7 ms on the player's main thread. There are no per-kind frequencies or interest management yet
+  (§95–96).
+- Sessions start from launch options; there is no lobby, menu or chat. Joining blocks the start for
+  up to ten seconds.
+- A player who drops cannot come back to the same god automatically, and there is no host
+  migration (§72).
+- Only played by two instances on one Mac; not yet across two computers, a router or Windows.
+
 ### Interface
 
 - One panel (Diplomacy); no audio, menu or settings screen.
@@ -675,26 +716,26 @@ The [README](../README.md) lists every control and option.
 
 ## Recommended next steps
 
-### Milestone 12: Multiplayer Foundation (§127)
+### Milestone 13: Multiplayer Simulation (§128)
 
-Deliverables: an ENet host, joining, player assignment, action authority and synchronized god
-state, for two players first. ADR-003 decided a host-authoritative model over ENet, without
-lockstep (§67–74).
+Deliverables: synchronize miracles, Creatures, settlements, disasters and diplomacy, for four
+players. Milestone 12 already sends everything in whole-world snapshots; Milestone 13 sends each
+kind at the rate it needs (§95–96).
 
-1. Message contracts in the core (`Pantheon.Networking`, no Godot): joining, the god assigned, the
-   player's intents (miracles, Creature commands, diplomatic moves, refugee policy), their
-   verdicts, and state snapshots.
-2. A transport behind an interface: Godot's ENet in the client, and an in-memory loopback for
-   headless tests.
-3. The host runs the only simulation. It assigns a joining player a god the AI was playing, and
-   checks every intent with the existing authorities, issued as that player's god (§73).
-4. A client receives the world once, then the god state (power, rank, followers, cooldowns,
-   diplomacy) and the changes it needs at the rates of §96. It shows them with the same
-   presenters, and predicts nothing that matters (§97).
-5. `--host` and `--join=<address>`, a status line for the connection, and debug lines for peers,
-   latency and messages.
-6. Tests over the loopback: assignment, refused and accepted intents, the same god state on both
-   sides, a client leaving and joining again.
+1. Replication by kind and rate:
+   - Creatures and migrants' positions often (several times a second);
+   - god state at a medium rate;
+   - settlements, weather and disasters slowly;
+   - diplomacy, miracles and history by event.
+
+   Whole snapshots stay for joining and as a rare correction.
+2. Interest: positions of Creatures and walkers far from a player's camera less often (§95).
+3. Miracles: the host's cast event carries what a player needs to show it at once; the replica's
+   prediction never casts a miracle.
+4. Four players: measure the host's cost and the traffic with three players joined, and fix what
+   the measurements show.
+5. A player who drops gets its god back when it returns with the same name, while the session lasts.
+6. Tests over the loopback for each kind of update and for four players; a run of four instances.
 
 ### Alongside
 

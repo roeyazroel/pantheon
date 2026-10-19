@@ -42,7 +42,7 @@ game/                         Godot 4.7.2 project (res://)
   project.godot               Project settings, input map, .NET settings
   Pantheon.csproj             Godot.NET.Sdk/4.7.2 project: assembly "Pantheon", namespace Pantheon.Client
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
-  Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
+  Scripts/                    Bootstrap, Camera, Network (ENet adapter), Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                               creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json,
                               migration.json (simulation);
@@ -60,8 +60,9 @@ src/
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
-                              Tier 2 representative citizens (Population)
-  Pantheon.Networking/        Reserved for host-authoritative ENet (ADR-003)
+                              Tier 2 representative citizens (Population), Multiplayer (host and player)
+  Pantheon.Networking/        Host-authoritative protocol (ADR-003, ADR-018): messages, codecs, transport
+                              contract, in-memory loopback
   Pantheon.Tests/             xUnit tests (headless)
 tools/                        Maintenance scripts (vendor-terrain3d.sh)
 docs/                         PANTHEON_SPEC.md (the owner's specification), PROGRESS_SUMMARY.md,
@@ -87,7 +88,7 @@ graph TD
     Sim["Pantheon.Simulation"]
     Persist["Pantheon.Persistence"]
     Domain["Pantheon.Domain"]
-    Net["Pantheon.Networking (reserved)"]
+    Net["Pantheon.Networking"]
     Tests["Pantheon.Tests"]
     T3D["Terrain3D GDExtension (optional at runtime)"]
 
@@ -95,10 +96,13 @@ graph TD
     Client --> Sim
     Client --> Persist
     Client --> Domain
+    Client --> Net
     Client -. "ClassDB dynamic calls" .-> T3D
     Game --> Sim
     Game --> Persist
     Game --> Domain
+    Game --> Net
+    Net --> Domain
     Sim --> Domain
     Persist --> Domain
     Tests --> Game
@@ -237,6 +241,18 @@ files and compiled assemblies and fails when either rule is broken.
   the RNG state back and increments `Tick`.
 - `Terrain/TerrainRaycaster`: ray against the heightfield (used for cursor picking).
 
+### Networking (`Pantheon.Networking`)
+
+- `NetworkProtocol`: the protocol version, the default port (7777), the host's peer id and the
+  most players.
+- `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`, `EventBatch`,
+  `PlayerList`, the intents (`CastIntent`, `CreatureIntent`, `DiplomacyIntent`, `RefugeeIntent`),
+  `Verdict` and `Goodbye`. `MessageCodec` writes them as JSON tagged with their type, gzipped from
+  1 KB; `EventCodec` carries any `WorldEvent` by its type name.
+- `Transport/INetworkTransport`: connect, receive, send reliably or not, disconnect, round trip.
+  `LoopbackNetwork` is an in-memory host and players for headless tests; the client's
+  `Network/EnetTransport` is Godot's ENet. See [Multiplayer](#multiplayer).
+
 ### Persistence (`Pantheon.Persistence`)
 
 - Save envelope: `{ "SaveVersion": 10, "World": { ... } }`, indented, enums as strings,
@@ -349,6 +365,11 @@ files and compiled assemblies and fails when either rule is broken.
   `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
   looks. `SettlementLabel` adds the main god's share; `SettlementPicker` finds the settlement
   nearest a point.
+- `Multiplayer/MultiplayerHost` and `Multiplayer/MultiplayerClient` share a world (ADR-018); see
+  [Multiplayer](#multiplayer). `GameSession` holds either the host's world or a player's replica,
+  and every player command can name its issuing god (`CastMiracleAs` and the like), which the host
+  uses for its players' intents. `SessionEvents` keeps events for the local player and, on a
+  host, for the players.
 - `Population/*`: Tier 2 representative citizens, derived from `WorldState` and never saved:
   `TierSelector`, `RepresentativeRoster`, `CitizenRoutine` and `SettlementCrowd` (see
   [Settlement simulation and population tiers](#settlement-simulation-and-population-tiers)).
@@ -399,6 +420,10 @@ files and compiled assemblies and fails when either rule is broken.
   launch options.
 - `Presentation/Creatures/CreatureView` poses fights (blows traded face to face), games and
   flight, shows a fighter's health on its label, and `CreatureBody` draws scars on the flanks.
+- `Network/EnetTransport` puts Godot's `ENetMultiplayerPeer` behind `INetworkTransport` (reliable and
+  unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
+  (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
+  end, says goodbye and saves a host's world.
 - `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
   buttons send the moves through `SessionCommands.CommandDiplomacy`, and its refugee row sets the
   player's policy through `MigrationCommands.SetPolicy`.
@@ -434,6 +459,7 @@ sequenceDiagram
 
     Godot->>Root: _Process(delta)
     Root->>Session: Update(delta)
+    Note over Root: NetworkDriver.Update first: a host handles intents and sends events and snapshots; a player takes them
     Session->>Sched: Advance(delta, step)
     loop whole ticks (10 Hz x time scale, capped)
         Sched->>Engine: Step(world)
@@ -471,6 +497,43 @@ elapsed (× time scale) determines how many ticks run, and the settlement model 
 tenth tick, so its cadence follows simulated time, not frames. The citizens move every frame,
 but their poses are functions of simulation time, so they freeze while paused and speed up
 with the time scale.
+
+## Multiplayer
+
+ADR-018 records the decisions, and the Milestone 12 plan
+([.docs/milestone-12-multiplayer-foundation.md](../.docs/milestone-12-multiplayer-foundation.md))
+has the measured run.
+
+- **One canonical world.** The host's `GameSession` runs the simulation, as alone. A joining player
+  takes over a god the AI played (controller `Remote`), and the AI leaves it alone.
+- **Intents** (§73): a player's commands travel to the host as intents without a god. The host
+  carries each out as the player's god through the same authorities as its own commands, and
+  answers with a `Verdict`. Saving, loading, the clock and the debug tools are the host's alone.
+- **Replication** (§95): the whole world when a player joins and every second after; every event
+  as it is raised; the list of players when it changes.
+- **Replicas**: a player's session runs the same simulation between snapshots, only to predict.
+  It discards its own events and takes each snapshot as its world.
+- **Leaving** (§71): a departed player's god goes back to the AI; a host that quits tells its
+  players and saves its world. A saved world loads with the AI playing every `Remote` god.
+
+```mermaid
+flowchart LR
+    subgraph Player["Player's game"]
+        PUI["HUD, hand, panels"] --> PCmd["SessionCommands<br/>(intent when a replica)"]
+        PCmd --> PClient["MultiplayerClient"]
+        PClient --> Replica["Replica GameSession<br/>(predicts, discards its events)"]
+    end
+    subgraph Host["Host's game"]
+        HServer["MultiplayerHost"] --> HCmd["SessionCommands.*As<br/>(as the player's god)"]
+        HCmd --> Auth["Authorities"]
+        Auth --> World["Canonical WorldState"]
+        World --> Outbox["Event outbox"]
+    end
+    PClient -- "Hello, intents, Goodbye" --> HServer
+    HServer -- "Welcome, Verdict, Players" --> PClient
+    Outbox -- "EventBatch" --> PClient
+    World -- "Snapshot every second" --> PClient
+```
 
 ## Settlement simulation and population tiers
 
@@ -998,16 +1061,17 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 8 (current)
+    alt version 11 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 7
+    else versions 1 to 10
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 8, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water; 7→8: disasters, fire, scorch, ruins, shields)
+        Mig-->>Save: JsonObject at version 11, one step at a time (1→2: health, construction; 2→3: player god, beliefs, blessings; 3→4: Creatures; 4→5: personalities, dominance, winner; 5→6: diplomacy; 6→7: weather, soil water; 7→8: disasters, fire, scorch, ruins, shields; 8→9: winners; 9→10: migration, refugee policies; 10→11: Creatures' skill, scars and views)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
     end
     Save->>Save: SaveIntegrity.Validate(world)
+    Session->>Session: gods a connected player played (Remote) go back to the AI
     Session->>Gen: Generate(seed, generation settings)
     Session-->>Root: WorldReplaced
     Root->>View: Rebuild(world, terrain)
@@ -1082,8 +1146,10 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   player and the AI, migration's presentation and tools, and the version 9 → 10 migration
   (against `save-v9.json`). Since Milestone 11 it covers the Creatures' views and urges,
   meetings, play, flight, betrayal, fights and their outcomes, the AI's teaching and confronting,
-  their presentation and tools, and the version 10 → 11 migration (against `save-v10.json`). The
-  tests load the shipped `game/Data/*.json`; rule tests
+  their presentation and tools, and the version 10 → 11 migration (against `save-v10.json`). Since
+  Milestone 12 it covers the protocol and its codecs, the loopback transport, a host and its players
+  over the loopback (joining, refusals, intents and verdicts, snapshots, events, leaving), and the
+  multiplayer launch options and readouts. The tests load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
   `WeatherWorlds.Rules`, `DisasterWorlds.Rules`, `MigrationWorlds.Rules`)
   so retuning the data does not change their meaning.

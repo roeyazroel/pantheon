@@ -31,6 +31,11 @@ public static class WeatherCommands
     public static string NextSpell(GameSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         return SetSpell(session, Next(session.World.Weather.Spell));
     }
 
@@ -41,6 +46,11 @@ public static class WeatherCommands
     public static string SetSpell(GameSession session, WeatherSpell spell)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         var world = session.World;
         var (_, longest) = WeatherModel.SpellSeconds(session.Content.Weather, spell);
         world.Weather.Spell = spell;
@@ -55,6 +65,11 @@ public static class WeatherCommands
     public static string SummonStorm(GameSession session, GroundPosition target)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         var rules = session.Content.Weather;
         var weather = session.World.Weather;
         var (windX, windZ) = WeatherModel.WindVector(weather);

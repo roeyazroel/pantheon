@@ -24,6 +24,11 @@ public static class DisasterCommands
     public static string StartQuake(GameSession session, GroundPosition target)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         var quake = DisasterModel.StartQuake(session.Content.Disasters, session.World.Disasters, target, DebugMagnitude, session.World.Tick, godId: null);
         return string.Format(CultureInfo.InvariantCulture, "An earthquake of magnitude {0:0.0} strikes at ({1:0}, {2:0}); it shakes {3:0} m around", quake.Magnitude, target.X, target.Z, quake.Radius);
     }
@@ -35,6 +40,11 @@ public static class DisasterCommands
     public static string StartFire(GameSession session, GroundPosition target)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         if (!session.World.Regions.TryGetRegionIdAt(target.X, target.Z, out var regionId))
         {
             return "Point at the land to start a fire";

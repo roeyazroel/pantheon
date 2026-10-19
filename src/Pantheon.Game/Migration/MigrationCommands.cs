@@ -26,11 +26,24 @@ public static class MigrationCommands
     public static string SetPolicy(GameSession session, RefugeePolicy policy)
     {
         ArgumentNullException.ThrowIfNull(session);
-        return session.SetRefugeePolicy(policy) switch
+        return session.Client is { } client
+            ? client.Request(id => new Networking.Protocol.RefugeeIntent(id, policy))
+            : SetPolicyAs(session, session.LocalGodId ?? 0, policy).Text;
+    }
+
+    /// <summary>Sets a god's refugee policy, as its player's intent.</summary>
+    /// <param name="session">The session.</param>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="policy">The policy.</param>
+    /// <returns>Whether it was set, and the status line.</returns>
+    public static CommandOutcome SetPolicyAs(GameSession session, int godId, RefugeePolicy policy)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        return session.SetRefugeePolicyAs(godId, policy) switch
         {
-            RefugeePolicyRejection.None => "Your people now " + Verb(policy),
-            RefugeePolicyRejection.Unchanged => "That is already your refugee policy",
-            RefugeePolicyRejection.UnknownGod or RefugeePolicyRejection.NotAuthorized => "You have no god to set a refugee policy for",
+            RefugeePolicyRejection.None => new CommandOutcome(true, "Your people now " + Verb(policy)),
+            RefugeePolicyRejection.Unchanged => new CommandOutcome(false, "That is already your refugee policy"),
+            RefugeePolicyRejection.UnknownGod or RefugeePolicyRejection.NotAuthorized => new CommandOutcome(false, "You have no god to set a refugee policy for"),
         };
     }
 
@@ -42,6 +55,11 @@ public static class MigrationCommands
     public static string SendFrom(GameSession session, GroundPosition point, int people = DebugGroup)
     {
         ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
         return Nearest(session.World, point) is { } settlement
             ? SendFrom(session, settlement, people)
             : "Point at a village to send people away";

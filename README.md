@@ -73,6 +73,10 @@ betrayed it. Allies' Creatures become friends, and friends refuse to fight when 
 war. A beaten Creature is banished for a while with a scar, its loyalty shaken and its people's
 faith dented, and its god holds a grudge.
 
+**Milestone 12 (Multiplayer Foundation)** lets friends share a world. One player hosts; others join
+over the network and each takes over a god the AI was playing. The host's computer runs the only
+real world. Everything a joined player does goes to the host, which checks it and answers.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -142,6 +146,9 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- multiplayer: the messages and their encoding, a host and its players over an in-memory network
+  (joining, gods, refusals, intents checked by the host, snapshots, events, leaving), and that only
+  the host saves, keeps the clock or uses the debug tools;
 - the HUD model, alerts, map overlays, the diplomacy panel, the weather's and disasters' looks and
   tools, migration's walkers, overlay and alerts, Creatures' bonds on the card, panel and debug
   panel, and the migration of Milestone 1 to 10 saves;
@@ -551,9 +558,46 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--disaster=quake\|fire` | Start an earthquake or a fire at the focused settlement. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
+| `--host=on\|off\|<port>` | Host this world for other players (port 7777 by default). |
+| `--join=<address>[:<port>]` | Join a host's world instead of making one. |
+| `--name=<player>` | Your name in a shared world. |
+| `--god=<name>` | The god you ask for when joining. |
+| `--upnp=on\|off` | Ask the router to forward the host's port. |
 | `--meet=on\|off\|<name>` | Bring the nearest other Creature (or the one with that name) beside yours at the start, so they meet. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
+
+## Playing together
+
+One player hosts the world and up to three others join it, each playing a god the AI would
+otherwise play. There is no server or account: the host's computer runs the world.
+
+```bash
+# The host (opens UDP port 7777; --upnp=on asks the router to forward it)
+godot --path game -- --host=on --name=Roey
+# Each other player, with the host's address
+godot --path game -- --join=192.168.1.20 --name=Ana --god=Seren
+```
+
+- **Joining.** A player gets the god it asks for with `--god`, or the first god the AI plays. The
+  host turns players away when its game data differs, when they run another version, or when no god
+  is free. A player that cannot join plays alone after ten seconds.
+- **Playing.** A joined player plays as usual: miracles, the Creature, diplomacy and the refugee
+  policy. Each command goes to the host, which checks it as it checks the host's own and replies.
+  The status line says "Asking the host..." and then what happened ("Food on Larkspur for 45
+  Divine Power", or "Outside your influence").
+  - The host sends its world every second and every event at once, so alerts and miracles show up
+    for everyone.
+  - The HUD names who plays the other gods: "Ilyra (Roey)".
+- **The host decides** the speed and pausing, and only the host saves, loads, starts a new world
+  or uses the debug keys.
+- **Leaving.** When a player leaves, the AI takes its god back. When the host quits, the session
+  ends for everyone and the host's world is saved to `user://saves/hosted.json`.
+- **Seeing it.** F1 shows who plays which god, the round trip to each and the traffic.
+
+To play over the internet, the host forwards UDP port 7777 on its router (or uses `--upnp=on`)
+and gives the others its public address. The whole world travels once a second (about 45 KB/s
+per player), which suits a home connection; Milestone 13 sends less.
 
 ## Saves
 
@@ -596,7 +640,7 @@ src/
   Pantheon.Persistence/   Versioned JSON saves with migrations, and content parsing
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
-  Pantheon.Networking/    Reserved for host-authoritative ENet networking (ADR-003)
+  Pantheon.Networking/    The multiplayer protocol, its codecs and the transport contract (ADR-003, ADR-018)
   Pantheon.Tests/         xUnit tests
 docs/                 The owner's specification (PANTHEON_SPEC.md, the source of truth), the progress
                       summary (PROGRESS_SUMMARY.md), the vision summary (GAME_SPEC.md), architecture

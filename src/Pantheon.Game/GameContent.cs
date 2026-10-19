@@ -37,6 +37,12 @@ namespace Pantheon.Game;
 /// <param name="Migration">Tuning of migration.</param>
 public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules SettlementRules, DivineRules DivineRules, MiracleBook Miracles, PantheonSetup Pantheon, CreatureRules Creatures, GodAiRules GodAi, DiplomacyRules Diplomacy, WeatherRules Weather, DisasterRules Disasters, MigrationRules Migration)
 {
+    /// <summary>
+    /// A fingerprint of the content files this content was parsed from (SHA-256, hex), so a host can
+    /// refuse players whose game data differs from its own (ADR-018); empty for content built in code.
+    /// </summary>
+    public string Fingerprint { get; init; } = string.Empty;
+
     /// <summary>The full simulation pipeline over this content.</summary>
     /// <returns>A new engine.</returns>
     public SimulationEngine CreateEngine() => new(SettlementRules, DivineRules, Creatures, GodAi, Miracles, Diplomacy, Weather, Disasters, Migration);
@@ -76,7 +82,14 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         Check(ContentJson.MigrationFileName, () => MigrationRulesValidator.Validate(migration));
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
-        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration);
+        return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration) { Fingerprint = FingerprintOf(files) };
+    }
+
+    /// <summary>The SHA-256 of every content file's text, in order, as lower-case hex.</summary>
+    private static string FingerprintOf(GameContentFiles files)
+    {
+        var text = string.Join('\0', files.WorldGen, files.SettlementRules, files.DivineRules, files.Miracles, files.Gods, files.Creatures, files.GodAi, files.Diplomacy, files.Weather, files.Disasters, files.Migration);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
     /// <summary>Runs a validator and reports its problems as a content error of one file.</summary>

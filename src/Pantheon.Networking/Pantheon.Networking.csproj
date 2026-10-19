@@ -1,8 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Reserved for host-authoritative ENet networking (ADR-003, Milestones 12 and 13). Intentionally empty until then. -->
+  <!-- Host-authoritative networking (ADR-003, ADR-018): the protocol, its codec and the transport contract. No Godot. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pantheon.Domain\Pantheon.Domain.csproj" />
+  </ItemGroup>
 
 </Project>

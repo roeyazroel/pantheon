@@ -18,7 +18,7 @@ silently:
 | --- | --- | --- |
 | [ADR-001](ADR-001-godot-dotnet-pinned-version.md) | Godot 4.x .NET, pinned to 4.7.2-stable | Accepted |
 | [ADR-002](ADR-002-csharp-primary-language.md) | C# as the primary language | Accepted |
-| [ADR-003](ADR-003-host-authoritative-enet-networking.md) | Host-authoritative networking over ENet, no lockstep | Accepted (deferred) |
+| [ADR-003](ADR-003-host-authoritative-enet-networking.md) | Host-authoritative networking over ENet, no lockstep | Accepted; implemented from Milestone 12 (ADR-018) |
 | [ADR-004](ADR-004-statistical-population-simulation-with-tiering.md) | Statistical population simulation with tiering | Accepted; amended by ADR-008 |
 | [ADR-005](ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 |
 | [ADR-006](ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
@@ -33,6 +33,7 @@ silently:
 | [ADR-015](ADR-015-four-gods-coalitions-and-pantheon-victory.md) | Four gods: coalitions, allies' memory and pantheon victory | Accepted (amends ADR-011) |
 | [ADR-016](ADR-016-migration-groups-and-refugee-policies.md) | Migration as groups on the road, and gods' refugee policies | Accepted |
 | [ADR-017](ADR-017-creature-relationships-and-combat.md) | Creature relationships, meetings and combat | Accepted |
+| [ADR-018](ADR-018-multiplayer-host-snapshots-and-intents.md) | Multiplayer sessions: a host's world, players' intents and replicas kept by snapshots | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

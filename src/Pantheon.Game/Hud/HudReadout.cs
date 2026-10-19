@@ -91,7 +91,7 @@ public static class HudReadout
             TargetValid = valid,
             TargetRadius = selected?.Radius ?? 0f,
             Creature = BuildCreatureCard(session),
-            Rivals = BuildRivals(session.World, god.Id),
+            Rivals = BuildRivals(session.World, god.Id, session.Players),
             Contest = DescribeContest(session, god, out var favours),
             ContestFavoursPlayer = favours,
             Weather = DescribeWeather(session, god.Id, out var warning),
@@ -169,8 +169,8 @@ public static class HudReadout
         return line;
     }
 
-    /// <summary>One line per other god.</summary>
-    private static IReadOnlyList<string> BuildRivals(WorldState world, int localGodId)
+    /// <summary>One line per other god: its player's name when a player plays it (ADR-018), else its personality.</summary>
+    private static IReadOnlyList<string> BuildRivals(WorldState world, int localGodId, IReadOnlyDictionary<int, string> players)
     {
         var lines = new List<string>();
         foreach (var rival in world.Gods)
@@ -181,10 +181,12 @@ public static class HudReadout
             }
 
             var personality = DivineText.Personality(rival.Personality);
+            var who = players.TryGetValue(rival.Id, out var player) && rival.Controller != GodController.Ai ? " (" + player + ")"
+                : personality.Length > 0 ? " the " + personality : string.Empty;
             lines.Add(Format(
                 "{0}{1}: {2} followers ({3:0%}), {4}",
                 rival.Name,
-                personality.Length > 0 ? " the " + personality : string.Empty,
+                who,
                 GodStanding.CountFollowers(world, rival.Id),
                 VictorySystem.ShareOf(world, rival.Id),
                 Diplomacy.DiplomacyText.Status(Simulation.Diplomacy.DiplomacyModel.StatusOf(world, localGodId, rival.Id))));

@@ -39,6 +39,11 @@ public sealed record LaunchOptions
         "refugees",
         "migrate",
         "meet",
+        "host",
+        "join",
+        "name",
+        "god",
+        "upnp",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -109,6 +114,21 @@ public sealed record LaunchOptions
     /// the nearest, <c>null</c> for none.
     /// </summary>
     public string? Meet { get; init; }
+
+    /// <summary>The UDP port to host the world on (ADR-018), or <c>null</c> to play alone.</summary>
+    public int? HostPort { get; init; }
+
+    /// <summary>The host to join: its address and port (ADR-018), or <c>null</c> to play on this computer.</summary>
+    public (string Address, int Port)? Join { get; init; }
+
+    /// <summary>The player's name in a shared session.</summary>
+    public string? PlayerName { get; init; }
+
+    /// <summary>The god a joining player asks for, by name.</summary>
+    public string? WantedGod { get; init; }
+
+    /// <summary>Whether a host asks the router for its port with UPnP (spec §68).</summary>
+    public bool Upnp { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -243,6 +263,31 @@ public sealed record LaunchOptions
                 return TryParsePositiveInt(value.Trim(), out var migrants)
                     ? options with { Migrate = migrants }
                     : Warn(options, warnings, $"'--migrate' needs a positive whole number of people, got '{value}'.");
+            case "host":
+                return value.Trim().ToLowerInvariant() switch
+                {
+                    "on" => options with { HostPort = Networking.NetworkProtocol.DefaultPort },
+                    "off" => options with { HostPort = null },
+                    var port when TryParsePort(port, out var number) => options with { HostPort = number },
+                    _ => Warn(options, warnings, $"'--host' needs on, off or a port from 1 to 65535, got '{value}'."),
+                };
+            case "join":
+                return TryParseAddress(value.Trim(), out var address)
+                    ? options with { Join = address }
+                    : Warn(options, warnings, $"'--join' needs an address, optionally with :port, got '{value}'.");
+            case "name":
+                return value.Trim().Length is > 0 and <= 24
+                    ? options with { PlayerName = value.Trim() }
+                    : Warn(options, warnings, $"'--name' needs 1 to 24 characters, got '{value}'.");
+            case "god":
+                return value.Trim().Length > 0 ? options with { WantedGod = value.Trim() } : Warn(options, warnings, "'--god' needs a god's name.");
+            case "upnp":
+                return value.Trim().ToLowerInvariant() switch
+                {
+                    "on" => options with { Upnp = true },
+                    "off" => options with { Upnp = false },
+                    _ => Warn(options, warnings, $"'--upnp' needs on or off, got '{value}'."),
+                };
             case "meet":
                 return value.Trim() switch
                 {
@@ -268,6 +313,30 @@ public sealed record LaunchOptions
     {
         warnings.Add(warning);
         return options;
+    }
+
+    /// <summary>Parses a UDP port from 1 to 65535.</summary>
+    private static bool TryParsePort(string value, out int port) => TryParsePositiveInt(value, out port) && port <= 65535;
+
+    /// <summary>Parses "address" or "address:port"; the port defaults to <see cref="Networking.NetworkProtocol.DefaultPort"/>.</summary>
+    private static bool TryParseAddress(string value, out (string Address, int Port) address)
+    {
+        address = default;
+        var colon = value.LastIndexOf(':');
+        var (host, port) = colon > 0 && value.IndexOf(':') == colon ? (value[..colon], value[(colon + 1)..]) : (value, null);
+        if (host.Length == 0 || host.Contains(' ', StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var number = Networking.NetworkProtocol.DefaultPort;
+        if (port is not null && !TryParsePort(port, out number))
+        {
+            return false;
+        }
+
+        address = (host, number);
+        return true;
     }
 
     /// <summary>Parses a positive whole number written with digits only.</summary>

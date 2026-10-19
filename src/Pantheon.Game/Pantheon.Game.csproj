@@ -8,6 +8,7 @@
     <ProjectReference Include="..\Pantheon.Domain\Pantheon.Domain.csproj" />
     <ProjectReference Include="..\Pantheon.Simulation\Pantheon.Simulation.csproj" />
     <ProjectReference Include="..\Pantheon.Persistence\Pantheon.Persistence.csproj" />
+    <ProjectReference Include="..\Pantheon.Networking\Pantheon.Networking.csproj" />
   </ItemGroup>
 
 </Project>

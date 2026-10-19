@@ -15,8 +15,8 @@ public sealed class GodState
     /// <summary>Display name.</summary>
     public required string Name { get; init; }
 
-    /// <summary>Whether a player or the AI decides the god's actions.</summary>
-    public required GodController Controller { get; init; }
+    /// <summary>Whether a player or the AI decides the god's actions; a player joining or leaving the host changes it (ADR-018).</summary>
+    public required GodController Controller { get; set; }
 
     /// <summary>The AI's strategic personality; <see cref="GodPersonality.None"/> for a player.</summary>
     public required GodPersonality Personality { get; init; }

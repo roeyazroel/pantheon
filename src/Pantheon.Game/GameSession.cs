@@ -17,21 +17,22 @@ namespace Pantheon.Game;
 /// <summary>
 /// Engine-agnostic application core. It owns the authoritative <see cref="WorldState"/>, its
 /// derived <see cref="TerrainField"/> and the fixed-step clock, and it is the authority that checks
-/// and applies the local player's commands. The Godot shell drives it and rebuilds visuals when
-/// <see cref="WorldReplaced"/> fires.
+/// and applies the players' commands. The Godot shell drives it and rebuilds visuals when
+/// <see cref="WorldReplaced"/> fires. A player connected to a host holds a replica instead
+/// (ADR-018): it runs the simulation only to keep its view moving between the host's snapshots,
+/// keeps none of the events it raises, and sends its commands to the host.
 /// </summary>
 public sealed class GameSession
 {
-    // Events nobody drains (headless runs) are dropped oldest first beyond this many.
-    private const int MaxPendingEvents = 512;
-
     private readonly SimulationEngine _engine;
     private readonly Authorities _authorities;
     private readonly Action _step;
-    private readonly List<WorldEvent> _events = [];
+    private readonly SessionEvents _queue = new();
+    private readonly List<WorldEvent> _predicted = [];
+    private readonly Dictionary<int, string> _players = [];
 
     /// <summary>Creates a session around an existing world.</summary>
-    private GameSession(GameContent content, WorldState world, TerrainField terrain)
+    private GameSession(GameContent content, WorldState world, TerrainField terrain, int? localGodId = null)
     {
         Content = content;
         _engine = content.CreateEngine();
@@ -40,7 +41,7 @@ public sealed class GameSession
         World = world;
         Terrain = terrain;
         Scheduler = new SimulationScheduler();
-        LocalGodId = FindLocalGod(world);
+        LocalGodId = localGodId ?? FindLocalGod(world);
     }
 
     /// <summary>Raised after <see cref="World"/> and <see cref="Terrain"/> are replaced by a new or loaded world.</summary>
@@ -58,8 +59,27 @@ public sealed class GameSession
     /// <summary>Fixed-step simulation clock.</summary>
     public SimulationScheduler Scheduler { get; }
 
-    /// <summary>The god the local player controls: the first god with a human controller, if any.</summary>
+    /// <summary>The god the local player controls: the first god with a human controller, or a joined player's god.</summary>
     public int? LocalGodId { get; private set; }
+
+    /// <summary>The host this session's player is connected to, when the session is a replica (ADR-018).</summary>
+    public Multiplayer.MultiplayerClient? Client { get; private set; }
+
+    /// <summary>Whether the session is a replica of a host's world, which only the host may change.</summary>
+    public bool IsReplica => Client is not null;
+
+    /// <summary>
+    /// Whether events are also kept for the host to send to its players (<see cref="DrainOutbox"/>),
+    /// besides the local player's (<see cref="DrainEvents"/>).
+    /// </summary>
+    public bool KeepsOutbox
+    {
+        get => _queue.KeepsOutbox;
+        set => _queue.KeepsOutbox = value;
+    }
+
+    /// <summary>The players' names by the god each plays, when a session is shared (ADR-018).</summary>
+    public IReadOnlyDictionary<int, string> Players => _players;
 
     /// <summary>The god the local player controls, if any.</summary>
     public GodState? LocalGod => LocalGodId is { } id ? World.Gods.Find(god => god.Id == id) : null;
@@ -95,6 +115,69 @@ public sealed class GameSession
         var (world, terrain) = LoadWorld(path);
         return new GameSession(content, world, terrain);
     }
+
+    /// <summary>A replica of a host's world for a joined player (ADR-018), its terrain regenerated from the world's seed.</summary>
+    /// <param name="content">Validated content, the same as the host's.</param>
+    /// <param name="world">The host's world.</param>
+    /// <param name="localGodId">The god the player plays.</param>
+    /// <param name="client">The connection to the host.</param>
+    /// <returns>The replica session.</returns>
+    public static GameSession CreateReplica(GameContent content, WorldState world, int localGodId, Multiplayer.MultiplayerClient client)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(client);
+        return new GameSession(content, world, TerrainGenerator.Generate(world.Seed, world.Generation), localGodId) { Client = client };
+    }
+
+    /// <summary>
+    /// Takes the host's newer world into a replica (ADR-018): the world is replaced as a whole and
+    /// the clock follows the host's. The terrain is kept while the seed and generation match.
+    /// </summary>
+    /// <param name="world">The host's world.</param>
+    /// <param name="timeScale">The host's simulation speed.</param>
+    /// <param name="paused">Whether the host's clock is paused.</param>
+    public void ApplySnapshot(WorldState world, double timeScale, bool paused)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        // Generation settings hold lists, so they are compared by what fixes the land: the seed and the grid.
+        var (grid, current) = (world.Regions, World.Regions);
+        var sameLand = world.Seed == World.Seed && grid.Columns == current.Columns && grid.Rows == current.Rows && grid.RegionSize == current.RegionSize
+            && world.Generation.HeightmapResolution == World.Generation.HeightmapResolution && world.Generation.VertexSpacing == World.Generation.VertexSpacing;
+        World = world;
+        Scheduler.TimeScale = timeScale;
+        Scheduler.IsPaused = paused;
+        if (!sameLand)
+        {
+            Terrain = TerrainGenerator.Generate(world.Seed, world.Generation);
+            Scheduler.Reset();
+            WorldReplaced?.Invoke();
+        }
+    }
+
+    /// <summary>Adds events the host's world raised, for the local player's alerts and effects.</summary>
+    /// <param name="events">The events, oldest first.</param>
+    public void ReceiveEvents(IEnumerable<WorldEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(events);
+        _queue.Add(events);
+    }
+
+    /// <summary>Records who plays which god, for the HUD and the panels.</summary>
+    /// <param name="players">Player names by god id.</param>
+    public void SetPlayers(IEnumerable<KeyValuePair<int, string>> players)
+    {
+        ArgumentNullException.ThrowIfNull(players);
+        _players.Clear();
+        foreach (var (godId, name) in players)
+        {
+            _players[godId] = name;
+        }
+    }
+
+    /// <summary>Returns the events raised since the last call for the host to send, oldest first, and forgets them.</summary>
+    /// <returns>The events; none unless <see cref="KeepsOutbox"/> is set.</returns>
+    public IReadOnlyList<WorldEvent> DrainOutbox() => _queue.DrainOutbox();
 
     /// <summary>Advances the simulation by real elapsed time.</summary>
     /// <param name="realDeltaSeconds">Real seconds since the previous frame.</param>
@@ -143,6 +226,14 @@ public sealed class GameSession
     public CastCheck CheckCast(string miracleId, GroundPosition target) =>
         _authorities.Miracles.Check(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0);
 
+    /// <summary>Casts a miracle for a god, as its player's intent (spec §73): checked as any issuer's is.</summary>
+    /// <param name="godId">The issuing god: the local player's, or a connected player's on the host.</param>
+    /// <param name="miracleId">The miracle.</param>
+    /// <param name="target">Where to cast it.</param>
+    /// <returns>The verdict.</returns>
+    public CastCheck CastMiracleAs(int godId, string miracleId, GroundPosition target) =>
+        _authorities.Miracles.Cast(World, new CastMiracleRequest(godId, miracleId, target), godId, _queue.Pending);
+
     /// <summary>The settlements a miracle cast at a target would reach.</summary>
     /// <param name="miracleId">The miracle.</param>
     /// <param name="target">Where it would be cast.</param>
@@ -157,8 +248,7 @@ public sealed class GameSession
     /// <param name="miracleId">The miracle.</param>
     /// <param name="target">Where to cast it.</param>
     /// <returns>The verdict.</returns>
-    public CastCheck CastMiracle(string miracleId, GroundPosition target) =>
-        _authorities.Miracles.Cast(World, new CastMiracleRequest(LocalGodId ?? 0, miracleId, target), LocalGodId ?? 0, _events);
+    public CastCheck CastMiracle(string miracleId, GroundPosition target) => CastMiracleAs(LocalGodId ?? 0, miracleId, target);
 
     /// <summary>
     /// Sends a command to the local player's Creature (spec §73, ADR-010): reward or punish what it is
@@ -167,11 +257,17 @@ public sealed class GameSession
     /// <param name="kind">Reward, punish or go to.</param>
     /// <param name="target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>.</param>
     /// <returns>The outcome.</returns>
-    public CreatureCommandResult CommandCreature(CreatureCommandKind kind, GroundPosition target = default)
+    public CreatureCommandResult CommandCreature(CreatureCommandKind kind, GroundPosition target = default) => CommandCreatureAs(LocalGodId ?? 0, kind, target);
+
+    /// <summary>Sends a command to a god's Creature, as its player's intent; the authority checks it first.</summary>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="kind">Reward, punish or go to.</param>
+    /// <param name="target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>.</param>
+    /// <returns>The outcome.</returns>
+    public CreatureCommandResult CommandCreatureAs(int godId, CreatureCommandKind kind, GroundPosition target = default)
     {
-        var god = LocalGodId ?? 0;
-        var creature = LocalGod?.CreatureId ?? 0;
-        return _authorities.Creatures.Execute(World, new CreatureCommand(god, creature, kind, target), god, _events);
+        var creature = World.Gods.Find(g => g.Id == godId)?.CreatureId ?? 0;
+        return _authorities.Creatures.Execute(World, new CreatureCommand(godId, creature, kind, target), godId, _queue.Pending);
     }
 
     /// <summary>What a reward or punishment of the local Creature would judge now, if anything.</summary>
@@ -193,71 +289,8 @@ public sealed class GameSession
     public IReadOnlyList<CreatureOption> PreviewCreatureOptions() =>
         LocalCreature is { } creature ? _engine.Creatures!.Brain.ListOptions(World, creature) : [];
 
-    /// <summary>The Creature nearest the local Creature that is not banished, if any (ADR-017).</summary>
-    /// <returns>The Creature, or <c>null</c>.</returns>
-    public CreatureState? NearestOtherCreature()
-    {
-        if (LocalCreature is not { } mine)
-        {
-            return null;
-        }
-
-        CreatureState? nearest = null;
-        var best = float.MaxValue;
-        foreach (var other in World.Creatures)
-        {
-            var dx = other.Position.X - mine.Position.X;
-            var dz = other.Position.Z - mine.Position.Z;
-            var distance = (dx * dx) + (dz * dz);
-            if (other.Id != mine.Id && other.Activity.Phase != CreaturePhase.Banished && distance < best)
-            {
-                (nearest, best) = (other, distance);
-            }
-        }
-
-        return nearest;
-    }
-
-    /// <summary>How the local Creature would answer the nearest other Creature if they met now, best first, for the debug view.</summary>
-    /// <returns>The answers; none without two Creatures.</returns>
-    public IReadOnlyList<CreatureOption> PreviewCreatureResponses() =>
-        LocalCreature is { } mine && NearestOtherCreature() is { } other ? _engine.Creatures!.Brain.ListResponses(World, mine, other) : [];
-
-    /// <summary>
-    /// Debug (ADR-017): brings the nearest other Creature beside the local Creature, free to meet it
-    /// at once, as the M key brings migrants. The meeting itself happens in the simulation.
-    /// </summary>
-    /// <param name="name">The Creature to bring, by name (any case); the nearest when <c>null</c> or empty.</param>
-    /// <returns>The Creature brought, or <c>null</c> without such a Creature or room beside the local one.</returns>
-    public CreatureState? BringOtherCreature(string? name = null)
-    {
-        var other = string.IsNullOrEmpty(name)
-            ? NearestOtherCreature()
-            : World.Creatures.Find(c => c.Id != LocalCreature?.Id && c.Activity.Phase != CreaturePhase.Banished && string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
-        if (LocalCreature is not { Activity.Phase: not CreaturePhase.Banished } mine || other is null)
-        {
-            return null;
-        }
-
-        if (CreatureFounder.Beside(World.Regions, mine.Position) is not { } spot)
-        {
-            return null;
-        }
-
-        other.Position = spot;
-        other.Activity.Path.Clear();
-        other.Activity.Phase = CreaturePhase.Deciding;
-        other.Activity.TicksLeft = 0;
-        foreach (var view in new[] { CreatureBonds.Find(mine, other.Id), CreatureBonds.Find(other, mine.Id) })
-        {
-            if (view is not null)
-            {
-                view.LastMetTick = -1;
-            }
-        }
-
-        return other;
-    }
+    /// <summary>The Creatures' brain, for previews of their options and answers.</summary>
+    internal CreatureBrain CreatureBrain => _engine.Creatures!.Brain;
 
     /// <summary>
     /// Sends a diplomatic command from the local player's god to another god (spec §113, ADR-012); the
@@ -266,8 +299,15 @@ public sealed class GameSession
     /// <param name="otherGodId">The other god.</param>
     /// <param name="kind">What to do.</param>
     /// <returns>Why it was refused, or <see cref="DiplomacyRejection.None"/>.</returns>
-    public DiplomacyRejection CommandDiplomacy(int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) =>
-        _authorities.Diplomacy.Execute(World, new Domain.Diplomacy.DiplomaticCommand(LocalGodId ?? 0, otherGodId, kind), LocalGodId ?? 0, _events);
+    public DiplomacyRejection CommandDiplomacy(int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) => CommandDiplomacyAs(LocalGodId ?? 0, otherGodId, kind);
+
+    /// <summary>Sends a diplomatic command from a god to another, as its player's intent; the authority checks it first.</summary>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="otherGodId">The other god.</param>
+    /// <param name="kind">What to do.</param>
+    /// <returns>Why it was refused, or <see cref="DiplomacyRejection.None"/>.</returns>
+    public DiplomacyRejection CommandDiplomacyAs(int godId, int otherGodId, Domain.Diplomacy.DiplomaticCommandKind kind) =>
+        _authorities.Diplomacy.Execute(World, new Domain.Diplomacy.DiplomaticCommand(godId, otherGodId, kind), godId, _queue.Pending);
 
     /// <summary>Whether a diplomatic command from the local player's god would be accepted now.</summary>
     /// <param name="otherGodId">The other god.</param>
@@ -291,8 +331,14 @@ public sealed class GameSession
     /// <summary>Sets the local player's god's refugee policy (spec §31, ADR-016); the authority checks it first.</summary>
     /// <param name="policy">The policy.</param>
     /// <returns>Why it was refused, or <see cref="Simulation.Migration.RefugeePolicyRejection.None"/>.</returns>
-    public Simulation.Migration.RefugeePolicyRejection SetRefugeePolicy(Domain.Migration.RefugeePolicy policy) =>
-        _authorities.Migration.SetPolicy(World, LocalGodId ?? 0, policy, LocalGodId ?? 0, _events);
+    public Simulation.Migration.RefugeePolicyRejection SetRefugeePolicy(Domain.Migration.RefugeePolicy policy) => SetRefugeePolicyAs(LocalGodId ?? 0, policy);
+
+    /// <summary>Sets a god's refugee policy, as its player's intent; the authority checks it first.</summary>
+    /// <param name="godId">The issuing god.</param>
+    /// <param name="policy">The policy.</param>
+    /// <returns>Why it was refused, or <see cref="Simulation.Migration.RefugeePolicyRejection.None"/>.</returns>
+    public Simulation.Migration.RefugeePolicyRejection SetRefugeePolicyAs(int godId, Domain.Migration.RefugeePolicy policy) =>
+        _authorities.Migration.SetPolicy(World, godId, policy, godId, _queue.Pending);
 
     /// <summary>The pressure on a settlement's people to leave now (ADR-016).</summary>
     /// <param name="settlement">The settlement.</param>
@@ -305,7 +351,7 @@ public sealed class GameSession
     /// <param name="people">How many leave.</param>
     /// <returns>The group, or <c>null</c> when nobody could leave or there is nowhere to go.</returns>
     public Domain.Migration.MigrationGroup? SendMigrants(Domain.Settlements.SettlementState settlement, int people) =>
-        _engine.Migration!.SendOut(World, settlement, people, _events);
+        _engine.Migration!.SendOut(World, settlement, people, _queue.Pending);
 
     /// <summary>The refugee policy an AI god wants now and why, for the debug view.</summary>
     /// <param name="god">The god.</param>
@@ -317,16 +363,11 @@ public sealed class GameSession
 
     /// <summary>The latest miracle cast still waiting to be drained, if any.</summary>
     /// <returns>The event, or <c>null</c>.</returns>
-    public MiracleCast? PeekLastCast() => _events.FindLast(e => e is MiracleCast) as MiracleCast;
+    public MiracleCast? PeekLastCast() => _queue.Pending.FindLast(e => e is MiracleCast) as MiracleCast;
 
     /// <summary>Returns the events raised since the last call, oldest first, and forgets them.</summary>
     /// <returns>The events.</returns>
-    public IReadOnlyList<WorldEvent> DrainEvents()
-    {
-        var events = _events.ToArray();
-        _events.Clear();
-        return events;
-    }
+    public IReadOnlyList<WorldEvent> DrainEvents() => _queue.DrainLocal();
 
     /// <summary>Saves the current world.</summary>
     /// <param name="path">Destination file path.</param>
@@ -341,10 +382,18 @@ public sealed class GameSession
         Replace(world, terrain);
     }
 
-    /// <summary>Reads a save and regenerates its terrain from the saved seed and generation settings.</summary>
+    /// <summary>Reads a save and regenerates its terrain from the saved seed and generation settings. Gods that connected players played go back to the AI.</summary>
     private static (WorldState World, TerrainField Terrain) LoadWorld(string path)
     {
         var world = WorldSaveSerializer.LoadFromFile(path);
+        foreach (var god in world.Gods)
+        {
+            if (god.Controller == GodController.Remote)
+            {
+                god.Controller = GodController.Ai;
+            }
+        }
+
         try
         {
             // The saved settings, not the current content files, define the terrain, so a save
@@ -363,19 +412,23 @@ public sealed class GameSession
         World = world;
         Terrain = terrain;
         LocalGodId = FindLocalGod(world);
-        _events.Clear();
+        _queue.Clear();
         Scheduler.Reset();
         WorldReplaced?.Invoke();
     }
 
-    /// <summary>Runs one simulation tick on the current world.</summary>
+    /// <summary>Runs one simulation tick on the current world; a replica keeps none of its events, which the host sends instead.</summary>
     private void StepWorld()
     {
-        _engine.Step(World, _events);
-        if (_events.Count > MaxPendingEvents)
+        if (IsReplica)
         {
-            _events.RemoveRange(0, _events.Count - MaxPendingEvents);
+            _engine.Step(World, _predicted);
+            _predicted.Clear();
+            return;
         }
+
+        _engine.Step(World, _queue.Pending);
+        _queue.Trim();
     }
 
     /// <summary>The first god with a human controller.</summary>

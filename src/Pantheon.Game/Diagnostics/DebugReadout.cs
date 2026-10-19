@@ -43,6 +43,7 @@ public static class DebugReadout
             FormatSettlementStep(snapshot),
         };
 
+        lines.AddRange(snapshot.NetworkLines);
         BeliefReadout.AppendGods(lines, snapshot);
         GodAiReadout.Append(lines, snapshot);
         CreatureReadout.Append(lines, snapshot);

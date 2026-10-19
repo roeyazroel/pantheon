@@ -152,7 +152,7 @@ public sealed class CreatureRelationsPresentationTests
     {
         var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(1234));
         var mine = session.LocalCreature!;
-        var other = session.NearestOtherCreature()!;
+        var other = CreatureCommands.NearestOther(session)!;
 
         var status = CreatureCommands.BringOther(session);
         session.RunTicks(4);
