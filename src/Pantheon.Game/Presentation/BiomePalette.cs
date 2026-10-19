@@ -91,6 +91,9 @@ public sealed record BiomePalette
     /// <summary>Strength of the per-sample brightness variation (0 = flat colour).</summary>
     public required float ColorVariation { get; init; }
 
+    /// <summary>How the ground is textured (ADR-051).</summary>
+    public required GroundSettings Ground { get; init; }
+
     /// <summary>Parses and validates the palette content file.</summary>
     /// <param name="json">Text of <c>biome_palette.json</c>.</param>
     /// <returns>The validated palette.</returns>
@@ -132,6 +135,7 @@ public sealed record BiomePalette
     /// <exception cref="ArgumentException">A threshold is invalid.</exception>
     public void Validate()
     {
+        Ground.Validate();
         if (!(BeachMaxHeight > 0f) || !(SnowBlendRange > 0f) || !(DeepWaterDepth > 0f))
         {
             throw new ArgumentException("BeachMaxHeight, SnowBlendRange and DeepWaterDepth must be positive.");

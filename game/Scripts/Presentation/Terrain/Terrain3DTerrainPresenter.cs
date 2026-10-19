@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using Godot;
 using Pantheon.Game.Presentation;
@@ -23,7 +24,6 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
 
     // One region covers the default 1024-sample world; larger heightmaps are split across regions on import.
     private const int RegionSize = 1024;
-    private const float GroundTextureUvScale = 0.1f;
 
     private readonly Node3D _parent;
     private readonly Camera3D _camera;
@@ -60,9 +60,12 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
         terrain.Call("change_region_size", RegionSize);
         terrain.Set("vertex_spacing", field.Spacing);
         terrain.Call("set_camera", _camera);
-        terrain.Set("assets", CreateAssets());
+        terrain.Set("assets", CreateAssets(palette.Ground));
         var material = terrain.Get("material").AsGodotObject();
         material.Set("world_background", WorldBackgroundNone);
+
+        // Textures meet in softer edges than Terrain3D's default (ADR-051).
+        material.Call("set_shader_param", "blend_sharpness", 0.2f);
         UsePatchedShader(material);
         ImportMaps(terrain, field, palette);
 
@@ -103,26 +106,38 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
         material.Call("set_shader_override", shader);
     }
 
-    /// <summary>Imports the height map and the biome colour map; there is no control map, so texture 0 covers everything.</summary>
+    /// <summary>
+    /// Imports the height map, the control map that picks each sample's textures, and the biome
+    /// colours as a gentle tint over them (ADR-051).
+    /// </summary>
     private static void ImportMaps(Node3D terrain, TerrainField field, BiomePalette palette)
     {
         var size = field.Resolution;
         var heights = Image.CreateFromData(size, size, false, Image.Format.Rf, MemoryMarshal.AsBytes(field.Heights).ToArray());
-        var colors = Image.CreateFromData(size, size, false, Image.Format.Rgba8, TerrainColorizer.ComputeRgba(field, palette));
-        var images = new Godot.Collections.Array { heights, new Variant(), colors };
+        var control = Image.CreateFromData(size, size, false, Image.Format.Rf, MemoryMarshal.AsBytes(TerrainControl.Compute(field, palette).AsSpan()).ToArray());
+        var rgba = TerrainColorizer.ComputeRgba(field, palette);
+        TerrainControl.Tint(rgba, palette.Ground);
+        var colors = Image.CreateFromData(size, size, false, Image.Format.Rgba8, rgba);
+        var images = new Godot.Collections.Array { heights, control, colors };
         terrain.Get("data").AsGodotObject().Call("import_images", images, Vector3.Zero, 0f, 1f);
     }
 
-    /// <summary>One ground texture asset, tinted per sample by the colour map.</summary>
-    private static Resource CreateAssets()
+    /// <summary>The ground's textures, one asset for each kind, in the order of their ids.</summary>
+    private static Resource CreateAssets(GroundSettings ground)
     {
-        var texture = ClassDB.Instantiate(TextureAssetClass).As<Resource>();
-        texture.Set("name", "Ground");
-        texture.Set("albedo_texture", GroundTexture.Create());
-        texture.Set("uv_scale", GroundTextureUvScale);
-
         var assets = ClassDB.Instantiate(AssetsClass).As<Resource>();
-        assets.Call("set_texture", 0, texture);
+        foreach (var kind in Enum.GetValues<GroundKind>())
+        {
+            var maps = GroundTextures.Create(kind, ground);
+            var texture = ClassDB.Instantiate(TextureAssetClass).As<Resource>();
+            texture.Set("name", kind.ToString());
+            texture.Set("albedo_texture", maps.Albedo);
+            texture.Set("normal_texture", maps.Normal);
+            texture.Set("uv_scale", ground.UvScale);
+            texture.Set("detiling_rotation", kind == GroundKind.Rock ? 0f : 0.25f);
+            assets.Call("set_texture", (int)kind, texture);
+        }
+
         return assets;
     }
 }

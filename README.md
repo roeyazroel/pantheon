@@ -911,12 +911,15 @@ The island has every biome of §5 (ADR-038).
   - Volcanic ash is fertile but bare and full of stone.
   - Deserts yield little and dry out.
   - The tundra grows conifers.
-- **Seeing it:** each biome has its own colour, blending into its neighbours. The Book of the
-  World's World page counts the land by biome, and the F3 map's first layer shows each region's
-  biome.
+- **Seeing it:** each biome has its own ground (ADR-051): grass, forest floor, highland earth,
+  desert sand, tundra moss, swamp mud or volcanic ash, made in code with its own pattern and
+  relief, blending into its neighbours' over a few metres. Rock covers steep slopes, snow the
+  cold heights, and sand the land nearest the sea. The fallback renderer shows the biomes' colours
+  instead. The Book of the World's World page counts the land by biome, and the F3 map's first
+  layer shows each region's biome.
 
-The rules are in `game/Data/worldgen.json` (`Biomes` and `Landforms`) and the colours in
-`game/Data/biome_palette.json`.
+The rules are in `game/Data/worldgen.json` (`Biomes` and `Landforms`), and the colours and the
+ground's textures in `game/Data/biome_palette.json` (`Ground`).
 
 ## The land's life
 
@@ -1253,8 +1256,8 @@ Every sound is made by the game itself:
 - thunder and roars heard from across the island, where they happen;
 - the earthquake's rumble, fire, and the wind and rain where you look.
 
-The settings page (start screen or Esc) sets fullscreen, vertical sync, shadows, the render
-scale, the citizens shown, and the loudness of everything, the music, the effects and the wind and
+The settings page (start screen or Esc) sets fullscreen, vertical sync, shadows, the lighting
+effects (ambient occlusion and a soft glow), the render scale, the citizens shown, and the loudness of everything, the music, the effects and the wind and
 rain.
 
 ## World sizes

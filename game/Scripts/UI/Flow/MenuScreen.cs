@@ -166,6 +166,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         Toggle("Fullscreen", Settings.Fullscreen, on => Settings with { Fullscreen = on });
         Toggle("Vertical sync", Settings.VSync, on => Settings with { VSync = on });
         Toggle("Shadows", Settings.Shadows, on => Settings with { Shadows = on });
+        Toggle("Lighting effects", Settings.LightingEffects, on => Settings with { LightingEffects = on });
         Slide("Render scale", Settings.RenderScale, Pantheon.Game.Settings.GameSettings.MinRenderScale, value => Settings with { RenderScale = value });
         Slide("Citizens shown", Settings.Citizens, Pantheon.Game.Settings.GameSettings.MinCitizens, value => Settings with { Citizens = value });
         _column.AddChild(UiKit.Text("Fewer citizens take effect when the game next starts.", 13, UiKit.Muted));

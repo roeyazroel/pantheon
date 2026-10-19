@@ -738,12 +738,21 @@ keep it in 0..1. A missing,
   stress world.
 - `Camera/GodCameraController`: maps input (WASD, edge scroll, right-drag grab, wheel, Q/E,
   middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`.
+- The light (`Scenes/Main.tscn`, ADR-051): a procedural sky, the sun with soft shadows, ACES
+  tonemapping, screen-space ambient occlusion and a soft glow (both switched by the settings'
+  lighting effects), distance fog and a little contrast.
 - `Presentation/WorldPresenter`: rebuilds and syncs all world visuals:
   - `Terrain/ITerrainPresenter` with `Terrain3DTerrainPresenter` (primary) and
     `FallbackMeshTerrainPresenter` (fallback, logged and labelled with its reason), chosen by
     `TerrainPresenterFactory` (ADR-005). The Terrain3D adapter switches Terrain3D to a copy of
     its generated shader with bounds-safe region lookups and a colour lookup that also covers the
-    world's east and south edges (ADR-007, which amends ADR-005). The terrain streams its detail
+    world's east and south edges (ADR-007, which amends ADR-005). Since ADR-051 Terrain3D draws
+    nine ground textures made in code (`GroundTextures`: a pattern from seamless noise between two
+    colours, its height in the albedo's alpha, a normal map with roughness in its alpha), chosen
+    sample by sample by the control map `TerrainControl.Compute` paints in the core: the biome's
+    texture, blended into a neighbouring biome's over 6 m, with rock on steep slopes, snow on cold
+    heights or sand near the sea over it, each turned at random but rock. The biome colours tint
+    them gently (`TerrainControl.Tint`). The fallback keeps the vertex colours. The terrain streams its detail
     (§84, ADR-050): Terrain3D by its own clipmap, and the fallback by building every chunk from
     every second sample and rebuilding those near the camera from every sample, their borders
     matched to the coarse (`TerrainMeshBuilder.BuildChunk`'s `edgeStride`).

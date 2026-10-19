@@ -26,5 +26,25 @@
   "RockSlopeStart": 0.7,
   "RockSlopeFull": 1.4,
   "DeepWaterDepth": 18.0,
-  "ColorVariation": 0.05
+  "ColorVariation": 0.05,
+
+  // The ground's textures (spec section 61, ADR-051). Each is made in code from noise between its
+  // darker and lighter colour, with its own pattern (grass blades, leaf litter, pebbles, strata,
+  // ripples, drifts, moss, puddles, cinders) and a normal map. The biome colours above tint them by
+  // TintStrength; UvScale is how often they repeat (Terrain3D's UV scale).
+  "Ground": {
+    "Textures": {
+      "Grass": ["#355a22", "#a9b866"],
+      "ForestFloor": ["#2b3420", "#7d6642"],
+      "Earth": ["#5f4a33", "#9c8058"],
+      "Rock": ["#57524c", "#a39d93"],
+      "Sand": ["#bfa16b", "#ead9a8"],
+      "Snow": ["#cfd8e3", "#ffffff"],
+      "Moss": ["#5f6b4c", "#a2a684"],
+      "Mud": ["#2f2c1e", "#5e573a"],
+      "Ash": ["#26221f", "#5a524b"]
+    },
+    "TintStrength": 0.15,
+    "UvScale": 0.1
+  }
 }

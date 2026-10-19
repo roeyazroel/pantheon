@@ -5,10 +5,13 @@
 [ext_resource type="PackedScene" path="res://Scenes/UI/DebugOverlay.tscn" id="3_overlay"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_world"]
-sky_top_color = Color(0.29, 0.47, 0.72, 1)
-sky_horizon_color = Color(0.71, 0.79, 0.86, 1)
+sky_top_color = Color(0.2, 0.4, 0.71, 1)
+sky_horizon_color = Color(0.68, 0.78, 0.88, 1)
+sky_curve = 0.12
 ground_bottom_color = Color(0.09, 0.2, 0.28, 1)
-ground_horizon_color = Color(0.71, 0.79, 0.86, 1)
+ground_horizon_color = Color(0.68, 0.78, 0.88, 1)
+sun_angle_max = 20.0
+sun_curve = 0.08
 
 [sub_resource type="Sky" id="Sky_world"]
 sky_material = SubResource("ProceduralSkyMaterial_world")
@@ -19,11 +22,28 @@ sky = SubResource("Sky_world")
 ambient_light_source = 3
 ambient_light_energy = 0.8
 reflected_light_source = 2
-tonemap_mode = 2
+tonemap_mode = 3
+tonemap_exposure = 1.05
+tonemap_white = 6.0
+ssao_enabled = true
+ssao_radius = 2.5
+ssao_intensity = 1.6
+ssao_power = 1.4
+ssao_detail = 0.6
+ssao_light_affect = 0.15
+glow_enabled = true
+glow_intensity = 0.4
+glow_strength = 0.9
+glow_bloom = 0.04
+glow_blend_mode = 1
+glow_hdr_threshold = 1.1
 fog_enabled = true
 fog_light_color = Color(0.71, 0.79, 0.86, 1)
 fog_density = 0.00012
 fog_sky_affect = 0.0
+adjustment_enabled = true
+adjustment_contrast = 1.06
+adjustment_saturation = 0.95
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_root")
@@ -33,9 +53,10 @@ environment = SubResource("Environment_world")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.7880108, -0.4575257, 0.41195792, 0, 0.66913056, 0.74314487, -0.6156615, -0.58560616, 0.5272821, 0, 0, 0)
-light_color = Color(1, 0.95, 0.86, 1)
-light_energy = 1.15
+light_color = Color(1, 0.94, 0.84, 1)
+light_energy = 1.25
 shadow_enabled = true
+shadow_blur = 1.5
 directional_shadow_max_distance = 900.0
 
 [node name="World" type="Node3D" parent="."]

@@ -66,6 +66,7 @@ silently:
 | [ADR-048](ADR-048-structural-integrity-and-debris.md) | Structural integrity, flood resistance and debris | Accepted |
 | [ADR-049](ADR-049-people-that-look-and-move-like-people.md) | People that look and move like people | Accepted |
 | [ADR-050](ADR-050-world-streaming.md) | World streaming | Accepted |
+| [ADR-051](ADR-051-ground-textures-and-light.md) | Ground textures and light | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

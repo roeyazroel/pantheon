@@ -9,9 +9,10 @@ public sealed class GameSettingsTests
     [Fact]
     public void Settings_RoundTrip_ThroughTheirFile()
     {
-        var settings = new GameSettings { Fullscreen = true, VSync = false, Shadows = false, RenderScale = 0.75f, Citizens = 0.5f, MasterVolume = 0.3f, MusicVolume = 0f, EffectsVolume = 1f, AmbienceVolume = 0.2f };
+        var settings = new GameSettings { Fullscreen = true, VSync = false, Shadows = false, LightingEffects = false, RenderScale = 0.75f, Citizens = 0.5f, MasterVolume = 0.3f, MusicVolume = 0f, EffectsVolume = 1f, AmbienceVolume = 0.2f };
 
         Assert.Equal(settings, GameSettings.Parse(settings.Serialize()));
+        Assert.True(new GameSettings().LightingEffects, "the lighting effects are on unless turned off");
     }
 
     [Theory]

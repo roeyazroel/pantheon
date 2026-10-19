@@ -16,7 +16,8 @@ internal static class SettingsApplier
     /// Whether the game is starting: then vsync is only turned off, never on, so the engine's own
     /// <c>--disable-vsync</c> for measuring still holds.
     /// </param>
-    public static void Apply(GameSettings settings, Viewport viewport, DirectionalLight3D? sun, bool startup)
+    /// <param name="environment">The world's environment, for the lighting effects.</param>
+    public static void Apply(GameSettings settings, Viewport viewport, DirectionalLight3D? sun, bool startup, Godot.Environment? environment = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(viewport);
@@ -34,6 +35,12 @@ internal static class SettingsApplier
         if (sun is not null)
         {
             sun.ShadowEnabled = settings.Shadows;
+        }
+
+        if (environment is not null)
+        {
+            environment.SsaoEnabled = settings.LightingEffects;
+            environment.GlowEnabled = settings.LightingEffects;
         }
 
         viewport.Scaling3DMode = settings.RenderScale < 1f ? Viewport.Scaling3DModeEnum.Fsr : Viewport.Scaling3DModeEnum.Bilinear;
