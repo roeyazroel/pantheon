@@ -121,8 +121,9 @@ flowchart LR
   - **No Creature defended itself:** at 0.36 hardly any Creature was brave and protective enough
     in ten games. The threshold is now 0.3.
   - **Leak warning at exit:** Godot sometimes warns that 2–6 objects were leaked at exit, in about
-    one run in four, also without any of this part's options and in part 16's captures. Runs with
-    `--verbose` never showed it. It is not yet traced.
+    one run in four, also without any of this part's options. Part 15's build does the same (one
+    of eight plain runs, against one of eight for this build), so it predates parts 16 and 17. Runs
+    with `--verbose` never showed it. It is not yet traced.
 
 ## Tasks
 

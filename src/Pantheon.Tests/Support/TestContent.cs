@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using Pantheon.Domain.Ecology;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World.Generation;
 using Pantheon.Game;
@@ -38,7 +40,23 @@ internal static class TestContent
 
         // Test worlds keep the land of the worlds before rivers (ADR-022); RiverWorldGen has them.
         Hydrology = null,
+
+        // And the four biomes of the worlds before §5's others (ADR-038); BiomeWorldGen has them all.
+        Biomes = FourBiomes,
+        Landforms = null,
     };
+
+    /// <summary>The four biomes every world had before ADR-038, as shipped then.</summary>
+    public static IReadOnlyList<BiomeRule> FourBiomes { get; } =
+    [
+        new() { Biome = Biome.Sea, MaxElevation = 0f, BaseFertility = 0f, BaseVegetation = 0f },
+        new() { Biome = Biome.Highland, MinElevation = 70f, BaseFertility = 0.25f, BaseVegetation = 0.2f },
+        new() { Biome = Biome.Forest, MinMoisture = 0.55f, BaseFertility = 0.6f, BaseVegetation = 0.9f },
+        new() { Biome = Biome.Grassland, BaseFertility = 0.9f, BaseVegetation = 0.5f },
+    ];
+
+    /// <summary><see cref="RiverWorldGen"/> with every biome of §5 (ADR-038).</summary>
+    public static WorldGenSettings BiomeWorldGen => RiverWorldGen with { Biomes = Shipped.WorldGen.Biomes, Landforms = Shipped.WorldGen.Landforms };
 
     /// <summary><see cref="SmallWorldGen"/> with the shipped rivers and lakes (ADR-022).</summary>
     public static WorldGenSettings RiverWorldGen => SmallWorldGen with { Hydrology = Shipped.WorldGen.Hydrology };

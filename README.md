@@ -832,6 +832,34 @@ in the top bar and the book, and remembered in the history.
   everyone grows afraid. When the whole island stays parched, the council is called. And when a
   fifth of the people are on the road, the world remembers it.
 
+## The island's biomes
+
+The island has every biome of §5 (ADR-038).
+
+- **What the climate decides:**
+  - grassland and forest;
+  - highland on the heights;
+  - tundra, the cold band below them;
+  - desert where it is hot and dry;
+  - swamp where it is wet and low.
+- **What the place decides:**
+  - islands off the main one;
+  - coasts, the low land by the sea;
+  - river valleys, the low land along rivers and lakes;
+  - the dark volcanic land around the island's highest peak, which is the volcano.
+- **What each biome does:** its fertility and growth set what the land yields, where villages
+  are founded, how much wood and stone it holds, and how readily it burns.
+  - River valleys are the richest land, and villages crowd into them.
+  - Volcanic ash is fertile but bare and full of stone.
+  - Deserts yield little and dry out.
+  - The tundra grows conifers.
+- **Seeing it:** each biome has its own colour, blending into its neighbours. The Book of the
+  World's World page counts the land by biome, and the F3 map's first layer shows each region's
+  biome.
+
+The rules are in `game/Data/worldgen.json` (`Biomes` and `Landforms`) and the colours in
+`game/Data/biome_palette.json`.
+
 ## The land's life
 
 - **Harm.** Fires, floods, earthquakes and lightning harm the life of the land they reach. Harmed
@@ -1428,7 +1456,8 @@ start with no prophets or elders; their villages choose elders at once. Saves fr
 start with nobody sick and no great event, and set their first eclipse when loaded. Saves from before part 15
 find their beast's lair and set their first anomaly when loaded. In saves from before part 16
 every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
-start with middling courage, protectiveness, jealousy and playfulness. Saves from before part 13
+start with middling courage, protectiveness, jealousy and playfulness. Worlds from before part 18
+keep their four biomes. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
@@ -1494,16 +1523,17 @@ and the definition of done.
   cannot be patched, a warning is logged; use `--terrain=fallback` on such machines.
 - macOS may block the unsigned Terrain3D binaries until they are removed from quarantine. See
   Terrain3D's platform documentation.
-- Export presets are not set up yet. The game reads `res://Data/*.json` at startup, so every
-  export must include those files.
+- The game reads `res://Data/*.json` at startup, so every export must include those files (the
+  presets in `game/export_presets.cfg` do).
+- About one run in four, Godot warns at exit that a few ObjectDB instances were leaked. It happens
+  since at least part 15 and never with `--verbose`; it is harmless and not yet traced.
 - Four gods crowd the small island: a player who does nothing keeps only a few followers after ten
   minutes, and Seren the Guardian is the strongest AI god (kindness converts better than fear).
 - The whole island is built at once rather than streamed in pieces: a huge world's heightfield
   takes 1.1 s to build. No world is larger than 12 km or holds more than eight gods.
 - A history record names two winners, so a pantheon of three or four is told by its first two.
 - Snow does not slow travel, grass and trees keep their colour through the year, and pollution
-  does not depend on a village's technology. Tsunamis, tornadoes, volcanoes, landslides, meteors,
-  crop disease and locusts are not in the game yet.
+  does not depend on a village's technology. Biomes do not change how fast anyone walks.
 - The representative citizens are presentation only: they show what the settlement's numbers
   say, but nothing can interact with an individual citizen until a later milestone adds full
   (Tier 3) agents ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).

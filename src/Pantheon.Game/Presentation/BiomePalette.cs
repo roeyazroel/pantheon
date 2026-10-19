@@ -22,6 +22,27 @@ public sealed record BiomePalette
     /// <summary>Highland ground colour.</summary>
     public required RgbColor Highland { get; init; }
 
+    /// <summary>Desert sand colour (ADR-038).</summary>
+    public required RgbColor Desert { get; init; }
+
+    /// <summary>Tundra moss colour (ADR-038).</summary>
+    public required RgbColor Tundra { get; init; }
+
+    /// <summary>Swamp colour (ADR-038).</summary>
+    public required RgbColor Swamp { get; init; }
+
+    /// <summary>Coastal dune grass colour (ADR-038).</summary>
+    public required RgbColor Coast { get; init; }
+
+    /// <summary>River valley colour (ADR-038).</summary>
+    public required RgbColor RiverValley { get; init; }
+
+    /// <summary>Island grass colour (ADR-038).</summary>
+    public required RgbColor Island { get; init; }
+
+    /// <summary>Volcanic ash colour (ADR-038).</summary>
+    public required RgbColor Volcanic { get; init; }
+
     /// <summary>Colour of deep sea floor.</summary>
     public required RgbColor SeaFloor { get; init; }
 
@@ -64,6 +85,9 @@ public sealed record BiomePalette
     /// <summary>Water depth (metres) at which the sea floor reaches <see cref="SeaFloor"/>.</summary>
     public required float DeepWaterDepth { get; init; }
 
+    /// <summary>Metres over which neighbouring land biomes' colours blend into each other (ADR-038); 0 draws hard borders.</summary>
+    public float BiomeBlendMetres { get; init; }
+
     /// <summary>Strength of the per-sample brightness variation (0 = flat colour).</summary>
     public required float ColorVariation { get; init; }
 
@@ -95,6 +119,13 @@ public sealed record BiomePalette
         Biome.Grassland => Grassland,
         Biome.Forest => Forest,
         Biome.Highland => Highland,
+        Biome.Desert => Desert,
+        Biome.Tundra => Tundra,
+        Biome.Swamp => Swamp,
+        Biome.Coast => Coast,
+        Biome.RiverValley => RiverValley,
+        Biome.Island => Island,
+        Biome.Volcanic => Volcanic,
     };
 
     /// <summary>Throws when a threshold is out of range.</summary>
@@ -109,6 +140,11 @@ public sealed record BiomePalette
         if (!(RockSlopeStart >= 0f && RockSlopeStart < RockSlopeFull))
         {
             throw new ArgumentException("RockSlopeStart must be non-negative and below RockSlopeFull.");
+        }
+
+        if (!(BiomeBlendMetres is >= 0f and <= 64f))
+        {
+            throw new ArgumentException("BiomeBlendMetres must lie between 0 and 64.");
         }
 
         if (!(ColorVariation is >= 0f and <= 0.5f))

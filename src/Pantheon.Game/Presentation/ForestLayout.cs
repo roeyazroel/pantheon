@@ -98,7 +98,7 @@ public static class ForestLayout
         var (column, row) = grid.GetCoordinates(region.Id);
         var size = grid.RegionSize;
         var seed = world.Seed.Value;
-        var conifers = region.Biome is Biome.Forest or Biome.Highland ? 0.8f : 0.2f;
+        var conifers = region.Biome is Biome.Forest or Biome.Highland or Biome.Tundra ? 0.8f : region.Biome is Biome.Volcanic ? 0.5f : 0.2f;
         var count = TreeCount(grid, region);
         for (var slot = 0; slot < count; slot++)
         {

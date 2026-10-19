@@ -18,9 +18,13 @@ public sealed class BiomeClassifierTests
     [InlineData(70f, 0.3f, 0.9f, Biome.Highland)]
     [InlineData(150f, 0.1f, 0.1f, Biome.Highland)]
     [InlineData(20f, 0.6f, 0.55f, Biome.Forest)]
-    [InlineData(0f, 0.7f, 0.95f, Biome.Forest)]
-    [InlineData(20f, 0.6f, 0.54f, Biome.Grassland)]
+    [InlineData(0f, 0.7f, 0.95f, Biome.Swamp)]
+    [InlineData(10f, 0.7f, 0.95f, Biome.Forest)]
+    [InlineData(20f, 0.59f, 0.54f, Biome.Grassland)]
     [InlineData(69.9f, 0.4f, 0.1f, Biome.Grassland)]
+    [InlineData(50f, 0.3f, 0.6f, Biome.Tundra)]
+    [InlineData(20f, 0.65f, 0.3f, Biome.Desert)]
+    [InlineData(20f, 0.65f, 0.4f, Biome.Grassland)]
     public void Classifier_UsesShippedRulesInOrder(float elevation, float temperature, float moisture, Biome expected)
     {
         Assert.Equal(expected, Shipped.Classify(elevation, temperature, moisture));

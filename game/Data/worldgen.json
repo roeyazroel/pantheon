@@ -26,13 +26,42 @@
     "CoastalMoistureBonus": 0.15,
     "CoastalMoistureRange": 25.0
   },
-  // Ordered: the first matching rule wins and the last rule must have no bounds.
+  // Ordered: the first matching rule wins and the last rule must have no bounds. The climate decides
+  // these biomes (spec section 5, ADR-038): tundra is the cold land below the heights, desert hot dry
+  // land, swamp wet low land.
   "Biomes": [
     { "Biome": "Sea", "MaxElevation": 0.0, "BaseFertility": 0.0, "BaseVegetation": 0.0 },
     { "Biome": "Highland", "MinElevation": 70.0, "BaseFertility": 0.25, "BaseVegetation": 0.2 },
+    { "Biome": "Tundra", "MaxTemperature": 0.4, "BaseFertility": 0.3, "BaseVegetation": 0.35 },
+    { "Biome": "Desert", "MinTemperature": 0.56, "MaxMoisture": 0.4, "BaseFertility": 0.25, "BaseVegetation": 0.1 },
+    { "Biome": "Swamp", "MinMoisture": 0.8, "MaxElevation": 8.0, "BaseFertility": 0.5, "BaseVegetation": 0.85 },
     { "Biome": "Forest", "MinMoisture": 0.55, "BaseFertility": 0.6, "BaseVegetation": 0.9 },
     { "Biome": "Grassland", "BaseFertility": 0.9, "BaseVegetation": 0.5 }
   ],
+  // Biomes that place decides (ADR-038), marked after the climate's and the rivers, in this order:
+  // every land mass but the largest under IslandMaxArea square metres is an island; land within
+  // VolcanicMetres of the highest land region's centre is volcanic when that region rises
+  // VolcanoMinElevation metres (keep it equal to the volcano's MinElevation in disasters.json); land
+  // within ValleyMetres of a river or lake and no higher than ValleyMaxHeight is a river valley, where
+  // it was one of ValleyOver; land within CoastMetres of the sea and no higher than CoastMaxHeight is
+  // coast, where it was one of CoastOver. Traits give their fertility and vegetation.
+  "Landforms": {
+    "IslandMaxArea": 120000.0,
+    "CoastMetres": 32.0,
+    "CoastMaxHeight": 10.0,
+    "CoastOver": [ "Grassland", "Forest" ],
+    "ValleyMetres": 30.0,
+    "ValleyMaxHeight": 40.0,
+    "ValleyOver": [ "Grassland", "Forest", "Desert", "Tundra" ],
+    "VolcanoMinElevation": 60.0,
+    "VolcanicMetres": 140.0,
+    "Traits": [
+      { "Biome": "Coast", "BaseFertility": 0.65, "BaseVegetation": 0.35 },
+      { "Biome": "RiverValley", "BaseFertility": 1.0, "BaseVegetation": 0.65 },
+      { "Biome": "Island", "BaseFertility": 0.7, "BaseVegetation": 0.6 },
+      { "Biome": "Volcanic", "BaseFertility": 0.8, "BaseVegetation": 0.25 }
+    ]
+  },
   // Up to Count settlements on the best habitable regions, at least MinimumSpacing regions apart
   // (with the farmland radius of 2, a spacing of 5 keeps their farmland apart).
   "StartingSettlement": {
@@ -100,7 +129,14 @@
     "Biomes": [
       { "Biome": "Grassland", "Forest": 0.8, "Stone": 0.15 },
       { "Biome": "Forest", "Forest": 1.1, "Stone": 0.2 },
-      { "Biome": "Highland", "Forest": 1.6, "Stone": 0.75 }
+      { "Biome": "Highland", "Forest": 1.6, "Stone": 0.75 },
+      { "Biome": "Desert", "Forest": 1.0, "Stone": 0.3 },
+      { "Biome": "Tundra", "Forest": 1.4, "Stone": 0.4 },
+      { "Biome": "Swamp", "Forest": 0.9, "Stone": 0.05 },
+      { "Biome": "Coast", "Forest": 0.6, "Stone": 0.1 },
+      { "Biome": "RiverValley", "Forest": 0.9, "Stone": 0.1 },
+      { "Biome": "Island", "Forest": 1.0, "Stone": 0.2 },
+      { "Biome": "Volcanic", "Forest": 0.8, "Stone": 0.9 }
     ],
     "PatchSize": 500.0,
     "PatchStrength": 0.6

@@ -52,4 +52,7 @@ public sealed record WorldGenSettings
     /// before version 24 was.
     /// </summary>
     public ResourceSettings? Resources { get; init; }
+
+    /// <summary>The biomes place decides: islands, coasts, river valleys and volcanic land (ADR-038); <c>null</c> for none.</summary>
+    public LandformSettings? Landforms { get; init; }
 }

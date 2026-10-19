@@ -55,6 +55,12 @@ public static class TerrainGenerator
             biomes[index] = classifier.Classify(heights[index], temperature[index], moisture[index]);
         }
 
+        // Islands, volcanic land, river valleys and coasts are where they are, whatever the climate (ADR-038).
+        if (settings.Landforms is { } landforms)
+        {
+            LandformMarker.Mark(landforms, settings.RegionsPerSide, resolution, settings.VertexSpacing, heights, hydrology, biomes);
+        }
+
         return new TerrainField(resolution, settings.VertexSpacing, heights, moisture, temperature, biomes, hydrology);
     }
 

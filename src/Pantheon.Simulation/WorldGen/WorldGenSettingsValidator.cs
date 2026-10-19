@@ -39,6 +39,11 @@ public static class WorldGenSettingsValidator
             ValidateResources(resources, errors);
         }
 
+        if (settings.Landforms is { } landforms)
+        {
+            ValidateLandforms(settings, landforms, errors);
+        }
+
         if (errors.Count > 0)
         {
             throw new ArgumentException("Invalid world generation settings:" + Environment.NewLine + " - " +
@@ -103,6 +108,35 @@ public static class WorldGenSettingsValidator
         foreach (var name in settlement.Names)
         {
             Require(!string.IsNullOrWhiteSpace(name), "StartingSettlement.Names must not contain blank names.", errors);
+        }
+    }
+
+    /// <summary>
+    /// Checks the landforms (ADR-038): distances and areas not negative; traits for coast, river
+    /// valley, island and volcanic land and for nothing else; no climate rule for them; and coast and
+    /// valleys replacing only land.
+    /// </summary>
+    private static void ValidateLandforms(WorldGenSettings settings, LandformSettings landforms, List<string> errors)
+    {
+        Domain.Ecology.Biome[] kinds = [Domain.Ecology.Biome.Coast, Domain.Ecology.Biome.RiverValley, Domain.Ecology.Biome.Island, Domain.Ecology.Biome.Volcanic];
+        Require(landforms.IslandMaxArea >= 0f && landforms.CoastMetres >= 0f && landforms.CoastMaxHeight >= 0f && landforms.ValleyMetres >= 0f
+            && landforms.ValleyMaxHeight >= 0f && landforms.VolcanoMinElevation >= 0f && landforms.VolcanicMetres >= 0f,
+            "Landforms areas, distances and heights must not be negative.", errors);
+        var traits = landforms.Traits ?? [];
+        Require(traits.Count == kinds.Length && Array.TrueForAll(kinds, k => System.Linq.Enumerable.Count(traits, t => t is not null && t.Biome == k) == 1),
+            "Landforms.Traits must list Coast, RiverValley, Island and Volcanic, each once.", errors);
+        foreach (var trait in traits)
+        {
+            Require(trait is null || (trait.BaseFertility is >= 0f and <= 1f && trait.BaseVegetation is >= 0f and <= 1f),
+                "Landforms.Traits fertility and vegetation must be between 0 and 1.", errors);
+        }
+
+        Require(!System.Linq.Enumerable.Any(settings.Biomes, rule => rule is not null && Array.IndexOf(kinds, rule.Biome) >= 0),
+            "Biomes must not give climate rules to the landforms Coast, RiverValley, Island or Volcanic.", errors);
+        foreach (var (name, over) in new[] { ("CoastOver", landforms.CoastOver), ("ValleyOver", landforms.ValleyOver) })
+        {
+            Require(over is not null && System.Linq.Enumerable.All(over, b => Enum.IsDefined(b) && b != Domain.Ecology.Biome.Sea),
+                $"Landforms.{name} must list known land biomes.", errors);
         }
     }
 

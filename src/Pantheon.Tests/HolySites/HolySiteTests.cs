@@ -42,7 +42,7 @@ public sealed class HolySiteTests
         Assert.All(world.HolySites, site => Assert.All(world.Settlements, s => Assert.True(Chebyshev(grid, site.RegionId, s.RegionId) >= 3)));
         Assert.All(world.HolySites, a => Assert.All(world.HolySites.Where(b => b != a), b => Assert.True(Chebyshev(grid, a.RegionId, b.RegionId) >= Rules.MinimumSpacing)));
         var peak = world.HolySites.Single(s => s.Kind == HolySiteKind.SacredPeak);
-        Assert.Equal(Biome.Highland, grid.Cells[peak.RegionId].Biome);
+        Assert.Contains(grid.Cells[peak.RegionId].Biome, new[] { Biome.Highland, Biome.Volcanic });
         Assert.Equal(Biome.Forest, grid.Cells[world.HolySites.Single(s => s.Kind == HolySiteKind.AncientGrove).RegionId].Biome);
         Assert.StartsWith("The Sacred Peak of ", peak.Name, StringComparison.Ordinal);
         Assert.All(world.HolySites, site => Assert.Null(site.KeeperGodId));

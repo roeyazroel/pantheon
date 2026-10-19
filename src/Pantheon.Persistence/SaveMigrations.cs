@@ -148,6 +148,9 @@ internal static class SaveMigrations
             case 27:
                 TemperamentSaveMigration.UpgradeFrom27(root);
                 break;
+            case 28:
+                LandformSaveMigration.UpgradeFrom28(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

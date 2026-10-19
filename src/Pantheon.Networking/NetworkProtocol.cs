@@ -15,9 +15,9 @@ public static class NetworkProtocol
     /// version 12 (part 13) the roads and the land's timber and stone, version 13 (part 14) the great
     /// events and the plague, version 14 (part 15) the ancient beast and the anomaly, version 15
     /// (part 16) the gods each god knows and its goals, version 16 (part 17) Creatures' courage,
-    /// protectiveness, jealousy and playfulness.
+    /// protectiveness, jealousy and playfulness, version 17 (part 18) the biomes of §5 and the landforms.
     /// </summary>
-    public const int Version = 16;
+    public const int Version = 17;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

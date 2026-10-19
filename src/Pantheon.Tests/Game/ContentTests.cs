@@ -20,7 +20,8 @@ public sealed class ContentTests
         Assert.Equal(1024, content.WorldGen.HeightmapResolution);
         Assert.Equal(32, content.WorldGen.RegionsPerSide);
         Assert.True(content.WorldGen.Biomes[^1].IsCatchAll());
-        Assert.Equal(new[] { Biome.Sea, Biome.Highland, Biome.Forest, Biome.Grassland }, content.WorldGen.Biomes.Select(rule => rule.Biome));
+        Assert.Equal(new[] { Biome.Sea, Biome.Highland, Biome.Tundra, Biome.Desert, Biome.Swamp, Biome.Forest, Biome.Grassland }, content.WorldGen.Biomes.Select(rule => rule.Biome));
+        Assert.Equal(new[] { Biome.Coast, Biome.RiverValley, Biome.Island, Biome.Volcanic }, content.WorldGen.Landforms!.Traits.Select(t => t.Biome));
         Assert.NotEmpty(content.WorldGen.StartingSettlement.Names);
         Assert.Equal(10, content.SettlementRules.StepIntervalTicks);
     }
@@ -60,6 +61,9 @@ public sealed class ContentTests
     [InlineData("disasters.json", "\"Transmission\": 0.05", "\"Transmission\": 1.5", "GreatEvents.Plague.Transmission")]
     [InlineData("disasters.json", "\"FirstMaxSeconds\": 2100.0", "\"FirstMaxSeconds\": 600.0", "longest waits must be at least its shortest")]
     [InlineData("disasters.json", "{ \"Kind\": \"Eclipse\", \"Names\"", "{ \"Kind\": \"Plague\", \"Names\"", "GreatEvents.Names must list known kinds, each once")]
+    [InlineData("worldgen.json", "\"CoastMetres\": 32.0", "\"CoastMetres\": -4.0", "Landforms areas, distances and heights")]
+    [InlineData("worldgen.json", "\"VolcanoMinElevation\": 60.0", "\"VolcanoMinElevation\": 50.0", "the volcano in disasters.json needs 60")]
+    [InlineData("worldgen.json", "{ \"Biome\": \"Island\", \"BaseFertility\": 0.7", "{ \"Biome\": \"Coast\", \"BaseFertility\": 0.7", "Landforms.Traits must list Coast, RiverValley, Island and Volcanic")]
     [InlineData("god_ai.json", "\"Boost\": 2.0", "\"Boost\": 0.5", "Planning.Boost")]
     [InlineData("god_ai.json", "\"Doubt\": 0.3", "\"Doubt\": 1.3", "Planning.Doubt")]
     [InlineData("diplomacy.json", "\"SharedAdherence\": 0.05", "\"SharedAdherence\": 0.0", "Acquaintance.SharedAdherence")]

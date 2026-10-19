@@ -278,9 +278,15 @@ files and compiled assemblies and fails when either rule is broken.
   4. With `Hydrology` set, rivers and lakes are found and cut into the land (ADR-022):
      `WorldGen/FlowGrid` routes water by a priority flood, `HydrologyGenerator` finds the lakes and
      rivers and `ChannelCarver` cuts the channels; the result is the field's `HydrologyMap`.
-  5. Each sample is classified by data-driven `BiomeRule`s (first match wins).
-- `WorldGen/RegionBuilder` aggregates samples per region (means plus majority biome) and derives
-  fertility and vegetation; `ResourceFounder` lays the forests and stone from the biomes and the
+  5. Each sample is classified by data-driven `BiomeRule`s (first match wins): the climate's
+     biomes, including tundra, desert and swamp (ADR-038).
+  6. With `Landforms` set, `WorldGen/LandformMarker` marks the biomes place decides, in order:
+     islands, the volcanic land around the highest land region (the one `HazardModel.FindVolcano`
+     takes), river valleys and coasts (ADR-038).
+- `WorldGen/RegionBuilder` aggregates samples per region (means plus majority biome; with
+  landforms, land when most samples are land and then its most common land biome) and derives
+  fertility and vegetation from the biome's traits (`RegionBuilder.Traits`: its climate rule or its
+  landform traits); `ResourceFounder` lays the forests and stone from the biomes and the
   seed's noise (ADR-033). `SettlementFounder.FoundAll` places up to `Count` settlements (8 on a
   small island, 20 or 40 on larger ones) on
   the best habitable regions, at least `MinimumSpacing` regions apart so their farmland never
@@ -416,7 +422,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (16 since ADR-037, whose Creatures carry their new traits;
+- `NetworkProtocol`: the protocol version (17 since ADR-038, whose regions and generation carry the
+  new biomes and landforms; 16 since ADR-037, whose Creatures carry their new traits;
   15 since ADR-036, whose Gods section carries the gods
   each knows and its goals; 14 since ADR-035, whose GreatEvents section carries the
   beast; 13 since ADR-034, which added the GreatEvents section; 12
@@ -481,7 +488,8 @@ starts no great event and sets the first eclipse on the first step. Version 25 �
 and gives the events under way no place. Version 26 → 27 (`PlanSaveMigration`) has every god know
 every other, hold no goal and plan on its next turn; `PlanIntegrity` checks known gods and goals.
 Version 27 → 28 (`TemperamentSaveMigration`) gives every Creature 0.5 of courage, protectiveness,
-jealousy and playfulness. A missing,
+jealousy and playfulness. Version 28 → 29 (`LandformSaveMigration`) gives the generation no
+landforms, so the terrain grows as it was. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -2049,11 +2057,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 28 (current)
+    alt version 29 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 27
+    else versions 1 to 28
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 28, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament)
+        Mig-->>Save: JsonObject at version 29, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
@@ -2071,7 +2079,8 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     Seed["WorldSeed + WorldGenSettings"] --> TG["TerrainGenerator<br/>FastNoiseLite layers"]
-    TG --> TF["TerrainField<br/>height / moisture / temperature / biome"]
+    TG --> LM["LandformMarker<br/>islands, volcanic land, valleys, coasts"]
+    LM --> TF["TerrainField<br/>height / moisture / temperature / biome"]
     TF --> RB["RegionBuilder<br/>32x32 regions"]
     RB --> SF["SettlementFounder"]
     SF --> WS["WorldState"]
@@ -2082,7 +2091,10 @@ flowchart TD
 ```
 
 Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 × 32 regions of
-64 m, sea level at 0 m. The biome set is Sea plus three land biomes: Grassland, Forest and Highland.
+64 m, sea level at 0 m. The biomes are Sea and §5's land biomes: Grassland, Forest, Highland,
+Tundra, Desert and Swamp by climate, and Coast, River Valley, Island and Volcanic by place
+(ADR-038). `TerrainColorizer` gives each its colour from `biome_palette.json` and blends
+neighbouring land biomes over `BiomeBlendMetres` with a sliding box filter.
 
 ## Determinism
 

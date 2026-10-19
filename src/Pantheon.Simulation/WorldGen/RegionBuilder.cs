@@ -40,7 +40,7 @@ public static class RegionBuilder
             for (var column = 0; column < regionsPerSide; column++)
             {
                 var id = (row * regionsPerSide) + column;
-                cells.Add(BuildRegion(field, classifier, id, column * samplesPerRegion, row * samplesPerRegion, samplesPerRegion, settings.Hydrology?.FullWaterShare ?? 1f));
+                cells.Add(BuildRegion(field, classifier, settings.Landforms, id, column * samplesPerRegion, row * samplesPerRegion, samplesPerRegion, settings.Hydrology?.FullWaterShare ?? 1f));
             }
         }
 
@@ -57,7 +57,7 @@ public static class RegionBuilder
     /// Averages the climate of one block of samples and derives fertility and vegetation. Ground
     /// under a river or lake is not land; the share of it waters the region (ADR-022).
     /// </summary>
-    private static RegionState BuildRegion(TerrainField field, BiomeClassifier classifier, int id, int startX, int startZ, int size, float fullWaterShare)
+    private static RegionState BuildRegion(TerrainField field, BiomeClassifier classifier, LandformSettings? landforms, int id, int startX, int startZ, int size, float fullWaterShare)
     {
         var heights = field.Heights;
         var moisture = field.Moisture;
@@ -95,8 +95,8 @@ public static class RegionBuilder
         var meanMoisture = (float)(moistureSum / sampleCount);
         var meanTemperature = (float)(temperatureSum / sampleCount);
         var landFraction = (float)(landSamples / sampleCount);
-        var biome = MajorityBiome(biomeCounts);
-        var rule = classifier.GetRule(biome);
+        var biome = landforms is null ? MajorityBiome(biomeCounts) : MajorityLandBiome(biomeCounts);
+        var rule = Traits(classifier, landforms, biome);
         var vegetation = ComputeVegetation(rule, meanMoisture, landFraction);
 
         return new RegionState
@@ -120,6 +120,52 @@ public static class RegionBuilder
             // The land starts with as many wild animals as its cover holds (ADR-028).
             Wildlife = biome == Biome.Sea ? 0f : SimMath.Clamp01(vegetation),
         };
+    }
+
+    /// <summary>
+    /// With landforms, the land is split among many biomes, so the sea would win mixed coastal regions:
+    /// a region is sea only when most of its samples are sea, and land takes its most common land
+    /// biome (ADR-038). Ties go to the lowest enum value.
+    /// </summary>
+    private static Biome MajorityLandBiome(ReadOnlySpan<int> counts)
+    {
+        var sea = counts[(int)Biome.Sea];
+        var land = 0;
+        var best = -1;
+        for (var i = 0; i < counts.Length; i++)
+        {
+            if (i == (int)Biome.Sea)
+            {
+                continue;
+            }
+
+            land += counts[i];
+            if (best < 0 || counts[i] > counts[best])
+            {
+                best = i;
+            }
+        }
+
+        return LandformMarker.IsLand(sea, land) && best >= 0 && counts[best] > 0 ? (Biome)best : Biome.Sea;
+    }
+
+    /// <summary>The base traits of a biome: its climate rule, or its landform traits (ADR-038).</summary>
+    /// <param name="classifier">The climate rules.</param>
+    /// <param name="landforms">Landform settings, if any.</param>
+    /// <param name="biome">The biome.</param>
+    /// <returns>A rule with its base fertility and vegetation.</returns>
+    public static BiomeRule Traits(BiomeClassifier classifier, LandformSettings? landforms, Biome biome)
+    {
+        ArgumentNullException.ThrowIfNull(classifier);
+        foreach (var traits in landforms?.Traits ?? [])
+        {
+            if (traits.Biome == biome)
+            {
+                return new BiomeRule { Biome = biome, BaseFertility = traits.BaseFertility, BaseVegetation = traits.BaseVegetation };
+            }
+        }
+
+        return classifier.GetRule(biome);
     }
 
     /// <summary>Most common biome. Ties go to the lowest enum value, which keeps results deterministic.</summary>

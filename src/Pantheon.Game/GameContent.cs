@@ -110,6 +110,14 @@ public sealed record GameContent(WorldGenSettings WorldGen, SettlementRules Sett
         MiracleBook? book = null;
         Check(ContentJson.MiraclesFileName, () => book = new MiracleBook(catalog));
         CheckAcrossFiles(pantheon, creatures, godAi, domains, book!);
+        Check(ContentJson.WorldGenFileName, () =>
+        {
+            // The volcanic land must lie around the volcano the hazards find (ADR-038).
+            if (worldGen.Landforms is { } landforms && disasters.Hazards.Volcano.MinElevation != landforms.VolcanoMinElevation)
+            {
+                throw new ArgumentException($"Landforms.VolcanoMinElevation is {landforms.VolcanoMinElevation}, but the volcano in {ContentJson.DisastersFileName} needs {disasters.Hazards.Volcano.MinElevation}.");
+            }
+        });
         return new GameContent(worldGen, rules, divine, book!, pantheon, creatures, godAi, diplomacy, weather, disasters, migration, history, domains, holySites, water, society) { Fingerprint = FingerprintOf(files), Sizes = sizes, Ecology = ecology };
     }
 

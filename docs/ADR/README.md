@@ -53,6 +53,7 @@ silently:
 | [ADR-035](ADR-035-the-ancient-beast-and-the-magical-anomaly.md) | The ancient beast and the magical anomaly | Accepted |
 | [ADR-036](ADR-036-known-gods-and-the-gods-long-term-plans.md) | Known gods and the gods' long-term plans | Accepted |
 | [ADR-037](ADR-037-creature-temperament.md) | Creature temperament: courage, protectiveness, jealousy and playfulness | Accepted |
+| [ADR-038](ADR-038-the-biomes-of-the-world.md) | The biomes of the world | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier
