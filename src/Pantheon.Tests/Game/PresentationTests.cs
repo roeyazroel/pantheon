@@ -145,6 +145,7 @@ public sealed class PresentationTests
             Housing = 60,
             Health = 1f,
             Society = Pantheon.Domain.Society.SocietyState.Founded(),
+            Culture = Pantheon.Domain.Culture.CultureState.Founded(),
             Beliefs = [],
             ConstructionProgress = 0f,
             Ruins = 0,

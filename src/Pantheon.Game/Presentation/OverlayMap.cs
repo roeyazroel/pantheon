@@ -44,7 +44,8 @@ public static class OverlayMap
         OverlayKind.Food => OverlayKind.Weather,
         OverlayKind.Weather => OverlayKind.Danger,
         OverlayKind.Danger => OverlayKind.Migration,
-        OverlayKind.Migration => null,
+        OverlayKind.Migration => OverlayKind.Culture,
+        OverlayKind.Culture => null,
     };
 
     /// <summary>Builds an overlay.</summary>
@@ -94,6 +95,10 @@ public static class OverlayMap
             case OverlayKind.Migration:
                 PaintMigration(world, view, pressure, rgba);
                 legend = "Migration: each settlement's lands from green (content) to red (people want to leave); people on the road and their way in their god's colour";
+                break;
+            case OverlayKind.Culture:
+                CultureOverlay.Paint(world, view.OverlayOpacity, (regionId, color, alpha) => PaintTerritory(grid, regionId, rgba, color, alpha));
+                legend = CultureOverlay.Legend;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown overlay.");

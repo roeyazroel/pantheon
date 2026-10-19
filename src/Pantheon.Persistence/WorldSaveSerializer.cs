@@ -29,9 +29,10 @@ public static class WorldSaveSerializer
     /// domains, holy sites, and settlements' Old Faiths and sanctuaries; version 14 (Milestone 15,
     /// part 2) added rivers and lakes, regions' fresh water and floods, and settlements' water;
     /// version 15 (part 3) added settlements' society: safety, happiness, wealth, education,
-    /// stability, technology, buildings and priority.
+    /// stability, technology, buildings and priority; version 16 (part 4) added beliefs' dependency
+    /// and resentment, settlements' culture, and gods' conduct and traits.
     /// </summary>
-    public const int CurrentSaveVersion = 15;
+    public const int CurrentSaveVersion = 16;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

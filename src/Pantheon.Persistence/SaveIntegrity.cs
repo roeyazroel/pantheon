@@ -133,6 +133,8 @@ internal static class SaveIntegrity
                 errors.Add($"God id {god.Id} is used more than once.");
             }
 
+            CultureIntegrity.Validate(god, errors);
+
             if (!float.IsFinite(god.DivinePower) || god.DivinePower < 0f)
             {
                 errors.Add($"God {god.Id} has Divine Power {god.DivinePower}; it must be finite and not negative.");
@@ -251,6 +253,7 @@ internal static class SaveIntegrity
             ValidateBeliefs(settlement.Beliefs, $"Settlement {settlement.Id}", godIds, errors);
             HolySiteIntegrity.ValidateFaith(world, settlement, godIds, errors);
             SocietyIntegrity.Validate(settlement, godIds, errors);
+            CultureIntegrity.Validate(settlement, errors);
         }
     }
 }

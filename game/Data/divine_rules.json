@@ -119,5 +119,54 @@
     "ReturnPerStep": 0.02,
     "FadePerStep": 0.004,
     "CooldownSeconds": 600.0
+  },
+
+  // Culture (spec sections 7, 8, 11 and 32-35, ADR-024). Per belief step unless named per second.
+  // Resentment: fear breeds it (ResentmentFromFear x fear x room), love dissolves it, and a god's harm
+  // to its own followers adds ResentmentFromHarm. Dependency: help in need adds DependencyFromHelp x
+  // need; it fades by DependencyFade; the dependent doubt more in hardship (DependencyExpectation) and
+  // worship more (DependencyWorship). Sacrifice makes fear worship harder (SacrificeWorship).
+  // Secularism: each unit loses SecularPowerLoss of the worship, SecularResistance of the gods' pull
+  // and MiracleResistance of a miracle's effect, and adds SecularScience to learning; a settlement is
+  // agnostic, atheist and anti-divine from those levels; anti-divine ones turn AntiDivineApostasy of
+  // every god's followers away a step and spread their reason. Doctrines drift DoctrineDriftPerSecond
+  // towards what the people live through and are embraced from Embraced; a miracle that touches one
+  // adds DoctrineFromMiracle; DoctrineEffect scales what they do. Charity shares food, temples send
+  // missionaries, resentment past RebellionResentment raises revolt. Conduct fades by
+  // ConductFadePerSecond; traits show from TraitThreshold; betraying love when known for mercy adds
+  // Contradiction x the usual doubt.
+  "Culture": {
+    "ResentmentFromFear": 0.004,
+    "ResentmentFromLove": 0.01,
+    "ResentmentFromHarm": 0.15,
+    "DependencyFromHelp": 0.12,
+    "DependencyFade": 0.002,
+    "DependencyExpectation": 0.006,
+    "DependencyWorship": 0.3,
+    "SacrificeWorship": 0.5,
+    "SecularPowerLoss": 0.8,
+    "SecularResistance": 0.8,
+    "MiracleResistance": 0.6,
+    "SecularScience": 0.5,
+    "Agnostic": 0.3,
+    "Atheist": 0.55,
+    "AntiDivine": 0.8,
+    "AntiDivineApostasy": 0.005,
+    "SecularSpreadPerSecond": 0.002,
+    "Secular": { "Doubt": 0.6, "Godless": 0.4, "Schism": 0.5, "Resentment": 0.4, "Science": 0.05, "Faith": 0.5 },
+    "SecularDriftPerSecond": 0.004,
+    "DoctrineDriftPerSecond": 0.002,
+    "Embraced": 0.5,
+    "DoctrineFromMiracle": 0.03,
+    "DoctrineEffect": 0.5,
+    "CharityPerSecond": 0.01,
+    "MissionPerSecond": 0.002,
+    "MissionRange": 5,
+    "RebellionResentment": 0.5,
+    "RebellionShare": 0.4,
+    "RebellionVent": 0.5,
+    "ConductFadePerSecond": 0.0005,
+    "TraitThreshold": 5.0,
+    "Contradiction": 1.0
   }
 }

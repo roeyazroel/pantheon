@@ -86,7 +86,9 @@ public static class HudReadout
         return new HudModel
         {
             HasGod = true,
-            GodLine = Format("{0} - {1}", god.Name, DivineText.Rank(god.Rank)),
+            GodLine = god.Traits.Count == 0
+                ? Format("{0} - {1}", god.Name, DivineText.Rank(god.Rank))
+                : Format("{0} - {1} - seen as {2}", god.Name, DivineText.Rank(god.Rank), string.Join(", ", god.Traits.Select(Culture.CultureText.Name))),
             PowerText = Format("{0:0}", Math.Floor(god.DivinePower)),
             IncomeText = Format("{0:+0.0;-0.0;0.0}/s", income),
             FollowersText = next is null

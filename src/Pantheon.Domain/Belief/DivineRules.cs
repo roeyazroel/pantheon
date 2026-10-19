@@ -28,6 +28,9 @@ public sealed record DivineRules
     /// <summary>Religious infrastructure multiplier of a settlement's shrine.</summary>
     public required float ShrineInfrastructure { get; init; }
 
+    /// <summary>Dependency, resentment, doctrines, secularism, missionaries, rebellion and gods' conduct (spec §7, §8, §11, §32–35, ADR-024).</summary>
+    public required Culture.CultureRules Culture { get; init; }
+
     /// <summary>Factor on the infrastructure of a god whose temple the settlement raised (spec §9, ADR-023).</summary>
     public required float TempleInfrastructure { get; init; }
 

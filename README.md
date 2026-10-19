@@ -121,6 +121,21 @@ domains:
   between neighbours, never past the world of fantasy.
 - **Expansion.** Crowded villages found new ones, so worlds grow.
 
+**Milestone 15, part 4 (Culture)** gives villages beliefs of their own and gods a reputation:
+
+- **Doctrines.** Villages come to hold pacifism, militarism, sacrifice, charity, nature worship,
+  the search for knowledge, expansion or isolation from what they live through and the god they
+  follow, and each changes how they worship, learn, convert and welcome strangers.
+- **Turning from the gods.** Doubt, the godless, schisms and resentment make villages agnostic,
+  then atheist, then set against every god.
+- **Dependency and resentment.** People you help in need come to depend on you and expect your
+  protection. People you harm, or who fear you, resent you, and may revolt and tear down your
+  temple.
+- **Missionaries and charity.** Temples win the godless of nearby villages; charitable villages
+  feed hungry neighbours.
+- **Reputation.** What you do earns traits: compassionate, cruel, vengeful, merciful, generous,
+  deceptive, honest, chaotic or ambitious. Villages read their god by them.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -193,6 +208,9 @@ covers:
 - Creatures together: the views they hold of each other, meetings, play, greetings, flight,
   betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
   gods teach their Creatures about others and when AI gods send them against an enemy's;
+- culture: doctrines and what they follow, secularism and its stages, dependency and resentment,
+  missionaries, charity, revolts, the traits gods earn by their acts, what witnesses take from a
+  miracle, and how culture is shown (panel, HUD, diplomacy panel, alerts, history, overlay);
 - the world's history (what is significant, how it reads), the end screen, the guide, the list of
   saves and that a pantheon wins as a god and its strongest ally;
 - domains (slots by rank, the authority, cheaper miracles, every boon and every signature miracle,
@@ -228,7 +246,7 @@ covers:
 | Show the Settlements panel for the village under the cursor (its society, technology, buildings and priority), or hide it | N |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, religion, faith, food, weather, danger, migration), then off | O |
+| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture), then off | O |
 | Look at the next settlement | F or Home |
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
@@ -476,6 +494,41 @@ The rules are in `game/Data/disasters.json`.
 The rules are in `game/Data/society.json`, with what technology and buildings do in
 `settlement_rules.json` (`Civics`), `disasters.json` (`Preparedness`), `divine_rules.json` and
 `migration.json`.
+
+## Culture
+
+- **Doctrines.** Each village holds §33's doctrines more or less firmly. They follow what it
+  lives through and the god most of it follows, and what they do:
+
+  | Doctrine | Grows with | What it does |
+  | --- | --- | --- |
+  | Pacifism | Peace, safety, a merciful or compassionate god | Harm by its god stirs more doubt and resentment |
+  | Militarism | War, a Prepare for war priority, a War or ambitious god | Its people accept force from their god |
+  | Sacrifice | Fear of its god, a Death god | The fearful worship harder, and resent less |
+  | Charity | Love of its god, help in need, a compassionate or generous god | Gratitude for help runs deeper; full stores feed hungry neighbours |
+  | Nature worship | A blessed land, blessings of the land, a Nature god | Blessings move it more, and fires and quakes outrage it |
+  | Knowledge seeking | Learning, a Knowledge god | It learns faster, and turns from the gods a little |
+  | Expansion | An Expand priority, crowding, an ambitious god | It sends settlers sooner |
+  | Isolation | Few neighbours, a god that turns refugees away, war | Other gods and strangers find it closed |
+- **Turning from the gods.** Doubt among its followers, people who follow no god, an Old Faith,
+  resentment and science raise a village's secularism; faith holds it back. Agnostic villages
+  (30%) worship and convert less, atheist ones (55%) still less, and anti-divine ones (80%)
+  turn people away from every god and spread their reason to their neighbours.
+- **Dependency.** People you help when they need it depend on you: they worship harder, and
+  doubt you in hard times when you do not come.
+- **Resentment.** Fear breeds resentment and love dissolves it. Harming your own followers breeds
+  it fast, and more among pacifists. An unsettled village that fears and resents its god revolts:
+  many renounce it and its temple is torn down.
+- **Missionaries.** A temple wins people who follow no god in the villages around it.
+- **Reputation.** The world remembers what each god does: help, gifts, harm, cruelty to its own,
+  vengeance, upheaval, deceit, faithfulness and wars. Over time this earns traits, which fade if
+  the god changes its ways. A god known for mercy that strikes its own shocks them the more.
+- **Where to see it.** The Settlements panel (N) lists the doctrines a village holds, how far it
+  has turned from the gods, and its people's love, fear, need and resentment of each god. The HUD
+  and the diplomacy panel (P) say how the world sees each god. The Culture overlay (O) colours
+  each village's lands by its strongest doctrine, grey where it has turned from the gods.
+
+The rules are in `game/Data/divine_rules.json` (`Culture`).
 
 ## Rivers, lakes and floods
 
@@ -768,7 +821,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration\|culture` | Start with a map overlay shown. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
@@ -777,6 +830,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--disaster=quake\|fire\|flood` | Start an earthquake, a fire or a flood at the focused settlement. |
 | `--priority=<priority>` | Ask the focused settlement to put something first (Food, Health, Growth, Worship, Defence, Preparation, Expansion, Temple). |
 | `--settlement-panel=on\|off` | Open the Settlements panel (N) on the focused settlement at the start. |
+| `--doctrine=<doctrine>\|secular` | Give the focused settlement a doctrine in full (Pacifism, Militarism, Sacrifice, Charity, NatureWorship, KnowledgeSeeking, Expansionism, Isolationism), or turn it against the gods. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
 | `--menu=on\|off` | Start on the start screen (the default without options) or not. |

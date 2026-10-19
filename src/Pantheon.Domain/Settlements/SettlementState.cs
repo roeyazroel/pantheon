@@ -61,6 +61,9 @@ public sealed class SettlementState
     /// <summary>Its people's safety, happiness, wealth, learning, order, technology, buildings and priority (spec §29–30, §36, ADR-023).</summary>
     public required Society.SocietyState Society { get; init; }
 
+    /// <summary>Its doctrines and how far it has turned from the gods (spec §33, §35, ADR-024).</summary>
+    public required Culture.CultureState Culture { get; init; }
+
     /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
     public required List<GodBelief> Beliefs { get; init; }
 }

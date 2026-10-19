@@ -127,6 +127,8 @@ public sealed class SimulationEngine
         {
             systems.Add(new IntervalSystem(new Society.SocietySystem(societyRules, settlementRules, divineRules), societyRules.StepIntervalTicks));
         }
+
+        systems.Add(new IntervalSystem(new Culture.CultureSystem(divineRules, settlementRules, societyRules, divineRules.StepIntervalTicks), divineRules.StepIntervalTicks));
         if (domainRules is not null)
         {
             systems.Add(new IntervalSystem(new Domains.DomainSystem(domainRules, divineRules, settlementRules, weatherRules), divineRules.StepIntervalTicks));

@@ -136,6 +136,7 @@ internal static class SettlementWorlds
                     SanctuaryGodId = null,
                     SanctuaryUntilTick = 0,
                     Society = Pantheon.Domain.Society.SocietyState.Founded(),
+                    Culture = Pantheon.Domain.Culture.CultureState.Founded(),
                     Beliefs = [],
                 },
             },

@@ -74,6 +74,15 @@ public enum HistoryKind
 
     /// <summary>A settlement raised a temple to a god (ADR-023).</summary>
     Temple,
+
+    /// <summary>A settlement rose against a god; <see cref="HistoryRecord.Count"/> is how many renounced it (ADR-024).</summary>
+    Revolt,
+
+    /// <summary>A settlement turned against every god (ADR-024).</summary>
+    Renunciation,
+
+    /// <summary>A settlement embraced a doctrine; <see cref="HistoryRecord.Count"/> is the doctrine's number (ADR-024).</summary>
+    Doctrine,
 }
 
 /// <summary>

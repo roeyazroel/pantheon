@@ -195,6 +195,11 @@ public sealed class MiracleCaster
             god.DivinePower += deaths * _domains.Boons.DeathPowerPerDeath;
         }
 
+        if (!unseen)
+        {
+            Culture.WitnessCulture.NoteCast(world, god.Id, miracle, affected, needs, deaths, other => _effects.IsGuilty(world, god.Id, other));
+        }
+
         MiracleEffects.ApplyToRegions(miracle, world.Regions, request.Target);
         _effects.ApplyToWorld(world, miracle, god.Id, request.Target, affected, events);
         events.Add(new MiracleCast
@@ -304,6 +309,12 @@ public sealed class MiracleCaster
     {
         var need = BeliefModel.NeedFor(conditions, miracle.Gratitude);
         var loveScale = _rules.GratitudeFloor + ((1f - _rules.GratitudeFloor) * need);
+        if (need > 0f)
+        {
+            loveScale = Math.Min(1f, loveScale * Culture.CultureModel.GratitudeFactor(_rules.Culture, settlement.Culture));
+        }
+
+        closeness *= Culture.CultureModel.WitnessFactor(_rules.Culture, settlement.Culture, miracle);
         var trickery = _domains is not null && DomainModel.Holds(world, godId, GodDomain.Trickery) ? 1f + _domains.Boons.TrickeryDoubt : 1f;
         foreach (var other in settlement.Beliefs)
         {
@@ -318,9 +329,12 @@ public sealed class MiracleCaster
         BeliefModel.ApplyImpulse(belief, miracle.Witness, closeness, loveScale);
         if (miracle.Witness.Love < 0f && love > 0f)
         {
-            // A god that harms people who love it contradicts all they knew of it (spec §34).
-            belief.Doubt = BeliefModel.ApplyChange(belief.Doubt, _rules.Schism.BetrayalDoubt * love * closeness);
+            // A god that harms people who love it contradicts all they knew of it (spec §34), the more so if it was known for mercy (ADR-024).
+            var shock = Culture.WitnessCulture.BetrayalFactor(_rules.Culture, world, godId, settlement, miracle);
+            belief.Doubt = BeliefModel.ApplyChange(belief.Doubt, _rules.Schism.BetrayalDoubt * love * closeness * shock);
         }
+
+        Culture.WitnessCulture.Witnessed(_rules.Culture, settlement, belief, miracle, need, closeness);
     }
 
     /// <summary>

@@ -105,6 +105,8 @@ internal static class CreatureBondWorlds
             RefugeePolicy = god.RefugeePolicy,
             Cooldowns = god.Cooldowns,
             Domains = god.Domains,
+            Conduct = god.Conduct,
+            Traits = god.Traits,
         };
         world.Gods[index] = withCreature;
         var creature = CreatureFounder.Found(Rules, world.Seed, withCreature, name, world.Settlements[index], world.Regions);

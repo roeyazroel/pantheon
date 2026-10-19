@@ -109,6 +109,9 @@ internal static class SaveMigrations
             case 14:
                 SocietySaveMigration.UpgradeFrom14(root);
                 break;
+            case 15:
+                SocietySaveMigration.UpgradeFrom15(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

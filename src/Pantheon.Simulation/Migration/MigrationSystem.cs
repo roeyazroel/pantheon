@@ -187,7 +187,7 @@ public sealed class MigrationSystem : ISimulationSystem
             var conditions = ConditionsOf(world, settlement);
             if (MigrationModel.Push(_rules, world, settlement, conditions).Value <= pressure - _rules.BetterBy)
             {
-                candidates.Add((settlement, MigrationModel.Appeal(_rules, settlement, conditions, beliefs, distance)));
+                candidates.Add((settlement, MigrationModel.Appeal(_rules, settlement, conditions, beliefs, distance) * Culture.CultureModel.WelcomeFactor(_divine.Culture, settlement.Culture)));
             }
         }
 

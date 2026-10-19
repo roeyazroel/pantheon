@@ -56,6 +56,7 @@ public sealed record LaunchOptions
         "settings-page",
         "priority",
         "settlement-panel",
+        "doctrine",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -180,6 +181,9 @@ public sealed record LaunchOptions
 
     /// <summary>Whether the Settlements panel is open at the start, on the focused settlement.</summary>
     public bool SettlementPanel { get; init; }
+
+    /// <summary>A doctrine, or secularism, the focused settlement holds at the start (ADR-024).</summary>
+    public CultureAtStart? Doctrine { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -367,6 +371,10 @@ public sealed record LaunchOptions
                 return Enum.TryParse<Domain.Society.SettlementPriority>(value.Trim(), ignoreCase: true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(value.Trim(), out _)
                     ? options with { Priority = priority }
                     : Warn(options, warnings, $"'--priority' needs a priority such as Temple or Preparation, got '{value}'.");
+            case "doctrine":
+                return Enum.TryParse<CultureAtStart>(value.Trim(), ignoreCase: true, out var doctrine) && Enum.IsDefined(doctrine) && !int.TryParse(value.Trim(), out _)
+                    ? options with { Doctrine = doctrine }
+                    : Warn(options, warnings, $"'--doctrine' needs a doctrine such as Charity or Militarism, or Secular, got '{value}'.");
             case "settlement-panel":
                 return OnOff(value) is { } open ? options with { SettlementPanel = open } : Warn(options, warnings, $"'--settlement-panel' needs on or off, got '{value}'.");
             case "guide":

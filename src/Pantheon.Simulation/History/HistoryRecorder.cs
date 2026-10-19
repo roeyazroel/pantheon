@@ -130,6 +130,16 @@ public sealed class HistoryRecorder
             case SchismEnded { Reconciled: true } reunion:
                 Add(world, HistoryKind.Reunion, god: reunion.GodId, settlement: reunion.SettlementId);
                 break;
+            case Rebellion revolt:
+                Add(world, HistoryKind.Revolt, god: revolt.GodId, settlement: revolt.SettlementId, count: revolt.People);
+                break;
+            case SecularismRose { Stage: Domain.Culture.SecularStage.AntiDivine } renounced:
+                Once(world, HistoryKind.Renunciation, renounced.SettlementId, null, 0);
+                break;
+            case DoctrineEmbraced embraced when world.Settlements.Find(s => s.Id == embraced.SettlementId) is { } place && place.Population >= _rules.ConversionPopulation
+                && !Recent(world, HistoryKind.Doctrine, r => r.SettlementId == place.Id && r.Count == (int)embraced.Doctrine):
+                Add(world, HistoryKind.Doctrine, settlement: place.Id, count: (int)embraced.Doctrine);
+                break;
             default:
                 break;
         }

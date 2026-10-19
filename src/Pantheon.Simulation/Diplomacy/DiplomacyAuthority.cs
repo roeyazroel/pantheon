@@ -132,6 +132,7 @@ public sealed class DiplomacyAuthority
                 betrayal = DiplomacyModel.AreAllied(world, me, other);
                 SetStatus(world, me, other, DiplomaticStatus.War);
                 _ledger.Record(world, other, me, DiplomaticAct.DeclaredWar, null);
+                Culture.ConductModel.Note(world, me, Culture.ConductModel.Act.Aggression, 2f);
                 if (betrayal)
                 {
                     Betray(world, me, other);
@@ -211,12 +212,16 @@ public sealed class DiplomacyAuthority
         SetStatus(world, me, proposer, status);
         _ledger.Record(world, me, proposer, act, null);
         _ledger.Record(world, proposer, me, act, null);
+        var faith = act == DiplomaticAct.MadePeace ? 1f : 0.5f;
+        Culture.ConductModel.Note(world, me, Culture.ConductModel.Act.Faithfulness, faith);
+        Culture.ConductModel.Note(world, proposer, Culture.ConductModel.Act.Faithfulness, faith);
     }
 
     /// <summary>The betrayed god remembers, and every other god trusts the betrayer less (spec §40).</summary>
     private void Betray(WorldState world, int betrayer, int betrayed)
     {
         _ledger.Record(world, betrayed, betrayer, DiplomaticAct.Betrayed, null);
+        Culture.ConductModel.Note(world, betrayer, Culture.ConductModel.Act.Deceit, 2f);
         foreach (var god in world.Gods)
         {
             if (god.Id != betrayer && god.Id != betrayed)

@@ -87,7 +87,7 @@ public sealed class BeliefSystem : ISimulationSystem
         }
 
         var steadfast = settlement.SanctuaryGodId is { } sheltered ? beliefs.FindIndex(b => b.GodId == sheltered) : -1;
-        var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs, WarResistance(world, beliefs), Schisms.OldFaithShare(settlement), steadfast);
+        var changes = BeliefModel.ComputeAdherenceChanges(_rules, beliefs, PullFactors(world, settlement), Schisms.OldFaithShare(settlement), steadfast);
         int? gainer = null;
         int? loser = null;
         for (var i = 0; i < beliefs.Count; i++)
@@ -95,6 +95,8 @@ public sealed class BeliefSystem : ISimulationSystem
             var belief = beliefs[i];
             var hadMajority = belief.Adherence >= BeliefModel.MajorityShare;
             (belief.Faith, belief.Love, belief.Fear, belief.Doubt) = BeliefModel.Drift(_rules, belief, conditions);
+            Culture.CultureModel.DriftFeelings(_rules.Culture, belief, settlement.Culture);
+            belief.Doubt = SimMath.Clamp01(belief.Doubt + Culture.CultureModel.Expectation(_rules.Culture, belief, conditions.Hardship));
             belief.Adherence = SimMath.Clamp01(belief.Adherence + changes[i]);
             var hasMajority = belief.Adherence >= BeliefModel.MajorityShare;
             if (hasMajority != hadMajority)
@@ -118,6 +120,31 @@ public sealed class BeliefSystem : ISimulationSystem
 
         beliefs.RemoveAll(b => b.Adherence * Math.Max(0, settlement.Population) < ForgottenFollowers && b.Faith < _rules.ForgottenFaith);
         Schisms.Step(_rules, world, settlement, events);
+    }
+
+    /// <summary>
+    /// Pull factors for a settlement's gods: a people at war resists the enemy, and a secular or
+    /// isolationist culture resists every god, or every god but its own (ADR-024).
+    /// </summary>
+    private float[] PullFactors(WorldState world, SettlementState settlement)
+    {
+        var beliefs = settlement.Beliefs;
+        var factors = WarResistance(world, beliefs) ?? NoResistance(beliefs.Count);
+        var main = Culture.CultureModel.Main(settlement);
+        for (var i = 0; i < beliefs.Count; i++)
+        {
+            factors[i] *= Culture.CultureModel.PullFactor(_rules.Culture, settlement.Culture, beliefs[i] == main);
+        }
+
+        return factors;
+    }
+
+    /// <summary>Factors of 1 for every god.</summary>
+    private static float[] NoResistance(int count)
+    {
+        var factors = new float[count];
+        Array.Fill(factors, 1f);
+        return factors;
     }
 
     /// <summary>

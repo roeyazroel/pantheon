@@ -10,9 +10,9 @@ namespace Pantheon.Game.Diagnostics;
 /// <summary>The debug overlay's lines about a settlement's society (ADR-023).</summary>
 public static class SocietyReadout
 {
-    /// <summary>The society of a settlement: its values, priority, work and technology.</summary>
+    /// <summary>The society of a settlement: its values, priority, work, technology and culture.</summary>
     /// <param name="settlement">The settlement.</param>
-    /// <returns>Two lines.</returns>
+    /// <returns>Three lines.</returns>
     public static IReadOnlyList<string> Describe(SettlementState settlement)
     {
         ArgumentNullException.ThrowIfNull(settlement);
@@ -25,6 +25,7 @@ public static class SocietyReadout
                 society.Safety, society.Happiness, society.Stability, society.Wealth, society.Education, society.Priority,
                 society.PriorityGodId is { } setter ? Format(" (god {0})", setter) : string.Empty, society.Project?.ToString() ?? "none", society.ProjectProgress, buildings),
             "  technology: " + string.Join(" ", Enum.GetValues<TechnologyField>().Select(f => Format("{0} {1:0.00}", f, society.Technology.Get(f)))),
+            Culture.CultureReadout.Debug(settlement),
         ];
     }
 

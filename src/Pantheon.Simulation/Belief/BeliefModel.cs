@@ -231,6 +231,7 @@ public static class BeliefModel
         return ComputeWorshippers(settlementRules, settlement, belief)
             * ComputeWorshipIntensity(rules, belief)
             * ComputeInfrastructure(rules, settlement, belief.GodId)
+            * Culture.CultureModel.WorshipFactor(rules.Culture, belief, settlement.Culture)
             * rules.PowerPerWorshipperPerStep;
     }
 

@@ -85,7 +85,7 @@ public sealed class MigrationPresentationTests
 
         Assert.StartsWith("Migration overlay", image.Legend, StringComparison.Ordinal);
         Assert.Equal(OverlayKind.Migration, OverlayMap.Next(OverlayKind.Danger));
-        Assert.Null(OverlayMap.Next(OverlayKind.Migration));
+        Assert.Equal(OverlayKind.Culture, OverlayMap.Next(OverlayKind.Migration));
         world.Regions.TryGetRegionIdAt(500f, 512f, out var road);
         Assert.Equal(RgbColor.ToByte(view.GodColor(3).R), image.Rgba[road * 4]);
         var home = world.Settlements[0].RegionId * 4;

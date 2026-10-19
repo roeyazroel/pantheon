@@ -41,4 +41,10 @@ public sealed class GodState
 
     /// <summary>The domains the god has taken up, in the order it chose them (spec §12, ADR-021); never more than its rank allows.</summary>
     public required List<GodDomain> Domains { get; init; }
+
+    /// <summary>What the god has done, as the world remembers it (spec §3.2, §11, ADR-024).</summary>
+    public required Culture.GodConduct Conduct { get; init; }
+
+    /// <summary>How the world sees the god now, from its conduct (spec §11, ADR-024).</summary>
+    public required List<Culture.GodTrait> Traits { get; init; }
 }

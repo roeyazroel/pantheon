@@ -158,6 +158,8 @@ public sealed class AlertFeed
                 return FaithAlerts.Describe(worldEvent, world, localGodId);
             case PriorityChanged or BuildingCompleted or SettlementFounded or TechnologyAdvanced:
                 return SocietyAlerts.Describe(worldEvent, world, localGodId);
+            case Rebellion or SecularismRose or DoctrineEmbraced or TraitEarned:
+                return CultureAlerts.Describe(worldEvent, world, localGodId);
             case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
                 return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             default:

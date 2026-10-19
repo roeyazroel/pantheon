@@ -148,7 +148,7 @@ public static class MigrationModel
         {
             var share = rules.AbandonShare * Math.Max(belief.Fear, belief.Doubt);
             var lost = belief.Adherence * share;
-            copy.Add(new GodBelief { GodId = belief.GodId, Adherence = belief.Adherence - lost, Faith = belief.Faith, Love = belief.Love, Fear = belief.Fear, Doubt = belief.Doubt });
+            copy.Add(new GodBelief { GodId = belief.GodId, Adherence = belief.Adherence - lost, Faith = belief.Faith, Love = belief.Love, Fear = belief.Fear, Doubt = belief.Doubt, Dependency = belief.Dependency, Resentment = belief.Resentment });
             if (lost > most && share >= NoticeableAbandonment)
             {
                 most = lost;

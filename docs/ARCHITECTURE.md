@@ -140,7 +140,8 @@ files and compiled assemblies and fails when either rule is broken.
 - `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Water` (in its
   wells and cisterns; ADR-022), `Society` (`SocietyState`: safety, happiness, stability,
   wealth, education, `TechnologyLevels` in §36's eight fields, buildings, priority and the
-  building under way; ADR-023), `Housing`
+  building under way; ADR-023), `Culture` (`CultureState`: how firmly it holds each of §33's
+  eight doctrines and how far it has turned from the gods, its secularism; ADR-024), `Housing`
   (capacity in people), `Health` (0..1), `ConstructionProgress` (work done on the one house
   being built; 0 when none is under way), `Ruins` (houses destroyed and not yet rebuilt),
   `ShieldedUntilTick` (while a Shield miracle protects it), `OldFaith` (the share of its people
@@ -149,12 +150,15 @@ files and compiled assemblies and fails when either rule is broken.
   `Beliefs`. These aggregates are the canonical
   population (Tier 1, ADR-004 and ADR-008).
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
-  follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt` (0..1).
+  follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt`,
+  `Dependency` and `Resentment` (0..1; the last two §7–8's deeper feelings, ADR-024).
   Followers are `Population × Adherence` and are never stored (ADR-009).
 - `GodState`: `Id`, `Name`, `Controller` (Human, Ai or Remote), `Personality` (`None` for players;
   one of §47's eight for AI gods), `DivinePower`, `Rank` (never falls), `DominantSinceTick`
   (while it holds the victory share), `CreatureId`, `RefugeePolicy`, `Cooldowns` and `Domains`
-  (the domains it has taken up, ADR-021). Followers and influence are derived from the beliefs.
+  (the domains it has taken up, ADR-021), `Conduct` (`GodConduct`: what the world remembers of its
+  acts, fading) and `Traits` (what the world calls it, from that conduct; ADR-024). Followers and
+  influence are derived from the beliefs.
 - `CreatureState` (ADR-010): a Tier 3 entity saved whole: position and heading, level, experience,
   health, loyalty, morality, `Needs` (hunger, fatigue, boredom), `Personality` (kindness,
   aggression, laziness, curiosity), `Activity` (action, situation, phase, target, path, ticks
@@ -194,6 +198,7 @@ files and compiled assemblies and fails when either rule is broken.
   `SocietyRules` (`society.json`, ADR-023). What technology and buildings do lives with the rules
   of the system it changes: `SettlementRules.Civics`, `DisasterRules.Preparedness`, the temple and
   religion factors in `DivineRules`, and unhappiness, unrest and navigation in `MigrationRules`.
+  `DivineRules.Culture` (`CultureRules`) holds the culture's numbers (ADR-024).
   `WorldGenSettings.Hydrology` (optional) shapes the rivers and lakes. `DivineRules` carries the
   `SchismRules` and the holy sites' influence, and `CreatureRules` the `CreatureSpecies`
   (ADR-021).
@@ -263,6 +268,12 @@ files and compiled assemblies and fails when either rule is broken.
   villages), `SocietyAuthority` (priorities, checked) and `PriorityAdvisor` (AI gods' priorities).
   `Settlements/CivicModel` turns technology, buildings and priorities into the settlement model's
   factors (ADR-023). See [Settlements' society](#settlements-society).
+- `Culture/`: `CultureModel` (secular stages, dependency and resentment, doctrine and secular
+  targets, the factors culture puts on worship, conversion, miracles, learning, founding and
+  welcome), `ConductModel` (acts noted, fading and traits), `WitnessCulture` (what witnessing a
+  miracle adds, and what the world notes of a cast) and `CultureSystem` (the culture step:
+  doctrines, secularism, missionaries, charity, revolts and traits; ADR-024). See
+  [Culture](#culture).
 - `Water/`: `WaterModel` (a river's level, overflow, spreading floods, waves) and `WaterSystem`
   (the water step: levels, floods, silt, irrigation, drowning). `WorldGen/WaterFounder` records
   the rivers and lakes in the state. See [Rivers, lakes and floods](#rivers-lakes-and-floods).
@@ -280,7 +291,7 @@ files and compiled assemblies and fails when either rule is broken.
   `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration and domain
   authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  water step, the disaster step, the settlement step, the belief step, the society step, the domains' boons, the holy sites, the
+  water step, the disaster step, the settlement step, the belief step, the society step, the culture step, the domains' boons, the holy sites, the
   victory check, the diplomacy step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
@@ -328,7 +339,9 @@ files and compiled assemblies and fails when either rule is broken.
   the sites as a new world would. Version 13 → 14 gives the world no rivers or lakes, every region
   no fresh water or flood and every settlement full wells (six per unit of housing); its
   generation settings have no hydrology, so its land regenerates unchanged. Version 14 → 15
-  (`SocietySaveMigration`) gives every settlement a newly founded society. A missing,
+  (`SocietySaveMigration`) gives every settlement a newly founded society. Version 15 → 16 gives
+every settlement a culture with no doctrine and no secularism, every belief (a settlement's or a
+migration group's) no dependency or resentment, and every god no conduct or traits. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -343,7 +356,8 @@ files and compiled assemblies and fails when either rule is broken.
   disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods),
   rivers and lakes (`WaterIntegrity`: unique ids, names, regions that exist, valid levels), fresh
   water and flood in 0..1, water not negative, societies (`SocietyIntegrity`: values in range,
-  each building once, temples to known gods, known priorities),
+  each building once, temples to known gods, known priorities), culture (`CultureIntegrity`:
+  doctrines, secularism, dependency and resentment in 0..1, conduct not negative, each trait once),
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
@@ -419,7 +433,8 @@ files and compiled assemblies and fails when either rule is broken.
   colour), faith and food (each settlement's lands on a red-to-green ramp), weather (each land
   region's soil water, brown to yellow to blue), danger (fires, ash and shielded settlements) and
   migration (each settlement's lands by the pressure to leave, and every group's way in its god's
-  colour). `Presentation/CloudLayout` lays out each weather
+  colour) and culture (each settlement's lands in the colour of its strongest doctrine, grey where
+  it has turned from the gods). `Presentation/CloudLayout` lays out each weather
   cell's puffs, colour, opacity, rain and lightning from `PresentationHash` and
   `WeatherViewSettings` (`weather_view.json`), and how much a storm dims the light.
   `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
@@ -433,6 +448,11 @@ files and compiled assemblies and fails when either rule is broken.
 - `History/HistoryText` and `HistoryReadout` word the chronicle ("Year 12 — The Shaking of Elar");
   `Flow/EndSummary` builds the end screen, `Flow/Guide` the first-minutes guide (ADR-020).
   `Persistence/SaveCatalog` lists the saves for the load page.
+- `Culture/CultureText`, `CultureReadout` and `CultureCommands` word doctrines, secular stages and
+  traits, build the Settlements panel's and F1's culture lines, and shape a village's culture for
+  `--doctrine`; `Alerts/CultureAlerts` adds revolts, godless villages, doctrines and traits, and
+  `Presentation/CultureOverlay` paints the Culture overlay (ADR-024). The HUD's god line and the
+  diplomacy panel say how the world sees each god.
 - `Domains/DomainText`, `DomainCommands` and `DomainReadout` word domains, sites and Old Faiths,
   take up a domain for the player (asking the host in a shared world) and build the Domains
   panel; `Alerts/FaithAlerts` and `Diagnostics/FaithReadout` add their alerts and debug lines
@@ -702,6 +722,35 @@ flowchart LR
   (an intent for a joined player); AI gods through `PriorityAdvisor` at their evaluation interval.
 - New villages join `WorldState.Settlements` with the next id and an unused name, and the
   settlement presenter adds their views on its next sync.
+
+## Culture
+
+ADR-024 records the decisions, and the plan
+([.docs/milestone-15-part-4-culture.md](../.docs/milestone-15-part-4-culture.md)) the numbers.
+
+```mermaid
+flowchart LR
+    acts[Miracles, wars, peace, betrayal] --> conduct[GodState.Conduct]
+    conduct --> traits[Traits: compassionate, cruel, ...]
+    witness[Witnessed miracles: WitnessCulture] --> feelings[Dependency, resentment]
+    witness --> doctrines
+    life[Peace, war, fear, love, land, learning, crowding] --> doctrines[Doctrines: CultureSystem]
+    traits --> doctrines
+    beliefs[Doubt, faith, the godless, Old Faith, science] --> secular[Secularism]
+    doctrines --> effects[Factors on worship, conversion, miracles, learning, founding, migration]
+    secular --> effects
+    feelings --> effects
+    feelings --> revolt[Revolts: temples torn down]
+    temples[Temples] --> missions[Missionaries]
+    doctrines --> charity[Charity: food to hungry neighbours]
+```
+
+- The culture step runs after the society step, at the belief step's rate. Each factor is
+  applied where the system it changes already computes: `BeliefModel.ComputePower`,
+  `BeliefSystem`'s pull, `MiracleCaster.Witness`, `SocietySystem`'s learning, `Expansion` and
+  `MigrationSystem`'s appeal.
+- `MiracleCaster` and `DiplomacyAuthority` note acts in `GodState.Conduct`; traits are derived from
+  it each step, and doctrines read a god only through its traits and domains.
 
 ## Sound and settings
 

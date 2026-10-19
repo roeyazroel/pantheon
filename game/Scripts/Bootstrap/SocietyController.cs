@@ -13,7 +13,7 @@ namespace Pantheon.Client.Bootstrap;
 /// <summary>
 /// Settlements' society in the client (ADR-023): the Settlements panel (N) on the village nearest
 /// the cursor, the player's priorities, and the launch options that try them out (<c>--priority</c>,
-/// <c>--settlement-panel</c>). It reads the session and sends the player's choices to it.
+/// <c>--settlement-panel</c>) and the culture of <c>--doctrine</c> (ADR-024). It reads the session and sends the player's choices to it.
 /// </summary>
 internal sealed partial class SocietyController : Node
 {
@@ -39,7 +39,7 @@ internal sealed partial class SocietyController : Node
         _panel = new SettlementPanel { Name = "Settlements" };
         AddChild(_panel);
         _panel.PriorityChosen += (settlement, priority) => _setStatus(SocietyCommands.SetPriority(_session, settlement, priority));
-        CallDeferred(nameof(ApplyOptions), options.Priority is { } priority ? (int)priority : -1, options.SettlementPanel);
+        CallDeferred(nameof(ApplyOptions), options.Priority is { } priority ? (int)priority : -1, options.SettlementPanel, options.Doctrine is { } doctrine ? (int)doctrine : -1);
     }
 
     /// <inheritdoc />
@@ -73,8 +73,8 @@ internal sealed partial class SocietyController : Node
         GetViewport().SetInputAsHandled();
     }
 
-    /// <summary>Sets the focused village's priority and opens the panel, as the launch options ask.</summary>
-    private void ApplyOptions(int priority, bool open)
+    /// <summary>Sets the focused village's priority and culture and opens the panel, as the launch options ask.</summary>
+    private void ApplyOptions(int priority, bool open, int doctrine)
     {
         if (Pick(cursorFirst: false) is not { } id)
         {
@@ -84,6 +84,11 @@ internal sealed partial class SocietyController : Node
         if (priority >= 0)
         {
             _setStatus(SocietyCommands.SetPriority(_session, id, (Domain.Society.SettlementPriority)priority));
+        }
+
+        if (doctrine >= 0)
+        {
+            _setStatus(Game.Culture.CultureCommands.Impose(_session, id, (CultureAtStart)doctrine));
         }
 
         _settlementId = id;

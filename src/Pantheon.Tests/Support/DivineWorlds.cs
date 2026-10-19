@@ -35,6 +35,7 @@ internal static class DivineWorlds
         LoveWorshipIntensity = 0.3f,
         FearWorshipIntensity = 0.6f,
         ShrineInfrastructure = 1f,
+        Culture = CultureWorlds.Inert,
         TempleInfrastructure = 1f,
         ReligionPerLevel = 0f,
         ComfortFoodPerPerson = 2f,
@@ -146,6 +147,7 @@ internal static class DivineWorlds
                 SanctuaryGodId = null,
                 SanctuaryUntilTick = 0,
                 Society = Pantheon.Domain.Society.SocietyState.Founded(),
+                Culture = Pantheon.Domain.Culture.CultureState.Founded(),
                 Beliefs = [],
             });
         }
@@ -191,6 +193,8 @@ internal static class DivineWorlds
         RefugeePolicy = RefugeePolicy.Welcome,
         Cooldowns = [],
         Domains = [],
+        Conduct = Pantheon.Domain.Culture.GodConduct.None(),
+        Traits = [],
     };
 
     /// <summary>Gives a settlement a belief in the god.</summary>

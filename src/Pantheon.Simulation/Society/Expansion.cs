@@ -28,13 +28,13 @@ internal sealed class Expansion
     /// <summary>Creates the founding over validated rules.</summary>
     public Expansion(SocietyRules rules) => _rules = rules;
 
-    /// <summary>Founds a village from a settlement when its priority, size and time allow and there is land for it.</summary>
-    public void TryFound(WorldState world, SettlementState home, List<WorldEvent> events)
+    /// <summary>Founds a village from a settlement when its priority, size (times <paramref name="sooner"/>: expansionists go sooner) and time allow and there is land for it.</summary>
+    public void TryFound(WorldState world, SettlementState home, float sooner, List<WorldEvent> events)
     {
         var expansion = _rules.Expansion;
         var society = home.Society;
         var cooldown = (long)MathF.Round(expansion.CooldownSeconds * SimulationTime.TicksPerSecond);
-        if (society.Priority != SettlementPriority.Expansion || home.Population < expansion.MinPopulation
+        if (society.Priority != SettlementPriority.Expansion || home.Population < expansion.MinPopulation * sooner
             || (society.LastFoundingTick > 0 && world.Tick - society.LastFoundingTick < cooldown) || Site(world, home) is not { } site)
         {
             return;
@@ -64,7 +64,8 @@ internal sealed class Expansion
             SanctuaryGodId = null,
             SanctuaryUntilTick = 0,
             Society = Founded(home.Society),
-            Beliefs = home.Beliefs.ConvertAll(b => new GodBelief { GodId = b.GodId, Adherence = b.Adherence, Faith = b.Faith, Love = b.Love, Fear = b.Fear, Doubt = b.Doubt }),
+            Culture = Inherited(home.Culture),
+            Beliefs = home.Beliefs.ConvertAll(b => new GodBelief { GodId = b.GodId, Adherence = b.Adherence, Faith = b.Faith, Love = b.Love, Fear = b.Fear, Doubt = b.Doubt, Dependency = b.Dependency, Resentment = b.Resentment }),
         };
         world.Settlements.Add(village);
         events.Add(new SettlementFounded { Tick = world.Tick, SettlementId = village.Id, FromSettlementId = home.Id, Settlers = settlers });
@@ -152,6 +153,19 @@ internal sealed class Expansion
                 return name;
             }
         }
+    }
+
+    /// <summary>A new village's culture: its founders' doctrines and outlook (ADR-024).</summary>
+    private static Domain.Culture.CultureState Inherited(Domain.Culture.CultureState home)
+    {
+        var culture = Domain.Culture.CultureState.Founded();
+        foreach (var doctrine in Enum.GetValues<Domain.Culture.Doctrine>())
+        {
+            culture.Set(doctrine, home.Get(doctrine));
+        }
+
+        culture.Secularism = home.Secularism;
+        return culture;
     }
 
     /// <summary>A new village's society: founded fresh, with most of its founders' knowledge.</summary>

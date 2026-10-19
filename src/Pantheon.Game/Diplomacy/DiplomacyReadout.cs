@@ -12,7 +12,7 @@ public sealed record DiplomacyEntry
     /// <summary>The god.</summary>
     public required int GodId { get; init; }
 
-    /// <summary>Name and personality.</summary>
+    /// <summary>Name, personality and how the world sees it.</summary>
     public required string Title { get; init; }
 
     /// <summary>Your status with it.</summary>
@@ -90,7 +90,7 @@ public static class DiplomacyReadout
             entries.Add(new DiplomacyEntry
             {
                 GodId = god.Id,
-                Title = personality.Length > 0 ? $"{god.Name} the {personality}" : god.Name,
+                Title = (personality.Length > 0 ? $"{god.Name} the {personality}" : god.Name) + Traits(god),
                 Status = DiplomacyModel.StatusOf(world, me, god.Id),
                 Attitude = DiplomacyText.Attitude(view),
                 Explanation = DiplomacyText.Explain(view, world),
@@ -105,6 +105,10 @@ public static class DiplomacyReadout
 
         return entries;
     }
+
+    /// <summary>How the world sees the god (ADR-024), for example " (seen as cruel, vengeful)", or empty.</summary>
+    private static string Traits(Domain.Gods.GodState god) =>
+        god.Traits.Count == 0 ? string.Empty : " (seen as " + string.Join(", ", god.Traits.ConvertAll(Culture.CultureText.Name)) + ")";
 
     /// <summary>How the player's Creature and the god's Creature regard each other, or empty.</summary>
     private static string CreaturesOf(GameSession session, Domain.Gods.GodState god) =>

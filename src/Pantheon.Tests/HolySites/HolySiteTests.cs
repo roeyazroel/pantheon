@@ -144,6 +144,7 @@ public sealed class HolySiteTests
         {
             Id = god.Id, Name = god.Name, Controller = GodController.Ai, Personality = GodPersonality.Zealot, DivinePower = 0f, Rank = god.Rank,
             DominantSinceTick = null, CreatureId = god.CreatureId, RefugeePolicy = god.RefugeePolicy, Cooldowns = [], Domains = [],
+            Conduct = Pantheon.Domain.Culture.GodConduct.None(), Traits = [],
         };
         world.Gods[0] = profiled;
         world.HolySites.Add(Site(1, HolySiteKind.StandingStones, new GroundPosition(900f, 900f), null));

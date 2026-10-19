@@ -33,7 +33,7 @@ public sealed class Replicator
         [WorldSection.Gods] = 0.25,
         [WorldSection.Migration] = 0.5,
         [WorldSection.Diplomacy] = 0.5,
-        [WorldSection.Settlements] = 1.0,
+        [WorldSection.Settlements] = 2.0,
         [WorldSection.Weather] = 1.0,
         [WorldSection.Disasters] = 1.0,
         [WorldSection.Creatures] = 2.0,

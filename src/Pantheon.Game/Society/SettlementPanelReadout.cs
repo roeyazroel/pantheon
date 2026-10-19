@@ -57,6 +57,8 @@ public static class SettlementPanelReadout
             "Knows: " + string.Join("   ", Enum.GetValues<TechnologyField>().Select(f => SocietyText.Format("{0} {1:0.0}", SocietyText.Name(f), society.Technology.Get(f)))),
             "Has built: " + (society.Buildings.Count == 0 ? "nothing yet" : string.Join(", ", society.Buildings.Select(b => Building(session, b)))),
             Work(content.Society, world, settlement),
+            Culture.CultureReadout.Doctrines(content.DivineRules.Culture, settlement),
+            Culture.CultureReadout.Feelings(session, settlement),
         };
 
         var setter = society.PriorityGodId is { } god ? GodStanding.Find(world, god)?.Name : null;

@@ -60,7 +60,7 @@ public sealed class SocietySystem : ISimulationSystem
             Live(world, settlement, seconds);
             Learn(world, settlement, seconds, context.Events);
             Build(settlement, seconds, world, context.Events);
-            _expansion.TryFound(world, settlement, context.Events);
+            _expansion.TryFound(world, settlement, Culture.CultureModel.FoundingFactor(_divine.Culture, settlement.Culture), context.Events);
         }
     }
 
@@ -88,7 +88,9 @@ public sealed class SocietySystem : ISimulationSystem
     private void Learn(WorldState world, SettlementState settlement, float seconds, List<WorldEvent> events)
     {
         var society = settlement.Society;
-        society.Education = SimMath.Clamp01(society.Education + SocietyModel.EducationChange(_rules, settlement, seconds));
+        var change = SocietyModel.EducationChange(_rules, settlement, seconds);
+        var learning = change > 0f ? Culture.CultureModel.LearningFactor(_divine.Culture, settlement.Culture) : 1f;
+        society.Education = SimMath.Clamp01(society.Education + (change * learning));
         var focus = SocietyModel.Focus(_rules, settlement);
         var neighbours = SocietyModel.Neighbours(_rules, world, settlement);
         foreach (var field in Fields)

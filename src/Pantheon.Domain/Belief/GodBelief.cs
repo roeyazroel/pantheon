@@ -25,4 +25,10 @@ public sealed class GodBelief
 
     /// <summary>How uncertain the people have become about the god (0..1).</summary>
     public required float Doubt { get; set; }
+
+    /// <summary>How strongly the people believe they need the god (0..1, spec §7, ADR-024); 0 for a new belief.</summary>
+    public float Dependency { get; set; }
+
+    /// <summary>How angry the people are about the god's behaviour (0..1, spec §7, ADR-024); 0 for a new belief.</summary>
+    public float Resentment { get; set; }
 }

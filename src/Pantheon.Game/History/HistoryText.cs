@@ -61,6 +61,9 @@ public static class HistoryText
             HistoryKind.Thirst => Format("The Thirst of {0}", place),
             HistoryKind.Founding => Format("The Founding of {0}", place),
             HistoryKind.Temple => Format("{0} raises a temple to {1}", place, god),
+            HistoryKind.Revolt => Format("The Revolt of {0} against {1}", place, god),
+            HistoryKind.Renunciation => Format("{0} renounces the gods", place),
+            HistoryKind.Doctrine => Format("{0} embraces {1}", place, Culture.CultureText.Name((Domain.Culture.Doctrine)record.Count)),
         };
     }
 
@@ -78,6 +81,7 @@ public static class HistoryText
             HistoryKind.Fire => Format("{0} houses lost", record.Count),
             HistoryKind.Flood => record.Count > 0 ? Format("{0} houses lost", record.Count) : "people drowned",
             HistoryKind.Founding => Format("{0} settlers", record.Count),
+            HistoryKind.Revolt => Format("{0} renounced their god", record.Count),
             HistoryKind.Exodus => Format("{0} people left", record.Count),
             HistoryKind.Battle => Format("{0} prevailed", CreatureName(world, record.CreatureId)),
             HistoryKind.Betrayal => Format("broken by {0}", GodName(world, record.GodId)),
@@ -85,7 +89,7 @@ public static class HistoryText
             HistoryKind.Claimed => record.OtherGodId is null ? string.Empty : Format("taken from {0}", GodName(world, record.OtherGodId)),
             HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
-                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple => string.Empty,
+                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine => string.Empty,
         };
     }
 

@@ -60,6 +60,8 @@ public static class PantheonFounder
                 RefugeePolicy = RefugeePolicy.Welcome,
                 Cooldowns = [],
                 Domains = [],
+                Conduct = Pantheon.Domain.Culture.GodConduct.None(),
+                Traits = [],
             };
             gods.Add(god);
             if (home is null)

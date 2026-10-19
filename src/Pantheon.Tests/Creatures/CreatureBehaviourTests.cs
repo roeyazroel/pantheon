@@ -258,6 +258,8 @@ public sealed class CreatureBehaviourTests
             RefugeePolicy = RefugeePolicy.Welcome,
             Cooldowns = [],
             Domains = [],
+            Conduct = Pantheon.Domain.Culture.GodConduct.None(),
+            Traits = [],
         };
         creature.Needs.Hunger = 0f;
         creature.Needs.Fatigue = 0f;

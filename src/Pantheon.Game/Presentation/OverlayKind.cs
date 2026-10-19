@@ -23,4 +23,7 @@ public enum OverlayKind
 
     /// <summary>The pressure on each settlement's people to leave, and the routes of people on the move (ADR-016).</summary>
     Migration,
+
+    /// <summary>Each settlement's lands by the doctrine it holds most, grey where it has turned from the gods (ADR-024).</summary>
+    Culture,
 }
