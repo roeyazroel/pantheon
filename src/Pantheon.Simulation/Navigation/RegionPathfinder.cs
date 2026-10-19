@@ -17,13 +17,16 @@ public static class RegionPathfinder
     // Straight-line checks sample the line this often, in regions.
     private const float LineSampleStep = 0.25f;
 
-    /// <summary>Whether a land walker can stand in a region.</summary>
+    /// <summary>Rubble from which a region cannot be walked through until it is cleared (spec §20's blocked roads, ADR-029).</summary>
+    public const float BlockingRubble = 0.5f;
+
+    /// <summary>Whether a land walker can pass through a region.</summary>
     /// <param name="region">The region.</param>
-    /// <returns><c>true</c> for land.</returns>
+    /// <returns><c>true</c> for land not buried in rubble.</returns>
     public static bool IsWalkable(RegionState region)
     {
         ArgumentNullException.ThrowIfNull(region);
-        return region.Biome != Biome.Sea;
+        return region.Biome != Biome.Sea && region.Rubble < BlockingRubble;
     }
 
     /// <summary>

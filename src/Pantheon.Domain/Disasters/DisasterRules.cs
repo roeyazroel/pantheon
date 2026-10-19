@@ -104,6 +104,9 @@ public sealed record DisasterRules
 
     /// <summary>How a settlement's preparations and technology lessen disasters (spec §21, ADR-023).</summary>
     public required Preparedness Preparedness { get; init; }
+
+    /// <summary>Tsunamis, landslides, the volcano, tornadoes, meteors, blight and locusts (ADR-029); none when absent.</summary>
+    public HazardRules Hazards { get; init; } = HazardRules.None;
 }
 
 /// <summary>How a settlement's buildings and technology lessen what disasters do to it (spec §21, §36, ADR-023).</summary>
@@ -126,6 +129,15 @@ public sealed record Preparedness
 
     /// <summary>Share of the food a disaster would spoil that a granary keeps.</summary>
     public required float GranaryFood { get; init; }
+
+    /// <summary>Share of a tsunami's or a hurricane's damage that a sea wall prevents (ADR-029).</summary>
+    public float SeaWallDamage { get; init; }
+
+    /// <summary>Share of a flood's damage that a dam upstream prevents, beside a levee's (ADR-029).</summary>
+    public float DamDamage { get; init; }
+
+    /// <summary>Share of the deaths in every disaster that evacuation routes prevent (ADR-029).</summary>
+    public float EvacuationDeaths { get; init; }
 
     /// <summary>No preparedness at all.</summary>
     public static Preparedness None { get; } = new()

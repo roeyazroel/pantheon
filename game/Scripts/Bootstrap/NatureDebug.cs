@@ -15,7 +15,7 @@ namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
 /// The debug drivers of weather, seasons, disasters, migration and Creature meetings (ADR-013, ADR-014,
-/// ADR-016, ADR-017, ADR-022, ADR-028): the F8, F10, F11, F12, L, M, K and Y hotkeys and the
+/// ADR-016, ADR-017, ADR-022, ADR-028, ADR-029): the F8, F10, F11, F12, L, M, K, Y and I hotkeys and the
 /// <c>--weather</c>, <c>--season</c>, <c>--disaster</c>, <c>--migrate</c>, <c>--refugees</c> and <c>--meet</c> launch options. Every
 /// change goes through the engine-agnostic commands; this class only wires them to input.
 /// </summary>
@@ -24,6 +24,7 @@ internal sealed class NatureDebug
     private readonly GameSession _session;
     private readonly GodCameraController _camera;
     private readonly Action<string> _setStatus;
+    private HazardKind? _lastHazard;
 
     /// <summary>Creates the drivers.</summary>
     /// <param name="session">The session whose world they change.</param>
@@ -48,7 +49,23 @@ internal sealed class NatureDebug
         (InputActions.DebugMigrate, () => AtCursor("send people away", point => MigrationCommands.SendFrom(_session, point))),
         (InputActions.DebugMeet, () => _setStatus(CreatureCommands.BringOther(_session))),
         (InputActions.DebugSeason, () => _setStatus(SeasonCommands.NextSeason(_session))),
+        (InputActions.DebugHazard, NextHazard),
     ];
+
+    /// <summary>Starts the next hazard of the cycle at the cursor (I).</summary>
+    private void NextHazard()
+    {
+        var kind = HazardCommands.Next(_lastHazard);
+        if (_camera.CursorGroundPoint is { } cursor)
+        {
+            _lastHazard = kind;
+            _setStatus(HazardCommands.Start(_session, kind, new GroundPosition(cursor.X, cursor.Z)));
+        }
+        else
+        {
+            _setStatus("Point at the ground to start a hazard");
+        }
+    }
 
     /// <summary>Sets up the weather, disaster, refugee policy and migration the launch options ask for, at the focused settlement where a place is needed.</summary>
     /// <param name="options">Launch options.</param>
@@ -88,7 +105,19 @@ internal sealed class NatureDebug
                 DisasterAtStart.Quake => DisasterCommands.StartQuake(_session, place),
                 DisasterAtStart.Fire => DisasterCommands.StartFire(_session, place),
                 DisasterAtStart.Flood => DisasterCommands.StartFlood(_session, place),
+                DisasterAtStart.Tornado => HazardCommands.Start(_session, HazardKind.Tornado, place),
+                DisasterAtStart.Landslide => HazardCommands.Start(_session, HazardKind.Landslide, place),
+                DisasterAtStart.Meteor => HazardCommands.Start(_session, HazardKind.Meteor, place),
+                DisasterAtStart.Blight => HazardCommands.Start(_session, HazardKind.Blight, place),
+                DisasterAtStart.Locusts => HazardCommands.Start(_session, HazardKind.Locusts, place),
+                DisasterAtStart.Tsunami => HazardCommands.Start(_session, HazardKind.Tsunami, place),
+                DisasterAtStart.Eruption => HazardCommands.Start(_session, HazardKind.Eruption, place),
             });
+            if (disaster == DisasterAtStart.Eruption && _session.World.Disasters.Volcano is { } volcano)
+            {
+                // The volcano may stand far from any village, so the camera goes to it.
+                _camera.FocusOn(_session.World.Regions.GetRegionCenter(volcano.RegionId), distance: null, snap: true);
+            }
         }
     }
 

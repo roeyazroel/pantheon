@@ -121,7 +121,8 @@ rule is followed by the conventions that meet it in this repository.
   others, and how yours would meet the nearest one, the climate (the season and what it and a heat
   or cold wave change), the weather's spell and cells, the land's life at the cursor (snow,
   wildlife, damage, scar, pollution and biodiversity), the rivers'
-  levels and the lakes, earthquakes and fires,
+  levels and the lakes, earthquakes and fires, the volcano, tornadoes, locust swarms, blighted and
+  buried land and the marks on it,
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second and the sections a player received, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier,
@@ -134,12 +135,12 @@ rule is followed by the conventions that meet it in this repository.
   holy sites and who keeps them), the U council panel (the vote in session, decrees, tabled motions and motions to table), the N Settlements panel (a village's faiths, stores, society,
   technology, buildings and work, doctrines, turn from the gods and feelings, holy wars, its priority, the player's word to its holy war and proxy acts), the settings page, the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire, scorch, fresh water, flood, snow,
-  wildlife, damage, scar and pollution), the
+  wildlife, damage, scar, pollution, blight and rubble), the
   O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
   F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
   flood), M
-  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), the launch
+  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), the launch
   options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,

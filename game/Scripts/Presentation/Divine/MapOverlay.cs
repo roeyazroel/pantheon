@@ -18,7 +18,7 @@ internal sealed class MapOverlay
     /// <param name="parent">Node that holds it.</param>
     public MapOverlay(Node3D parent)
     {
-        _decal = new Decal { Name = "MapOverlay", Visible = false, UpperFade = 0f, LowerFade = 0f };
+        _decal = new Decal { Name = "MapOverlay", Visible = false, UpperFade = 0f, LowerFade = 0f, CullMask = DeclutteredLabel.GroundOnly };
         parent.AddChild(_decal);
     }
 

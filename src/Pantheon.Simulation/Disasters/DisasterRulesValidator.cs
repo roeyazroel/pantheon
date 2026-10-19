@@ -52,6 +52,7 @@ public static class DisasterRulesValidator
         errors.RequireShare(rules.HouseQuakeResistance, nameof(rules.HouseQuakeResistance));
         errors.RequireShare(rules.HouseFireResistance, nameof(rules.HouseFireResistance));
         errors.RequireShare(rules.ShieldedDamage, nameof(rules.ShieldedDamage));
+        HazardRulesValidator.Check(errors, rules);
         errors.ThrowIfAny("disaster rules", nameof(rules));
     }
 }

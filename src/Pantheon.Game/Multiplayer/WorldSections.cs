@@ -124,6 +124,11 @@ public static class WorldSections
                 var disasters = Read<DisasterState>(data);
                 Replace(world.Disasters.Earthquakes, disasters.Earthquakes);
                 world.Disasters.NextEarthquakeId = disasters.NextEarthquakeId;
+                Replace(world.Disasters.Tornadoes, disasters.Tornadoes);
+                Replace(world.Disasters.Swarms, disasters.Swarms);
+                Replace(world.Disasters.Marks, disasters.Marks);
+                Replace(world.Disasters.BlightedSettlementIds, disasters.BlightedSettlementIds);
+                (world.Disasters.NextHazardId, world.Disasters.Volcano) = (disasters.NextHazardId, disasters.Volcano);
                 return null;
             case WorldSection.Migration:
                 var migration = Read<MigrationState>(data);
@@ -245,7 +250,9 @@ public sealed record CreatureMotion(
 /// <param name="Damage">The harm to its life (ADR-028).</param>
 /// <param name="Scar">The permanent part of the harm (ADR-028).</param>
 /// <param name="Pollution">Its pollution (ADR-028).</param>
-public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood, float Snow = 0f, float Wildlife = 0f, float Damage = 0f, float Scar = 0f, float Pollution = 0f)
+/// <param name="Blight">The blight in its fields (ADR-029).</param>
+/// <param name="Rubble">The landslide rubble on it (ADR-029).</param>
+public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood, float Snow = 0f, float Wildlife = 0f, float Damage = 0f, float Scar = 0f, float Pollution = 0f, float Blight = 0f, float Rubble = 0f)
 {
     /// <summary>A region's changing values now.</summary>
     /// <param name="region">The region.</param>
@@ -253,7 +260,7 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
     public static RegionChange Of(RegionState region)
     {
         ArgumentNullException.ThrowIfNull(region);
-        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution);
+        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution, region.Blight, region.Rubble);
     }
 
     /// <summary>Sets a replica's region to these values.</summary>
@@ -263,5 +270,6 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
         ArgumentNullException.ThrowIfNull(region);
         (region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood) = (Fertility, Vegetation, Blessing, SoilMoisture, Fire, Scorch, Flood);
         (region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution) = (Snow, Wildlife, Damage, Scar, Pollution);
+        (region.Blight, region.Rubble) = (Blight, Rubble);
     }
 }

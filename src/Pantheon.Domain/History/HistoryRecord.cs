@@ -114,6 +114,27 @@ public enum HistoryKind
 
     /// <summary>The land a settlement lives from was scarred for good (ADR-028).</summary>
     Scar,
+
+    /// <summary>A wave from the sea struck a settlement; <see cref="HistoryRecord.Count"/> is the houses lost (ADR-029).</summary>
+    Tsunami,
+
+    /// <summary>A landslide buried a settlement; <see cref="HistoryRecord.Count"/> is the dead (ADR-029).</summary>
+    Landslide,
+
+    /// <summary>The volcano by a settlement erupted (ADR-029).</summary>
+    Eruption,
+
+    /// <summary>A tornado tore through a settlement; <see cref="HistoryRecord.Count"/> is the houses lost (ADR-029).</summary>
+    Tornado,
+
+    /// <summary>A falling star struck by a settlement (ADR-029).</summary>
+    Meteor,
+
+    /// <summary>Blight took a settlement's fields (ADR-029).</summary>
+    Blight,
+
+    /// <summary>Locusts fell on a settlement (ADR-029).</summary>
+    Locusts,
 }
 
 /// <summary>

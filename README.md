@@ -260,6 +260,11 @@ covers:
   season does to harvests, stores, health and migration, snow lying and melting, fog and
   hurricanes, harm healing into scars and Nature's healing, wildlife and hunting, pollution, the
   words, alerts, history, readouts and overlay, and the migration of part 7's saves;
+- hazards: the volcano, its lava and ash, waves from coastal quakes and sea walls, landslides and
+  the rubble that blocks the way, meteors, tornadoes, locusts and rain, blight and what cures it,
+  evacuation routes, dams and irrigation, marks fading, the same hazards across a save and load,
+  their words, alerts, history, readouts, overlay, cover and commands, and the migration of part
+  8's saves;
 - world sizes and victories: the shipped sizes and what a larger one adds, the same world for the
   same seed and size, the checks on `world_sizes.json`, conquest, culture and the sandbox, the
   first victory being the only one, how each victory is told (alerts, history, end screen, HUD),
@@ -332,6 +337,7 @@ covers:
 | Start the next weather spell: normal, dry, wet, heat wave, cold wave (debug) | F8 |
 | Call a storm at the cursor, short of a hurricane (debug) | F10 |
 | Begin the next season (debug) | Y |
+| Start the next hazard at the cursor: tornado, landslide, meteor, blight, locusts, tsunami, eruption (debug) | I |
 | Start an earthquake at the cursor (debug) | F11 (fn+F11 on Mac laptops) |
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
 | Flood the nearest river, or send a wave over the land at the cursor (debug) | L |
@@ -659,6 +665,35 @@ go hungry. The line under your HUD names the season and the time left in it ("Wi
 
 The rules are in `game/Data/disasters.json`.
 
+## Hazards
+
+- **Tsunamis.** A strong earthquake near the coast raises a great wave that floods the low land
+  around the shore. A sea wall spares a village most of it.
+- **Landslides.** Steep slopes give way when the soil is soaked or an earthquake shakes them,
+  burying the land below in rubble. Rubble blocks the way for migrants and Creatures until it is
+  cleared, and the village it buries is marked "cut off".
+- **The volcano.** The island's highest peak, if high enough, is a volcano. Now and then it wakes:
+  it rumbles with tremors for 40 seconds, then erupts for a minute. Lava runs down its steepest
+  slope and burns everything in its way, and ash falls around it, harming the land, sickening the
+  people and spoiling their stores. A plume of smoke rises while it rumbles, and embers and a red
+  glow while it erupts.
+- **Tornadoes.** A thunderstorm over warm land may spin one down: a grey funnel that runs with the
+  storm for half a minute or so and tears down the houses it passes.
+- **Falling stars.** Rarely, a meteor strikes: a crater, fire, an earthquake and ruin around it.
+- **Blight.** Crops sicken in warm, wet fields, and blight spreads from field to field. Blighted
+  fields (yellowed on the land) yield less, and their villages are marked "blight". Dry weather,
+  fire or Bless Crops ends it.
+- **Locusts.** Swarms rise from hot, dry land and drift with the wind, eating the stores of the
+  villages they pass over. Rain drowns them.
+- **Marks on the land.** Earthquakes crack the ground, landslides scar the slopes and meteors
+  leave craters; the marks fade over ten minutes.
+- **Preparing.** Villages preparing for disaster raise sea walls by the sea, dams beside rivers
+  and lakes, and evacuation routes, which save half the lives any disaster would take. Villages
+  putting food first irrigate their fields beside water, which saves their harvest in dry weather.
+
+The alerts and the history tell of each hazard, and the Danger overlay (O) shows rubble in grey and
+blight in purple. The rules are in `Hazards` in `game/Data/disasters.json`.
+
 ## The land's life
 
 - **Harm.** Fires, floods, earthquakes and lightning harm the life of the land they reach. Harmed
@@ -696,12 +731,12 @@ The rules are in `game/Data/ecology.json`.
 
   | Priority | What happens |
   | --- | --- |
-  | Increase food | More is harvested; a granary keeps more and saves food from disasters |
+  | Increase food | More is harvested; a granary keeps more and saves food from disasters; irrigation waters the fields beside water |
   | Improve health | Healers tend the sick; a hospital saves lives |
   | Grow | More births while there is food and room |
   | Focus on worship | Twice the worship, so more power for its gods |
   | Prepare for war | Watchmen; walls turn attacks away |
-  | Prepare for disaster | Levees beside water, firebreaks, shelters and cisterns |
+  | Prepare for disaster | Levees and dams beside water, sea walls by the sea, firebreaks, shelters, cisterns and evacuation routes |
   | Expand | Settlers found new villages on free land nearby |
   | Build a temple | A temple to you: half again as much power from its worship |
 - **Buildings** rise once the village has put by the wealth for them. Temples (roofed in their
@@ -1019,7 +1054,8 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   goal now and its top candidate actions with their scores and reasons, its diplomatic moves
   with the factors behind them, the climate (the season and what it and a heat or cold wave
   change), the weather (the spell, the wind and the strongest cells),
-  disasters (earthquakes and the fiercest fires), migration (the groups on the road and every
+  disasters (earthquakes and the fiercest fires), hazards (the volcano, tornadoes, swarms, blighted
+  and buried regions, and marks on the land), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
@@ -1049,7 +1085,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   lowest value) to bright (the highest), and the legend gives the range. The region under the
   cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
   vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water,
-  flood, snow, wildlife, damage, scar and pollution, all on a fixed 0 to 1 scale.
+  flood, snow, wildlife, damage, scar, pollution, blight and rubble, all on a fixed 0 to 1 scale.
 - **O** cycles the map overlays: influence, religion, faith, food, weather, danger, migration,
   culture and nature.
 - **K** brings the nearest other Creature beside yours, so they meet at once and you can watch them
@@ -1064,6 +1100,8 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
 - **F8** starts the next weather spell (normal, dry, wet, heat wave, cold wave) for its longest
   length, and **F10** calls a storm at the cursor, short of a hurricane. Use them to drive
   droughts and storm damage. **Y** begins the next season.
+- **I** starts the next hazard of the cycle at the cursor: a tornado, a landslide, a meteor,
+  blight in the fields, a locust swarm, a wave on the nearest coast, then the volcano's waking.
 - **F11** starts an earthquake (magnitude 6.5) and **F12** a fire at the cursor.
 - **L** makes the nearest river within 400 m burst its banks, or sends a wave over the low land at
   the cursor. The debug panel lists the rivers' levels and the lakes, and a selected settlement's
@@ -1101,7 +1139,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm\|heatwave\|coldwave\|hurricane` | Start in a weather spell, or with a storm or a hurricane over the focused settlement. |
-| `--disaster=quake\|fire\|flood` | Start an earthquake, a fire or a flood at the focused settlement. |
+| `--disaster=quake\|fire\|flood\|tornado\|landslide\|meteor\|blight\|locusts\|tsunami\|eruption` | Start a disaster or a hazard at the focused settlement (the volcano wakes wherever it is, and the camera goes to it). |
 | `--priority=<priority>` | Ask the focused settlement to put something first (Food, Health, Growth, Worship, Defence, Preparation, Expansion, Temple). |
 | `--settlement-panel=on\|off` | Open the Settlements panel (N) on the focused settlement at the start. |
 | `--doctrine=<doctrine>\|secular` | Give the focused settlement a doctrine in full (Pacifism, Militarism, Sacrifice, Charity, NatureWorship, KnowledgeSeeking, Expansionism, Isolationism), or turn it against the gods. |
@@ -1202,8 +1240,9 @@ Milestones 1 to 13 start with an empty history: the world remembers from then on
 Milestones 1 to 14 start with gods who have chosen no domains and with no village split, and find
 their holy sites when they are loaded. Saves from before Milestone 15, part 7 are won by Divine
 Ascendancy alone. Saves from before part 8 keep an even climate, without seasons, with no snow or
-harm and their land's animals at its cover. A save keeps its world's size, how it may be won and
-its seasons.
+harm and their land's animals at its cover. Saves from before part 9 start with no blight, rubble,
+tornadoes, swarms or marks, and find their volcano when it is first needed. A save keeps its world's
+size, how it may be won and its seasons.
 
 Your settings are kept in `user://settings.json`; the start screen and the pause menu have a
 settings page.

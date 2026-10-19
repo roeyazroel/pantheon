@@ -56,4 +56,10 @@ public enum RegionDebugLayer
 
     /// <summary>Its pollution (ADR-028).</summary>
     Pollution,
+
+    /// <summary>The blight in its crops (ADR-029).</summary>
+    Blight,
+
+    /// <summary>The rubble a landslide left on it (ADR-029).</summary>
+    Rubble,
 }

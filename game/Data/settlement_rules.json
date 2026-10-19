@@ -87,6 +87,8 @@
     "FoodPriorityYield": 0.15,
     "HealthPriorityRecovery": 0.003,
     "GrowthPriorityBirths": 0.4,
-    "WorshipPriorityFactor": 2.0
+    "WorshipPriorityFactor": 2.0,
+    // Irrigation supplies this share of its fields' missing soil water (ADR-029).
+    "IrrigationWater": 0.5
   }
 }

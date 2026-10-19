@@ -18,7 +18,8 @@ public static class SettlementEconomy
     /// <param name="radius">Farmland radius in regions; 0 is the settlement's own region only.</param>
     /// <returns>
     /// The number of farmable regions and their mean fertility, blessing, soil moisture, scorch, flood
-    /// and snow. The land's fertility counts as far as its life is unharmed and unpolluted (ADR-028).
+    /// snow and blight. The land's fertility counts as far as its life is unharmed and unpolluted
+    /// (ADR-028) and its crop free of blight (ADR-029).
     /// The square is clipped at the grid edge.
     /// </returns>
     public static FarmlandSurvey SurveyFarmland(RegionGrid grid, int regionId, int radius)
@@ -35,6 +36,7 @@ public static class SettlementEconomy
         var scorch = 0f;
         var flood = 0f;
         var snow = 0f;
+        var blight = 0f;
         for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
         {
             for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
@@ -43,17 +45,18 @@ public static class SettlementEconomy
                 if (IsFarmland(region))
                 {
                     count++;
-                    fertility += SimMath.Clamp01(region.Fertility) * (1f - SimMath.Clamp01(region.Damage)) * (1f - SimMath.Clamp01(region.Pollution));
+                    fertility += SimMath.Clamp01(region.Fertility) * (1f - SimMath.Clamp01(region.Damage)) * (1f - SimMath.Clamp01(region.Pollution)) * (1f - SimMath.Clamp01(region.Blight));
                     blessing += SimMath.Clamp01(region.Blessing);
                     soil += SimMath.Clamp01(region.SoilMoisture);
                     scorch += SimMath.Clamp01(region.Scorch);
                     flood += SimMath.Clamp01(region.Flood);
                     snow += SimMath.Clamp01(region.Snow);
+                    blight += SimMath.Clamp01(region.Blight);
                 }
             }
         }
 
-        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count, flood / count, snow / count) : new FarmlandSurvey(0, 0f);
+        return count > 0 ? new FarmlandSurvey(count, fertility / count, blessing / count, soil / count, scorch / count, flood / count, snow / count, blight / count) : new FarmlandSurvey(0, 0f);
     }
 
     /// <summary>Whether a region can be farmed: dry land with fertile soil.</summary>
@@ -395,6 +398,12 @@ public static class SettlementEconomy
         ArgumentNullException.ThrowIfNull(regions);
 
         var land = SurveyFarmland(regions, settlement.RegionId, rules.FarmlandRadius);
+        if (CivicModel.Has(settlement, Domain.Society.BuildingKind.Irrigation))
+        {
+            // Irrigation brings water from rivers, lakes and wells to the fields (ADR-029).
+            land = land with { MeanSoilMoisture = land.MeanSoilMoisture + ((1f - land.MeanSoilMoisture) * rules.Civics.IrrigationWater) };
+        }
+
         var labour = AllocateLabour(rules, settlement);
         var production = (ComputeProduction(rules, labour.Farmers, land) * CivicModel.YieldFactor(rules, settlement) * Math.Max(0f, climateYield)) + Math.Max(0f, hunted);
         var consumption = ComputeConsumption(rules, settlement.Population);

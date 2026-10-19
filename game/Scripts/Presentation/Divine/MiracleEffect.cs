@@ -165,7 +165,7 @@ internal sealed partial class MiracleEffect : Node3D
     /// <summary>A ring of light on the ground that spreads to the radius.</summary>
     private void AddRing(Color color)
     {
-        _ring = new Decal { Name = "Wave", TextureAlbedo = RingTexture.Texture, Modulate = color, Size = new Vector3(1f, 80f, 1f), EmissionEnergy = 2f };
+        _ring = new Decal { Name = "Wave", TextureAlbedo = RingTexture.Texture, Modulate = color, Size = new Vector3(1f, 80f, 1f), EmissionEnergy = 2f, CullMask = DeclutteredLabel.GroundOnly };
         AddChild(_ring);
     }
 

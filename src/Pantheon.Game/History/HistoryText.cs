@@ -73,6 +73,13 @@ public static class HistoryText
             HistoryKind.Exposure => Format("The Plot of {0} against {1} is uncovered", god, other),
             HistoryKind.Hurricane => Format("The Great Storm of {0}", place),
             HistoryKind.Scar => Format("The Scarring of {0}", place),
+            HistoryKind.Tsunami => Format("The Great Wave of {0}", place),
+            HistoryKind.Landslide => Format("The Landslide at {0}", place),
+            HistoryKind.Eruption => Format("The Eruption of {0}", record.SettlementId is { } id && world.Settlements.Find(s => s.Id == id) is { } village ? Disasters.DisasterText.VolcanoName(world, world.Disasters.Volcano?.RegionId ?? village.RegionId) : place),
+            HistoryKind.Tornado => Format("The Whirlwind of {0}", place),
+            HistoryKind.Meteor => Format("The Falling Star of {0}", place),
+            HistoryKind.Blight => Format("The Blight of {0}", place),
+            HistoryKind.Locusts => Format("The Locusts of {0}", place),
         };
     }
 
@@ -89,7 +96,8 @@ public static class HistoryText
             HistoryKind.Earthquake => record.Count > 0 ? Format("{0} dead", record.Count) : "houses fell",
             HistoryKind.Fire => Format("{0} houses lost", record.Count),
             HistoryKind.Flood => record.Count > 0 ? Format("{0} houses lost", record.Count) : "people drowned",
-            HistoryKind.Hurricane => Format("{0} houses lost", record.Count),
+            HistoryKind.Hurricane or HistoryKind.Tsunami or HistoryKind.Tornado => Format("{0} houses lost", record.Count),
+            HistoryKind.Landslide => record.Count > 0 ? Format("{0} dead", record.Count) : "houses buried",
             HistoryKind.Founding => Format("{0} settlers", record.Count),
             HistoryKind.Revolt => Format("{0} renounced their god", record.Count),
             HistoryKind.Absorption => Format("{0} turned", record.Count),
@@ -102,7 +110,8 @@ public static class HistoryText
             HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
                 or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple or HistoryKind.Renunciation or HistoryKind.Doctrine
-                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure or HistoryKind.Scar => string.Empty,
+                or HistoryKind.Treaty or HistoryKind.Revelation or HistoryKind.Decree or HistoryKind.DictatedPeace or HistoryKind.Exposure or HistoryKind.Scar
+                or HistoryKind.Eruption or HistoryKind.Meteor or HistoryKind.Blight or HistoryKind.Locusts => string.Empty,
         };
     }
 

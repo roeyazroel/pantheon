@@ -44,6 +44,7 @@ silently:
 | [ADR-026](ADR-026-war-goals-intelligence-proxy-wars-and-holy-wars.md) | War goals, intelligence, proxy wars and mortal holy wars | Accepted |
 | [ADR-027](ADR-027-world-sizes-victories-and-large-worlds.md) | World sizes, conquest, cultural and sandbox victories, and large worlds | Accepted |
 | [ADR-028](ADR-028-seasons-extremes-and-ecology.md) | Seasons, weather extremes and the land's life | Accepted |
+| [ADR-029](ADR-029-hazards-preparation-and-marks-on-the-land.md) | Hazards, disaster preparation and marks on the land | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

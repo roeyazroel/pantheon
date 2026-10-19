@@ -133,7 +133,8 @@ files and compiled assemblies and fails when either rule is broken.
   `VictoryAchieved.Kind` (`VictoryKind`: ascendancy, pantheon, conquest, cultural) how it was. A
   world's size lives only in `Generation` and its gods. Since ADR-028, `Seasons` (`SeasonState`:
   the tick the year began) is present when the world turns through seasons, and regions carry
-  `Snow`, `Wildlife`, `Damage`, `Scar` and `Pollution`.
+  `Snow`, `Wildlife`, `Damage`, `Scar` and `Pollution`. Since ADR-029 regions carry `Blight` and
+  landslide `Rubble`.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -187,7 +188,11 @@ files and compiled assemblies and fails when either rule is broken.
   `DiplomacyRules.Conflict` tunes war goals, intelligence, proxy acts and holy wars. A settlement's
   society holds the `HolyWarState` it wages, if any.
 - `DisasterState` (ADR-014): the `Earthquakes` under way (epicentre, magnitude, peak intensity,
-  radius, end and the god who caused it) and `NextEarthquakeId`.
+  radius, end and the god who caused it) and `NextEarthquakeId`. Since ADR-029 also the
+  `Tornadoes` and locust `Swarms` on the move with `NextHazardId`, the island's `Volcano` (its
+  region and `VolcanoPhase`: dormant, rumbling, erupting) once found, the `Marks` left on the land
+  (`TerrainMark`: crack, slide or crater, where and when) and the `BlightedSettlementIds` told of
+  blight.
 - `WeatherState` (ADR-013): `Cells` (`WeatherCell`: position, velocity, radius, pressure,
   temperature, humidity, precipitation, wind, electrical activity and the god who called it),
   `NextCellId`, `Spell` (normal, dry, wet, heat wave or cold wave, ADR-028), `SpellEndsTick` and
@@ -199,8 +204,10 @@ files and compiled assemblies and fails when either rule is broken.
   `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded`, `DomainChosen`, `HolySiteContested`,
   `HolySiteClaimed`, `SchismStarted`, `SchismEnded`, `FloodStarted`, `ThirstStarted`,
   `PriorityChanged`, `BuildingCompleted`, `TechnologyAdvanced`, `SettlementFounded`,
-  `SeasonChanged`, `LandScarred` and others; `StormStruck.Hurricane` and `DisasterKind.Hurricane`
-  tell of hurricanes)
+  `SeasonChanged`, `LandScarred`, `TsunamiStruck`, `LandslideStruck`, `VolcanoChanged`,
+  `TornadoTouchedDown`, `MeteorStruck`, `BlightChanged`, `SwarmArrived` and others;
+  `StormStruck.Hurricane` and `DisasterKind.Hurricane` tell of hurricanes, and `DisasterKind`
+  names every hazard that damages a settlement)
   raised during a tick or a command
   and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
@@ -225,6 +232,9 @@ files and compiled assemblies and fails when either rule is broken.
   (ADR-027). `WeatherRules.Seasons` (`SeasonRules`: the season's length and each season's
   `ClimateEffects`) and `WeatherRules.Extremes` (`ExtremeRules`: snow, fog, hurricanes, heat and
   cold waves), and `EcologyRules` (`ecology.json`), shape the year and the land's life (ADR-028).
+  `DisasterRules.Hazards` (`HazardRules`: tsunamis, landslides, the volcano, tornadoes, meteors,
+  blight, locusts and how long marks last) shapes the hazards, and `Preparedness` and
+  `SettlementRules.Civics` what sea walls, dams, evacuation routes and irrigation do (ADR-029).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -306,8 +316,11 @@ files and compiled assemblies and fails when either rule is broken.
 - `Disasters/`: `DisasterModel` (quakes, shaking, flammability, ignition, fire threat, danger,
   shields), `Wildfires` (lighting, burning, spreading, regrowth), `DisasterDamage` (what a quake,
   fire or flood does to a settlement) and `DisasterSystem` (the disaster step). `Belief/Hazards`
-  carries a settlement's drought, danger and thirst into its conditions. See
-  [Disasters](#disasters).
+  carries a settlement's drought, danger and thirst into its conditions. Since ADR-029
+  `HazardModel` (the volcano, lava, waves, slides, impacts, spawning), `HazardSystem` (the hazard
+  step) and `LivingHazards` (tornadoes, locusts, blight) run the rest of §19's hazards, and
+  `DisasterDamage.Strike` applies any of them to a settlement. See [Disasters](#disasters) and
+  [Hazards](#hazards).
 - `Society/`: `SocietyModel` (targets of safety, happiness and stability, wealth, learning,
   focus, the next building), `SocietySystem` (the society step), `Expansion` (settlers founding
   villages), `SocietyAuthority` (priorities, checked) and `PriorityAdvisor` (AI gods' priorities).
@@ -346,8 +359,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (8 since ADR-028, whose world and regions carry the
-  seasons and the land's life), the default port (7777), the host's peer id and the most players.
+- `NetworkProtocol`: the protocol version (9 since ADR-029, whose disasters and regions carry the
+  hazards, blight and rubble), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
   `ViewFocus`, the intents (`CastIntent`, veiled or not, `CreatureIntent`, `DiplomacyIntent` with a
@@ -393,7 +406,9 @@ not met. Version 17 → 18 gives the world no war records and every settlement n
 18 → 19 (`VictorySaveMigration`) makes the world won by ascendancy alone and starts no god's
 conquest or cultural clock. Version 19 → 20 (`NatureSaveMigration`) keeps the world's even
 climate, without seasons, and gives its regions no snow, harm, scars or pollution and their
-animals at their cover. A missing,
+animals at their cover. Version 20 → 21 (`HazardSaveMigration`) gives regions no blight or rubble
+and the disasters nothing on the move, no marks, no village told of blight and a volcano still to
+be found. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -477,7 +492,9 @@ animals at their cover. A missing,
   `Creatures/CreatureBondText` words how Creatures regard each other, and
   `Creatures/CreatureCommands` brings another Creature to the player's (K).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
-  `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging.
+  `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging,
+  and `Disasters/HazardCommands` any hazard (I, `--disaster`); `Alerts/HazardAlerts` tells of the
+  hazards (ADR-029).
 - `Weather/WeatherText` words spells, kinds, the wind's direction and droughts;
   `Weather/WeatherCommands` drives the weather for debugging (F8 next spell, F10 a storm at the
   cursor). `Weather/SeasonText` words the seasons and `Weather/SeasonCommands` begins one (Y,
@@ -584,7 +601,10 @@ animals at their cover. A missing,
 - `Presentation/Disasters/`: `DisasterPresenter` keeps a `FireView` (flames, smoke, glow) per
   burning region, ash decals on scorched land and a dome over each shielded settlement, plays a
   shock wave when an earthquake begins and shakes the camera while the ground under its focus
-  shakes. `SiteView` draws ruins as rubble.
+  shakes. `SiteView` draws ruins as rubble. Its `HazardPresenter` (ADR-029) drapes blight and
+  rubble (`HazardCover`) over the land, keeps a funnel per tornado and a cloud per swarm
+  (`HazardViews`), raises the volcano's plume while it rumbles or erupts, and lays a fading decal
+  for each crack, slide and crater.
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast
   along the way, and a label that fades out at strategic zoom.
@@ -660,6 +680,7 @@ sequenceDiagram
         end
         opt last tick of each 10-tick interval
             Engine->>State: disaster step (earthquakes, wildfires, hurricanes, destruction, fear)
+            Engine->>State: hazard step (waves, the volcano, landslides, meteors, tornadoes, locusts, blight, marks)
             Engine->>State: ecology step (harm, scars, wildlife, pollution)
         end
         opt last tick of each 10-tick interval (1 Hz at x1)
@@ -1017,8 +1038,8 @@ flowchart LR
   - The Nature overlay (`NatureOverlay`) paints biodiversity, scars and snow.
   - The client drapes `SnowCover` over the terrain.
 - **Cost:** a tenth more per tick: 0.09 ms on a small world, 0.68 ms on a huge one.
-- **Not modelled:** the rest of §19's disasters (part 9), snow slowing travel, grass and trees
-  changing colour with the seasons, and pollution by technology.
+- **Not modelled:** snow slowing travel, grass and trees changing colour with the seasons, and
+  pollution by technology. The rest of §19's disasters came in part 9 ([Hazards](#hazards)).
 ## Sound and settings
 
 ```mermaid
@@ -1533,6 +1554,57 @@ flowchart LR
     Rain["Rain, firefighting"] --> Fire
 ```
 
+## Hazards
+
+ADR-029 records the decisions, and the plan
+([.docs/milestone-15-part-9-hazards.md](../.docs/milestone-15-part-9-hazards.md)) the numbers.
+`HazardSystem` runs after the disaster step, on its interval, with a stream derived from the seed
+and the tick.
+
+```mermaid
+flowchart LR
+    quake[Earthquake begins] --> crack[Crack mark]
+    quake --> wave[Tsunami near the coast]
+    quake --> slide[Landslide on shaken slopes]
+    soaked[Soaked steep slope] --> slide
+    slide --> rubble[RegionState.Rubble]
+    rubble --> blocked[RegionPathfinder: the way is blocked]
+    volcano[Volcano wakes] --> tremor[Tremors]
+    tremor --> quake
+    volcano --> lava[Lava: fire, scorch, harm]
+    volcano --> ash[Ash: harm, sickness, spoiling]
+    storm[Thunderstorm over warm land] --> tornado[Tornado]
+    meteor[Falling star] --> crater[Crater, fire, quake]
+    wet[Warm, wet fields] --> blight[RegionState.Blight]
+    blight --> harvest[Smaller harvests]
+    dry[Hot, dry land] --> locusts[Locust swarm]
+    locusts --> stores[Eaten stores]
+    wave --> strike[DisasterDamage.Strike]
+    slide --> strike
+    tornado --> strike
+    crater --> strike
+    strike --> village[Houses, people, fear]
+    prepared[Sea walls, dams, evacuation routes] --> strike
+```
+
+- **Each step** cracks the land where earthquakes began and raises a wave from those near the
+  coast, runs the volcano's phases, clears rubble and lets soaked or shaken slopes slide, and may
+  bring a meteor. `LivingHazards` then spins tornadoes down from thunderstorms, raises and moves
+  locust swarms, and grows, spreads and cures blight. Old marks are forgotten.
+- **Striking a village** goes through `DisasterDamage.Strike`: the shield, Protection,
+  architecture, the village's works (`Exposure`) and evacuation routes (`Deadliness`), then fear
+  and a `SettlementDamaged` report.
+- **Preparation.** `SocietyModel.NextProject` raises sea walls only beside the sea, and dams and
+  irrigation only beside water. Irrigation waters a village's fields in `SettlementEconomy.Assess`.
+- **Blight** lowers farmland's fertility in `SurveyFarmland`. A village is told as its fields'
+  mean blight reaches the notice and again below half of it; `BlightedSettlementIds` keeps who
+  has been told.
+- **Presentation.** `HazardAlerts`, the history's hazard titles, the labels' "blight" and "cut
+  off", F1's hazards line, F3's layers, the Danger overlay, `HazardCover` and the client's
+  `HazardPresenter`.
+- **Not modelled:** lava as its own flow, slides that change the terrain's height, tornadoes
+  that carry things, and reservoirs beyond the cistern.
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -1593,7 +1665,10 @@ the client.
   fires and the selected settlement's dangers (fire threat, shaking, ruins, homeless, scorched
   land, shield). F3 has fire and scorch layers, the Danger overlay shows fires, ash and shields,
   F11 starts an earthquake and F12 a fire at the cursor, and `--disaster=quake|fire` starts one at
-  the focused settlement.
+  the focused settlement. Since ADR-029 a hazards line gives the volcano, tornadoes, swarms,
+  blighted and buried regions and marks, each settlement's line its blight and rubble, F3 has
+  blight and rubble layers, the Danger overlay shows them, I starts the next hazard at the cursor
+  and `--disaster` takes `tornado|landslide|meteor|blight|locusts|tsunami|eruption`.
 - The F1 panel's migration lines (`MigrationReadout`, §106 "migration routes") list the groups on
   the road (size, way, cause, food, health, the god they follow), every god's refugee policy with
   the AI's reason, and the selected settlement's pressure, cause and people wanting to leave. The
@@ -1633,11 +1708,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 20 (current)
+    alt version 21 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 19
+    else versions 1 to 20
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 20, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life)
+        Mig-->>Save: JsonObject at version 21, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

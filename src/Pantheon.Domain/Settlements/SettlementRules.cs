@@ -167,6 +167,9 @@ public sealed record CivicEffects
     /// <summary>Factor on the share of the day spent worshipping under a Worship priority.</summary>
     public required float WorshipPriorityFactor { get; init; }
 
+    /// <summary>Share of the farmland's missing soil water that irrigation supplies (ADR-029).</summary>
+    public float IrrigationWater { get; init; }
+
     /// <summary>No effects at all: for rules built before technology and buildings.</summary>
     public static CivicEffects None { get; } = new()
     {

@@ -58,6 +58,40 @@
     "ShelterDeaths": 0.6,
     "FirebreakDamage": 0.5,
     "LeveeDamage": 0.6,
-    "GranaryFood": 0.5
+    "GranaryFood": 0.5,
+    // A sea wall spares a coastal village this share of a tsunami's or a hurricane's damage, a dam a
+    // river village this share of a flood's (beside a levee's), and evacuation routes this share of
+    // the deaths in every disaster (ADR-029).
+    "SeaWallDamage": 0.6,
+    "DamDamage": 0.3,
+    "EvacuationDeaths": 0.5
+  },
+
+  // The rest of spec section 19's disasters (ADR-029), each a process. Rates are per second.
+  "Hazards": {
+    // An earthquake at least MinMagnitude within CoastDistance metres of the sea raises a wave that
+    // floods the land around the shore, RadiusPerMagnitude metres inland and HeightPerMagnitude metres
+    // above the sea per magnitude above MinMagnitude, plus one.
+    "Tsunami": { "MinMagnitude": 6.0, "CoastDistance": 250.0, "RadiusPerMagnitude": 180.0, "HeightPerMagnitude": 2.5, "HousingLoss": 0.35, "Deaths": 0.06 },
+    // A region at least MinDrop metres above its lowest neighbour slides with SlidePerSecond chance
+    // while its soil is soaked, and ShakeChance a second while an earthquake shakes it fully; it
+    // buries the land below in rubble that blocks the way until it clears.
+    "Landslide": { "SlidePerSecond": 0.00005, "MinDrop": 30.0, "WetSoil": 0.85, "ShakeChance": 0.002, "HousingLoss": 0.4, "Deaths": 0.05, "Damage": 0.5, "RubbleClearPerSecond": 0.004 },
+    // The highest peak, if at least MinElevation metres high, wakes EruptionsPerHour, rumbles with
+    // tremors, then erupts: lava down LavaRegions regions of its steepest slope, ash within AshRadius.
+    "Volcano": { "EruptionsPerHour": 0.5, "MinElevation": 60.0, "RumbleSeconds": 40.0, "EruptSeconds": 60.0, "TremorSeconds": 8.0, "TremorMagnitude": 4.8, "LavaRegions": 6, "AshRadius": 350.0, "AshDamagePerSecond": 0.004, "AshHealthLossPerSecond": 0.002, "AshFoodLossPerSecond": 0.004, "CooldownSeconds": 1200.0 },
+    // A thunderstorm over land at least MinTemperature warm spins a tornado down with
+    // PerStormPerSecond chance; it runs at Speed for MinSeconds to MaxSeconds, wrecking Radius metres.
+    "Tornado": { "PerStormPerSecond": 0.004, "MinTemperature": 0.6, "Radius": 45.0, "MinSeconds": 20.0, "MaxSeconds": 45.0, "Speed": 14.0, "HousingLossPerSecond": 0.08, "DeathsPerSecond": 0.004, "DamagePerSecond": 0.05 },
+    // Falling stars strike PerHour, devastating Radius metres and setting off a quake.
+    "Meteor": { "PerHour": 0.3, "Radius": 160.0, "Magnitude": 5.8, "HousingLoss": 0.7, "Deaths": 0.2, "Scar": 0.5 },
+    // Blight appears in warm, wet fields, grows and spreads while they stay so, and dies away when
+    // they do not, in fire, or under a blessing.
+    "Blight": { "EmergencePerSecond": 0.00002, "MinTemperature": 0.5, "WetSoil": 0.5, "GrowthPerSecond": 0.01, "SpreadPerSecond": 0.1, "DeclinePerSecond": 0.01, "BlessingCurePerSecond": 0.1, "Notice": 0.15 },
+    // Locusts rise SwarmsPerHour from hot, dry land, drift with the wind and eat the stores of the
+    // villages within Radius; rain drowns them.
+    "Locusts": { "SwarmsPerHour": 1.0, "MinTemperature": 0.55, "MaxSoil": 0.3, "Radius": 220.0, "Speed": 5.0, "MinSeconds": 90.0, "MaxSeconds": 180.0, "FoodEatenPerSecond": 0.004, "RainLossPerSecond": 0.05, "DamagePerSecond": 0.002 },
+    // The cracks, slide scars and craters disasters leave stay this long.
+    "MarkSeconds": 600.0
   }
 }

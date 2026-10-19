@@ -114,6 +114,11 @@ internal static class SaveIntegrity
             {
                 errors.Add($"Region {i} has fresh water {cell.FreshWater} or flood {cell.Flood}; both must lie between 0 and 1.");
             }
+            else if (!IsShare(cell.Snow) || !IsShare(cell.Wildlife) || !IsShare(cell.Damage) || !IsShare(cell.Scar) || cell.Scar > cell.Damage + 1e-4f
+                || !IsShare(cell.Pollution) || !IsShare(cell.Blight) || !IsShare(cell.Rubble))
+            {
+                errors.Add($"Region {i} has snow, wildlife, harm, scar, pollution, blight or rubble outside 0 to 1, or more scar than harm (ADR-028, ADR-029).");
+            }
         }
     }
 

@@ -26,4 +26,16 @@ public enum BuildingKind
 
     /// <summary>Walls: attacks harm it less, and its people feel safer.</summary>
     Walls,
+
+    /// <summary>A sea wall: tsunamis and hurricanes harm a coastal village less (ADR-029).</summary>
+    SeaWall,
+
+    /// <summary>A dam upstream: floods harm a river village less (ADR-029).</summary>
+    Dam,
+
+    /// <summary>Irrigation: the fields keep water through a drought (ADR-029).</summary>
+    Irrigation,
+
+    /// <summary>Evacuation routes: fewer die in every disaster (ADR-029).</summary>
+    Evacuation,
 }

@@ -29,6 +29,8 @@ public static class OverlayMap
     private static readonly RgbColor Ash = RgbColor.ParseHex("#3a2e26");
     private static readonly RgbColor Shielded = RgbColor.ParseHex("#7fc8ff");
     private static readonly RgbColor Floodwater = RgbColor.ParseHex("#123f8c");
+    private static readonly RgbColor Blighted = RgbColor.ParseHex("#7a2a8c");
+    private static readonly RgbColor Rubble = RgbColor.ParseHex("#8a7f72");
 
     /// <summary>The overlay the overlay key shows next.</summary>
     /// <param name="kind">Current overlay, or <c>null</c> when none is shown.</param>
@@ -91,7 +93,7 @@ public static class OverlayMap
                 break;
             case OverlayKind.Danger:
                 PaintDanger(world, view.OverlayOpacity, rgba);
-                legend = "Danger: fires in orange (brighter when fiercer), floods in deep blue, scorched land in ash, shielded settlements in blue";
+                legend = "Danger: fires in orange (brighter when fiercer), floods in deep blue, rubble in grey, blight in purple, scorched land in ash, shielded settlements in blue";
                 break;
             case OverlayKind.Migration:
                 PaintMigration(world, view, pressure, rgba);
@@ -150,7 +152,7 @@ public static class OverlayMap
         }
     }
 
-    /// <summary>Colours burning regions by their fire, scorched ones by their scorch, and the lands of shielded settlements blue.</summary>
+    /// <summary>Colours burning regions by their fire, flooded ones by their flood, then rubble, blight and scorch, and the lands of shielded settlements blue.</summary>
     private static void PaintDanger(WorldState world, float opacity, byte[] rgba)
     {
         foreach (var settlement in world.Settlements)
@@ -170,6 +172,14 @@ public static class OverlayMap
             else if (region.Flood > 0.02f)
             {
                 Write(rgba, region.Id, Floodwater, (0.4f + (0.6f * Math.Clamp(region.Flood, 0f, 1f))) * opacity);
+            }
+            else if (region.Rubble > 0f)
+            {
+                Write(rgba, region.Id, Rubble, (0.4f + (0.6f * Math.Clamp(region.Rubble, 0f, 1f))) * opacity);
+            }
+            else if (region.Blight >= Disasters.DisasterText.BlightShown)
+            {
+                Write(rgba, region.Id, Blighted, (0.3f + (0.7f * Math.Clamp(region.Blight, 0f, 1f))) * opacity);
             }
             else if (region.Scorch > 0.05f)
             {

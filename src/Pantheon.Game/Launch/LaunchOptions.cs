@@ -305,7 +305,7 @@ public sealed partial record LaunchOptions
             case "disaster":
                 return Enum.TryParse<DisasterAtStart>(value.Trim(), ignoreCase: true, out var disaster) && Enum.IsDefined(disaster)
                     ? options with { Disaster = disaster }
-                    : Warn(options, warnings, $"'--disaster' needs quake, fire or flood, got '{value}'.");
+                    : Warn(options, warnings, $"'--disaster' needs quake, fire, flood, tornado, landslide, meteor, blight, locusts, tsunami or eruption, got '{value}'.");
             case "refugees":
                 return value.Trim().ToLowerInvariant() switch
                 {

@@ -106,6 +106,27 @@ public sealed class HistoryRecorder
             case LandScarred scarred:
                 Once(world, HistoryKind.Scar, scarred.SettlementId, null, 0);
                 break;
+            case SettlementDamaged { Cause: DisasterKind.Tsunami } wave when wave.Deaths >= _rules.EarthquakeDeaths || wave.HousesLost >= _rules.HousesLost:
+                Once(world, HistoryKind.Tsunami, wave.SettlementId, null, wave.HousesLost);
+                break;
+            case SettlementDamaged { Cause: DisasterKind.Landslide } slide when slide.Deaths > 0 || slide.HousesLost > 0:
+                Once(world, HistoryKind.Landslide, slide.SettlementId, null, slide.Deaths);
+                break;
+            case SettlementDamaged { Cause: DisasterKind.Tornado } tornado when tornado.HousesLost >= _rules.HousesLost:
+                Once(world, HistoryKind.Tornado, tornado.SettlementId, null, tornado.HousesLost);
+                break;
+            case VolcanoChanged { Phase: VolcanoPhase.Erupting } eruption when NearestId(world, world.Regions.GetRegionCenter(eruption.RegionId)) is { } beside:
+                Once(world, HistoryKind.Eruption, beside, null, 0);
+                break;
+            case MeteorStruck meteor when NearestId(world, meteor.Position) is { } struck:
+                Once(world, HistoryKind.Meteor, struck, null, 0);
+                break;
+            case BlightChanged { Started: true } blight:
+                Once(world, HistoryKind.Blight, blight.SettlementId, null, 0);
+                break;
+            case SwarmArrived swarm:
+                Once(world, HistoryKind.Locusts, swarm.SettlementId, null, 0);
+                break;
             case ThirstStarted thirst:
                 Once(world, HistoryKind.Thirst, thirst.SettlementId, null, 0);
                 break;
@@ -210,6 +231,23 @@ public sealed class HistoryRecorder
     }
 
     /// <summary>Records a settlement's moment unless the same kind was recorded there lately.</summary>
+    /// <summary>The settlement nearest a point, if any.</summary>
+    private static int? NearestId(WorldState world, GroundPosition point)
+    {
+        int? nearest = null;
+        var best = float.MaxValue;
+        foreach (var settlement in world.Settlements)
+        {
+            var distance = ((settlement.Position.X - point.X) * (settlement.Position.X - point.X)) + ((settlement.Position.Z - point.Z) * (settlement.Position.Z - point.Z));
+            if (distance < best)
+            {
+                (nearest, best) = (settlement.Id, distance);
+            }
+        }
+
+        return nearest;
+    }
+
     private void Once(WorldState world, HistoryKind kind, int settlementId, int? godId, int count)
     {
         if (!Recent(world, kind, r => r.SettlementId == settlementId))

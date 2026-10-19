@@ -56,7 +56,11 @@
     { "Kind": "Levee", "Priority": "Preparation", "Work": 250.0, "Wealth": 35.0, "Field": "Engineering" },
     { "Kind": "Firebreak", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Engineering" },
     { "Kind": "Shelter", "Priority": "Preparation", "Work": 200.0, "Wealth": 30.0, "Field": "Architecture" },
-    { "Kind": "Cistern", "Priority": "Preparation", "Work": 150.0, "Wealth": 25.0, "Field": "Engineering" }
+    { "Kind": "Cistern", "Priority": "Preparation", "Work": 150.0, "Wealth": 25.0, "Field": "Engineering" },
+    { "Kind": "Evacuation", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Architecture" },
+    { "Kind": "SeaWall", "Priority": "Preparation", "Work": 250.0, "Wealth": 40.0, "Field": "Engineering" },
+    { "Kind": "Dam", "Priority": "Preparation", "Work": 300.0, "Wealth": 45.0, "Field": "Engineering" },
+    { "Kind": "Irrigation", "Priority": "Food", "Work": 200.0, "Wealth": 30.0, "Field": "Agriculture" }
   ],
 
   // Expansion (spec 29): under an Expansion priority, a settlement of at least MinPopulation sends

@@ -204,8 +204,8 @@ public static class SocietyModel
 
     /// <summary>
     /// The building a settlement's priority calls for next, if it has not raised it: the temple of the
-    /// god that set the priority, or the first useful one of the priority's buildings (levees only
-    /// beside water).
+    /// god that set the priority, or the first useful one of the priority's buildings (levees, dams
+    /// and irrigation only beside water, sea walls only by the sea).
     /// </summary>
     /// <param name="rules">Society rules.</param>
     /// <param name="world">World state.</param>
@@ -226,13 +226,41 @@ public static class SocietyModel
             var built = building.Kind == BuildingKind.Temple
                 ? society.PriorityGodId is not { } god || CivicModel.HasTemple(settlement, god)
                 : CivicModel.Has(settlement, building.Kind);
-            if (!built && (building.Kind != BuildingKind.Levee || NearWater(world, settlement)))
+            if (!built && Fits(world, settlement, building.Kind))
             {
                 return building;
             }
         }
 
         return null;
+    }
+
+    /// <summary>Whether a building is of use where a settlement stands: by water for levees, dams and irrigation, by the sea for a sea wall.</summary>
+    private static bool Fits(WorldState world, SettlementState settlement, BuildingKind kind) => kind switch
+    {
+        BuildingKind.Levee or BuildingKind.Dam or BuildingKind.Irrigation => NearWater(world, settlement),
+        BuildingKind.SeaWall => NearSea(world, settlement),
+        BuildingKind.Temple or BuildingKind.Granary or BuildingKind.Cistern or BuildingKind.Firebreak or BuildingKind.Shelter
+            or BuildingKind.Hospital or BuildingKind.Walls or BuildingKind.Evacuation => true,
+    };
+
+    /// <summary>Whether the sea touches the settlement's region or one beside it.</summary>
+    private static bool NearSea(WorldState world, SettlementState settlement)
+    {
+        var grid = world.Regions;
+        var (column, row) = grid.GetCoordinates(settlement.RegionId);
+        for (var r = Math.Max(0, row - 1); r <= Math.Min(grid.Rows - 1, row + 1); r++)
+        {
+            for (var c = Math.Max(0, column - 1); c <= Math.Min(grid.Columns - 1, column + 1); c++)
+            {
+                if (grid.Cells[(r * grid.Columns) + c].Biome == Domain.Ecology.Biome.Sea)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Whether a river or lake waters the settlement's region or one beside it.</summary>

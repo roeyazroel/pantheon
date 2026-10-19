@@ -52,6 +52,10 @@ public static class SocietyText
         BuildingKind.Levee => "levees",
         BuildingKind.Hospital => "hospital",
         BuildingKind.Walls => "walls",
+        BuildingKind.SeaWall => "sea wall",
+        BuildingKind.Dam => "dam",
+        BuildingKind.Irrigation => "irrigation",
+        BuildingKind.Evacuation => "evacuation routes",
     };
 
     /// <summary>A field of technology's name.</summary>

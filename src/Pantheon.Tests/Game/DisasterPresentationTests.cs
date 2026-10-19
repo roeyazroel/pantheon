@@ -163,7 +163,7 @@ public sealed class DisasterPresentationTests
         Assert.Equal(DisasterAtStart.Fire, LaunchOptions.Parse(["--disaster=FIRE"]).Disaster);
         Assert.Equal(OverlayKind.Danger, LaunchOptions.Parse(["--overlay=danger"]).Overlay);
         Assert.Equal(DisasterAtStart.Flood, LaunchOptions.Parse(["--disaster=flood"]).Disaster);
-        Assert.Single(LaunchOptions.Parse(["--disaster=meteor"]).Warnings);
+        Assert.Single(LaunchOptions.Parse(["--disaster=plague"]).Warnings);
     }
 
     [Fact]

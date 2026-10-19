@@ -171,6 +171,8 @@ public sealed class AlertFeed
                     : Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             case SeasonChanged or LandScarred:
                 return NatureAlerts.Describe(worldEvent, world, localGodId);
+            case TsunamiStruck or LandslideStruck or VolcanoChanged or TornadoTouchedDown or MeteorStruck or BlightChanged or SwarmArrived:
+                return HazardAlerts.Describe(worldEvent, world, localGodId);
             default:
                 return null;
         }

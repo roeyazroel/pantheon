@@ -8,4 +8,5 @@ namespace Pantheon.Simulation.Settlements;
 /// <param name="MeanScorch">Mean scorch of their land (0..1) that wildfires left (ADR-014).</param>
 /// <param name="MeanFlood">Mean flood over their land (0..1, ADR-022).</param>
 /// <param name="MeanSnow">Mean snow on their land (0..1, ADR-028).</param>
-public readonly record struct FarmlandSurvey(int LandRegions, float MeanFertility, float MeanBlessing = 0f, float MeanSoilMoisture = 1f, float MeanScorch = 0f, float MeanFlood = 0f, float MeanSnow = 0f);
+/// <param name="MeanBlight">Mean blight in their fields (0..1, ADR-029).</param>
+public readonly record struct FarmlandSurvey(int LandRegions, float MeanFertility, float MeanBlessing = 0f, float MeanSoilMoisture = 1f, float MeanScorch = 0f, float MeanFlood = 0f, float MeanSnow = 0f, float MeanBlight = 0f);

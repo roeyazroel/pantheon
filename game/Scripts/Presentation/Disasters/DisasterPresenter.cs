@@ -13,7 +13,8 @@ namespace Pantheon.Client.Presentation.Disasters;
 /// <summary>
 /// Draws disasters (ADR-014) from <see cref="WorldState"/>: a <see cref="FireView"/> per burning
 /// region, ash on scorched land, a dome over shielded settlements, a shock wave when an earthquake
-/// begins and the camera shaking while the ground shakes under its focus.
+/// begins and the camera shaking while the ground shakes under its focus; its
+/// <see cref="HazardPresenter"/> draws the hazards of ADR-029.
 /// </summary>
 public sealed class DisasterPresenter
 {
@@ -37,6 +38,7 @@ public sealed class DisasterPresenter
     private readonly Node3D _domes;
     private readonly Node3D _waves;
     private readonly GodCameraController _camera;
+    private readonly HazardPresenter _hazards;
     private readonly Dictionary<int, FireView> _fireViews = [];
     private readonly Dictionary<int, Decal> _ashViews = [];
     private readonly Dictionary<int, MeshInstance3D> _domeViews = [];
@@ -48,8 +50,10 @@ public sealed class DisasterPresenter
     /// <summary>Creates the presenter's nodes under a parent.</summary>
     /// <param name="parent">Node that holds the disaster visuals.</param>
     /// <param name="camera">The camera, shaken by earthquakes.</param>
-    public DisasterPresenter(Node3D parent, GodCameraController camera)
+    /// <param name="hazards">Hazard rules, for drawing tornadoes, swarms and marks.</param>
+    public DisasterPresenter(Node3D parent, GodCameraController camera, Domain.Disasters.HazardRules hazards)
     {
+        _hazards = new HazardPresenter(parent, hazards);
         _fires = parent.AddLayer("Fires");
         _ash = parent.AddLayer("Ash");
         _domes = parent.AddLayer("Shields");
@@ -73,6 +77,7 @@ public sealed class DisasterPresenter
         _ashViews.Clear();
         _domeViews.Clear();
         _seenQuakes.Clear();
+        _hazards.Rebuild(terrain, regionSize);
     }
 
     /// <summary>Brings the visuals in line with the disasters and shakes the camera.</summary>
@@ -84,6 +89,7 @@ public sealed class DisasterPresenter
         _time += delta;
         SyncRegions(world);
         SyncDomes(world);
+        _hazards.Sync(world, delta);
         foreach (var quake in world.Disasters.Earthquakes)
         {
             if (_seenQuakes.Add(quake.Id))
@@ -125,7 +131,7 @@ public sealed class DisasterPresenter
             {
                 if (!_ashViews.TryGetValue(region.Id, out var ash))
                 {
-                    ash = new Decal { Name = "Ash", TextureAlbedo = Weather.SoftDiscTexture.Texture, Size = new Vector3(_regionSize * 1.5f, AshDepth, _regionSize * 1.5f), Position = Ground(centre.X, centre.Z), UpperFade = 0.1f, LowerFade = 0.1f };
+                    ash = new Decal { Name = "Ash", TextureAlbedo = Weather.SoftDiscTexture.Texture, Size = new Vector3(_regionSize * 1.5f, AshDepth, _regionSize * 1.5f), Position = Ground(centre.X, centre.Z), UpperFade = 0.1f, LowerFade = 0.1f, CullMask = DeclutteredLabel.GroundOnly };
                     _ashViews[region.Id] = ash;
                     _ash.AddChild(ash);
                 }

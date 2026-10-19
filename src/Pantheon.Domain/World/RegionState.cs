@@ -71,4 +71,10 @@ public sealed class RegionState
 
     /// <summary>Pollution (0..1, spec §18, ADR-028) from crowded, working villages; it lowers yield and wildlife and clears slowly.</summary>
     public float Pollution { get; set; }
+
+    /// <summary>Crop blight (0..1, spec §19, ADR-029): the share of the field's crop it takes; it spreads in warm, wet weather.</summary>
+    public float Blight { get; set; }
+
+    /// <summary>Landslide rubble (0..1, spec §20, ADR-029): enough of it blocks the way until it is cleared.</summary>
+    public float Rubble { get; set; }
 }

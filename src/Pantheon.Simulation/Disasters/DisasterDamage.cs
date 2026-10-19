@@ -45,24 +45,56 @@ internal sealed class DisasterDamage
         return protection * (1f - Math.Clamp(_rules.Preparedness.ArchitecturePerLevel * settlement.Society.Technology.Architecture, 0f, MaxPrepared));
     }
 
-    /// <summary>Share of a fire's or a flood's harm a settlement takes: firebreaks or levees, and engineering, spare it some (ADR-023).</summary>
+    /// <summary>
+    /// Share of a disaster's harm a settlement takes: firebreaks, levees and a dam, shelters and a sea
+    /// wall spare it some (ADR-023, ADR-029), and so does engineering, except in an earthquake.
+    /// </summary>
     public float Exposure(SettlementState settlement, DisasterKind kind)
     {
         var prepared = _rules.Preparedness;
+        bool Has(Domain.Society.BuildingKind building) => Settlements.CivicModel.Has(settlement, building);
         var works = kind switch
         {
-            DisasterKind.Fire => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Firebreak) ? prepared.FirebreakDamage : 0f,
-            DisasterKind.Flood => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Levee) ? prepared.LeveeDamage : 0f,
+            DisasterKind.Fire => Has(Domain.Society.BuildingKind.Firebreak) ? prepared.FirebreakDamage : 0f,
+            DisasterKind.Flood => (Has(Domain.Society.BuildingKind.Levee) ? prepared.LeveeDamage : 0f) + (Has(Domain.Society.BuildingKind.Dam) ? prepared.DamDamage : 0f),
             DisasterKind.Earthquake => 0f,
-            DisasterKind.Hurricane => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Shelter) ? prepared.ShelterDeaths : 0f,
+            DisasterKind.Hurricane => (Has(Domain.Society.BuildingKind.Shelter) ? prepared.ShelterDeaths : 0f) + (Has(Domain.Society.BuildingKind.SeaWall) ? prepared.SeaWallDamage : 0f),
+            DisasterKind.Tsunami => Has(Domain.Society.BuildingKind.SeaWall) ? prepared.SeaWallDamage : 0f,
+            DisasterKind.Landslide or DisasterKind.Eruption or DisasterKind.Tornado or DisasterKind.Meteor => 0f,
         };
         var engineering = kind == DisasterKind.Earthquake ? 0f : prepared.EngineeringPerLevel * settlement.Society.Technology.Engineering;
         return 1f - Math.Clamp(works + engineering, 0f, MaxPrepared);
     }
 
-    /// <summary>Share of the deaths a disaster would cause that happen: shelters save people from quakes and floods (ADR-023).</summary>
-    public float Deadliness(SettlementState settlement, DisasterKind kind) =>
-        kind != DisasterKind.Fire && Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Shelter) ? 1f - _rules.Preparedness.ShelterDeaths : 1f;
+    /// <summary>
+    /// Share of the deaths a disaster would cause that happen: shelters save people from all but
+    /// fire (ADR-023), and evacuation routes from every disaster (ADR-029).
+    /// </summary>
+    public float Deadliness(SettlementState settlement, DisasterKind kind)
+    {
+        var sheltered = kind != DisasterKind.Fire && Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Shelter) ? 1f - _rules.Preparedness.ShelterDeaths : 1f;
+        var evacuated = Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Evacuation) ? 1f - _rules.Preparedness.EvacuationDeaths : 1f;
+        return sheltered * evacuated;
+    }
+
+    /// <summary>
+    /// Strikes a settlement: destroys a share of its houses and kills a share of its people, by the
+    /// severity, as its shield, protection, preparations and technology allow, frightens it and
+    /// reports the damage (ADR-029).
+    /// </summary>
+    public void Strike(WorldState world, SettlementState settlement, DisasterKind kind, float housing, float deaths, float severity, SimulationRandom random, List<WorldEvent> events)
+    {
+        if (settlement.Population <= 0 || severity <= 0f)
+        {
+            return;
+        }
+
+        severity *= Protection(settlement, world.Tick);
+        var houses = Destroy(settlement, random, housing * severity * Fragility(world, settlement) * Exposure(settlement, kind));
+        var killed = Kill(settlement, random, deaths * severity * Deadliness(settlement, kind) * Exposure(settlement, kind));
+        Frighten(settlement, severity);
+        Report(world, settlement, kind, houses, killed, events);
+    }
 
     /// <summary>Share of the food a disaster would spoil that is lost: a granary keeps some (ADR-023).</summary>
     public float FoodLoss(SettlementState settlement) =>

@@ -124,6 +124,9 @@ internal static class SaveMigrations
             case 19:
                 NatureSaveMigration.UpgradeFrom19(root);
                 break;
+            case 20:
+                HazardSaveMigration.UpgradeFrom20(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

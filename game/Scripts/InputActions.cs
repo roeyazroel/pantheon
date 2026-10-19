@@ -135,6 +135,9 @@ public static class InputActions
     /// <summary>Debug: the next season begins now (Y, ADR-028).</summary>
     public static readonly StringName DebugSeason = "debug_season";
 
+    /// <summary>Debug: the next hazard of the cycle starts at the cursor (I, ADR-029).</summary>
+    public static readonly StringName DebugHazard = "debug_hazard";
+
     /// <summary>The pause menu (Esc, when no miracle is selected).</summary>
     public static readonly StringName GameMenu = "game_menu";
 
@@ -162,7 +165,7 @@ public static class InputActions
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
         CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
-        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil,
+        SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
         CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
     ];

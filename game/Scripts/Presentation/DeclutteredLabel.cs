@@ -12,6 +12,12 @@ internal sealed partial class DeclutteredLabel : Label3D
     /// <summary>The group every such label joins.</summary>
     public const string Group = "decluttered_labels";
 
+    /// <summary>The render layer labels are drawn on, which decals on the ground leave alone.</summary>
+    public const uint Layer = 1u << 1;
+
+    /// <summary>The cull mask of a decal on the ground: every layer but the labels'.</summary>
+    public const uint GroundOnly = ~Layer;
+
     private string _full = string.Empty;
     private string _short = string.Empty;
     private LabelFit _fit = LabelFit.Full;
@@ -23,6 +29,7 @@ internal sealed partial class DeclutteredLabel : Label3D
     {
         RenderPriority = 20;
         OutlineRenderPriority = 19;
+        Layers = Layer;
     }
 
     /// <summary>The larger, the sooner it takes its place on screen.</summary>

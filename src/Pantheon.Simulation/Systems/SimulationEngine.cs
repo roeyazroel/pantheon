@@ -129,6 +129,7 @@ public sealed class SimulationEngine
         systems.AddRange(
         [
             new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules, ecologyRules), disasterRules.StepIntervalTicks),
+            new IntervalSystem(new HazardSystem(disasterRules, settlementRules, divineRules, weatherRules, disasterRules.StepIntervalTicks, domainRules), disasterRules.StepIntervalTicks),
         ]);
         if (ecologyRules is not null)
         {

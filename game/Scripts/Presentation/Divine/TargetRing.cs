@@ -24,6 +24,7 @@ internal sealed class TargetRing
             Visible = false,
             UpperFade = 0.05f,
             LowerFade = 0.05f,
+            CullMask = DeclutteredLabel.GroundOnly,
         };
         parent.AddChild(_decal);
     }
