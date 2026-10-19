@@ -1384,11 +1384,20 @@ running for every settlement either way.
 - `CitizenRoutine` gives each representative a closed-form schedule in simulation time: rest
   by the door, walk to work (the fields, a ring around the building site, or chores near
   home), work with a forward lean per stroke, walk to the shrine, gather facing it, walk home.
-  Walks bob once per stride.
+  Walks bob once per stride. Given the crowd's ways (`ICitizenWays`, ADR-046), a walk follows its
+  leg's way round obstacles, a little faster, so the leg keeps its straight line's time.
+- `LocalNavGrid` is a village's local navigation (§85, ADR-046), baked from its layout:
+  - cells of `NavCellSize` metres; huts, ruins, the building site, the shrine, a built temple and
+    water are blocked, with `NavClearance` of room;
+  - a way is straight when clear, else A* over the cells pulled taut, cached by its two ends.
+
+  `RepresentativeRoster` moves work spots that fall inside a hut just outside its wall.
 - `SettlementCrowd` keeps the roster in step with the aggregates. It rebuilds the roster only
   when the role counts or the layout change, and bumps `RosterVersion` so the view recolours.
   Rerouted figures walk to their new routine at `CatchUpSpeed` instead of jumping; newcomers
-  step out of their door; on promotion everyone appears in place.
+  step out of their door; on promotion everyone appears in place. It bakes the village's
+  `LocalNavGrid` (`Navigation`) while figures are shown, again when the layout or the temple
+  changes, and supplies the ways; `CrowdStatus.Navigation` gives F1 the grid's figures.
 - Representatives have no effects of their own: they show the work the aggregates already
   account for. Demotion has nothing to fold back, and saves, loads and new worlds rebuild them.
 

@@ -51,6 +51,11 @@
     "WorkLean": 0.45,
     "WorkStrokesPerSecond": 0.8,
     "FigureScale": 1.4,
+
+    // Local navigation (spec section 85, ADR-046): figures find their way round huts, the shrine, the
+    // temple and water on a grid of NavCellSize metres, keeping NavClearance metres from walls.
+    "NavCellSize": 1.0,
+    "NavClearance": 0.4,
     "FarmerColor": "#a8483a",
     "BuilderColor": "#e09a2a",
     "VillagerColor": "#4a6cb0"

@@ -437,8 +437,9 @@ Near the camera (within 450 m of a settlement), the settlement switches to Tier 
 representative citizens: one figure per inhabitant, up to 300, each standing for several
 people in a larger settlement. Farmers (red) work in the fields, builders (amber) at the
 building site and villagers (blue) do chores near home. Each follows a repeating round: rest by
-the door, work, gather at the shrine, go home. The citizens are derived from the settlement's
-numbers and never saved. Beyond 550 m the settlement shows only its houses, building site and
+the door, work, gather at the shrine, go home. They find their way round the huts, the shrine,
+the temple and water on the village's local navigation grid (ADR-046), so nobody walks through a
+wall. The citizens are derived from the settlement's numbers and never saved. Beyond 550 m the settlement shows only its houses, building site and
 fields (Tier 1); the simulation is the same in both tiers. Balance values are in
 `game/Data/settlement_rules.json` and presentation values (layout, colours, tier distances,
 routines) in `game/Data/settlement_view.json`.
@@ -1331,7 +1332,8 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   - expected births and deaths per second, the house under construction and the time to the
     next settlement step;
   - the simulation tier, the camera distance that changes it and, in Tier 2, the citizens
-    shown and the people each stands for;
+    shown and the people each stands for, and the local navigation grid's cells, blocked cells and
+    ways searched;
   - its water: its farmland's soil, the drought and the harvest it allows, and the weather over it;
   - its dangers: the fire threat, the shaking, its ruins, the homeless, scorched land and any shield;
   - its migration: the pressure to leave and its cause, the people wanting to go and those on

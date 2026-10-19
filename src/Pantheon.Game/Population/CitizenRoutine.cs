@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace Pantheon.Game.Population;
@@ -6,7 +7,9 @@ namespace Pantheon.Game.Population;
 /// <summary>
 /// A representative's routine as a closed-form function of simulation time: rest at home, walk to
 /// work, work, walk to the shrine, gather, walk home, and again. Because it depends only on the
-/// time, citizens freeze while the game is paused and hurry when it runs faster.
+/// time, citizens freeze while the game is paused and hurry when it runs faster. Given its
+/// village's ways (ADR-046), a figure walks round what stands in its way, a little faster, so each
+/// leg still takes the time its straight line would.
 /// </summary>
 public static class CitizenRoutine
 {
@@ -27,8 +30,9 @@ public static class CitizenRoutine
     /// <param name="citizen">Representative.</param>
     /// <param name="seconds">Simulation time in seconds.</param>
     /// <param name="settings">Routine settings.</param>
+    /// <param name="ways">The ways round obstacles; straight lines when <c>null</c>.</param>
     /// <returns>Its pose on the ground.</returns>
-    public static RoutinePose Evaluate(in RepresentativeCitizen citizen, double seconds, CitizenSettings settings)
+    public static RoutinePose Evaluate(in RepresentativeCitizen citizen, double seconds, CitizenSettings settings, ICitizenWays? ways = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         var cycle = CycleSeconds(citizen, settings);
@@ -46,7 +50,7 @@ public static class CitizenRoutine
         var toWork = Vector2.Distance(citizen.Home, citizen.Work) / settings.WalkSpeed;
         if (t < toWork)
         {
-            return Walk(citizen.Home, citizen.Work, t, settings);
+            return Walk(citizen.Home, citizen.Work, t, settings, ways?.Way(citizen.Index, CitizenLeg.ToWork, citizen.Home, citizen.Work));
         }
 
         t -= toWork;
@@ -59,7 +63,7 @@ public static class CitizenRoutine
         var toGathering = Vector2.Distance(citizen.Work, citizen.Gathering) / settings.WalkSpeed;
         if (t < toGathering)
         {
-            return Walk(citizen.Work, citizen.Gathering, t, settings);
+            return Walk(citizen.Work, citizen.Gathering, t, settings, ways?.Way(citizen.Index, CitizenLeg.ToGathering, citizen.Work, citizen.Gathering));
         }
 
         t -= toGathering;
@@ -69,7 +73,7 @@ public static class CitizenRoutine
         }
 
         // Whatever is left of the cycle is the walk home; rounding can leave it a hair long.
-        return Walk(citizen.Gathering, citizen.Home, t - settings.GatherSeconds, settings);
+        return Walk(citizen.Gathering, citizen.Home, t - settings.GatherSeconds, settings, ways?.Way(citizen.Index, CitizenLeg.ToHome, citizen.Gathering, citizen.Home));
     }
 
     /// <summary>Height of the walking bob after walking a distance: one hop per stride.</summary>
@@ -85,8 +89,11 @@ public static class CitizenRoutine
     /// <summary>Standing still at a spot.</summary>
     private static RoutinePose Stay(Vector2 spot, float yaw, CitizenActivity activity) => new(spot, yaw, 0f, 0f, activity);
 
-    /// <summary>Walking from one spot to another at walking speed, <paramref name="t"/> seconds after setting off.</summary>
-    private static RoutinePose Walk(Vector2 from, Vector2 to, float t, CitizenSettings settings)
+    /// <summary>
+    /// Walking from one spot to another, <paramref name="t"/> seconds after setting off: straight at
+    /// walking speed, or along a way round obstacles at the speed that keeps the straight line's time.
+    /// </summary>
+    private static RoutinePose Walk(Vector2 from, Vector2 to, float t, CitizenSettings settings, IReadOnlyList<Vector2>? way)
     {
         var distance = Vector2.Distance(from, to);
         if (distance <= 0f)
@@ -94,9 +101,35 @@ public static class CitizenRoutine
             return Stay(to, 0f, CitizenActivity.Walking);
         }
 
-        var walked = Math.Clamp(t * settings.WalkSpeed, 0f, distance);
-        var ground = Vector2.Lerp(from, to, walked / distance);
-        return new RoutinePose(ground, GroundMath.YawTowards(from, to), 0f, Bounce(walked, settings), CitizenActivity.Walking);
+        var share = Math.Clamp(t * settings.WalkSpeed / distance, 0f, 1f);
+        if (way is not { Count: > 0 })
+        {
+            var walked = share * distance;
+            return new RoutinePose(Vector2.Lerp(from, to, share), GroundMath.YawTowards(from, to), 0f, Bounce(walked, settings), CitizenActivity.Walking);
+        }
+
+        var length = Vector2.Distance(from, way[0]);
+        for (var i = 1; i < way.Count; i++)
+        {
+            length += Vector2.Distance(way[i - 1], way[i]);
+        }
+
+        var along = share * length;
+        var start = from;
+        foreach (var next in way)
+        {
+            var leg = Vector2.Distance(start, next);
+            if (along <= leg || next == way[^1])
+            {
+                var ground = leg > 0f ? Vector2.Lerp(start, next, Math.Clamp(along / leg, 0f, 1f)) : next;
+                return new RoutinePose(ground, GroundMath.YawTowards(start, next), 0f, Bounce(share * length, settings), CitizenActivity.Walking);
+            }
+
+            along -= leg;
+            start = next;
+        }
+
+        return Stay(to, 0f, CitizenActivity.Walking);
     }
 
     /// <summary>Forward lean of a work stroke: down and back up once per stroke.</summary>

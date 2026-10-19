@@ -67,7 +67,9 @@ public sealed class SettlementCrowdTests
 
         Show(crowd, settlement, 0.0, Near);
 
-        Assert.Equal(new CrowdStatus(SettlementId, SimulationTier.Regional, 300, 1.8f, Near, 450f, 550f), crowd.GetStatus(540, Near));
+        var status = crowd.GetStatus(540, Near);
+        Assert.Equal(new CrowdStatus(SettlementId, SimulationTier.Regional, 300, 1.8f, Near, 450f, 550f), status with { Navigation = null });
+        Assert.Equal(crowd.Navigation!.Cells, status.Navigation!.Value.Cells);
     }
 
     [Fact]
@@ -241,7 +243,7 @@ public sealed class SettlementCrowdTests
 
     /// <summary>Whether a figure stands where its routine puts it.</summary>
     private static bool IsOnRoutine(SettlementCrowd crowd, int index, double seconds) =>
-        Vector2.Distance(CitizenRoutine.Evaluate(crowd.Roster[index], seconds, Citizens).Ground, Ground(crowd.Poses[index].Position)) <= Tolerance;
+        Vector2.Distance(CitizenRoutine.Evaluate(crowd.Roster[index], seconds, Citizens, crowd).Ground, Ground(crowd.Poses[index].Position)) <= Tolerance;
 
     /// <summary>Asserts that every figure is posed exactly as its routine says, standing on the terrain.</summary>
     private static void AssertOnRoutines(SettlementCrowd crowd, double seconds)
@@ -249,7 +251,7 @@ public sealed class SettlementCrowdTests
         Assert.Equal(crowd.Roster.Count, crowd.Poses.Count);
         for (var i = 0; i < crowd.Roster.Count; i++)
         {
-            var routine = CitizenRoutine.Evaluate(crowd.Roster[i], seconds, Citizens);
+            var routine = CitizenRoutine.Evaluate(crowd.Roster[i], seconds, Citizens, crowd);
             var pose = crowd.Poses[i];
             Assert.Equal(routine.Activity, pose.Activity);
             Assert.Equal(routine.Ground.X, pose.Position.X, 3);

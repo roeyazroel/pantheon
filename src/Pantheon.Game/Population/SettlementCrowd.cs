@@ -20,7 +20,7 @@ namespace Pantheon.Game.Population;
 /// <see cref="CitizenSettings.CatchUpSpeed"/> instead of jumping. Representatives added while the
 /// settlement is in Tier 2 step out of their front door; on promotion everyone appears in place.
 /// </remarks>
-public sealed class SettlementCrowd
+public sealed class SettlementCrowd : ICitizenWays
 {
     private readonly WorldSeed _seed;
     private readonly int _settlementId;
@@ -31,6 +31,9 @@ public sealed class SettlementCrowd
     private CitizenPose[] _poses = [];
     private RosterInputs? _rosterInputs;
     private double? _lastSeconds;
+    private SettlementState? _settlement;
+    private SettlementSite? _site;
+    private (SettlementSite Site, bool Temple)? _gridFor;
 
     /// <summary>Creates the crowd of a settlement, in Tier 1 with nobody shown.</summary>
     /// <param name="seed">World seed, for the roster hashes.</param>
@@ -56,6 +59,9 @@ public sealed class SettlementCrowd
     /// <summary>Changes whenever the roster is rebuilt or cleared, so views know to refresh roles and counts.</summary>
     public int RosterVersion { get; private set; }
 
+    /// <summary>The village's local navigation in Tier 2 (ADR-046), or <c>null</c> before the figures first walk.</summary>
+    public LocalNavGrid? Navigation { get; private set; }
+
     /// <summary>Moves the settlement between tiers for the camera distance; leaving Tier 2 removes every figure.</summary>
     /// <param name="cameraDistance">Distance from the camera to the settlement centre, in metres.</param>
     public void SelectTier(float cameraDistance)
@@ -80,6 +86,7 @@ public sealed class SettlementCrowd
             return;
         }
 
+        (_settlement, _site) = (settlement, site);
         var count = RepresentativeRoster.ComputeCount(settlement.Population, _settings.Citizens.MaxRepresentatives);
         var inputs = RosterInputs.Of(RepresentativeRoster.SplitRoles(count, settlement.Population, labour), site);
         if (inputs == _rosterInputs)
@@ -97,12 +104,13 @@ public sealed class SettlementCrowd
     public void Advance(double simulationSeconds, TerrainField terrain)
     {
         ArgumentNullException.ThrowIfNull(terrain);
+        Bake(terrain);
         var elapsed = _lastSeconds is { } last ? Math.Max(0.0, simulationSeconds - last) : 0.0;
         _lastSeconds = simulationSeconds;
         var maxStep = (float)(_settings.Citizens.CatchUpSpeed * elapsed);
         for (var i = 0; i < _roster.Count; i++)
         {
-            var pose = Follow(i, CitizenRoutine.Evaluate(_roster[i], simulationSeconds, _settings.Citizens), maxStep, simulationSeconds);
+            var pose = Follow(i, CitizenRoutine.Evaluate(_roster[i], simulationSeconds, _settings.Citizens, this), maxStep, simulationSeconds);
             var height = terrain.SampleHeight(pose.Ground.X, pose.Ground.Y) + pose.Bounce;
             _poses[i] = new CitizenPose(new Vector3(pose.Ground.X, height, pose.Ground.Y), pose.Yaw, pose.Lean, pose.Activity);
         }
@@ -119,7 +127,29 @@ public sealed class SettlementCrowd
         _roster.Count > 0 ? (float)population / _roster.Count : 0f,
         cameraDistance,
         _settings.Citizens.RegionalTierEnterDistance,
-        _settings.Citizens.RegionalTierExitDistance);
+        _settings.Citizens.RegionalTierExitDistance,
+        Navigation is { } grid ? (grid.Cells, grid.Blocked, grid.Searches, grid.Detours) : null);
+
+    /// <inheritdoc />
+    public IReadOnlyList<Vector2>? Way(int index, CitizenLeg leg, Vector2 from, Vector2 to) => Navigation?.Way(from, to);
+
+    /// <summary>Bakes the village's local navigation again when its layout or its temple changed, while figures are shown.</summary>
+    private void Bake(TerrainField terrain)
+    {
+        if (_roster.Count == 0 || _site is not { } site || _settlement is not { } settlement)
+        {
+            return;
+        }
+
+        var temple = Simulation.Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Temple);
+        if (_gridFor is { } baked && ReferenceEquals(baked.Site, site) && baked.Temple == temple)
+        {
+            return;
+        }
+
+        Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens);
+        _gridFor = (site, temple);
+    }
 
     /// <summary>
     /// Moves a figure along its routine, or towards it at the catch-up speed when the routine is
@@ -177,6 +207,7 @@ public sealed class SettlementCrowd
     /// <summary>Removes every figure; the next promotion places everyone afresh.</summary>
     private void Clear()
     {
+        (Navigation, _gridFor, _site, _settlement) = (null, null, null, null);
         _roster = [];
         _shown = [];
         _placed = [];

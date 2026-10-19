@@ -125,7 +125,7 @@ rule is followed by the conventions that meet it in this repository.
   buried land and the marks on it,
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second, who decides and the sections a player received and how fresh they are, every god's domains, the holy sites with their
-  keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier,
+  keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier and local navigation,
   water, society and technology, culture, dangers, pressure to leave, belief, Old Faith,
   sanctuary and religious style, every followed villager with their needs, options and danger, the land's reshapings, every prophet's walk, last deed and time left, with the selected village's elder,
   the forest standing and the roads, with the selected village's stores, land and roads, and the

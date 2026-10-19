@@ -124,6 +124,7 @@ public static class RepresentativeRoster
             ? HomeSpot(key, index, site, house, settings)
             : center + GroundMath.Polar(Unit(key, index, GatherAngleKey) * MathF.Tau, citizens.GatherRadiusMax + citizens.DoorSpread);
         var (work, workYaw) = WorkSpot(key, index, role, site, home, settings);
+        work = OutOfHuts(work, site);
         var gatherAngle = Unit(key, index, GatherAngleKey) * MathF.Tau;
         var gatherRadius = citizens.GatherRadiusMin + ((citizens.GatherRadiusMax - citizens.GatherRadiusMin) * MathF.Sqrt(Unit(key, index, GatherRadiusKey)));
         var gathering = center + GroundMath.Polar(gatherAngle, gatherRadius);
@@ -173,6 +174,24 @@ public static class RepresentativeRoster
     /// Where the role works and which way it faces there. Builders without a building site and
     /// farmers without fields do chores near home, as villagers do.
     /// </summary>
+    /// <summary>A spot moved just outside the walls of any hut it falls in, so nobody works inside a house (ADR-046).</summary>
+    private static Vector2 OutOfHuts(Vector2 spot, SettlementSite site)
+    {
+        foreach (var hut in site.Houses)
+        {
+            var centre = new Vector2(hut.Position.X, hut.Position.Z);
+            var wall = (LocalNavGrid.HutRadius * hut.Scale) + 0.3f;
+            var away = spot - centre;
+            var distance = away.Length();
+            if (distance < wall)
+            {
+                spot = centre + (distance > 1e-3f ? away / distance : Vector2.UnitX) * wall;
+            }
+        }
+
+        return spot;
+    }
+
     private static (Vector2 Spot, float Yaw) WorkSpot(ulong key, int index, CitizenRole role, SettlementSite site, Vector2 home, SettlementViewSettings settings)
     {
         var a = Unit(key, index, WorkAKey);

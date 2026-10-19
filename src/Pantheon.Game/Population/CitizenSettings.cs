@@ -68,6 +68,12 @@ public sealed record CitizenSettings
     /// <summary>Size of the figures relative to life size; above 1 they read better from the god's-eye view.</summary>
     public required float FigureScale { get; init; }
 
+    /// <summary>The side of a cell of a village's local navigation grid, in metres (spec §85, ADR-046).</summary>
+    public required float NavCellSize { get; init; }
+
+    /// <summary>The room figures keep from walls, the shrine and the temple, in metres.</summary>
+    public required float NavClearance { get; init; }
+
     /// <summary>Clothing colour of farmers.</summary>
     public required RgbColor FarmerColor { get; init; }
 
@@ -109,6 +115,8 @@ public sealed record CitizenSettings
         Require(errors, WorkLean is >= 0f and <= MathF.PI / 2f, "WorkLean must lie between 0 and pi/2 radians.");
         Require(errors, WorkStrokesPerSecond >= 0f, "WorkStrokesPerSecond must not be negative.");
         Require(errors, FigureScale > 0f, "FigureScale must be positive.");
+        Require(errors, NavCellSize is >= 0.25f and <= 4f, "NavCellSize must lie between 0.25 and 4 metres.");
+        Require(errors, NavClearance is >= 0f and <= 3f, "NavClearance must lie between 0 and 3 metres.");
         if (errors.Count > 0)
         {
             throw new ArgumentException(string.Join(" ", errors));

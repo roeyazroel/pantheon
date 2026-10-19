@@ -50,6 +50,10 @@ internal static class SettlementReadout
             outlook.ExpectedDeaths * stepsPerSecond,
             FormatConstruction(rules, settlement, outlook, houses)));
         lines.Add(FormatTier(FindCrowd(snapshot.Crowds, settlement.Id)));
+        if (FindCrowd(snapshot.Crowds, settlement.Id)?.Navigation is { } navigation)
+        {
+            lines.Add(Format("  local nav: {0} cells, {1} blocked; {2} ways searched, {3} round something", navigation.Cells, navigation.Blocked, navigation.Searches, navigation.Detours));
+        }
         if (FormatWarnings(outlook, houses) is { } warnings)
         {
             lines.Add(warnings);
