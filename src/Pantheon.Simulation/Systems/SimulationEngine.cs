@@ -6,6 +6,7 @@ using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
@@ -14,6 +15,7 @@ using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Diplomacy;
 using Pantheon.Simulation.Disasters;
 using Pantheon.Simulation.Gods;
+using Pantheon.Simulation.Migration;
 using Pantheon.Simulation.Miracles;
 using Pantheon.Simulation.Randomness;
 using Pantheon.Simulation.Settlements;
@@ -65,9 +67,10 @@ public sealed class SimulationEngine
     }
 
     /// <summary>
-    /// Creates the full game pipeline (ADR-011 to ADR-014): the weather step, the disaster step, the
-    /// settlement step, the belief step, the victory check and the diplomacy step on their intervals, then every
-    /// Creature every tick, then the AI gods' strategic evaluations on theirs. One ledger records
+    /// Creates the full game pipeline (ADR-011 to ADR-016): the weather step, the disaster step, the
+    /// settlement step, the belief step, the victory check, the diplomacy step and the migration step
+    /// on their intervals, then every Creature every tick, then the AI gods' strategic evaluations
+    /// (and refugee policies) on theirs. One ledger records
     /// every act gods notice of each other, and AI gods act through the same
     /// <see cref="Authorities"/> as a player.
     /// </summary>
@@ -79,18 +82,22 @@ public sealed class SimulationEngine
     /// <param name="diplomacyRules">Tuning of relations between gods.</param>
     /// <param name="weatherRules">Tuning of weather and soil water.</param>
     /// <param name="disasterRules">Tuning of wildfires and earthquakes.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules)
+    /// <param name="migrationRules">Tuning of migration.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules)
     {
         var ledger = new DiplomacyLedger(diplomacyRules);
         Creatures = new CreatureSystem(creatureRules, divineRules, settlementRules, diplomacyRules, ledger);
         Authorities = new Authorities(
             new MiracleCaster(divineRules, settlementRules, miracles, ledger, weatherRules, disasterRules),
             new CreatureAuthority(creatureRules, Creatures.Brain),
-            new DiplomacyAuthority(diplomacyRules, ledger));
+            new DiplomacyAuthority(diplomacyRules, ledger),
+            new MigrationAuthority());
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
         Gods = new GodAiSystem(
             new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat),
-            godAiRules.EvaluationIntervalTicks);
+            godAiRules.EvaluationIntervalTicks,
+            new RefugeeAdvisor(migrationRules, Authorities.Migration));
+        Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger);
         _systems =
         [
             new IntervalSystem(new WeatherSystem(weatherRules, settlementRules), weatherRules.StepIntervalTicks),
@@ -99,6 +106,7 @@ public sealed class SimulationEngine
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
             new IntervalSystem(new VictorySystem(divineRules), divineRules.StepIntervalTicks),
             new IntervalSystem(new DiplomacySystem(diplomacyRules), diplomacyRules.StepIntervalTicks),
+            new IntervalSystem(Migration, migrationRules.StepIntervalTicks),
             Creatures,
             Gods,
         ];
@@ -112,6 +120,9 @@ public sealed class SimulationEngine
 
     /// <summary>The AI gods' system of the full pipeline, or <c>null</c> when the engine has none.</summary>
     public GodAiSystem? Gods { get; }
+
+    /// <summary>The migration system of the full pipeline, or <c>null</c> when the engine has none.</summary>
+    public MigrationSystem? Migration { get; }
 
     /// <summary>Creates an engine with an explicit system order.</summary>
     /// <param name="systems">Systems, in the order they run each tick.</param>

@@ -34,7 +34,7 @@ public sealed class GameSession
     private GameSession(GameContent content, WorldState world, TerrainField terrain)
     {
         Content = content;
-        _engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather, content.Disasters);
+        _engine = content.CreateEngine();
         _authorities = _engine.Authorities!;
         _step = StepWorld;
         World = world;
@@ -219,6 +219,33 @@ public sealed class GameSession
     /// <returns>Its candidate actions; none for a god without an AI personality.</returns>
     public IReadOnlyList<Simulation.Gods.AiCandidate> PreviewGodAi(GodState god) =>
         god.Controller == GodController.Ai ? _engine.Gods!.Ai.Evaluate(World, god) : [];
+
+    /// <summary>Sets the local player's god's refugee policy (spec §31, ADR-016); the authority checks it first.</summary>
+    /// <param name="policy">The policy.</param>
+    /// <returns>Why it was refused, or <see cref="Simulation.Migration.RefugeePolicyRejection.None"/>.</returns>
+    public Simulation.Migration.RefugeePolicyRejection SetRefugeePolicy(Domain.Migration.RefugeePolicy policy) =>
+        _authorities.Migration.SetPolicy(World, LocalGodId ?? 0, policy, LocalGodId ?? 0, _events);
+
+    /// <summary>The pressure on a settlement's people to leave now (ADR-016).</summary>
+    /// <param name="settlement">The settlement.</param>
+    /// <returns>The pressure and its main cause.</returns>
+    public Simulation.Migration.MigrationPressure MigrationPressureOn(Domain.Settlements.SettlementState settlement) =>
+        _engine.Migration!.PressureOn(World, settlement);
+
+    /// <summary>Sends a group out of a settlement now (the debug tools' forced migration, ADR-016).</summary>
+    /// <param name="settlement">The settlement.</param>
+    /// <param name="people">How many leave.</param>
+    /// <returns>The group, or <c>null</c> when nobody could leave or there is nowhere to go.</returns>
+    public Domain.Migration.MigrationGroup? SendMigrants(Domain.Settlements.SettlementState settlement, int people) =>
+        _engine.Migration!.SendOut(World, settlement, people, _events);
+
+    /// <summary>The refugee policy an AI god wants now and why, for the debug view.</summary>
+    /// <param name="god">The god.</param>
+    /// <returns>The policy and reason; <c>null</c> for a player's god.</returns>
+    public (Domain.Migration.RefugeePolicy Policy, string Reason)? PreviewRefugeePolicy(GodState god) =>
+        god.Controller == GodController.Ai && _engine.Gods!.Ai.ProfileOf(god.Personality) is { } profile && _engine.Gods.Refugees is { } advisor
+            ? advisor.Choose(World, god, profile)
+            : null;
 
     /// <summary>The latest miracle cast still waiting to be drained, if any.</summary>
     /// <returns>The event, or <c>null</c>.</returns>

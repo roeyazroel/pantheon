@@ -32,4 +32,10 @@ public enum DiplomaticAct
 
     /// <summary>It harmed, converted from, attacked, betrayed or declared war on the remembering god's ally (ADR-015).</summary>
     WrongedAlly,
+
+    /// <summary>It took in migrants who followed the remembering god (ADR-016).</summary>
+    Sheltered,
+
+    /// <summary>It turned away migrants who followed the remembering god (ADR-016).</summary>
+    TurnedAway,
 }

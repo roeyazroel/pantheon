@@ -49,6 +49,7 @@ public sealed class SaveMigrationV7Tests
         var expected = ReadFixture();
         Version8Expectations.Apply(expected);
         Version9Expectations.Apply(expected);
+        Version10Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version7SavePath)));
 
@@ -59,7 +60,7 @@ public sealed class SaveMigrationV7Tests
     public void LoadVersion7_KeepsPlayingTheSameWay_DisastersIncluded()
     {
         var content = TestContent.Shipped;
-        var engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather, content.Disasters);
+        var engine = content.CreateEngine();
         var straight = WorldSaveSerializer.LoadFromFile(Version7SavePath);
         var resumed = WorldSaveSerializer.LoadFromFile(Version7SavePath);
         DisasterModel.StartQuake(content.Disasters, straight.Disasters, straight.Settlements[0].Position, 6.5f, straight.Tick, null);

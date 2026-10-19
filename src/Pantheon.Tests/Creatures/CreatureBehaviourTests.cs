@@ -3,6 +3,7 @@ using System.Linq;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Belief;
 using Pantheon.Simulation.Creatures;
@@ -254,6 +255,7 @@ public sealed class CreatureBehaviourTests
             Rank = zealot.Rank,
             DominantSinceTick = null,
             CreatureId = creature.Id,
+            RefugeePolicy = RefugeePolicy.Welcome,
             Cooldowns = [],
         };
         creature.Needs.Hunger = 0f;

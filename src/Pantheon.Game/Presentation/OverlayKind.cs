@@ -20,4 +20,7 @@ public enum OverlayKind
 
     /// <summary>Fires burning, scorched land and shielded settlements (ADR-014).</summary>
     Danger,
+
+    /// <summary>The pressure on each settlement's people to leave, and the routes of people on the move (ADR-016).</summary>
+    Migration,
 }

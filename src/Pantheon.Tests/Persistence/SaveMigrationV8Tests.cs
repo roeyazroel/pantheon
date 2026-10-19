@@ -67,6 +67,7 @@ public sealed class SaveMigrationV8Tests
     {
         var expected = ReadFixture();
         Version9Expectations.Apply(expected);
+        Version10Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version8SavePath)));
 
@@ -77,7 +78,7 @@ public sealed class SaveMigrationV8Tests
     public void LoadVersion8_KeepsPlayingTheSameWay()
     {
         var content = TestContent.Shipped;
-        var engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather, content.Disasters);
+        var engine = content.CreateEngine();
         var straight = WorldSaveSerializer.LoadFromFile(Version8SavePath);
         var resumed = WorldSaveSerializer.LoadFromFile(Version8SavePath);
 

@@ -62,6 +62,11 @@ you. They gang up on whoever pulls ahead, make peace to face a common threat, re
 wronged their allies, and betray when it pays. Allies win together: a bloc that holds 60% of all
 belief for ten minutes shares the victory.
 
+**Milestone 10 (Population Movement)** sets people on the move. Famine, ruins, fire, war, and fear
+or doubt of their god drive villagers to pack up and walk to a better place, and many give up the
+god they fled. Where they arrive, the god most followed there welcomes them, makes them convert or
+turns them away, and their own god remembers it. You choose what your people do with newcomers.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -125,8 +130,11 @@ covers:
 - disasters: earthquakes and their damage, wildfires that grow, spread with the wind and burn
   out, rain and firefighting, ruins and rebuilding, the homeless, fear of the gods, the Fire,
   Earthquake and Shield miracles and how the AI uses them;
+- migration: what pushes people out and what keeps them, the wish to leave, groups setting out,
+  the gods they give up, where they go, the road, welcome, conversion and refusal, and refugee
+  policies for you and the AI;
 - the HUD model, alerts, map overlays, the diplomacy panel, the weather's and disasters' looks and
-  tools, and the migration of Milestone 1 to 7 saves;
+  tools, migration's walkers, overlay and alerts, and the migration of Milestone 1 to 9 saves;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -145,7 +153,7 @@ covers:
 | Select a miracle (again to deselect) | 1–9, or click it in the miracle bar |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, religion, faith, food, weather, danger), then off | O |
+| Next map overlay (influence, religion, faith, food, weather, danger, migration), then off | O |
 | Look at the next settlement | F or Home |
 | Look at your Creature | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
@@ -167,6 +175,7 @@ covers:
 | Call a storm at the cursor (debug) | F10 |
 | Start an earthquake at the cursor (debug) | F11 (fn+F11 on Mac laptops) |
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
+| Send 20 people out of the village under the cursor (debug) | M |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
 120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m). The simulation runs at a
@@ -355,6 +364,40 @@ The rules are in `game/Data/weather.json`; how dry the soil must be for drought 
 
 The rules are in `game/Data/disasters.json`.
 
+## Migration
+
+People leave villages where life is hard and walk to better ones.
+
+- **What drives them out.** Hunger, no roof (after a disaster, or too many people for the houses),
+  fire or shaking, a village torn between gods at war, and fear of their god or doubt in it. Love
+  keeps them home. The wish to leave builds while life is hard; once enough people want to go, a
+  group sets out with its share of the food.
+- **They give up gods.** Those who leave give up following a god in proportion to how much they
+  fear or doubt it. People fleeing a god's terror never go where it rules.
+- **The road.** A group heads for the best place it can walk to (room, food, safety, its own gods
+  followed there) and eats as it goes; without food it sickens and dies. Near the camera you see
+  its walkers in its god's colour, labelled "23 from Elar to Valen (war)".
+- **Arrival.** The god followed most where they arrive decides:
+  - *Welcome*: they settle as they are, and the village loves the god for it.
+  - *Demand conversion*: many must turn to that god, and fear and doubt it.
+  - *Turn away*: they walk on to another village, or home.
+
+  Their own god remembers what was done with its people, so taking in a rival's refugees earns
+  its gratitude and turning them away its resentment. The newcomers mix into the village's beliefs,
+  and its gods convert them over time.
+- **Your policy.** The row at the top of the diplomacy panel (P) sets what your people do with
+  migrants. Each rival's card says what it does. Vael demands conversion, Seren and Kaio welcome
+  them, an Isolationist turns them away, and a welcoming god turns them away while its own people
+  lack a roof.
+- **Seeing it.** Labels mark villages with "people leaving" and "migrants coming". Alerts tell you
+  when your followers leave or give you up, when migrants settle among your people, and when your
+  followers are converted, turned away or die on the road. The Migration overlay (O) colours each
+  village from green (content) to red (people want to leave) and draws every group's way in its
+  god's colour.
+
+The rules are in `game/Data/migration.json`, and each personality's refugee policy is in
+`game/Data/god_ai.json`.
+
 ## Your Creature
 
 Bramble's card on the left shows its level, what it is doing, its health and needs, its loyalty
@@ -389,7 +432,8 @@ now.
   camera band, one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now and its top candidate actions with their scores and reasons, its diplomatic moves
   with the factors behind them, the weather (the spell, the wind and the strongest cells),
-  disasters (earthquakes and the fiercest fires), the Creature
+  disasters (earthquakes and the fiercest fires), migration (the groups on the road and every
+  god's refugee policy with the AI's reason), the Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
   their scores, its learned preferences by situation and its latest memories), the region
   under the cursor with its statistics, soil, rain and wind and every god's influence there, one
@@ -405,6 +449,8 @@ now.
     shown and the people each stands for;
   - its water: its farmland's soil, the drought and the harvest it allows, and the weather over it;
   - its dangers: the fire threat, the shaking, its ruins, the homeless, scorched land and any shield;
+  - its migration: the pressure to leave and its cause, the people wanting to go and those on
+    their way there;
   - warnings when the settlement starves, construction waits for food, or births are blocked.
 - **B** draws the region grid and outlines the region under the cursor.
 - **F3** shows the region debug map in the bottom-left corner, one pixel per region, oriented
@@ -414,7 +460,7 @@ now.
   cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
   vegetation come blessing, your god's influence, the soil's water, fire and scorch, all on a
   fixed 0 to 1 scale.
-- **O** cycles the map overlays: influence, religion, faith, food, weather and danger.
+- **O** cycles the map overlays: influence, religion, faith, food, weather, danger and migration.
 - **F4** grants your god 500 Divine Power.
 - **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
   tick changed. Space resumes.
@@ -425,6 +471,7 @@ now.
 - **F8** starts the next weather spell (normal, dry, wet) for its longest length, and **F10** calls
   a storm at the cursor. Use them to drive droughts and storm damage.
 - **F11** starts an earthquake (magnitude 6.5) and **F12** a fire at the cursor.
+- **M** sends 20 people out of the village under the cursor to the best place they can reach.
 - The command-line options below reproduce a world (`--seed`, `--load`), force a renderer
   (`--terrain`), start from a grown settlement up close (`--advance-ticks`,
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
@@ -447,13 +494,15 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--divine-power=<n>` | Your god starts with `n` Divine Power. |
 | `--cast=<id>[,<id>...]` | Cast these miracles (ids from `miracles.json`) on the focused settlement at the start. |
 | `--select=<id>` | Start with a miracle selected; scripted runs show its ring at the screen centre. |
-| `--overlay=influence\|religion\|faith\|food\|weather\|danger` | Start with a map overlay shown. |
+| `--overlay=influence\|religion\|faith\|food\|weather\|danger\|migration` | Start with a map overlay shown. |
 | `--focus=<n>\|creature` | Start looking at settlement `n` (1 is your home; `--cast` targets it) or at your Creature. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm` | Start in a weather spell, or with a storm over the focused settlement. |
 | `--disaster=quake\|fire` | Start an earthquake or a fire at the focused settlement. |
+| `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
+| `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -483,8 +532,8 @@ to 7 start with nothing burning, shaking or in ruins.
 ```text
 game/                 Godot project: scenes, client scripts (Pantheon.Client), data, materials, shaders
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                      creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, settlement_view.json,
-                      biome_palette.json, divine_view.json, weather_view.json
+                      creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
+                      settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
   Pantheon.Domain/        World, region, settlement, god, belief, Creature, diplomacy, weather and disaster
@@ -514,8 +563,9 @@ vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and thei
 [.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md),
 [.docs/milestone-6-diplomacy.md](.docs/milestone-6-diplomacy.md),
 [.docs/milestone-7-weather.md](.docs/milestone-7-weather.md),
-[.docs/milestone-8-disasters.md](.docs/milestone-8-disasters.md) and
-[.docs/milestone-9-four-gods.md](.docs/milestone-9-four-gods.md).
+[.docs/milestone-8-disasters.md](.docs/milestone-8-disasters.md),
+[.docs/milestone-9-four-gods.md](.docs/milestone-9-four-gods.md) and
+[.docs/milestone-10-population-movement.md](.docs/milestone-10-population-movement.md).
 
 ## Contributing
 

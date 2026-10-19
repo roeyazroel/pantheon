@@ -197,6 +197,8 @@ public static class DiplomacyText
             DiplomaticAct.Allied => "allied with it",
             DiplomaticAct.MadePeace => "made peace with it",
             DiplomaticAct.WrongedAlly => "wronged its ally" + (where.Length > 0 ? " in" + where : string.Empty),
+            DiplomaticAct.Sheltered => "took in its followers" + (where.Length > 0 ? " in" + where : string.Empty),
+            DiplomaticAct.TurnedAway => "turned its followers away" + (where.Length > 0 ? " from" + where : string.Empty),
         };
     }
 

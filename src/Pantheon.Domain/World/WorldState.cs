@@ -3,6 +3,7 @@ using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World.Generation;
@@ -51,6 +52,9 @@ public sealed class WorldState
 
     /// <summary>Disasters under way (spec §19, ADR-014).</summary>
     public required DisasterState Disasters { get; init; }
+
+    /// <summary>People on the move between settlements (spec §31, §82, ADR-016).</summary>
+    public required MigrationState Migration { get; init; }
 
     /// <summary>
     /// The gods that have won (spec §53, §115): one god, or an alliance that won together; empty

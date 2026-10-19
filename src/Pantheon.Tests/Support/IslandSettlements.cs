@@ -52,6 +52,7 @@ internal static class IslandSettlements
             ConstructionProgress = constructionProgress,
             Ruins = 0,
             ShieldedUntilTick = 0,
+            Emigration = 0f,
             Beliefs = [],
         };
     }

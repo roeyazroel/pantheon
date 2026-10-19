@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Pantheon.Domain.Migration;
 
 namespace Pantheon.Domain.Gods;
 
@@ -31,6 +32,9 @@ public sealed class GodState
 
     /// <summary>The god's Creature, if it has one.</summary>
     public required int? CreatureId { get; init; }
+
+    /// <summary>What the god does with migrants arriving where it is followed most (ADR-016).</summary>
+    public required RefugeePolicy RefugeePolicy { get; set; }
 
     /// <summary>Miracles that are cooling down. Entries whose tick has passed may linger until the miracle is cast again.</summary>
     public required List<MiracleCooldown> Cooldowns { get; init; }

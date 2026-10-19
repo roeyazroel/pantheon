@@ -5,6 +5,7 @@ using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Diplomacy;
 using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Miracles;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Weather;
@@ -48,6 +49,9 @@ public static class ContentJson
 
     /// <summary>File name of the disaster rules.</summary>
     public const string DisastersFileName = "disasters.json";
+
+    /// <summary>File name of the migration rules.</summary>
+    public const string MigrationFileName = "migration.json";
 
     /// <summary>Parses any content type.</summary>
     /// <typeparam name="T">Content contract type.</typeparam>
@@ -123,4 +127,9 @@ public static class ContentJson
     /// <param name="json">File text.</param>
     /// <returns>The disaster rules.</returns>
     public static DisasterRules ParseDisasters(string json) => Parse<DisasterRules>(json, DisastersFileName);
+
+    /// <summary>Parses <c>migration.json</c>.</summary>
+    /// <param name="json">File text.</param>
+    /// <returns>The migration rules.</returns>
+    public static MigrationRules ParseMigration(string json) => Parse<MigrationRules>(json, MigrationFileName);
 }

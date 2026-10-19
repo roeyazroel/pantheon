@@ -51,6 +51,7 @@ public partial class GameRoot : Node3D
     private CreaturePresenter _creatures = null!;
     private WeatherPresenter _weather = null!;
     private DisasterPresenter _disasters = null!;
+    private Pantheon.Client.Presentation.Migration.MigrationPresenter _migrants = null!;
     private NatureDebug _nature = null!;
     private DiplomacyPanel _diplomacy = null!;
     private DivineController _divine = null!;
@@ -89,6 +90,7 @@ public partial class GameRoot : Node3D
         _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
         _weather = new WeatherPresenter(worldNode.AddLayer("Weather"), presentation.WeatherView, content.Weather, GetNodeOrNull<DirectionalLight3D>("Sun"));
         _disasters = new DisasterPresenter(worldNode.AddLayer("Disasters"), _camera);
+        _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView);
         var hand = DivineHand.Create();
         worldNode.AddChild(hand);
         _session = CreateSession(content, options);
@@ -101,6 +103,7 @@ public partial class GameRoot : Node3D
         _diplomacy = new DiplomacyPanel { Name = "Diplomacy" };
         AddChild(_diplomacy);
         _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
+        _diplomacy.PolicyClicked += policy => SetStatus(Pantheon.Game.Migration.MigrationCommands.SetPolicy(_session, policy));
         CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         if (options.AdvanceTicks is { } ticks)
@@ -143,6 +146,7 @@ public partial class GameRoot : Node3D
         var focus = new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);
         _weather.Sync(_session.World, _session.SimulationSeconds, (float)delta, focus);
         _disasters.Sync(_session.World, (float)delta, focus);
+        _migrants.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused);
         if (_pendingJudge is { } judge)
         {
             _pendingJudge = null;
@@ -152,7 +156,7 @@ public partial class GameRoot : Node3D
         _divine.Process(delta, cursor, _camera.Model.Distance);
         if (_diplomacy.PanelVisible)
         {
-            _diplomacy.ShowEntries(Pantheon.Game.Diplomacy.DiplomacyReadout.Build(_session));
+            _diplomacy.ShowEntries(Pantheon.Game.Diplomacy.DiplomacyReadout.Build(_session), _session.LocalGod?.RefugeePolicy);
         }
 
         var cursorRegion = RegionAt(cursor);
@@ -257,6 +261,7 @@ public partial class GameRoot : Node3D
         _creatures.Rebuild(_session.Terrain);
         _weather.Rebuild(_session.Terrain);
         _disasters.Rebuild(_session.Terrain, _session.World.Regions.RegionSize);
+        _migrants.Rebuild(_session.Terrain);
         _divine?.Reset();
         _focusIndex = -1;
         _camera.SetTerrain(_session.Terrain);
@@ -381,6 +386,9 @@ public partial class GameRoot : Node3D
         CreatureRules = _session.Content.Creatures,
         WeatherRules = _session.Content.Weather,
         DisasterRules = _session.Content.Disasters,
+        MigrationRules = _session.Content.Migration,
+        MigrationPressure = PressureUnder(cursor),
+        RefugeeChoices = [.. _session.World.Gods.Select(god => (god.Id, _session.PreviewRefugeePolicy(god))).Where(c => c.Item2 is not null).Select(c => (c.Id, c.Item2!.Value.Policy, c.Item2.Value.Reason))],
         LocalGodId = _session.LocalGodId,
         LocalCreatureId = _session.LocalCreature?.Id,
         CreatureOptions = _session.PreviewCreatureOptions(),
@@ -407,6 +415,12 @@ public partial class GameRoot : Node3D
         StatusMessage = _status,
         Crowds = _presenter.CrowdStatuses,
     };
+
+    /// <summary>The pressure to leave on the settlement near the cursor, for the debug panel.</summary>
+    private Pantheon.Simulation.Migration.MigrationPressure? PressureUnder(NVector3? cursor) =>
+        cursor is { } point && SettlementPicker.Nearest(_session.World, new GroundPosition(point.X, point.Z), SelectDistance) is { } settlement
+            ? _session.MigrationPressureOn(settlement)
+            : null;
 
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
     private string DescribeWorld() =>

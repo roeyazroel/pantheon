@@ -33,6 +33,7 @@ public sealed class DiplomacyLedger : IActRecorder
         switch (act)
         {
             case DiplomaticAct.Helped:
+            case DiplomaticAct.Sheltered:
                 relation.Gratitude = SimMath.Clamp01(relation.Gratitude + _rules.HelpGratitude);
                 break;
             case DiplomaticAct.Courted:
@@ -61,6 +62,7 @@ public sealed class DiplomacyLedger : IActRecorder
                 relation.Trust = SimMath.Clamp01(relation.Trust + _rules.HelpGratitude);
                 break;
             case DiplomaticAct.WrongedAlly:
+            case DiplomaticAct.TurnedAway:
                 relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
                 relation.Rivalry = SimMath.Clamp01(relation.Rivalry + (_rules.HarmRivalry / 2f));
                 break;

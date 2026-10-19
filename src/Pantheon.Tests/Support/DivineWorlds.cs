@@ -3,6 +3,7 @@ using System.Linq;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Ecology;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Miracles;
@@ -129,6 +130,7 @@ internal static class DivineWorlds
                 ConstructionProgress = 0f,
                 Ruins = 0,
                 ShieldedUntilTick = 0,
+                Emigration = 0f,
                 Beliefs = [],
             });
         }
@@ -146,6 +148,7 @@ internal static class DivineWorlds
             Diplomacy = new Pantheon.Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = WeatherWorlds.Calm(),
             Disasters = new Pantheon.Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
+            Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
         };
     }
@@ -167,6 +170,7 @@ internal static class DivineWorlds
         Rank = DivineRank.MinorSpirit,
         DominantSinceTick = null,
         CreatureId = null,
+        RefugeePolicy = RefugeePolicy.Welcome,
         Cooldowns = [],
     };
 

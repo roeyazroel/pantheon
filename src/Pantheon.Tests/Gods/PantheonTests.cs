@@ -136,7 +136,7 @@ public sealed class PantheonTests
     public void FourGods_PlayOutTheSameWayEachTime_AcrossASave()
     {
         var content = TestContent.Small;
-        var engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather, content.Disasters);
+        var engine = content.CreateEngine();
         var straight = Pantheon.Game.GameSession.CreateNew(content, new WorldSeed(19)).World;
         var resumed = Pantheon.Game.GameSession.CreateNew(content, new WorldSeed(19)).World;
 

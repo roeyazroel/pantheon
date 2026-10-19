@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Pantheon.Domain.Migration;
 
 namespace Pantheon.Domain.Gods;
 
@@ -71,4 +72,7 @@ public sealed record GodProfile
 
     /// <summary>How heavily it weighs what others did to it.</summary>
     public required float Grudge { get; init; }
+
+    /// <summary>What it does with migrants who arrive where it is followed (ADR-016); a welcoming god turns them away when its own people lack room.</summary>
+    public required RefugeePolicy RefugeePolicy { get; init; }
 }

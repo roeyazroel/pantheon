@@ -42,7 +42,8 @@ public static class OverlayMap
         OverlayKind.Faith => OverlayKind.Food,
         OverlayKind.Food => OverlayKind.Weather,
         OverlayKind.Weather => OverlayKind.Danger,
-        OverlayKind.Danger => null,
+        OverlayKind.Danger => OverlayKind.Migration,
+        OverlayKind.Migration => null,
     };
 
     /// <summary>Builds an overlay.</summary>
@@ -52,8 +53,9 @@ public static class OverlayMap
     /// <param name="rules">Divine rules, for influence and food comfort.</param>
     /// <param name="settlementRules">Settlement rules, for the soil crops need.</param>
     /// <param name="view">God colours and overlay opacity.</param>
+    /// <param name="pressure">Each settlement's pressure to leave (0..1), for the migration overlay; none without it.</param>
     /// <returns>The image and its legend.</returns>
-    public static OverlayImage Build(WorldState world, OverlayKind kind, int godId, DivineRules rules, SettlementRules settlementRules, DivineViewSettings view)
+    public static OverlayImage Build(WorldState world, OverlayKind kind, int godId, DivineRules rules, SettlementRules settlementRules, DivineViewSettings view, Func<SettlementState, float>? pressure = null)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(rules);
@@ -87,6 +89,10 @@ public static class OverlayMap
             case OverlayKind.Danger:
                 PaintDanger(world, view.OverlayOpacity, rgba);
                 legend = "Danger: fires in orange (brighter when fiercer), scorched land in ash, shielded settlements in blue";
+                break;
+            case OverlayKind.Migration:
+                PaintMigration(world, view, pressure, rgba);
+                legend = "Migration: each settlement's lands from green (content) to red (people want to leave); people on the road and their way in their god's colour";
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown overlay.");
@@ -153,6 +159,41 @@ public static class OverlayMap
             else if (region.Scorch > 0.05f)
             {
                 Write(rgba, region.Id, Ash, Math.Clamp(region.Scorch, 0f, 1f) * opacity);
+            }
+        }
+    }
+
+    /// <summary>Colours each settlement's lands by the pressure to leave, and each group's remaining way by its main god.</summary>
+    private static void PaintMigration(WorldState world, DivineViewSettings view, Func<SettlementState, float>? pressure, byte[] rgba)
+    {
+        if (pressure is not null)
+        {
+            PaintTerritories(world, rgba, 0.6f * view.OverlayOpacity, settlement => 1f - pressure(settlement));
+        }
+
+        var grid = world.Regions;
+        foreach (var group in world.Migration.Groups)
+        {
+            var color = Simulation.Migration.MigrationModel.MainGod(group.Beliefs) is { } god ? view.GodColor(god) : view.UnaffiliatedColor;
+            var from = group.Position;
+            foreach (var to in group.Path)
+            {
+                var (dx, dz) = (to.X - from.X, to.Z - from.Z);
+                var steps = Math.Max(1, (int)MathF.Ceiling(MathF.Sqrt((dx * dx) + (dz * dz)) / (grid.RegionSize * 0.5f)));
+                for (var i = 0; i <= steps; i++)
+                {
+                    if (grid.TryGetRegionIdAt(from.X + (dx * i / steps), from.Z + (dz * i / steps), out var region))
+                    {
+                        Write(rgba, region, color, view.OverlayOpacity);
+                    }
+                }
+
+                from = to;
+            }
+
+            if (grid.TryGetRegionIdAt(group.Position.X, group.Position.Z, out var here))
+            {
+                Write(rgba, here, RgbColor.Lerp(color, new RgbColor(1f, 1f, 1f), 0.5f), 1f);
             }
         }
     }

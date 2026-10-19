@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Pantheon.Domain.Diplomacy;
+using Pantheon.Domain.Migration;
 using Pantheon.Game.Diplomacy;
+using Pantheon.Game.Migration;
 
 namespace Pantheon.Client.UI;
 
 /// <summary>
 /// The diplomacy panel (spec §57: Diplomacy; P toggles it): one card per other god with your
 /// status, how it feels about you and why (spec §49), what it has proposed, and buttons for the
-/// moves the authority would accept now. It shows what <see cref="DiplomacyReadout"/> builds and
-/// reports clicks; it holds no game state.
+/// moves the authority would accept now, and your refugee policy (ADR-016). It shows what
+/// <see cref="DiplomacyReadout"/> builds and reports clicks; it holds no game state.
 /// </summary>
 public partial class DiplomacyPanel : CanvasLayer
 {
@@ -27,11 +29,15 @@ public partial class DiplomacyPanel : CanvasLayer
     };
 
     private PanelContainer _panel = null!;
+    private HBoxContainer _refugees = null!;
     private VBoxContainer _cards = null!;
     private string _shown = string.Empty;
 
     /// <summary>The player clicked a move towards a god.</summary>
     public event Action<int, DiplomaticCommandKind>? CommandClicked;
+
+    /// <summary>The player chose a refugee policy.</summary>
+    public event Action<RefugeePolicy>? PolicyClicked;
 
     /// <summary>Whether the panel is shown.</summary>
     public bool PanelVisible
@@ -60,23 +66,28 @@ public partial class DiplomacyPanel : CanvasLayer
         title.AddThemeFontSizeOverride("font_size", 20);
         title.AddThemeColorOverride("font_color", new Color(1f, 0.84f, 0.38f));
         column.AddChild(title);
+        _refugees = new HBoxContainer();
+        _refugees.AddThemeConstantOverride("separation", 8);
+        column.AddChild(_refugees);
         _cards = new VBoxContainer();
         _cards.AddThemeConstantOverride("separation", 12);
         column.AddChild(_cards);
     }
 
-    /// <summary>Shows the entries; the cards are rebuilt only when something changed.</summary>
+    /// <summary>Shows the entries and your refugee policy; the cards are rebuilt only when something changed.</summary>
     /// <param name="entries">One entry per other god.</param>
-    public void ShowEntries(IReadOnlyList<DiplomacyEntry> entries)
+    /// <param name="policy">Your refugee policy, or <c>null</c> without a god.</param>
+    public void ShowEntries(IReadOnlyList<DiplomacyEntry> entries, RefugeePolicy? policy)
     {
         ArgumentNullException.ThrowIfNull(entries);
-        var key = string.Join("|", Describe(entries));
+        var key = policy + "#" + string.Join("|", Describe(entries));
         if (key == _shown)
         {
             return;
         }
 
         _shown = key;
+        BuildRefugeeRow(policy);
         foreach (var child in _cards.GetChildren())
         {
             child.QueueFree();
@@ -103,10 +114,8 @@ public partial class DiplomacyPanel : CanvasLayer
         header.AddChild(Text(entry.Title, 18, Ink));
         header.AddChild(Text(DiplomacyText.Status(entry.Status), 16, _statusColors[entry.Status]));
         card.AddChild(header);
-        if (entry.Ties.Length > 0)
-        {
-            card.AddChild(Text(entry.Ties + ".", 14, new Color(0.62f, 0.8f, 1f)));
-        }
+        var practice = MigrationText.Practice(entry.RefugeePolicy);
+        card.AddChild(Text((entry.Ties.Length > 0 ? entry.Ties + ". " : string.Empty) + char.ToUpperInvariant(practice[0]) + practice[1..] + ".", 14, new Color(0.62f, 0.8f, 1f)));
 
         card.AddChild(Text(char.ToUpperInvariant(entry.Attitude[0]) + entry.Attitude[1..] + ".", 14, Muted));
         if (entry.Explanation.Length > 0)
@@ -144,6 +153,26 @@ public partial class DiplomacyPanel : CanvasLayer
         return card;
     }
 
+    /// <summary>The row of refugee policies, the current one shown pressed.</summary>
+    private void BuildRefugeeRow(RefugeePolicy? current)
+    {
+        foreach (var child in _refugees.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        _refugees.Visible = current is not null;
+        _refugees.AddChild(Text("Migrants arriving among your people:", 14, Muted));
+        foreach (var policy in Enum.GetValues<RefugeePolicy>())
+        {
+            // The current policy reads as chosen (gold), not as unavailable.
+            var button = new Button { Text = MigrationText.Policy(policy), FocusMode = Control.FocusModeEnum.None, Disabled = policy == current };
+            button.AddThemeColorOverride("font_disabled_color", new Color(1f, 0.84f, 0.38f));
+            button.Pressed += () => PolicyClicked?.Invoke(policy);
+            _refugees.AddChild(button);
+        }
+    }
+
     /// <summary>A label.</summary>
     private static Label Text(string text, int size, Color color)
     {
@@ -158,7 +187,7 @@ public partial class DiplomacyPanel : CanvasLayer
     {
         foreach (var entry in entries)
         {
-            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.Proposal}:{string.Join(",", entry.Available)}";
+            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Proposal}:{string.Join(",", entry.Available)}";
         }
     }
 }

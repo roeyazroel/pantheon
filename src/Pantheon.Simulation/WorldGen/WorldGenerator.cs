@@ -1,6 +1,7 @@
 using System;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Domain.World.Generation;
@@ -53,6 +54,7 @@ public static class WorldGenerator
             Diplomacy = new Domain.Diplomacy.DiplomacyState { Relations = [], Stances = [], Proposals = [] },
             Weather = CreateWeather(seed),
             Disasters = new Domain.Disasters.DisasterState { Earthquakes = [], NextEarthquakeId = 1 },
+            Migration = new MigrationState { Groups = [], NextGroupId = 1 },
             WinnerGodIds = [],
         };
 

@@ -38,7 +38,7 @@ public sealed class DisasterPresentationTests
         Assert.Equal(RgbColor.ToByte(RgbColor.ParseHex("#7fc8ff").B), image.Rgba[shielded + 2]);
         Assert.Equal(0, image.Rgba[(world.Regions.Cells.Count - 1) * 4 + 3]);
         Assert.Equal(OverlayKind.Danger, OverlayMap.Next(OverlayKind.Weather));
-        Assert.Null(OverlayMap.Next(OverlayKind.Danger));
+        Assert.Equal(OverlayKind.Migration, OverlayMap.Next(OverlayKind.Danger));
     }
 
     [Fact]

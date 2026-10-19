@@ -117,17 +117,20 @@ rule is followed by the conventions that meet it in this repository.
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
 - Current tools: the F1 debug panel (gods, the god AI's goal and top candidates with reasons
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
-  options, learned weights and memories, the weather's spell and cells, earthquakes and fires, the
-  selected settlement's economy, tier, water, dangers and belief),
-  the P diplomacy panel (status, each god's alliances and wars, attitude, memories, grievances and
-  every diplomatic move), the B region grid, the F3 region debug map (including blessing,
-  influence, soil water, fire and scorch), the O map overlays (influence, religion, faith, food, weather, danger), the `.`
-  single-tick step, the `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores),
-  F7 (settlers arrive), F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake)
-  and F12 (a fire), the launch options
+  options, learned weights and memories, the weather's spell and cells, earthquakes and fires,
+  migration groups and refugee policies, the selected settlement's economy, tier, water, dangers,
+  pressure to leave and belief),
+  the P diplomacy panel (status, each god's alliances, wars and refugee policy, attitude, memories,
+  grievances, every diplomatic move and your refugee policy), the B region grid, the F3 region
+  debug map (including blessing, influence, soil water, fire and scorch), the O map overlays
+  (influence, religion, faith, food, weather, danger, migration), the `.` single-tick step, the
+  `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
+  F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire) and M
+  (people leave the village at the cursor), the launch options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement or `creature`), `--judge`,
-  `--debug-panel`, `--diplomacy-panel`, `--weather` and `--disaster`, and scripted smoke runs with
+  `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate` and `--refugees`,
+  and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`. The README lists them.
 
 ## Where things go

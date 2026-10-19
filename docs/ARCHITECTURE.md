@@ -26,9 +26,9 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
 7. **No speculative infrastructure or optimisation.** Reserved areas (the networking project and
    the domain's population folder) hold no code until their milestone.
 8. **Commands go through an authority.** A player's intent (casting a miracle, rewarding,
-   punishing or sending the Creature, a diplomatic move) is a request that `MiracleCaster`,
-   `CreatureAuthority` or `DiplomacyAuthority` checks against the world before anything changes
-   (spec §73, ADR-009, ADR-010, ADR-012). The engine owns them as one `Authorities` bundle.
+   punishing or sending the Creature, a diplomatic move, a refugee policy) is a request that
+   `MiracleCaster`, `CreatureAuthority`, `DiplomacyAuthority` or `MigrationAuthority` checks
+   against the world before anything changes (spec §73, ADR-009, ADR-010, ADR-012, ADR-016). The engine owns them as one `Authorities` bundle.
    `GameSession` is the local authority; a multiplayer host will run the same checks. AI gods
    send the same requests through the same authorities (ADR-011).
 
@@ -44,7 +44,8 @@ game/                         Godot 4.7.2 project (res://)
   Scenes/                     Main.tscn, Camera/GodCamera.tscn, UI/DebugOverlay.tscn
   Scripts/                    Bootstrap, Camera, Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
-                              creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json (simulation);
+                              creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json,
+                              migration.json (simulation);
                               settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
                               (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
@@ -116,8 +117,9 @@ files and compiled assemblies and fails when either rule is broken.
 
 - `WorldState`: `Seed`, `Generation` (a copy of the `WorldGenSettings` used), `Tick`, `Random`
   (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures`, `Diplomacy`,
-  `Weather`, `Disasters` and `WinnerGodIds` (the god or allied gods that have won, spec §53 and
-  §115; ADR-015).
+  `Weather`, `Disasters`, `Migration` (groups on the road, ADR-016) and `WinnerGodIds` (the god
+  or allied gods that have won, spec §53 and §115; ADR-015). Settlements carry their people's
+  wish to leave (`Emigration`) and gods their `RefugeePolicy`.
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -156,7 +158,8 @@ files and compiled assemblies and fails when either rule is broken.
   `NextCellId`, `Spell` (normal, dry or wet), `SpellEndsTick` and `WindDirection`.
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
   `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
-  `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged` and others) raised during a tick or a command and never saved.
+  `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged`, `MigrationStarted`, `MigrationEnded`,
+  `MigrantsTurnedAway` and others) raised during a tick or a command and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
@@ -164,7 +167,7 @@ files and compiled assemblies and fails when either rule is broken.
   new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
   (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
   diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
-  (`weather.json`) and `DisasterRules` (`disasters.json`).
+  (`weather.json`), `DisasterRules` (`disasters.json`) and `MigrationRules` (`migration.json`).
 
 ### Simulation (`Pantheon.Simulation`)
 
@@ -215,12 +218,15 @@ files and compiled assemblies and fails when either rule is broken.
   shields), `Wildfires` (lighting, burning, spreading, regrowth) and `DisasterSystem` (the disaster
   step). `Belief/Hazards` carries a settlement's drought and danger into its conditions. See
   [Disasters](#disasters).
+- `Migration/`: `MigrationModel` (pressure, abandonment, appeal, conversion, merging),
+  `MigrationSystem` (the migration step), `MigrationAuthority` (refugee policies) and
+  `RefugeeAdvisor` (AI gods' policies). See [Migration](#migration).
 - `Systems/IntervalSystem` runs a wrapped system on the last tick of every interval of N ticks.
-  `Systems/Authorities` bundles the miracle, Creature and diplomacy authorities, which share one
-  ledger.
+  `Systems/Authorities` bundles the miracle, Creature, diplomacy and migration authorities; the
+  first three and the migration step share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  disaster step, the settlement step, the belief step, the victory check and the diplomacy step,
-  each in an
+  disaster step, the settlement step, the belief step, the victory check, the diplomacy step and
+  the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
   `SimulationRandom` restored from `WorldState.Random`, collects the events they raise, writes
@@ -229,11 +235,12 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 9, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 10, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
-  a time by `SaveMigrations`, then deserialized with the same strict options, so a migrated
+  a time by `SaveMigrations` (versions 1–5) and `RecentSaveMigrations` (from version 6), then
+  deserialized with the same strict options, so a migrated
   save gets exactly the checks of a current one. Version 1 → 2 gives every settlement
   `"Health": 1` and `"ConstructionProgress": 0`. Version 2 → 3 adds the Milestone 3 player god
   (Ilyra, 100 Divine Power) followed by 60% of the first settlement, empty beliefs elsewhere, no
@@ -244,7 +251,8 @@ files and compiled assemblies and fails when either rule is broken.
   proposals. Version 6 → 7 adds clear skies (no cells, a normal spell not yet scheduled, a west
   wind) and gives each region its climate's moisture as soil water. Version 7 → 8 adds no
   earthquakes, no fire or scorch, and no ruins or shields. Version 8 → 9 turns the one winner
-  into the list of winners (that god, or none). A missing, unsupported or newer version
+  into the list of winners (that god, or none). Version 9 → 10 adds no migration groups, no wish
+  to leave and a welcoming refugee policy for every god. A missing, unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
@@ -254,7 +262,9 @@ files and compiled assemblies and fails when either rule is broken.
   one relation per observer and subject and one stance per pair, values in range), soil moisture
   in 0..1, and weather (`WeatherIntegrity`: unique cell ids below the next id, finite positions,
   values in range, known gods), fire and scorch in 0..1, ruins and shields not negative, and
-  disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods).
+  disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods),
+  and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
+  sizes, food, health and positions, and beliefs as a settlement's).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -322,7 +332,9 @@ files and compiled assemblies and fails when either rule is broken.
 - `Presentation/OverlayMap` builds the map overlays (§58): influence (each region in the colour of
   the strongest god, opacity by its influence), religion (each settlement's lands in its main god's
   colour), faith and food (each settlement's lands on a red-to-green ramp), weather (each land
-  region's soil water, brown to yellow to blue) and danger (fires, ash and shielded settlements). `Presentation/CloudLayout` lays out each weather
+  region's soil water, brown to yellow to blue), danger (fires, ash and shielded settlements) and
+  migration (each settlement's lands by the pressure to leave, and every group's way in its god's
+  colour). `Presentation/CloudLayout` lays out each weather
   cell's puffs, colour, opacity, rain and lightning from `PresentationHash` and
   `WeatherViewSettings` (`weather_view.json`), and how much a storm dims the light.
   `DivineViewSettings` (`divine_view.json`) holds the god colours, overlay opacity and miracle
@@ -370,10 +382,14 @@ files and compiled assemblies and fails when either rule is broken.
   burning region, ash decals on scorched land and a dome over each shielded settlement, plays a
   shock wave when an earthquake begins and shakes the camera while the ground under its focus
   shakes. `SiteView` draws ruins as rubble.
-- `Bootstrap/NatureDebug` wires the weather and disaster debug hotkeys (F8, F10, F11, F12) and the
-  `--weather` and `--disaster` launch options.
+- `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
+  walkers in the migrants' god's colour (about one per three people), strung out two abreast
+  along the way, and a label that fades out at strategic zoom.
+- `Bootstrap/NatureDebug` wires the weather, disaster and migration debug hotkeys (F8, F10, F11,
+  F12, M) and the `--weather`, `--disaster`, `--migrate` and `--refugees` launch options.
 - `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
-  buttons send the moves through `SessionCommands.CommandDiplomacy`.
+  buttons send the moves through `SessionCommands.CommandDiplomacy`, and its refugee row sets the
+  player's policy through `MigrationCommands.SetPolicy`.
 - `Bootstrap/DivineController`: the player's divine interface. It selects miracles (keys 1–9 or
   the bar), casts at the cursor on a left click, rewards, punishes and sends the Creature (Z, X, V
   or the card), drives the hand's gestures, drains the session's events into effects and alerts,
@@ -420,10 +436,11 @@ sequenceDiagram
             Settle->>State: Tier 1 settlement step (food, health, births, deaths, construction)
             Engine->>State: belief step (drift, conversion, power, ranks, blessings)
             Engine->>State: victory check, diplomacy step (drift, fading, status, lapsed proposals)
+            Engine->>State: migration step (wish to leave, departures, the road, arrivals)
         end
         Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds)
         opt every 30 ticks
-            Engine->>State: AI gods (miracles, Creature, diplomacy) through the authorities
+            Engine->>State: AI gods (miracles, Creature, diplomacy, refugee policy) through the authorities
         end
         Engine->>State: RNG state, Tick++
     end
@@ -739,6 +756,41 @@ flowchart LR
     Ledger --> Memory
 ```
 
+## Migration
+
+ADR-016 records the decisions, and the Milestone 10 plan
+([.docs/milestone-10-population-movement.md](../.docs/milestone-10-population-movement.md)) has the
+rules with their shipped values and the measured runs.
+
+- **Pressure and the wish to leave**: hunger, homelessness, danger, war, and followers' fear and
+  doubt push a settlement's people out; love keeps them. Above a threshold the wish to leave
+  (`SettlementState.Emigration`) builds, and once enough want to go a group sets out.
+- **Groups** (`MigrationGroup`, §82) carry their people, beliefs, food and health along a route
+  from the region pathfinder to the most appealing settlement they can reach. On leaving they
+  give up gods they fear or doubt, in proportion.
+- **Arrival**: the god followed most at the destination welcomes them, demands that they convert
+  or turns them away, by its `RefugeePolicy`. The migrants' god remembers it (`Sheltered`,
+  `Converted`, `TurnedAway`), and joining mixes beliefs by population, so the host's gods convert
+  them over time.
+- **Policies** are commands checked by `MigrationAuthority`: the player sets theirs in the
+  diplomacy panel, and `RefugeeAdvisor` sets the AI gods' from their profiles, refusing migrants
+  while their own followers lack room.
+
+```mermaid
+flowchart LR
+    Conditions["Hunger, ruins, danger,<br/>war, fear, doubt"] --> Push["MigrationModel.Push"]
+    Push --> Urge["Emigration"]
+    Urge --> Group["MigrationGroup<br/>(beliefs, food, health, path)"]
+    Group --> Road["MigrationSystem: walk, eat"]
+    Road --> Policy{"Host god's RefugePolicy"}
+    Player["Diplomacy panel"] --> Authority["MigrationAuthority"]
+    Advisor["RefugeeAdvisor (AI)"] --> Authority
+    Authority --> Policy
+    Policy --> Merge["Merge into the settlement"]
+    Policy --> Ledger["DiplomacyLedger"]
+    Merge --> Belief["Belief step converts over time"]
+```
+
 ## Weather
 
 ADR-013 records the decisions, and the Milestone 7 plan
@@ -855,8 +907,15 @@ the client.
   land, shield). F3 has fire and scorch layers, the Danger overlay shows fires, ash and shields,
   F11 starts an earthquake and F12 a fire at the cursor, and `--disaster=quake|fire` starts one at
   the focused settlement.
+- The F1 panel's migration lines (`MigrationReadout`, §106 "migration routes") list the groups on
+  the road (size, way, cause, food, health, the god they follow), every god's refugee policy with
+  the AI's reason, and the selected settlement's pressure, cause and people wanting to leave. The
+  Migration overlay shows the routes, M sends 20 people out of the village under the cursor,
+  `--migrate=<n>` sends n out of the focused village and `--refugees=welcome|convert|turnaway`
+  sets the player's policy.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
-- O cycles the player map overlays (influence, religion, faith, food), which double as debug views.
+- O cycles the player map overlays (influence, religion, faith, food, weather, danger, migration),
+  which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
   runs n ticks before the first frame and `--camera-distance=<m>` sets the starting camera
   distance, so a grown settlement can be captured up close. `--divine-power`, `--cast`,
@@ -966,9 +1025,12 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   tools, and the version 7 → 8 migration (against `save-v7.json`). Since Milestone 9 it covers
   blocs and pantheon victory, allies' memory, the AI diplomat's coalition, balance, goodwill and
   endgame terms, the new personalities, the four-god presentation, and the version 8 → 9 migration
-  (against `save-v8.json`). The tests load the shipped `game/Data/*.json`; rule tests
+  (against `save-v8.json`). Since Milestone 10 it covers migration's pressure, abandonment, appeal,
+  conversion and merging, the migration step from leaving to arriving, refugee policies for the
+  player and the AI, migration's presentation and tools, and the version 9 → 10 migration
+  (against `save-v9.json`). The tests load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
-  `WeatherWorlds.Rules`, `DisasterWorlds.Rules`)
+  `WeatherWorlds.Rules`, `DisasterWorlds.Rules`, `MigrationWorlds.Rules`)
   so retuning the data does not change their meaning.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
   above, no Godot reference in core projects, no unseeded randomness or clock in core

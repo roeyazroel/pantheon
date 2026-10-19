@@ -60,6 +60,7 @@ public static class SettlementFounder
                 ConstructionProgress = 0f,
                 Ruins = 0,
                 ShieldedUntilTick = 0,
+                Emigration = 0f,
                 Beliefs = [],
             });
         }

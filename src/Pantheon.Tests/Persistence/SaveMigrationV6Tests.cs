@@ -52,6 +52,7 @@ public sealed class SaveMigrationV6Tests
         Version7Expectations.Apply(expected);
         Version8Expectations.Apply(expected);
         Version9Expectations.Apply(expected);
+        Version10Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version6SavePath)));
 
@@ -62,7 +63,7 @@ public sealed class SaveMigrationV6Tests
     public void LoadVersion6_KeepsPlayingTheSameWay_WeatherIncluded()
     {
         var content = TestContent.Shipped;
-        var engine = new SimulationEngine(content.SettlementRules, content.DivineRules, content.Creatures, content.GodAi, content.Miracles, content.Diplomacy, content.Weather, content.Disasters);
+        var engine = content.CreateEngine();
         var straight = WorldSaveSerializer.LoadFromFile(Version6SavePath);
         var resumed = WorldSaveSerializer.LoadFromFile(Version6SavePath);
 

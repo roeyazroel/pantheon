@@ -47,6 +47,7 @@ internal static class SaveIntegrity
         DiplomacyIntegrity.Validate(world, godIds, errors);
         WeatherIntegrity.Validate(world, godIds, errors);
         DisasterIntegrity.Validate(world, godIds, errors);
+        MigrationIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {
@@ -130,9 +131,9 @@ internal static class SaveIntegrity
                 errors.Add($"God {god.Id} has Divine Power {god.DivinePower}; it must be finite and not negative.");
             }
 
-            if (!Enum.IsDefined(god.Rank) || !Enum.IsDefined(god.Controller) || !Enum.IsDefined(god.Personality))
+            if (!Enum.IsDefined(god.Rank) || !Enum.IsDefined(god.Controller) || !Enum.IsDefined(god.Personality) || !Enum.IsDefined(god.RefugeePolicy))
             {
-                errors.Add($"God {god.Id} has an unknown rank, controller or personality.");
+                errors.Add($"God {god.Id} has an unknown rank, controller, personality or refugee policy.");
             }
 
             if (god.DominantSinceTick is { } since && (since < 0 || since > world.Tick))
@@ -149,27 +150,34 @@ internal static class SaveIntegrity
         return ids;
     }
 
-    /// <summary>Checks one settlement's beliefs: known gods, one entry each, values in 0..1, shares adding up to at most 1.</summary>
-    private static void ValidateBeliefs(SettlementState settlement, HashSet<int> godIds, List<string> errors)
+    /// <summary>
+    /// Checks a population's beliefs (a settlement's or a migration group's): known gods, one entry
+    /// each, values in 0..1, shares adding up to at most 1.
+    /// </summary>
+    /// <param name="beliefs">The beliefs.</param>
+    /// <param name="owner">How errors name the population, for example "Settlement 3".</param>
+    /// <param name="godIds">Ids of the world's gods.</param>
+    /// <param name="errors">Error list to append to.</param>
+    internal static void ValidateBeliefs(IReadOnlyList<GodBelief> beliefs, string owner, HashSet<int> godIds, List<string> errors)
     {
         var seen = new HashSet<int>();
         var total = 0f;
-        foreach (var belief in settlement.Beliefs)
+        foreach (var belief in beliefs)
         {
             if (belief is null)
             {
-                errors.Add($"Settlement {settlement.Id} has a null belief.");
+                errors.Add($"{owner} has a null belief.");
                 continue;
             }
 
             if (!godIds.Contains(belief.GodId) || !seen.Add(belief.GodId))
             {
-                errors.Add($"Settlement {settlement.Id} has a belief in missing or repeated god {belief.GodId}.");
+                errors.Add($"{owner} has a belief in missing or repeated god {belief.GodId}.");
             }
 
             if (!IsShare(belief.Adherence) || !IsShare(belief.Faith) || !IsShare(belief.Love) || !IsShare(belief.Fear) || !IsShare(belief.Doubt))
             {
-                errors.Add($"Settlement {settlement.Id} has a belief in god {belief.GodId} with a value outside 0..1.");
+                errors.Add($"{owner} has a belief in god {belief.GodId} with a value outside 0..1.");
             }
 
             total += belief.Adherence;
@@ -177,12 +185,12 @@ internal static class SaveIntegrity
 
         if (total > 1f + AdherenceTolerance)
         {
-            errors.Add($"Settlement {settlement.Id} has followers adding up to {total}; the shares must add up to at most 1.");
+            errors.Add($"{owner} has followers adding up to {total}; the shares must add up to at most 1.");
         }
     }
 
     /// <summary>Whether a value lies in 0..1.</summary>
-    private static bool IsShare(float value) => value is >= 0f and <= 1f;
+    internal static bool IsShare(float value) => value is >= 0f and <= 1f;
 
     /// <summary>Checks settlement ids, region references, non-negative quantities, health in 0..1 and beliefs.</summary>
     private static void ValidateSettlements(WorldState world, HashSet<int> godIds, List<string> errors)
@@ -223,7 +231,12 @@ internal static class SaveIntegrity
                 errors.Add($"Settlement {settlement.Id} has negative construction progress, ruins or shield.");
             }
 
-            ValidateBeliefs(settlement, godIds, errors);
+            if (!float.IsFinite(settlement.Emigration) || settlement.Emigration < 0f)
+            {
+                errors.Add($"Settlement {settlement.Id} has emigration {settlement.Emigration}; it must be finite and not negative.");
+            }
+
+            ValidateBeliefs(settlement.Beliefs, $"Settlement {settlement.Id}", godIds, errors);
         }
     }
 }

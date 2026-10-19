@@ -32,6 +32,7 @@ internal static class CreatureWorlds
             DivinePower = god.DivinePower,
             Rank = god.Rank,
             CreatureId = god.Id,
+            RefugeePolicy = god.RefugeePolicy,
             Cooldowns = god.Cooldowns,
         };
         world.Gods[0] = withCreature;

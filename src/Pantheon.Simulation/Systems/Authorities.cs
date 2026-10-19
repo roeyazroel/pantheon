@@ -1,5 +1,6 @@
 using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Diplomacy;
+using Pantheon.Simulation.Migration;
 using Pantheon.Simulation.Miracles;
 
 namespace Pantheon.Simulation.Systems;
@@ -11,4 +12,5 @@ namespace Pantheon.Simulation.Systems;
 /// <param name="Miracles">Miracle casts.</param>
 /// <param name="Creatures">Rewards, punishments and orders to Creatures.</param>
 /// <param name="Diplomacy">Diplomatic commands.</param>
-public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy);
+/// <param name="Migration">Refugee policies.</param>
+public sealed record Authorities(MiracleCaster Miracles, CreatureAuthority Creatures, DiplomacyAuthority Diplomacy, MigrationAuthority Migration);

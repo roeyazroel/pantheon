@@ -266,7 +266,17 @@ public static class BeliefModel
     public static GodBelief? Find(SettlementState settlement, int godId)
     {
         ArgumentNullException.ThrowIfNull(settlement);
-        foreach (var belief in settlement.Beliefs)
+        return Find(settlement.Beliefs, godId);
+    }
+
+    /// <summary>The belief in a god among a population's beliefs (a settlement's or a migration group's), if any.</summary>
+    /// <param name="beliefs">The beliefs.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns>The belief, or <c>null</c>.</returns>
+    public static GodBelief? Find(IReadOnlyList<GodBelief> beliefs, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(beliefs);
+        foreach (var belief in beliefs)
         {
             if (belief.GodId == godId)
             {

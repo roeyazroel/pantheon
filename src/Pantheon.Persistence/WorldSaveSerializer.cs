@@ -22,9 +22,10 @@ public static class WorldSaveSerializer
     /// (Milestone 5) added god personalities, dominance and the winner; version 6 (Milestone 6) added
     /// diplomacy; version 7 (Milestone 7) added the weather and the soil's water; version 8
     /// (Milestone 8) added disasters, regions' fire and scorch, and settlements' ruins and shields;
-    /// version 9 (Milestone 9) replaced the one winner with the winners, for victories won together.
+    /// version 9 (Milestone 9) replaced the one winner with the winners, for victories won together;
+    /// version 10 (Milestone 10) added migration, settlements' wish to leave and gods' refugee policies.
     /// </summary>
-    public const int CurrentSaveVersion = 9;
+    public const int CurrentSaveVersion = 10;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

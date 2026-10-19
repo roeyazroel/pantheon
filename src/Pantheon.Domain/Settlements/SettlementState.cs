@@ -43,6 +43,9 @@ public sealed class SettlementState
     /// <summary>Tick until which a Shield miracle protects the settlement from disasters; 0 when it has none.</summary>
     public required long ShieldedUntilTick { get; set; }
 
+    /// <summary>People who want to leave and have not yet set out (ADR-016); it builds while life is hard and fades when it eases.</summary>
+    public required float Emigration { get; set; }
+
     /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
     public required List<GodBelief> Beliefs { get; init; }
 }

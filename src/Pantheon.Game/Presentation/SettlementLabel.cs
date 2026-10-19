@@ -23,7 +23,7 @@ public static class SettlementLabel
     /// <summary>
     /// Formats the settlement name, its population, the share of it that follows its main god and,
     /// when the land threatens it, a third line of marks: drought (ADR-013), fire, ruins and a
-    /// shield (ADR-014).
+    /// shield (ADR-014), people leaving and migrants coming (ADR-016).
     /// </summary>
     /// <param name="settlement">Settlement.</param>
     /// <param name="world">World, for god names, the soil and fires.</param>
@@ -32,7 +32,8 @@ public static class SettlementLabel
     public static string Format(SettlementState settlement, WorldState world, SettlementRules rules)
     {
         var text = Format(settlement, world);
-        var marks = Disasters.DisasterText.Marks(settlement, world, rules);
+        var marks = new System.Collections.Generic.List<string>(Disasters.DisasterText.Marks(settlement, world, rules));
+        marks.AddRange(Migration.MigrationText.Marks(settlement, world));
         return marks.Count > 0 ? text + "\n" + string.Join(" · ", marks) : text;
     }
 

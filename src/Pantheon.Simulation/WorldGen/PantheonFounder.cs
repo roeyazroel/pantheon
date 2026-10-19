@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Gods;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Simulation.Creatures;
@@ -56,6 +57,7 @@ public static class PantheonFounder
                 Rank = DivineRank.MinorSpirit,
                 DominantSinceTick = null,
                 CreatureId = home is not null && creatureRules is not null ? id : null,
+                RefugeePolicy = RefugeePolicy.Welcome,
                 Cooldowns = [],
             };
             gods.Add(god);

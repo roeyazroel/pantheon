@@ -47,6 +47,7 @@ public static class GodAiRulesValidator
             errors.RequireShare(profile.Aggression, prefix + nameof(profile.Aggression));
             errors.RequireShare(profile.Treachery, prefix + nameof(profile.Treachery));
             errors.RequireShare(profile.Grudge, prefix + nameof(profile.Grudge));
+            errors.RequireDefined(profile.RefugeePolicy, prefix + nameof(profile.RefugeePolicy));
         }
 
         foreach (var personality in Enum.GetValues<GodPersonality>())

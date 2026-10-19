@@ -1,0 +1,64 @@
+{
+  // Migration (spec sections 31-32 and 82, ADR-016). The migration step runs every StepIntervalTicks
+  // ticks; rates are per simulated second. Values without units are shares (0..1).
+
+  // Pressure to leave = (FamineWeight x hunger + HomelessWeight x homeless share + DangerWeight x danger
+  // + WarWeight x war + FearWeight x fear + DoubtWeight x doubt), capped at 1, times (1 - LoveLoyalty x love).
+  // Hunger and danger are the settlement's needs (divine_rules.json); fear, doubt and love are its
+  // followers', weighted by how many follow each god. War: two gods at war, each followed by at least
+  // WarPresence of the people (1 when they split the village evenly).
+  "StepIntervalTicks": 10,
+  "FamineWeight": 1.0,
+  "HomelessWeight": 1.0,
+  "DangerWeight": 0.8,
+  "WarWeight": 0.5,
+  "WarPresence": 0.2,
+  "FearWeight": 0.6,
+  "DoubtWeight": 0.5,
+  "LoveLoyalty": 0.5,
+
+  // Above PressureThreshold, people come to want to leave at EmigrationPerSecond of the population per
+  // second at full pressure; the wish fades by UrgeFadePerSecond when life eases. Once MinGroupSize want
+  // to go (or GroupShare of the people, if more) they set out together: at most MaxGroupShare of the
+  // people, and MinRemaining always stay.
+  "PressureThreshold": 0.3,
+  "EmigrationPerSecond": 0.005,
+  "UrgeFadePerSecond": 0.02,
+  "MinGroupSize": 8,
+  "GroupShare": 0.05,
+  "MaxGroupShare": 0.25,
+  "MinRemaining": 15,
+  "MaxGroups": 20,
+
+  // Destinations within MaxDistance metres whose pressure is at least BetterBy lower; the most appealing
+  // one they can walk to: room, food, safety, their own gods followed there, less the distance.
+  "MaxDistance": 900.0,
+  "BetterBy": 0.15,
+  "RoomWeight": 1.0,
+  "FoodWeight": 1.0,
+  "SafetyWeight": 0.5,
+  "FaithWeight": 0.8,
+  "DistanceWeight": 0.6,
+
+  // The road: walking speed (metres per second), food taken along and eaten, hunger and deaths.
+  "Speed": 3.0,
+  "FoodTakenPerPerson": 6.0,
+  "FoodPerPersonPerSecond": 0.05,
+  "HungerHealthLossPerSecond": 0.01,
+  "HealthRecoveryPerSecond": 0.002,
+  "DeathsPerSecond": 0.004,
+
+  // Beliefs: those who leave give up following each god by AbandonShare x its followers' fear or doubt
+  // (whichever is higher). On arrival the god followed most there decides (gods' RefugePolicy, god_ai.json):
+  // welcomed migrants' gratitude adds WelcomeLove (by their share) to its love there; a god demanding
+  // conversion takes ConversionDemand of the migrants who follow other gods or none, who fear and doubt it
+  // by ConversionFear and ConversionDoubt; migrants turned away lose TurnedAwayLoss of their love for it.
+  // A welcoming AI god turns migrants away while more than OverwhelmedHomeless of its followers lack room.
+  "AbandonShare": 0.3,
+  "WelcomeLove": 0.3,
+  "ConversionDemand": 0.6,
+  "ConversionFear": 0.3,
+  "ConversionDoubt": 0.3,
+  "TurnedAwayLoss": 0.3,
+  "OverwhelmedHomeless": 0.2
+}

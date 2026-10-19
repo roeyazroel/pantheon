@@ -7,14 +7,16 @@ using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Game.Disasters;
 using Pantheon.Game.Launch;
+using Pantheon.Game.Migration;
 using Pantheon.Game.Weather;
 
 namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
-/// The debug drivers of weather and disasters (ADR-013, ADR-014): the F8, F10, F11 and F12 hotkeys
-/// and the <c>--weather</c> and <c>--disaster</c> launch options. Every change goes through the
-/// engine-agnostic commands; this class only wires them to input.
+/// The debug drivers of weather, disasters and migration (ADR-013, ADR-014, ADR-016): the F8, F10,
+/// F11, F12 and M hotkeys and the <c>--weather</c>, <c>--disaster</c>, <c>--migrate</c> and
+/// <c>--refugees</c> launch options. Every change goes through the engine-agnostic commands; this
+/// class only wires them to input.
 /// </summary>
 internal sealed class NatureDebug
 {
@@ -33,7 +35,7 @@ internal sealed class NatureDebug
         _setStatus = setStatus;
     }
 
-    /// <summary>The hotkeys: next spell, a storm, an earthquake and a fire at the cursor.</summary>
+    /// <summary>The hotkeys: next spell, a storm, an earthquake, a fire and a migration at the cursor.</summary>
     /// <returns>Action names and what they do.</returns>
     public IEnumerable<(StringName Action, Action Run)> Hotkeys() =>
     [
@@ -41,9 +43,10 @@ internal sealed class NatureDebug
         (InputActions.DebugStorm, () => AtCursor("call a storm", point => WeatherCommands.SummonStorm(_session, point))),
         (InputActions.DebugQuake, () => AtCursor("start an earthquake", point => DisasterCommands.StartQuake(_session, point))),
         (InputActions.DebugFire, () => AtCursor("start a fire", point => DisasterCommands.StartFire(_session, point))),
+        (InputActions.DebugMigrate, () => AtCursor("send people away", point => MigrationCommands.SendFrom(_session, point))),
     ];
 
-    /// <summary>Sets up the weather and disaster the launch options ask for, at the focused settlement where a place is needed.</summary>
+    /// <summary>Sets up the weather, disaster, refugee policy and migration the launch options ask for, at the focused settlement where a place is needed.</summary>
     /// <param name="options">Launch options.</param>
     /// <param name="focus">The focused settlement's position, if there is one.</param>
     public void ApplyStartOptions(LaunchOptions options, GroundPosition? focus)
@@ -52,6 +55,16 @@ internal sealed class NatureDebug
         if (options.Weather is { } weather && Weather(weather, focus) is { } status)
         {
             _setStatus(status);
+        }
+
+        if (options.Refugees is { } policy)
+        {
+            _setStatus(MigrationCommands.SetPolicy(_session, policy));
+        }
+
+        if (options.Migrate is { } people && focus is { } home)
+        {
+            _setStatus(MigrationCommands.SendFrom(_session, home, people));
         }
 
         if (options.Disaster is { } disaster && focus is { } place)

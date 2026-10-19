@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using Pantheon.Domain.Creatures;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
 
@@ -35,6 +36,8 @@ public sealed record LaunchOptions
         "diplomacy-panel",
         "weather",
         "disaster",
+        "refugees",
+        "migrate",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -93,6 +96,12 @@ public sealed record LaunchOptions
 
     /// <summary>A disaster started at the focused settlement at the start.</summary>
     public DisasterAtStart? Disaster { get; init; }
+
+    /// <summary>The player's refugee policy from the start (ADR-016).</summary>
+    public RefugeePolicy? Refugees { get; init; }
+
+    /// <summary>People sent out of the focused settlement at the start (ADR-016).</summary>
+    public int? Migrate { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -215,6 +224,18 @@ public sealed record LaunchOptions
                 return Enum.TryParse<DisasterAtStart>(value.Trim(), ignoreCase: true, out var disaster) && Enum.IsDefined(disaster)
                     ? options with { Disaster = disaster }
                     : Warn(options, warnings, $"'--disaster' needs quake or fire, got '{value}'.");
+            case "refugees":
+                return value.Trim().ToLowerInvariant() switch
+                {
+                    "welcome" => options with { Refugees = RefugeePolicy.Welcome },
+                    "convert" => options with { Refugees = RefugeePolicy.DemandConversion },
+                    "turnaway" => options with { Refugees = RefugeePolicy.TurnAway },
+                    _ => Warn(options, warnings, $"'--refugees' needs welcome, convert or turnaway, got '{value}'."),
+                };
+            case "migrate":
+                return TryParsePositiveInt(value.Trim(), out var migrants)
+                    ? options with { Migrate = migrants }
+                    : Warn(options, warnings, $"'--migrate' needs a positive whole number of people, got '{value}'.");
             case "debug-panel":
                 return value.Trim().ToLowerInvariant() switch
                 {

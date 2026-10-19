@@ -4,12 +4,14 @@ using Pantheon.Domain.Belief;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.Disasters;
+using Pantheon.Domain.Migration;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game.Camera;
 using Pantheon.Game.Population;
 using Pantheon.Simulation.Creatures;
 using Pantheon.Simulation.Gods;
+using Pantheon.Simulation.Migration;
 
 namespace Pantheon.Game.Diagnostics;
 
@@ -39,6 +41,15 @@ public sealed record DebugSnapshot
 
     /// <summary>Disaster rules, for the disaster lines; none without them.</summary>
     public DisasterRules? DisasterRules { get; init; }
+
+    /// <summary>Migration rules, for the migration lines; none without them.</summary>
+    public MigrationRules? MigrationRules { get; init; }
+
+    /// <summary>The pressure on the selected settlement's people to leave, if measured.</summary>
+    public MigrationPressure? MigrationPressure { get; init; }
+
+    /// <summary>Each AI god's refugee policy now and why, by god id.</summary>
+    public IReadOnlyList<(int GodId, RefugeePolicy Policy, string Reason)> RefugeeChoices { get; init; } = [];
 
     /// <summary>The local player's Creature, whose options are listed.</summary>
     public int? LocalCreatureId { get; init; }
