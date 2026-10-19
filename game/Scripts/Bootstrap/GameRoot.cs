@@ -175,7 +175,7 @@ public partial class GameRoot : Node3D
     {
         _network.Update(delta, new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y));
         _session.Update(delta);
-        _presenter.Sync(_session.World);
+        _presenter.Sync(_session.World, delta);
         _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
 
         _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId, _divine.HeldCreatureAt(_camera.CursorGroundPoint));

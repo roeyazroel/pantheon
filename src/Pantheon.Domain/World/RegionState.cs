@@ -80,4 +80,13 @@ public sealed class RegionState
 
     /// <summary>Blessing that never fades (0..1, spec §14, ADR-030): a god hallowed the land, and its <see cref="Blessing"/> stays at least this.</summary>
     public float Hallowed { get; set; }
+
+    /// <summary>The forest the land grows (0..1, spec §93, ADR-033): the most <see cref="Timber"/> it holds, to which cut or burnt wood grows back.</summary>
+    public float Forest { get; set; }
+
+    /// <summary>The standing wood (0..<see cref="Forest"/>, spec §5, ADR-033): villages cut it, fire burns it, and it grows back.</summary>
+    public float Timber { get; set; }
+
+    /// <summary>The stone that can be quarried (0..1, spec §5, ADR-033); quarrying uses it up for good.</summary>
+    public float Stone { get; set; }
 }

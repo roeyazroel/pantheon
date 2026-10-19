@@ -34,6 +34,11 @@ public static class WorldGenSettingsValidator
             ValidateHydrology(settings, hydrology, errors);
         }
 
+        if (settings.Resources is { } resources)
+        {
+            ValidateResources(resources, errors);
+        }
+
         if (errors.Count > 0)
         {
             throw new ArgumentException("Invalid world generation settings:" + Environment.NewLine + " - " +
@@ -98,6 +103,19 @@ public static class WorldGenSettingsValidator
         foreach (var name in settlement.Names)
         {
             Require(!string.IsNullOrWhiteSpace(name), "StartingSettlement.Names must not contain blank names.", errors);
+        }
+    }
+
+    /// <summary>Checks the forests' and stone's settings (ADR-033): each biome once, values not negative.</summary>
+    private static void ValidateResources(ResourceSettings resources, List<string> errors)
+    {
+        Require(resources.PatchSize > 0f, "Resources.PatchSize must be positive.", errors);
+        Require(resources.PatchStrength is >= 0f and <= 1f, "Resources.PatchStrength must be between 0 and 1.", errors);
+        var seen = new HashSet<Domain.Ecology.Biome>();
+        foreach (var biome in resources.Biomes)
+        {
+            Require(biome is not null && Enum.IsDefined(biome.Biome) && seen.Add(biome.Biome), "Resources.Biomes must list known biomes, each once.", errors);
+            Require(biome is null || (biome.Forest >= 0f && biome.Stone is >= 0f and <= 1f), "Resources.Biomes forest must not be negative, and stone must be between 0 and 1.", errors);
         }
     }
 

@@ -189,25 +189,27 @@ public static class SettlementEconomy
     /// Splits the workforce for one step. Builders work only while a house is wanted and funded, and
     /// are capped by the builder share, the builders one site takes and the work left on the house.
     /// Worshippers are <c>WorshipWorkforceShare</c> of the workers, scaled by the settlement's devotion.
-    /// Everyone else who works farms.
+    /// Gatherers go out while the stores of wood and stone run short (ADR-033). Everyone else who
+    /// works farms.
     /// </summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="settlement">Settlement state.</param>
-    /// <returns>Workers, farmers, builders and worshippers.</returns>
+    /// <returns>Workers, farmers, builders, worshippers and gatherers.</returns>
     public static LabourAllocation AllocateLabour(SettlementRules rules, SettlementState settlement)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(settlement);
         var workers = Math.Max(0, settlement.Population) * rules.WorkforceShare;
         var builders = 0f;
-        if (WantsConstruction(rules, settlement) && CanFundConstruction(rules, settlement))
+        if (WantsConstruction(rules, settlement) && CanFundConstruction(rules, settlement) && Resources.ResourceModel.HasWoodForHouse(rules, settlement))
         {
             var remainingWork = Math.Max(0f, ComputeHouseWork(rules, settlement) - settlement.ConstructionProgress);
             builders = Math.Min(Math.Min(workers * rules.MaxBuilderShare, rules.BuildersPerSite), remainingWork);
         }
 
         var worshippers = Math.Min(workers - builders, workers * rules.WorshipWorkforceShare * ComputeDevotion(settlement) * CivicModel.WorshipFactor(rules, settlement));
-        return new LabourAllocation(workers, workers - builders - worshippers, builders, worshippers);
+        var gatherers = Resources.ResourceModel.Gatherers(rules.Resources, settlement, workers, workers - builders - worshippers);
+        return new LabourAllocation(workers, workers - builders - worshippers - gatherers, builders, worshippers, gatherers);
     }
 
     /// <summary>

@@ -68,6 +68,8 @@ public static class SettlementFounder
                 Society = Domain.Society.SocietyState.Founded(),
                 Culture = Domain.Culture.CultureState.Founded(),
                 Beliefs = [],
+                Wood = settings.Wood,
+                Stone = settings.Stone,
             });
         }
 

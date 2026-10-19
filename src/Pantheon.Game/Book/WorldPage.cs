@@ -40,6 +40,7 @@ public static class WorldPage
                 world.Settlements.Count(s => s.Population > 0),
                 world.Settlements.Sum(s => (int)MathF.Round(Math.Max(0, s.Population) * Math.Max(0f, 1f - BeliefModel.TotalAdherence(s.Beliefs)))),
                 world.Migration.Groups.Sum(g => g.Population))),
+            new(Resources.ResourceText.World(world)),
             new("The gods", BookTone.Heading),
         };
         foreach (var god in world.Gods.OrderByDescending(g => GodStanding.CountFollowers(world, g.Id)).ThenBy(g => g.Id))

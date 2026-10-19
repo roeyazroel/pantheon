@@ -53,10 +53,10 @@ game/                         Godot 4.7.2 project (res://)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology (biomes, EcologyRules), Settlements, Gods, Belief, Miracles,
-                              Creatures, Notables, Diplomacy, Weather, Disasters, Events (+ reserved folders)
+                              Creatures, Notables, Roads, Diplomacy, Weather, Disasters, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Notables, Navigation, Gods (AI), Diplomacy, Weather, Ecology, Disasters,
-                              Systems, SimulationEngine
+                              Creatures, Notables, Resources, Roads, Navigation, Gods (AI), Diplomacy, Weather,
+                              Ecology, Disasters, Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -143,8 +143,9 @@ files and compiled assemblies and fails when either rule is broken.
   `Moisture` (the climate), `Fertility`, `Vegetation` (0..1), `Blessing` (0..1, from miracles; it
   fades), `SoilMoisture` (0..1, the water in the soil now; ADR-013), `Fire` (how fiercely it burns
   now), `Scorch` (how much of its fuel fire has eaten; ADR-014), `FreshWater` (0..1, how much of it a
-  river or lake waters, fixed at generation) and `Flood` (0..1, how deep it lies under a flood now;
-  ADR-022).
+  river or lake waters, fixed at generation), `Flood` (0..1, how deep it lies under a flood now;
+  ADR-022), and since ADR-033 `Forest` (the most wood it grows), `Timber` (its standing wood) and
+  `Stone`.
 - `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Water` (in its
   wells and cisterns; ADR-022), `Society` (`SocietyState`: safety, happiness, stability,
   wealth, education, `TechnologyLevels` in §36's eight fields, buildings, priority and the
@@ -154,8 +155,8 @@ files and compiled assemblies and fails when either rule is broken.
   being built; 0 when none is under way), `Ruins` (houses destroyed and not yet rebuilt),
   `ShieldedUntilTick` (while a Shield miracle protects it), `OldFaith` (the share of its people
   who broke away from their god in a schism, with how many have returned or fallen away; ADR-021),
-  `SanctuaryGodId` and `SanctuaryUntilTick` (whose followers cannot fall away for now) and
-  `Beliefs`. These aggregates are the canonical
+  `SanctuaryGodId` and `SanctuaryUntilTick` (whose followers cannot fall away for now),
+  `Beliefs`, and `Wood` and `Stone` in store (ADR-033). These aggregates are the canonical
   population (Tier 1, ADR-004 and ADR-008).
 - `GodBelief` (one per god a settlement knows): `GodId`, `Adherence` (the share of the people who
   follow the god; the shares add up to at most 1) and `Faith`, `Love`, `Fear`, `Doubt`,
@@ -174,6 +175,11 @@ files and compiled assemblies and fails when either rule is broken.
   left), `Preferences` (learned weight per situation and action) and `Memories` (recent deeds with
   the god's feedback). `CreatureCommand` (reward, punish, go to) is the intent the authority
   checks. `World/SimulationTime` fixes 10 ticks per simulated second.
+- `Roads/RoadState` (ADR-033): a road between two villages in `WorldState.Roads` (with
+  `NextRoadId`): its villages, its way, its length, the metres built and its wear.
+  `SettlementRules.Resources` (`ResourceRules`) and `SettlementRules.Roads` (`RoadRules`) hold
+  their numbers, `BuildingDefinition.Wood` and `Stone` what each building takes, and
+  `WorldGenSettings.Resources` how generation lays the forests and stone.
 - `Notables/NotableState` (ADR-032): a prophet or an elder, a Tier 3 individual saved whole in
   `WorldState.Notables` (with `NextNotableId`): kind, name, god, village, position, destination
   and path, time left to preach, born and death ticks, and `NotableMemory` deeds (rose, preached,
@@ -262,7 +268,8 @@ files and compiled assemblies and fails when either rule is broken.
      rivers and `ChannelCarver` cuts the channels; the result is the field's `HydrologyMap`.
   5. Each sample is classified by data-driven `BiomeRule`s (first match wins).
 - `WorldGen/RegionBuilder` aggregates samples per region (means plus majority biome) and derives
-  fertility and vegetation. `SettlementFounder.FoundAll` places up to `Count` settlements (8 on a
+  fertility and vegetation; `ResourceFounder` lays the forests and stone from the biomes and the
+  seed's noise (ADR-033). `SettlementFounder.FoundAll` places up to `Count` settlements (8 on a
   small island, 20 or 40 on larger ones) on
   the best habitable regions, at least `MinimumSpacing` regions apart so their farmland never
   overlaps, with names and populations drawn from seeded streams. `PantheonFounder` creates the
@@ -299,6 +306,11 @@ files and compiled assemblies and fails when either rule is broken.
   Creature lifted). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
 - `Miracles/DivineActs`: hallowing the land, waking the volcano and stilling every disaster
   (ADR-030), applied by `MiracleEffects`.
+- `Resources/`: `ResourceModel` (what a village wants in store, its gatherers, what they bring in
+  and take from the land, the wood a house takes) and `ResourceSystem` (timber growing back and
+  burning). `Roads/`: `RoadModel` (open roads, the way along one, a walker's speed, the next road
+  to plan) and `RoadSystem` (planning, building with stone, wear and mending, trade and food).
+  See [Wood, stone and roads](#wood-stone-and-roads).
 - `Notables/`: `NotableModel` (who is devout, raising a notable, a prophet's next village, a
   sermon, memory) and `NotableSystem` (elders chosen, keeping faith and turning, prophets called,
   walking and preaching, deaths and martyrdom). `MiracleEffects` raises an anointed prophet. See
@@ -381,7 +393,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (11 since ADR-032, which adds the Notables section; 10
+- `NetworkProtocol`: the protocol version (12 since ADR-033, which adds the Roads section and
+  regions' forest, timber and stone; 11 since ADR-032, which added the Notables section; 10
   since ADR-030, which added `HandIntent` and whose Creatures, gods and regions carry paths, what
   hands hold and hallowed land), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
@@ -433,7 +446,9 @@ animals at their cover. Version 20 → 21 (`HazardSaveMigration`) gives regions 
 and the disasters nothing on the move, no marks, no village told of blight and a volcano still to
 be found. Version 21 → 22 (`CallingSaveMigration`) gives Creatures no paths or callings, every hand
 nothing and no land hallowed. Version 22 → 23 (`NotableSaveMigration`) starts with no prophets or
-elders and gives the history's records no name. A missing,
+elders and gives the history's records no name. Version 23 → 24 (`ResourceSaveMigration`) grows
+each region's forest from its biome and vegetation, gives each village a new world's stores and
+starts with no roads. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -458,8 +473,10 @@ elders and gives the history's records no name. A missing,
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
   that leave room for the followers, sanctuaries of known gods), gods' domains (known, once each),
-  and notables (`NotableIntegrity`: unique ids below the next, known kinds, gods and villages,
-  finite places and possible lives).
+  notables (`NotableIntegrity`: unique ids below the next, known kinds, gods and villages,
+  finite places and possible lives), and resources and roads (`RoadIntegrity`: forest, timber and
+  stone in 0..1 with timber within the forest, stores not negative, unique road ids below the next
+  between two known villages, ways of two points or more, built within the length, wear in 0..1).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -523,6 +540,10 @@ elders and gives the history's records no name. A missing,
   `MiraclesPage`, `CreaturePage`: `BookPage` of `BookLine`s, ADR-031); `Presentation/StateOverlays`
   paints the population, disaster risk and political control overlays; `Camera/GodCameraModel`
   toggles the strategic overview.
+- `Resources/ResourceText` words the stores, roads and forests, and `Resources/ResourceCommands`
+  builds every planned road (`--roads`) or sets the stores (`--stores`); `Alerts/RoadAlerts` tells
+  of roads, `Diagnostics/ResourceReadout` gives their F1 lines, and `Presentation/ForestLayout` and
+  `RoadLayout` place the trees and the roads' ribbons (ADR-033).
 - `Notables/NotableText` words prophets and elders and `Notables/NotableCommands` raises a prophet
   (`--prophet`); `Alerts/NotableAlerts` tells of them, `Book/NotableSection` lists them on the
   World and Religion pages, and `Diagnostics/NotableReadout` gives their F1 lines (ADR-032).
@@ -642,6 +663,9 @@ elders and gives the history's records no name. A missing,
   rubble (`HazardCover`) over the land, keeps a funnel per tornado and a cloud per swarm
   (`HazardViews`), raises the volcano's plume while it rumbles or erupts, and lays a fading decal
   for each crack, slide and crater.
+- `Presentation/Land/`: `ForestPresenter` draws the trees in chunks of MultiMeshes (the low-poly
+  `TreeMeshes` with the `tree.gdshader` tint) and redraws a chunk when its timber, snow, villages
+  or roads change; `RoadPresenter` draws each road's ribbon (ADR-033).
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast
   along the way, and a label that fades out at strategic zoom. It owns the
@@ -1693,6 +1717,39 @@ flowchart LR
 - **Not modelled:** acts that change the terrain, carried offerings, Creatures above level 10 and
   the AI using the hand.
 
+## Wood, stone and roads
+
+ADR-033 records the decisions, and the plan
+([.docs/milestone-15-part-13-resources.md](../.docs/milestone-15-part-13-resources.md)) the numbers.
+
+```mermaid
+flowchart LR
+    gen[ResourceFounder] --> land[RegionState: Forest, Timber, Stone]
+    land --> gather[ResourceModel.Gather]
+    labour[AllocateLabour: gatherers] --> gather
+    gather --> stores[SettlementState: Wood, Stone]
+    stores --> houses[Houses and buildings]
+    stores --> roads[RoadSystem: build with stone]
+    roads --> open[Open roads]
+    open --> walkers[Faster walkers]
+    open --> trade[Trade and food]
+    land --> regrow[ResourceSystem: regrow, burn]
+    land --> wild[Wildlife and landslides]
+    land --> trees[ForestLayout and ForestPresenter]
+    open --> ribbon[RoadLayout and RoadPresenter]
+```
+
+- **Gathering.** `SettlementEconomy.AllocateLabour` takes gatherers out of the farmers while the
+  stores run short. `SettlementSystem` then calls `ResourceModel.Gather` and takes a house's wood
+  when one is begun. `SocietySystem` begins a building only when the stores hold its wood and
+  stone.
+- **The land.** `ResourceSystem` grows timber back towards the forest and burns it.
+  `EcologySystem` holds less wildlife where the forest is cleared, `HazardSystem` slides cleared
+  wet slopes sooner, and the Regrowth miracle and the hand's trees change timber.
+- **Roads.** `RoadSystem` plans one village's road a step, in turn, builds the unfinished ones,
+  and wears, mends, decays and trades on the whole ones. `MigrationSystem` and `NotableModel.SetOut`
+  take an open road between its villages, and both walk faster on one (`RoadModel.SpeedAt`).
+
 ## Prophets and elders
 
 ADR-032 records the decisions, and the plan
@@ -1809,6 +1866,10 @@ the client.
 - The F1 panel's notable lines (`NotableReadout`) count the prophets of each god and the elders,
   list each prophet's walk, last deed and time left, and name the selected village's elder and
   preachers. `--prophet=on` raises a prophet of the player's god at the focused village.
+- The F1 panel's resource lines (`ResourceReadout`) give the share of the island's forest standing
+  and the roads built, being built and cut, and the selected village's stores, gatherers, land and
+  roads; F3 adds Timber and Stone layers; `--roads=on` builds every road the villages would plan,
+  and `--stores=full|empty` sets their stores.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
 - O cycles the player map overlays (influence, religion, faith, food, weather, danger, migration),
   which double as debug views.
@@ -1842,11 +1903,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 23 (current)
+    alt version 24 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 22
+    else versions 1 to 23
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 23, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables)
+        Mig-->>Save: JsonObject at version 24, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

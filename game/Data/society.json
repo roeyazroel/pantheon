@@ -40,7 +40,7 @@
   "MaxTechnology": 5.0,
 
   // Buildings rise under their priority: each worker adds ProjectWorkPerWorker work a second once the
-  // wealth is paid.
+  // wealth, and the Wood and Stone from the stores (ADR-033), are paid.
   "ProjectWorkPerWorker": 0.05,
 
   // Priorities (spec 29): a god followed by at least PriorityShare of a settlement may set it, at most
@@ -49,18 +49,18 @@
   "PriorityCooldownSeconds": 60.0,
 
   "Buildings": [
-    { "Kind": "Temple", "Priority": "Temple", "Work": 300.0, "Wealth": 60.0, "Field": "Religion" },
-    { "Kind": "Granary", "Priority": "Food", "Work": 200.0, "Wealth": 30.0, "Field": "Agriculture" },
-    { "Kind": "Hospital", "Priority": "Health", "Work": 250.0, "Wealth": 40.0, "Field": "Medicine" },
-    { "Kind": "Walls", "Priority": "Defence", "Work": 300.0, "Wealth": 50.0, "Field": "Warfare" },
-    { "Kind": "Levee", "Priority": "Preparation", "Work": 250.0, "Wealth": 35.0, "Field": "Engineering" },
-    { "Kind": "Firebreak", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Engineering" },
-    { "Kind": "Shelter", "Priority": "Preparation", "Work": 200.0, "Wealth": 30.0, "Field": "Architecture" },
-    { "Kind": "Cistern", "Priority": "Preparation", "Work": 150.0, "Wealth": 25.0, "Field": "Engineering" },
-    { "Kind": "Evacuation", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Architecture" },
-    { "Kind": "SeaWall", "Priority": "Preparation", "Work": 250.0, "Wealth": 40.0, "Field": "Engineering" },
-    { "Kind": "Dam", "Priority": "Preparation", "Work": 300.0, "Wealth": 45.0, "Field": "Engineering" },
-    { "Kind": "Irrigation", "Priority": "Food", "Work": 200.0, "Wealth": 30.0, "Field": "Agriculture" }
+    { "Kind": "Temple", "Priority": "Temple", "Work": 300.0, "Wealth": 60.0, "Field": "Religion", "Wood": 25.0, "Stone": 15.0 },
+    { "Kind": "Granary", "Priority": "Food", "Work": 200.0, "Wealth": 30.0, "Field": "Agriculture", "Wood": 20.0, "Stone": 5.0 },
+    { "Kind": "Hospital", "Priority": "Health", "Work": 250.0, "Wealth": 40.0, "Field": "Medicine", "Wood": 20.0, "Stone": 10.0 },
+    { "Kind": "Walls", "Priority": "Defence", "Work": 300.0, "Wealth": 50.0, "Field": "Warfare", "Wood": 10.0, "Stone": 20.0 },
+    { "Kind": "Levee", "Priority": "Preparation", "Work": 250.0, "Wealth": 35.0, "Field": "Engineering", "Wood": 10.0, "Stone": 15.0 },
+    { "Kind": "Firebreak", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Engineering", "Wood": 10.0, "Stone": 0.0 },
+    { "Kind": "Shelter", "Priority": "Preparation", "Work": 200.0, "Wealth": 30.0, "Field": "Architecture", "Wood": 15.0, "Stone": 10.0 },
+    { "Kind": "Cistern", "Priority": "Preparation", "Work": 150.0, "Wealth": 25.0, "Field": "Engineering", "Wood": 5.0, "Stone": 15.0 },
+    { "Kind": "Evacuation", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Architecture", "Wood": 10.0, "Stone": 5.0 },
+    { "Kind": "SeaWall", "Priority": "Preparation", "Work": 250.0, "Wealth": 40.0, "Field": "Engineering", "Wood": 5.0, "Stone": 20.0 },
+    { "Kind": "Dam", "Priority": "Preparation", "Work": 300.0, "Wealth": 45.0, "Field": "Engineering", "Wood": 15.0, "Stone": 20.0 },
+    { "Kind": "Irrigation", "Priority": "Food", "Work": 200.0, "Wealth": 30.0, "Field": "Agriculture", "Wood": 15.0, "Stone": 5.0 }
   ],
 
   // Expansion (spec 29): under an Expansion priority, a settlement of at least MinPopulation sends

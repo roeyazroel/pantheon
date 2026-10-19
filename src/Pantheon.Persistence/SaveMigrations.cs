@@ -133,6 +133,9 @@ internal static class SaveMigrations
             case 22:
                 NotableSaveMigration.UpgradeFrom22(root);
                 break;
+            case 23:
+                ResourceSaveMigration.UpgradeFrom23(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

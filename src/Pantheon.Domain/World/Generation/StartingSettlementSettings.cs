@@ -34,4 +34,10 @@ public sealed record StartingSettlementSettings
 
     /// <summary>Pool of original settlement names, at least <see cref="Count"/>. The world seed picks them without repeats.</summary>
     public required IReadOnlyList<string> Names { get; init; }
+
+    /// <summary>Initial wood store (ADR-033).</summary>
+    public float Wood { get; init; }
+
+    /// <summary>Initial stone store (ADR-033).</summary>
+    public float Stone { get; init; }
 }

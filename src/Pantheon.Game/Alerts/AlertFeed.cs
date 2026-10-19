@@ -177,6 +177,8 @@ public sealed class AlertFeed
                 return PowerAlerts.Describe(worldEvent, world, localGodId);
             case NotableRose or NotablePreached or NotableDied or ElderTurned:
                 return NotableAlerts.Describe(worldEvent, world, localGodId);
+            case RoadBuilt or RoadChanged:
+                return RoadAlerts.Describe(worldEvent, world, localGodId);
             default:
                 return null;
         }

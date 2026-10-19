@@ -62,4 +62,10 @@ public enum RegionDebugLayer
 
     /// <summary>The rubble a landslide left on it (ADR-029).</summary>
     Rubble,
+
+    /// <summary>Its standing wood (ADR-033).</summary>
+    Timber,
+
+    /// <summary>Its stone (ADR-033).</summary>
+    Stone,
 }

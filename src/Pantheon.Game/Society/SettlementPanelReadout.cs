@@ -52,6 +52,8 @@ public static class SettlementPanelReadout
             SocietyText.Format(
                 "Food {0:0} of {1:0}   water {2:0} of {3:0}   health {4:0%}   homes {5}",
                 settlement.Food, outlook.Storage, settlement.Water, outlook.WaterStorage, settlement.Health, settlement.Housing),
+            Resources.ResourceText.Stores(content.SettlementRules, settlement, outlook.Labour.Gatherers),
+            Resources.ResourceText.Roads(content.SettlementRules.Roads, world, settlement),
             SocietyText.Format(
                 "Safety {0}   happiness {1}   order {2}   wealth {3:0}   learning {4:0%}",
                 SocietyText.Level(society.Safety), SocietyText.Level(society.Happiness), SocietyText.Level(society.Stability), society.Wealth, society.Education),

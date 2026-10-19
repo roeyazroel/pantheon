@@ -112,18 +112,21 @@ public static class NotableModel
         return best;
     }
 
-    /// <summary>Sets a prophet walking to a village, around the sea where the way can be found.</summary>
+    /// <summary>Sets a prophet walking to a village, by the open road where there is one (ADR-033), else around the sea where the way can be found.</summary>
     /// <param name="world">World state.</param>
     /// <param name="prophet">The prophet.</param>
     /// <param name="village">The village.</param>
-    public static void SetOut(WorldState world, NotableState prophet, SettlementState village)
+    /// <param name="roads">Road rules; <c>null</c> walks off the roads.</param>
+    public static void SetOut(WorldState world, NotableState prophet, SettlementState village, Domain.Roads.RoadRules? roads = null)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(prophet);
         ArgumentNullException.ThrowIfNull(village);
+        var road = roads is null ? null : Roads.RoadModel.Way(roads, world, prophet.SettlementId, village.Id);
         prophet.TargetSettlementId = village.Id;
         prophet.Path.Clear();
-        prophet.Path.AddRange(RegionPathfinder.FindPath(world.Regions, prophet.Position, village.Position) is { } way ? way : [village.Position]);
+        prophet.Path.AddRange(road is { Count: > 1 } ? road.GetRange(1, road.Count - 1)
+            : RegionPathfinder.FindPath(world.Regions, prophet.Position, village.Position) is { } way ? way : [village.Position]);
     }
 
     /// <summary>A prophet's sermon: the village's godless come to their god, and some of its rivals' followers too.</summary>

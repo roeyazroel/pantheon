@@ -29,6 +29,7 @@ public sealed class HazardSystem : ISimulationSystem
     private readonly DisasterDamage _damage;
     private readonly LivingHazards _living;
     private readonly int _intervalTicks;
+    private readonly float _clearedLandslide;
 
     /// <summary>Creates the system.</summary>
     /// <param name="rules">Disaster rules, with the hazards and the preparations.</param>
@@ -50,6 +51,7 @@ public sealed class HazardSystem : ISimulationSystem
         _damage = new DisasterDamage(rules, settlementRules, divine, domains, callings);
         _living = new LivingHazards(rules, settlementRules, weather, _damage);
         _intervalTicks = intervalTicks;
+        _clearedLandslide = settlementRules.Resources.ClearedLandslide;
     }
 
     /// <inheritdoc />
@@ -206,7 +208,8 @@ public sealed class HazardSystem : ISimulationSystem
 
             // The slope is looked at only where the soil is soaked or the ground shakes, the few regions that could slide.
             var shaking = shaken ? DisasterModel.ShakingAt(world.Disasters, grid.GetRegionCenter(region.Id)) : 0f;
-            var soaked = region.SoilMoisture >= rules.WetSoil ? rules.SlidePerSecond * seconds : 0f;
+            // A cleared slope slides the sooner (ADR-033).
+            var soaked = region.SoilMoisture >= rules.WetSoil ? rules.SlidePerSecond * seconds * (1f + (_clearedLandslide * Resources.ResourceModel.Cleared(region))) : 0f;
             var chance = soaked + (rules.ShakeChance * shaking * seconds);
             if (chance <= 0f || HazardModel.Downhill(grid, region.Id) is not { } below || below.Drop < rules.MinDrop || random.NextDouble() >= chance)
             {

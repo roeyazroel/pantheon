@@ -53,6 +53,10 @@ public sealed class ContentTests
     [InlineData("weather.json", "\"SnowTemperature\": 0.35", "\"SnowTemperature\": 1.5", "Extremes.SnowTemperature")]
     [InlineData("weather.json", "\"SeasonSeconds\": 150.0", "\"SeasonSeconds\": 0.0", "Seasons.SeasonSeconds")]
     [InlineData("ecology.json", "\"ScarThreshold\": 0.5", "\"ScarThreshold\": 2.0", "ScarThreshold")]
+    [InlineData("settlement_rules.json", "\"GatherShare\": 0.15", "\"GatherShare\": 1.5", "Resources.GatherShare")]
+    [InlineData("settlement_rules.json", "\"Speed\": 1.6", "\"Speed\": 0.5", "Roads.Speed")]
+    [InlineData("worldgen.json", "\"PatchStrength\": 0.6", "\"PatchStrength\": 1.6", "Resources.PatchStrength")]
+    [InlineData("society.json", "\"Wood\": 25.0, \"Stone\": 15.0", "\"Wood\": 25.0, \"Stone\": 15.0, \"Iron\": 3", "Iron")]
     public void DivineContent_WithOutOfRangeValue_FailsValidation(string file, string from, string to, string expected)
     {
         var text = TestContent.ReadText(file);

@@ -47,6 +47,7 @@ public static class WorldSections
             WorldSection.HolySites => Json(world.HolySites),
             WorldSection.Notables => Json(new NotablesPart(world.Notables, world.NextNotableId)),
             WorldSection.Water => Json(world.Water),
+            WorldSection.Roads => Json(new RoadsPart(world.Roads, world.NextRoadId)),
             WorldSection.Regions => throw new ArgumentException("Regions are written as changes, by WriteRegions.", nameof(section)),
         };
     }
@@ -161,6 +162,11 @@ public static class WorldSections
             case WorldSection.HolySites:
                 Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
                 return null;
+            case WorldSection.Roads:
+                var roads = Read<RoadsPart>(data);
+                Replace(world.Roads, roads.Roads);
+                world.NextRoadId = roads.NextRoadId;
+                return null;
             case WorldSection.Water:
                 var water = Read<Domain.Water.WaterState>(data);
                 Replace(world.Water.Rivers, water.Rivers);
@@ -193,6 +199,9 @@ public static class WorldSections
 
     /// <summary>The prophets and elders, with the id the next one will get (ADR-032).</summary>
     private sealed record NotablesPart(List<Domain.Notables.NotableState> Notables, int NextNotableId);
+
+    /// <summary>The roads, with the id the next one will get (ADR-033).</summary>
+    private sealed record RoadsPart(List<Domain.Roads.RoadState> Roads, int NextRoadId);
 }
 
 /// <summary>Where a Creature is and what it does now: what a player needs to see it move (ADR-019).</summary>
@@ -262,7 +271,10 @@ public sealed record CreatureMotion(
 /// <param name="Blight">The blight in its fields (ADR-029).</param>
 /// <param name="Rubble">The landslide rubble on it (ADR-029).</param>
 /// <param name="Hallowed">The blessing a god hallowed (ADR-030).</param>
-public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood, float Snow = 0f, float Wildlife = 0f, float Damage = 0f, float Scar = 0f, float Pollution = 0f, float Blight = 0f, float Rubble = 0f, float Hallowed = 0f)
+/// <param name="Forest">The forest it grows (ADR-033).</param>
+/// <param name="Timber">Its standing wood (ADR-033).</param>
+/// <param name="Stone">Its stone (ADR-033).</param>
+public readonly record struct RegionChange(int Id, float Fertility, float Vegetation, float Blessing, float SoilMoisture, float Fire, float Scorch, float Flood, float Snow = 0f, float Wildlife = 0f, float Damage = 0f, float Scar = 0f, float Pollution = 0f, float Blight = 0f, float Rubble = 0f, float Hallowed = 0f, float Forest = 0f, float Timber = 0f, float Stone = 0f)
 {
     /// <summary>A region's changing values now.</summary>
     /// <param name="region">The region.</param>
@@ -270,7 +282,7 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
     public static RegionChange Of(RegionState region)
     {
         ArgumentNullException.ThrowIfNull(region);
-        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution, region.Blight, region.Rubble, region.Hallowed);
+        return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution, region.Blight, region.Rubble, region.Hallowed, region.Forest, region.Timber, region.Stone);
     }
 
     /// <summary>Sets a replica's region to these values.</summary>
@@ -281,5 +293,6 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
         (region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood) = (Fertility, Vegetation, Blessing, SoilMoisture, Fire, Scorch, Flood);
         (region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution) = (Snow, Wildlife, Damage, Scar, Pollution);
         (region.Blight, region.Rubble, region.Hallowed) = (Blight, Rubble, Hallowed);
+        (region.Forest, region.Timber, region.Stone) = (Forest, Timber, Stone);
     }
 }

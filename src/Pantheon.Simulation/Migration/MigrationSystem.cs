@@ -137,7 +137,7 @@ public sealed class MigrationSystem : ISimulationSystem
 
         var (beliefs, abandoned) = MigrationModel.MigrantBeliefs(_rules, origin.Beliefs);
         var fleeing = pressure.Cause is MigrationCause.Fear or MigrationCause.Doubt ? abandoned : null;
-        if (Choose(world, origin.Position, beliefs, pressure.Value, [origin.Id], fleeing) is not { } route)
+        if (Choose(world, origin.Position, beliefs, pressure.Value, [origin.Id], fleeing, origin.Id) is not { } route)
         {
             return null;
         }
@@ -178,9 +178,10 @@ public sealed class MigrationSystem : ISimulationSystem
     /// <summary>
     /// The most appealing settlement within reach whose people are under less pressure (by
     /// <c>BetterBy</c>) than <paramref name="pressure"/> and that does not mainly follow the god the
-    /// migrants flee, and the way there; <c>null</c> when none.
+    /// migrants flee, and the way there, along the road from their village where one is open
+    /// (ADR-033); <c>null</c> when none.
     /// </summary>
-    private (SettlementState Destination, List<GroundPosition> Path)? Choose(WorldState world, GroundPosition from, List<GodBelief> beliefs, float pressure, IReadOnlyCollection<int> excluded, int? fleeing)
+    private (SettlementState Destination, List<GroundPosition> Path)? Choose(WorldState world, GroundPosition from, List<GodBelief> beliefs, float pressure, IReadOnlyCollection<int> excluded, int? fleeing, int? home = null)
     {
         var candidates = new List<(SettlementState Settlement, float Appeal)>();
         foreach (var settlement in world.Settlements)
@@ -201,7 +202,8 @@ public sealed class MigrationSystem : ISimulationSystem
         candidates.Sort(static (a, b) => b.Appeal != a.Appeal ? b.Appeal.CompareTo(a.Appeal) : a.Settlement.Id.CompareTo(b.Settlement.Id));
         for (var i = 0; i < Math.Min(RouteAttempts, candidates.Count); i++)
         {
-            if (RegionPathfinder.FindPath(world.Regions, from, candidates[i].Settlement.Position) is { } path)
+            var road = home is { } village ? Roads.RoadModel.Way(_settlementRules.Roads, world, village, candidates[i].Settlement.Id) : null;
+            if ((road is { Count: > 1 } ? road.GetRange(1, road.Count - 1) : RegionPathfinder.FindPath(world.Regions, from, candidates[i].Settlement.Position)) is { } path)
             {
                 return (candidates[i].Settlement, path);
             }
@@ -215,7 +217,7 @@ public sealed class MigrationSystem : ISimulationSystem
     {
         var origin = world.Settlements.Find(s => s.Id == group.OriginSettlementId);
         var navigation = origin is null ? 0f : _rules.NavigationPerLevel * origin.Society.Technology.Navigation;
-        Walk(group, _rules.Speed * (1f + navigation) * seconds);
+        Walk(group, _rules.Speed * (1f + navigation) * Roads.RoadModel.SpeedAt(_settlementRules.Roads, world, group.Position) * seconds);
         var need = group.Population * _rules.FoodPerPersonPerSecond * seconds;
         if (group.Food >= need)
         {

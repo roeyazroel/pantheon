@@ -137,6 +137,11 @@ public sealed class SimulationEngine
             systems.Add(new IntervalSystem(new Ecology.EcologySystem(ecologyRules, settlementRules), ecologyRules.StepIntervalTicks));
         }
 
+        if (settlementRules.Resources.Enabled)
+        {
+            systems.Add(new IntervalSystem(new Resources.ResourceSystem(settlementRules.Resources, settlementRules.StepIntervalTicks), settlementRules.StepIntervalTicks));
+        }
+
         systems.AddRange(
         [
             CreateSettlementStep(settlementRules, weatherRules, ecologyRules),
@@ -146,6 +151,11 @@ public sealed class SimulationEngine
         if (societyRules is not null)
         {
             systems.Add(new IntervalSystem(new Society.SocietySystem(societyRules, settlementRules, divineRules), societyRules.StepIntervalTicks));
+        }
+
+        if (settlementRules.Roads.Enabled)
+        {
+            systems.Add(new IntervalSystem(new Roads.RoadSystem(settlementRules, settlementRules.StepIntervalTicks), settlementRules.StepIntervalTicks));
         }
 
         systems.Add(new IntervalSystem(new Culture.CultureSystem(divineRules, settlementRules, societyRules, divineRules.StepIntervalTicks), divineRules.StepIntervalTicks));

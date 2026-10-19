@@ -181,7 +181,7 @@ public sealed class HazardPresentationTests
 
         Assert.Equal([0.6f, 0f], new[] { RegionDebugLayer.Blight, RegionDebugLayer.Rubble }.Select(l => RegionDebugMap.GetValue(blighted, l)));
         Assert.Equal(RegionDebugLayer.Rubble, RegionDebugMap.Next(RegionDebugLayer.Blight));
-        Assert.Null(RegionDebugMap.Next(RegionDebugLayer.Rubble));
+        Assert.Equal(RegionDebugLayer.Timber, RegionDebugMap.Next(RegionDebugLayer.Rubble));
 
         var image = OverlayMap.Build(world, OverlayKind.Danger, 1, DivineWorlds.Rules, SettlementWorlds.Rules, TestContent.DivineView);
 

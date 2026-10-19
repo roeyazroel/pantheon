@@ -82,4 +82,10 @@ public sealed class WorldState
 
     /// <summary>Id the next notable will get.</summary>
     public int NextNotableId { get; set; } = 1;
+
+    /// <summary>The roads between villages, built and being built (spec §29, ADR-033).</summary>
+    public List<Roads.RoadState> Roads { get; init; } = [];
+
+    /// <summary>Id for the next road.</summary>
+    public int NextRoadId { get; set; } = 1;
 }

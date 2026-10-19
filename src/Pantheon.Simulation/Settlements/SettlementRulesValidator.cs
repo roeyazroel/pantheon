@@ -64,6 +64,7 @@ public static class SettlementRulesValidator
         errors.RequireShare(rules.WellFloor, nameof(rules.WellFloor));
         errors.RequireShare(rules.WellAccess, nameof(rules.WellAccess));
         errors.RequireShare(rules.ThirstHealthLossPerStep, nameof(rules.ThirstHealthLossPerStep));
+        Resources.ResourceRulesValidator.Check(errors, rules.Resources, rules.Roads);
         errors.ThrowIfAny("settlement rules", nameof(rules));
     }
 }

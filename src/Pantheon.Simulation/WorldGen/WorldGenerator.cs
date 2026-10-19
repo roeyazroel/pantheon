@@ -39,6 +39,7 @@ public static class WorldGenerator
 
         var terrain = TerrainGenerator.Generate(seed, settings);
         var regions = RegionBuilder.Build(terrain, settings);
+        ResourceFounder.Found(regions, seed, settings.Resources);
         var settlements = SettlementFounder.FoundAll(regions, terrain, seed, settings.StartingSettlement);
         var (gods, creatures) = pantheon is null ? ([], []) : PantheonFounder.Found(pantheon, settlements, creatureRules, seed, regions);
 

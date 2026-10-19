@@ -98,6 +98,16 @@ internal sealed class NatureDebug
             _setStatus(Pantheon.Game.Hand.HandCommands.Use(_session, Pantheon.Domain.Hand.HandAction.PickUp, grip));
         }
 
+        if (options.Roads)
+        {
+            _setStatus(Pantheon.Game.Resources.ResourceCommands.BuildRoads(_session));
+        }
+
+        if (options.Stores is { } full)
+        {
+            _setStatus(Pantheon.Game.Resources.ResourceCommands.SetStores(_session, full));
+        }
+
         if (options.Prophet && focus is { } village)
         {
             _setStatus(Pantheon.Game.Notables.NotableCommands.RaiseProphet(_session, village));

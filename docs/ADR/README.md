@@ -48,6 +48,7 @@ silently:
 | [ADR-030](ADR-030-creature-paths-divine-hand-and-divine-acts.md) | Creatures' paths, the Divine Hand and the Divine Acts | Accepted |
 | [ADR-031](ADR-031-book-of-the-world-overlays-overview-and-exports.md) | The Book of the World, the last overlays, the strategic overview and export presets | Accepted |
 | [ADR-032](ADR-032-prophets-elders-and-temple-influence.md) | Prophets and elders as Tier 3 individuals, and temples and prophets as sources of influence | Accepted (amends ADR-004 and ADR-008) |
+| [ADR-033](ADR-033-resources-gathering-forests-and-roads.md) | Wood and stone, gathering, forests and roads | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

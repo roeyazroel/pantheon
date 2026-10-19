@@ -132,6 +132,7 @@ public sealed class HandAuthority
         if (tree)
         {
             region.Vegetation = SimMath.Clamp01(region.Vegetation - _rules.TreeCover);
+            region.Timber = Math.Max(0f, region.Timber - _rules.TreeCover);
         }
 
         god.Held = new HeldObject { Kind = tree ? HeldKind.Tree : HeldKind.Rock, Amount = 1, Tick = world.Tick };
@@ -168,6 +169,10 @@ public sealed class HandAuthority
         {
             var region = world.Regions.Cells[regionId];
             region.Vegetation = SimMath.Clamp01(region.Vegetation + _rules.TreeCover);
+
+            // A tree planted is forest that grows (ADR-033).
+            region.Timber = SimMath.Clamp01(region.Timber + _rules.TreeCover);
+            region.Forest = Math.Max(region.Forest, region.Timber);
             HandModel.Witness(world, god.Id, target, _rules.WitnessRadius * 0.5f, _rules.Planting);
         }
 

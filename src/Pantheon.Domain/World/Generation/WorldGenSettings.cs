@@ -46,4 +46,10 @@ public sealed record WorldGenSettings
     /// before version 14 was, so its terrain regenerates unchanged.
     /// </summary>
     public HydrologySettings? Hydrology { get; init; }
+
+    /// <summary>
+    /// The forests and stone (ADR-033); <c>null</c> for a world without them, as every world saved
+    /// before version 24 was.
+    /// </summary>
+    public ResourceSettings? Resources { get; init; }
 }

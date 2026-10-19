@@ -185,6 +185,9 @@ internal sealed class MiracleEffects
                     region.SoilMoisture = Math.Max(region.SoilMoisture, amount);
                     region.Scar *= 1f - amount;
                     region.Damage = Math.Max(region.Scar, region.Damage * (1f - amount));
+
+                    // The cut and burnt forest grows back too (ADR-033).
+                    region.Timber += (region.Forest - region.Timber) * amount;
                 }
             }
         }

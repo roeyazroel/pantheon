@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
+using Pantheon.Client.Presentation.Land;
 using Pantheon.Client.Presentation.Regions;
 using Pantheon.Client.Presentation.Settlements;
 using Pantheon.Client.Presentation.Terrain;
@@ -25,6 +26,8 @@ public sealed class WorldPresenter
     private readonly WaterPresenter _water;
     private readonly FreshWaterPresenter _freshWater;
     private readonly SettlementPresenter _settlements;
+    private readonly ForestPresenter _forests;
+    private readonly RoadPresenter _roads;
     private readonly RegionBoundaryOverlay _regions;
 
     /// <summary>Creates one child layer per kind of visual under <paramref name="root"/>.</summary>
@@ -40,6 +43,8 @@ public sealed class WorldPresenter
         _water = new WaterPresenter(root.AddLayer("Water"));
         _freshWater = new FreshWaterPresenter(root.AddLayer("FreshWater"));
         _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
+        _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout);
+        _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads);
         _regions = new RegionBoundaryOverlay(root.AddLayer("Regions"), content.Palette);
     }
 
@@ -66,6 +71,8 @@ public sealed class WorldPresenter
         _water.Build(terrain, _palette);
         _freshWater.Build(terrain, world);
         _settlements.Build(world, terrain);
+        _forests.Rebuild(world, terrain);
+        _roads.Rebuild(world, terrain);
         _regions.Build(world.Regions, terrain);
         GD.Print($"World visuals for seed {world.Seed} built in {stopwatch.ElapsedMilliseconds} ms ({TerrainBackend}).");
     }
@@ -73,12 +80,15 @@ public sealed class WorldPresenter
     /// <summary>Tier and representatives of every settlement after the latest <see cref="UpdateCitizens"/>.</summary>
     public IReadOnlyList<CrowdStatus> CrowdStatuses => _settlements.CrowdStatuses;
 
-    /// <summary>Refreshes visuals that follow the simulation, such as settlement labels, houses and fields.</summary>
+    /// <summary>Refreshes visuals that follow the simulation, such as settlement labels, houses and fields, the forests and the roads.</summary>
     /// <param name="world">Current world.</param>
-    public void Sync(WorldState world)
+    /// <param name="delta">Frame time in seconds.</param>
+    public void Sync(WorldState world, double delta)
     {
         _settlements.Sync(world);
         _freshWater.Sync(world);
+        _forests.Sync(world, delta);
+        _roads.Sync(world);
     }
 
     /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens near it.</summary>

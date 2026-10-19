@@ -42,6 +42,8 @@
     "PopulationVariation": 0.35,
     "Food": 120.0,
     "Water": 120.0,
+    "Wood": 30.0,
+    "Stone": 15.0,
     "Housing": 60,
     "CenterPreference": 0.35,
     "WaterPreference": 0.3,
@@ -90,5 +92,17 @@
     "FullWaterShare": 0.08,
     "RiverNames": [ "Silverrun", "Ashwater", "Brenna", "Coldbrook", "Elderflow", "Fennick", "Greywash", "Lowan", "Mirewind", "Rushmere" ],
     "LakeNames": [ "Stillmere", "Orrin Water", "Glasslake", "Hollowmere", "Duskpool", "Reedwater" ]
+  },
+  // Forests and stone (spec section 93, ADR-033): a region's forest is its biome's Forest times its
+  // vegetation and its stone its biome's Stone, both varied by up to PatchStrength in patches about
+  // PatchSize metres across.
+  "Resources": {
+    "Biomes": [
+      { "Biome": "Grassland", "Forest": 0.8, "Stone": 0.15 },
+      { "Biome": "Forest", "Forest": 1.1, "Stone": 0.2 },
+      { "Biome": "Highland", "Forest": 1.6, "Stone": 0.75 }
+    ],
+    "PatchSize": 500.0,
+    "PatchStrength": 0.6
   }
 }

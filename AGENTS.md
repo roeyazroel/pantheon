@@ -127,8 +127,8 @@ rule is followed by the conventions that meet it in this repository.
   second and the sections a player received, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier,
   water, society and technology, culture, dangers, pressure to leave, belief, Old Faith and
-  sanctuary, and every prophet's walk, last deed and time left, with the selected village's
-  elder),
+  sanctuary, every prophet's walk, last deed and time left, with the selected village's elder,
+  and the forest standing and the roads, with the selected village's stores, land and roads),
   the H history panel (the world's chronicle), the start screen and pause menu (Esc), the P
   diplomacy panel (status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
@@ -136,7 +136,7 @@ rule is followed by the conventions that meet it in this repository.
   holy sites and who keeps them, and the Divine Acts to aim), the U council panel (the vote in session, decrees, tabled motions and motions to table), the N Settlements panel (a village's faiths, stores, society,
   technology, buildings and work, doctrines, turn from the gods and feelings, holy wars, its priority, the player's word to its holy war and proxy acts), the settings page, the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire, scorch, fresh water, flood, snow,
-  wildlife, damage, scar, pollution, blight and rubble), the
+  wildlife, damage, scar, pollution, blight, rubble, timber and stone), the
   O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk, politics), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
   F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
@@ -146,7 +146,7 @@ rule is followed by the conventions that meet it in this repository.
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
-  `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
+  `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--roads`, `--stores`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
   `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with

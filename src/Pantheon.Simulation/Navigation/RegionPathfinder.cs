@@ -36,31 +36,33 @@ public static class RegionPathfinder
     /// <param name="grid">Region grid.</param>
     /// <param name="from">Start point.</param>
     /// <param name="to">Goal point.</param>
+    /// <param name="walkable">Which regions may be crossed; <see cref="IsWalkable"/> when <c>null</c>.</param>
     /// <returns>Waypoints after the start, ending at <paramref name="to"/>; <c>null</c> when no land path exists or a point is off the grid.</returns>
-    public static List<GroundPosition>? FindPath(RegionGrid grid, GroundPosition from, GroundPosition to)
+    public static List<GroundPosition>? FindPath(RegionGrid grid, GroundPosition from, GroundPosition to, Func<RegionState, bool>? walkable = null)
     {
         ArgumentNullException.ThrowIfNull(grid);
+        walkable ??= IsWalkable;
         if (!grid.TryGetRegionIdAt(from.X, from.Z, out var start) || !grid.TryGetRegionIdAt(to.X, to.Z, out var goal))
         {
             return null;
         }
 
-        if (IsLineWalkable(grid, from, to))
+        if (IsLineWalkable(grid, from, to, walkable))
         {
             return [to];
         }
 
-        var regions = Search(grid, start, goal);
+        var regions = Search(grid, start, goal, walkable);
         if (regions is null)
         {
             return null;
         }
 
-        return Smooth(grid, from, to, regions);
+        return Smooth(grid, from, to, regions, walkable);
     }
 
     /// <summary>A* from region to region; the start and goal regions are always allowed.</summary>
-    private static List<int>? Search(RegionGrid grid, int start, int goal)
+    private static List<int>? Search(RegionGrid grid, int start, int goal, Func<RegionState, bool> walkable)
     {
         var cost = new Dictionary<int, float> { [start] = 0f };
         var cameFrom = new Dictionary<int, int>();
@@ -86,7 +88,7 @@ public static class RegionPathfinder
                     }
 
                     var next = (r * grid.Columns) + c;
-                    if (next != goal && !IsWalkable(grid.Cells[next]))
+                    if (next != goal && !walkable(grid.Cells[next]))
                     {
                         continue;
                     }
@@ -132,7 +134,7 @@ public static class RegionPathfinder
     }
 
     /// <summary>Region centres as waypoints, skipping those a straight walk over land can cut out.</summary>
-    private static List<GroundPosition> Smooth(RegionGrid grid, GroundPosition from, GroundPosition to, List<int> regions)
+    private static List<GroundPosition> Smooth(RegionGrid grid, GroundPosition from, GroundPosition to, List<int> regions, Func<RegionState, bool> walkable)
     {
         var points = new List<GroundPosition>(regions.Count + 1);
         for (var i = 1; i < regions.Count - 1; i++)
@@ -149,7 +151,7 @@ public static class RegionPathfinder
             var furthest = index;
             for (var j = points.Count - 1; j > index; j--)
             {
-                if (IsLineWalkable(grid, anchor, points[j]))
+                if (IsLineWalkable(grid, anchor, points[j], walkable))
                 {
                     furthest = j;
                     break;
@@ -168,10 +170,12 @@ public static class RegionPathfinder
     /// <param name="grid">Region grid.</param>
     /// <param name="a">One end.</param>
     /// <param name="b">The other end.</param>
+    /// <param name="walkable">Which regions may be crossed; <see cref="IsWalkable"/> when <c>null</c>.</param>
     /// <returns><c>true</c> when the line stays on land.</returns>
-    public static bool IsLineWalkable(RegionGrid grid, GroundPosition a, GroundPosition b)
+    public static bool IsLineWalkable(RegionGrid grid, GroundPosition a, GroundPosition b, Func<RegionState, bool>? walkable = null)
     {
         ArgumentNullException.ThrowIfNull(grid);
+        walkable ??= IsWalkable;
         grid.TryGetRegionIdAt(a.X, a.Z, out var startRegion);
         grid.TryGetRegionIdAt(b.X, b.Z, out var endRegion);
         var length = MathF.Sqrt(((b.X - a.X) * (b.X - a.X)) + ((b.Z - a.Z) * (b.Z - a.Z)));
@@ -186,7 +190,7 @@ public static class RegionPathfinder
                 return false;
             }
 
-            if (region != startRegion && region != endRegion && !IsWalkable(grid.Cells[region]))
+            if (region != startRegion && region != endRegion && !walkable(grid.Cells[region]))
             {
                 return false;
             }

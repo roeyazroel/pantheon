@@ -117,9 +117,14 @@ public sealed class SocietySystem : ISimulationSystem
     private void Build(SettlementState settlement, float seconds, WorldState world, List<WorldEvent> events)
     {
         var society = settlement.Society;
-        if (society.Project is null && SocietyModel.NextProject(_rules, world, settlement) is { } next && society.Wealth >= next.Wealth)
+        if (society.Project is null && SocietyModel.NextProject(_rules, world, settlement) is { } next && society.Wealth >= next.Wealth && HasMaterials(settlement, next))
         {
             society.Wealth -= next.Wealth;
+            if (_settlementRules.Resources.Enabled)
+            {
+                (settlement.Wood, settlement.Stone) = (settlement.Wood - next.Wood, settlement.Stone - next.Stone);
+            }
+
             society.Project = next.Kind;
             society.ProjectProgress = 0f;
         }
@@ -142,6 +147,10 @@ public sealed class SocietySystem : ISimulationSystem
         society.ProjectProgress = 0f;
         events.Add(new BuildingCompleted { Tick = world.Tick, SettlementId = settlement.Id, Kind = project, GodId = god });
     }
+
+    /// <summary>Whether the stores hold the wood and stone a building takes; always, where nobody gathers (ADR-033).</summary>
+    private bool HasMaterials(SettlementState settlement, BuildingDefinition building) =>
+        !_settlementRules.Resources.Enabled || (settlement.Wood >= building.Wood && settlement.Stone >= building.Stone);
 
     /// <summary>A value moved a share of the way to its target.</summary>
     private static float Toward(float value, float target, float share) => SimMath.Clamp01(value + ((target - value) * share));

@@ -90,5 +90,56 @@
     "WorshipPriorityFactor": 2.0,
     // Irrigation supplies this share of its fields' missing soil water (ADR-029).
     "IrrigationWater": 0.5
+  },
+  // Wood and stone (spec sections 5 and 29, ADR-033). While its stores hold less than WoodPerHousing
+  // and StonePerHousing a place of housing (at least MinWoodStore and MinStoneStore), up to
+  // GatherShare of a village's workforce gathers instead of farming, from the land GatherRadius
+  // regions around: each brings WoodPerGathererPerStep wood from fully wooded land and
+  // StonePerGathererPerStep stone from land full of stone. Each unit cut takes TimberPerWood of the
+  // land's timber, and each unit quarried StonePerStone of its stone. A new house takes WoodPerHouse
+  // wood. Timber grows back TimberRegrowthPerSecond of the way to the land's forest a second, and
+  // fire burns TimberBurnPerSecond a second; a cleared forest holds ClearedWildlife less wildlife,
+  // and a cleared slope slides ClearedLandslide times more often.
+  "Resources": {
+    "GatherShare": 0.15,
+    "GatherRadius": 2,
+    "WoodPerGathererPerStep": 0.5,
+    "StonePerGathererPerStep": 0.3,
+    "WoodPerHousing": 0.4,
+    "StonePerHousing": 0.2,
+    "MinWoodStore": 30.0,
+    "MinStoneStore": 20.0,
+    "WoodPerHouse": 6.0,
+    "TimberPerWood": 0.02,
+    "StonePerStone": 0.005,
+    "TimberRegrowthPerSecond": 0.003,
+    "TimberBurnPerSecond": 0.1,
+    "ClearedWildlife": 0.5,
+    "ClearedLandslide": 1.0
+  },
+  // Roads (spec section 29, ADR-033). A village of at least MinPopulation builds a road to its
+  // nearest neighbour within Range metres that has none, one at a time: WorkShare of its workforce
+  // lays MetresPerWorkerPerSecond metres each a second, each metre taking StonePerMetre stone. On a
+  // whole road walkers within Width metres go Speed times as fast; it brings each of its villages
+  // TradeWealthPerSecond wealth a second, and carries up to FoodReliefPerSecond food a second to a
+  // village with less than HungerSteps steps of food from one with three times as many. Flood, fire
+  // and rubble on the way wear it WearPerSecond a second at full strength, until it is cut at
+  // CutWear; its villages mend RepairPerSecond a second, and it decays DecayPerSecond a second when a
+  // village is gone.
+  "Roads": {
+    "MinPopulation": 50,
+    "Range": 700.0,
+    "WorkShare": 0.05,
+    "MetresPerWorkerPerSecond": 0.5,
+    "StonePerMetre": 0.02,
+    "Speed": 1.6,
+    "Width": 20.0,
+    "TradeWealthPerSecond": 0.01,
+    "FoodReliefPerSecond": 1.0,
+    "HungerSteps": 10.0,
+    "WearPerSecond": 0.015,
+    "RepairPerSecond": 0.005,
+    "CutWear": 0.6,
+    "DecayPerSecond": 0.002
   }
 }

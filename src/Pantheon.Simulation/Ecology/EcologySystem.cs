@@ -90,7 +90,7 @@ public sealed class EcologySystem : ISimulationSystem
         var fire = SimMath.Clamp01(region.Fire);
         region.Damage = SimMath.Clamp01(region.Damage + (((_rules.FireDamagePerSecond * fire) + (_rules.FloodDamagePerSecond * SimMath.Clamp01(region.Flood))) * seconds));
         (region.Damage, region.Scar) = EcologyModel.Heal(_rules, region.Damage, region.Scar, seconds, nature);
-        var capacity = EcologyModel.WildlifeCapacity(region);
+        var capacity = EcologyModel.WildlifeCapacity(region) * (1f - (_settlementRules.Resources.ClearedWildlife * Resources.ResourceModel.Cleared(region)));
         var wildlife = SimMath.Clamp01(region.Wildlife) - (_rules.FireWildlifeLossPerSecond * fire * seconds);
         wildlife += (capacity - wildlife) * Math.Min(1f, _rules.WildlifeGrowthPerSecond * seconds);
         region.Wildlife = Math.Abs(capacity - wildlife) < EcologyModel.Settled ? capacity : Math.Clamp(wildlife, 0f, Math.Max(capacity, 0f));

@@ -134,7 +134,7 @@ public sealed class NotableSystem : ISimulationSystem
     {
         if (prophet.TargetSettlementId is { } target)
         {
-            Walk(prophet, _rules.ProphetSpeed * seconds);
+            Walk(prophet, _rules.ProphetSpeed * Roads.RoadModel.SpeedAt(_settlements.Roads, world, prophet.Position) * seconds);
             if (prophet.Path.Count == 0)
             {
                 (prophet.SettlementId, prophet.TargetSettlementId, prophet.TicksLeft) = (target, null, NotableModel.Ticks(_rules.PreachSeconds));
@@ -158,7 +158,7 @@ public sealed class NotableSystem : ISimulationSystem
 
         if (NotableModel.NextVillage(_rules, world, prophet) is { } next)
         {
-            NotableModel.SetOut(world, prophet, next);
+            NotableModel.SetOut(world, prophet, next, _settlements.Roads);
         }
         else
         {

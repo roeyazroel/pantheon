@@ -120,6 +120,12 @@ public sealed record SettlementRules
 
     /// <summary>What a settlement's technology and buildings do for its life (ADR-023); all zero for none.</summary>
     public required CivicEffects Civics { get; init; }
+
+    /// <summary>Gathering wood and stone and what houses take (ADR-033); <see cref="ResourceRules.None"/> when absent.</summary>
+    public ResourceRules Resources { get; init; } = ResourceRules.None;
+
+    /// <summary>How villages build roads to their neighbours and what roads do (ADR-033); <see cref="Roads.RoadRules.None"/> when absent.</summary>
+    public Roads.RoadRules Roads { get; init; } = Pantheon.Domain.Roads.RoadRules.None;
 }
 
 /// <summary>What a settlement's technology (per level) and buildings do for its harvests, health, houses, stores and defence (spec §21, §36, ADR-023).</summary>

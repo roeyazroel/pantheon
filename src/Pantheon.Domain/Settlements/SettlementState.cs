@@ -66,4 +66,10 @@ public sealed class SettlementState
 
     /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
     public required List<GodBelief> Beliefs { get; init; }
+
+    /// <summary>Wood in store (ADR-033): gathered from the land around, spent on houses and buildings.</summary>
+    public float Wood { get; set; }
+
+    /// <summary>Stone in store (ADR-033): quarried from the land around, spent on buildings and roads.</summary>
+    public float Stone { get; set; }
 }

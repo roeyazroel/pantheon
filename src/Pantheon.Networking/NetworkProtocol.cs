@@ -11,9 +11,10 @@ public static class NetworkProtocol
     /// version 7 (part 7) the world's victories and how a victory was won, version 8 (part 8) the
     /// seasons, snow, the land's life and hurricanes, version 9 (part 9) the hazards: tsunamis,
     /// landslides, the volcano, tornadoes, meteors, blight and locusts, version 10 (part 10) the
-    /// Divine Hand, Creatures' paths and the Divine Acts, version 11 (part 12) the prophets and elders.
+    /// Divine Hand, Creatures' paths and the Divine Acts, version 11 (part 12) the prophets and elders,
+    /// version 12 (part 13) the roads and the land's timber and stone.
     /// </summary>
-    public const int Version = 11;
+    public const int Version = 12;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

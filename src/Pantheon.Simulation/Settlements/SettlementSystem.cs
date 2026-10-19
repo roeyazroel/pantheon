@@ -57,6 +57,11 @@ public sealed class SettlementSystem : ISimulationSystem
             settlement.Food = outlook.FoodAfter;
             settlement.Water = outlook.WaterAfter;
             settlement.Health = outlook.HealthAfter;
+            if (_rules.Resources.Enabled && settlement.Population > 0)
+            {
+                Resources.ResourceModel.Gather(_rules.Resources, regions, settlement, outlook.Labour.Gatherers);
+            }
+
             UpdatePopulation(settlement, outlook, context.Random);
             UpdateConstruction(settlement, outlook.Labour.Builders);
         }
@@ -93,6 +98,12 @@ public sealed class SettlementSystem : ISimulationSystem
         if (builders <= 0f && remainingWork > 0f)
         {
             return;
+        }
+
+        if (builders > 0f && settlement.ConstructionProgress <= 0f)
+        {
+            // A house begun takes its wood (ADR-033).
+            settlement.Wood = Math.Max(0f, settlement.Wood - Resources.ResourceModel.HouseWood(_rules, settlement));
         }
 
         if (builders >= remainingWork)

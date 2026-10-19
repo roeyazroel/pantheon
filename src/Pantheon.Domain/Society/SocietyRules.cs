@@ -136,6 +136,12 @@ public sealed record BuildingDefinition
 
     /// <summary>The field of technology it favours.</summary>
     public required TechnologyField Field { get; init; }
+
+    /// <summary>Wood it takes from the stores when it is begun (ADR-033).</summary>
+    public float Wood { get; init; }
+
+    /// <summary>Stone it takes from the stores when it is begun (ADR-033).</summary>
+    public float Stone { get; init; }
 }
 
 /// <summary>How settlements found new villages (spec §29's "expand territory").</summary>

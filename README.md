@@ -287,6 +287,12 @@ covers:
   each god's limit, sermons, walking, martyrs, danger remembered, temples and prophets as
   influence, the same notables for the same world, their alerts, history, book, readout, option,
   save and section, the checks on their rules, and the migration of part 11's saves;
+- wood, stone and roads: forests and stone from the seed, gathering and what it takes from the
+  land, houses and buildings that wait for wood and stone, timber growing back and burning,
+  wildlife leaving cleared forests, settlers' stores, roads planned, built with stone, sped along,
+  carrying trade and food, cut by floods and mended, the trees and the road drawn, their alerts,
+  panel, book, readouts, options, save and sections, the checks on their rules, and the migration of
+  part 12's saves;
 - hazards: the volcano, its lava and ash, waves from coastal quakes and sea walls, landslides and
   the rubble that blocks the way, meteors, tornadoes, locusts and rain, blight and what cures it,
   evacuation routes, dams and irrigation, marks fading, the same hazards across a save and load,
@@ -398,6 +404,15 @@ and ×16 speed it up. Each step:
   everyone is fed again.
 - Children are born while there is free housing, a food surplus and stocked stores; fewer when
   health is low. People die at a low baseline rate, faster when health is low.
+- **Wood and stone.** Each village keeps stores of wood and stone. While they run short, some of
+  its workers gather instead of farming, from the land around: forests give wood and the heights
+  stone. A new house takes wood, and every building takes wood and stone. Cut forests grow back
+  slowly. Fire burns them, a cleared forest holds fewer animals, and a cleared wet slope slides
+  more easily.
+- **Roads.** A village of 50 or more builds a road, with stone, to its nearest neighbour within
+  700 m, one at a time. On a whole road, walkers (migrants and prophets) go 1.6 times as fast,
+  both villages grow richer, and food travels to a hungry village from one with plenty. Floods,
+  fires and landslides on the way cut a road until its villages mend it.
 
 A small island has eight settlements (a large one 20 and a huge one 40), founded on the best land
 at least five regions (320 m) apart with 26 to 54 people each. With seed 1234 your home village, Duskwater, grows from 30 people to
@@ -1221,6 +1236,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--overview=on\|off` | Start with the camera over the whole island. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
+| `--roads=on\|off` | Every road the villages would plan is built at the start (for captures). |
+| `--stores=full\|empty` | Every village's wood and stone start full or empty. |
 | `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
 | `--hand=villagers\|creature` | Your hand lifts villagers of the focused settlement, or your Creature, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
@@ -1309,7 +1326,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 23`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 24`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1330,7 +1347,9 @@ Ascendancy alone. Saves from before part 8 keep an even climate, without seasons
 harm and their land's animals at its cover. Saves from before part 9 start with no blight, rubble,
 tornadoes, swarms or marks, and find their volcano when it is first needed. Saves from before part 10
 start with Creatures that have walked no path, empty hands and no hallowed land. Saves from before part 12
-start with no prophets or elders; their villages choose elders at once. A save keeps its world's
+start with no prophets or elders; their villages choose elders at once. Saves from before part 13
+grow each region's forest from its vegetation (without a new world's patches), give each village a
+new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
 
 Your settings are kept in `user://settings.json`; the start screen and the pause menu have a

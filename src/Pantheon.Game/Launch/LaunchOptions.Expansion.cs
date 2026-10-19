@@ -58,6 +58,12 @@ public sealed partial record LaunchOptions
     /// <summary>Whether a prophet of the player's god rises at the focused village at the start (ADR-032), for captures.</summary>
     public bool Prophet { get; init; }
 
+    /// <summary>Whether every road the villages would plan is built at the start (ADR-033), for captures.</summary>
+    public bool Roads { get; init; }
+
+    /// <summary>Whether every village's wood and stone start full (<c>true</c>) or empty (<c>false</c>) (ADR-033).</summary>
+    public bool? Stores { get; init; }
+
     /// <summary>How to make the world these options ask for, with names the content knows.</summary>
     /// <param name="content">Validated content.</param>
     /// <returns>The species, size and victories; an unknown species or size is left to the content's own.</returns>
@@ -72,7 +78,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -161,6 +167,12 @@ public sealed partial record LaunchOptions
                     : Warn(options, warnings, $"'--book' needs world, religion, miracles or creature, got '{value}'.");
             case "overview":
                 return OnOff(value) is { } overview ? options with { Overview = overview } : Warn(options, warnings, $"'--overview' needs on or off, got '{value}'.");
+            case "roads":
+                return OnOff(value) is { } roads ? options with { Roads = roads } : Warn(options, warnings, $"'--roads' needs on or off, got '{value}'.");
+            case "stores":
+                return trimmed.Equals("full", StringComparison.OrdinalIgnoreCase) ? options with { Stores = true }
+                    : trimmed.Equals("empty", StringComparison.OrdinalIgnoreCase) ? options with { Stores = false }
+                    : Warn(options, warnings, $"'--stores' needs full or empty, got '{value}'.");
             case "prophet":
                 return OnOff(value) is { } prophet ? options with { Prophet = prophet } : Warn(options, warnings, $"'--prophet' needs on or off, got '{value}'.");
             case "hand":

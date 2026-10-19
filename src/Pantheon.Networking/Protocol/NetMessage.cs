@@ -185,6 +185,9 @@ public enum WorldSection
 
     /// <summary>The prophets and elders (ADR-032): a low rate, when they change.</summary>
     Notables,
+
+    /// <summary>The roads (ADR-033): the lowest rate, when they change.</summary>
+    Roads,
 }
 
 /// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>

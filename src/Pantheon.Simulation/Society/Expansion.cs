@@ -42,8 +42,13 @@ internal sealed class Expansion
 
         var settlers = Math.Min(expansion.Settlers, home.Population - 1);
         var food = Math.Min(home.Food, settlers * expansion.FoodPerSettler);
+
+        // The settlers carry their share of the wood and stone (ADR-033).
+        var share = (float)settlers / home.Population;
+        var (wood, stone) = (home.Wood * share, home.Stone * share);
         home.Population -= settlers;
         home.Food -= food;
+        (home.Wood, home.Stone) = (home.Wood - wood, home.Stone - stone);
         society.LastFoundingTick = Math.Max(1, world.Tick);
         var village = new SettlementState
         {
@@ -66,6 +71,8 @@ internal sealed class Expansion
             Society = Founded(home.Society),
             Culture = Inherited(home.Culture),
             Beliefs = home.Beliefs.ConvertAll(b => new GodBelief { GodId = b.GodId, Adherence = b.Adherence, Faith = b.Faith, Love = b.Love, Fear = b.Fear, Doubt = b.Doubt, Dependency = b.Dependency, Resentment = b.Resentment }),
+            Wood = wood,
+            Stone = stone,
         };
         world.Settlements.Add(village);
         events.Add(new SettlementFounded { Tick = world.Tick, SettlementId = village.Id, FromSettlementId = home.Id, Settlers = settlers });

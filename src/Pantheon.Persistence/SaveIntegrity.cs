@@ -54,6 +54,7 @@ internal static class SaveIntegrity
         PoliticsIntegrity.Validate(world, godIds, errors);
         ConflictIntegrity.Validate(world, godIds, errors);
         NotableIntegrity.Validate(world, godIds, errors);
+        RoadIntegrity.Validate(world, errors);
 
         if (errors.Count > 0)
         {

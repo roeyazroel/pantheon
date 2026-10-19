@@ -32,9 +32,12 @@ public static class WorldSaveSerializer
     /// stability, technology, buildings and priority; version 16 (part 4) added beliefs' dependency
     /// and resentment, settlements' culture, and gods' conduct and traits; version 17 (part 5) added
     /// treaties, favours, promises and the Divine Council; version 18 (part 6) added wars' goals and
-    /// scores and settlements' holy wars.
+    /// scores and settlements' holy wars; versions 19 to 22 (parts 7 to 10) added victories, seasons
+    /// and the land's life, hazards, and Creatures' paths and gods' hands; version 23 (part 12) added
+    /// prophets and elders; version 24 (part 13) added the land's forests and stone, villages' wood
+    /// and stone, and roads.
     /// </summary>
-    public const int CurrentSaveVersion = 23;
+    public const int CurrentSaveVersion = 24;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;
