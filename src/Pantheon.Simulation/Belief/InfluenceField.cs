@@ -63,6 +63,23 @@ public sealed class InfluenceField
             }
         }
 
+        foreach (var settlement in world.Settlements)
+        {
+            // A temple to the god carries its influence beyond its followers' (spec §10, ADR-032).
+            if (rules.TempleInfluenceStrength > 0f && Settlements.CivicModel.HasTemple(settlement, godId))
+            {
+                sources.Add(new InfluenceSource(settlement.Position, Math.Min(1f, rules.TempleInfluenceStrength), rules.TempleInfluenceReach));
+            }
+        }
+
+        foreach (var prophet in world.Notables)
+        {
+            if (prophet.GodId == godId && prophet.Kind == Domain.Notables.NotableKind.Prophet && rules.Notables.ProphetInfluence > 0f)
+            {
+                sources.Add(new InfluenceSource(prophet.Position, Math.Min(1f, rules.Notables.ProphetInfluence), rules.Notables.ProphetReach));
+            }
+        }
+
         foreach (var site in world.HolySites)
         {
             if (site.KeeperGodId == godId && rules.HolySiteInfluenceStrength > 0f)

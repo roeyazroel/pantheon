@@ -153,6 +153,15 @@ public enum HistoryKind
 
     /// <summary>A god stilled every disaster on the island (a Divine Act, ADR-030).</summary>
     Stillness,
+
+    /// <summary>A prophet rose in a settlement (ADR-032); <see cref="HistoryRecord.Name"/> is the prophet.</summary>
+    Prophet,
+
+    /// <summary>A prophet died in danger, a martyr (ADR-032); <see cref="HistoryRecord.Name"/> is the prophet.</summary>
+    Martyrdom,
+
+    /// <summary>A settlement's elder turned from their god (ADR-032); <see cref="HistoryRecord.Name"/> is the elder.</summary>
+    ElderTurned,
 }
 
 /// <summary>
@@ -184,4 +193,7 @@ public sealed class HistoryRecord
 
     /// <summary>A number the kind gives meaning to: the dead, the houses, the people, the rank, the level, the domain or the holy site; 0 otherwise.</summary>
     public required int Count { get; init; }
+
+    /// <summary>The name of the individual concerned, a prophet or an elder (ADR-032), if any.</summary>
+    public string? Name { get; init; }
 }

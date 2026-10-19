@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Pantheon.Client.Presentation.Notables;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
 using Pantheon.Simulation.Migration;
@@ -7,13 +8,17 @@ using Pantheon.Simulation.Terrain;
 
 namespace Pantheon.Client.Presentation.Migration;
 
-/// <summary>Builds one <see cref="MigrationView"/> per group on the road (ADR-016) and drops it when the group arrives.</summary>
+/// <summary>
+/// Builds one <see cref="MigrationView"/> per group on the road (ADR-016) and drops it when the group
+/// arrives; the prophets and elders who walk the same roads (ADR-032) come with it.
+/// </summary>
 public sealed class MigrationPresenter
 {
     private readonly Node3D _parent;
     private readonly DivineViewSettings _view;
     private readonly Dictionary<int, MigrationView> _views = [];
     private readonly HashSet<int> _seen = [];
+    private readonly NotablePresenter _notables;
     private TerrainField? _terrain;
 
     /// <summary>Creates the presenter; nothing is shown until <see cref="Rebuild"/>.</summary>
@@ -23,6 +28,7 @@ public sealed class MigrationPresenter
     {
         _parent = parent;
         _view = view;
+        _notables = new NotablePresenter(parent, view);
     }
 
     /// <summary>Drops every view, for a new or loaded world.</summary>
@@ -31,6 +37,7 @@ public sealed class MigrationPresenter
     {
         _parent.FreeChildren();
         _views.Clear();
+        _notables.Clear();
         _terrain = terrain;
     }
 
@@ -45,6 +52,7 @@ public sealed class MigrationPresenter
             return;
         }
 
+        _notables.Sync(world, _terrain, delta, running);
         _seen.Clear();
         foreach (var group in world.Migration.Groups)
         {

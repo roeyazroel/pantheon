@@ -163,6 +163,10 @@ internal sealed class MiracleValuer
                 case MiracleEffectKind.Awaken:
                     // The AI never wakes the volcano: it cannot aim at the mountain, only at villages.
                     break;
+                case MiracleEffectKind.Anoint:
+                    // A prophet from its own people goes out to win the others (ADR-032).
+                    value += Note(reasons, settlement, "anoint", 0.5f * profile.Convert * mine * size);
+                    break;
             }
         }
 

@@ -53,10 +53,10 @@ game/                         Godot 4.7.2 project (res://)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology (biomes, EcologyRules), Settlements, Gods, Belief, Miracles,
-                              Creatures, Diplomacy, Weather, Disasters, Events (+ reserved folders)
+                              Creatures, Notables, Diplomacy, Weather, Disasters, Events (+ reserved folders)
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
-                              Creatures, Navigation, Gods (AI), Diplomacy, Weather, Ecology, Disasters, Systems,
-                              SimulationEngine
+                              Creatures, Notables, Navigation, Gods (AI), Diplomacy, Weather, Ecology, Disasters,
+                              Systems, SimulationEngine
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
@@ -174,6 +174,11 @@ files and compiled assemblies and fails when either rule is broken.
   left), `Preferences` (learned weight per situation and action) and `Memories` (recent deeds with
   the god's feedback). `CreatureCommand` (reward, punish, go to) is the intent the authority
   checks. `World/SimulationTime` fixes 10 ticks per simulated second.
+- `Notables/NotableState` (ADR-032): a prophet or an elder, a Tier 3 individual saved whole in
+  `WorldState.Notables` (with `NextNotableId`): kind, name, god, village, position, destination
+  and path, time left to preach, born and death ticks, and `NotableMemory` deeds (rose, preached,
+  endured, turned). `NotableRules` (in `DivineRules.Notables`) holds their numbers, and
+  `DivineRules.TempleInfluenceStrength` and `TempleInfluenceReach` a temple's influence.
 - `CastMiracleRequest` (god, miracle id, target): the intent that the authority checks (§73).
 - `DiplomacyState` (ADR-012): `Relations` (one `GodRelation` per observer and subject: trust,
   fear, respect, rivalry, gratitude, suspicion and the `DiplomaticMemory` of acts), `Stances`
@@ -272,7 +277,8 @@ files and compiled assemblies and fails when either rule is broken.
 - `Belief/BeliefModel`: the belief rules as pure functions (conditions, drift, pull and push,
   conversion within the free share, worshippers, worship intensity, Divine Power, impulses).
   `BeliefSystem` applies one belief step (see [Gods, belief and miracles](#gods-belief-and-miracles)).
-  `InfluenceField` derives a god's influence from its followers. `GodStanding` counts followers,
+  `InfluenceField` derives a god's influence from its followers, its Creature, its temples, its
+  prophets and the holy sites it keeps (ADR-032). `GodStanding` counts followers,
   sums power and picks ranks.
 - `Miracles/MiracleBook` validates and indexes the miracles; `MiracleCaster` checks requests
   (§73: authorisation, a signature miracle's domain, rank, cooldown, place, influence, a target
@@ -293,6 +299,10 @@ files and compiled assemblies and fails when either rule is broken.
   Creature lifted). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
 - `Miracles/DivineActs`: hallowing the land, waking the volcano and stilling every disaster
   (ADR-030), applied by `MiracleEffects`.
+- `Notables/`: `NotableModel` (who is devout, raising a notable, a prophet's next village, a
+  sermon, memory) and `NotableSystem` (elders chosen, keeping faith and turning, prophets called,
+  walking and preaching, deaths and martyrdom). `MiracleEffects` raises an anointed prophet. See
+  [Prophets and elders](#prophets-and-elders).
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
   `GodAiSystem`; `Gods/MiracleValuer` weighs what each miracle is worth to it, and
@@ -371,8 +381,9 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (10 since ADR-030, which adds `HandIntent` and whose
-  Creatures, gods and regions carry paths, what hands hold and hallowed land), the default port (7777), the host's peer id and the most players.
+- `NetworkProtocol`: the protocol version (11 since ADR-032, which adds the Notables section; 10
+  since ADR-030, which added `HandIntent` and whose Creatures, gods and regions carry paths, what
+  hands hold and hallowed land), the default port (7777), the host's peer id and the most players.
 - `Protocol/NetMessage` and its records: `Hello`, `Welcome`, `Refused`, `Snapshot`,
   `SectionUpdate` (one `WorldSection` of the world, ADR-019), `EventBatch`, `PlayerList`,
   `ViewFocus`, the intents (`CastIntent`, veiled or not, `CreatureIntent`, `DiplomacyIntent` with a
@@ -421,7 +432,8 @@ climate, without seasons, and gives its regions no snow, harm, scars or pollutio
 animals at their cover. Version 20 → 21 (`HazardSaveMigration`) gives regions no blight or rubble
 and the disasters nothing on the move, no marks, no village told of blight and a volcano still to
 be found. Version 21 → 22 (`CallingSaveMigration`) gives Creatures no paths or callings, every hand
-nothing and no land hallowed. A missing,
+nothing and no land hallowed. Version 22 → 23 (`NotableSaveMigration`) starts with no prophets or
+elders and gives the history's records no name. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -445,7 +457,9 @@ nothing and no land hallowed. A missing,
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
-  that leave room for the followers, sanctuaries of known gods), and gods' domains (known, once each).
+  that leave room for the followers, sanctuaries of known gods), gods' domains (known, once each),
+  and notables (`NotableIntegrity`: unique ids below the next, known kinds, gods and villages,
+  finite places and possible lives).
 - Saves are written atomically (temporary file, then rename).
 - `ContentJson` parses the content files with the same strict options (comments and trailing
   commas allowed).
@@ -509,6 +523,9 @@ nothing and no land hallowed. A missing,
   `MiraclesPage`, `CreaturePage`: `BookPage` of `BookLine`s, ADR-031); `Presentation/StateOverlays`
   paints the population, disaster risk and political control overlays; `Camera/GodCameraModel`
   toggles the strategic overview.
+- `Notables/NotableText` words prophets and elders and `Notables/NotableCommands` raises a prophet
+  (`--prophet`); `Alerts/NotableAlerts` tells of them, `Book/NotableSection` lists them on the
+  World and Religion pages, and `Diagnostics/NotableReadout` gives their F1 lines (ADR-032).
 - `Hand/HandCommands` uses the player's hand (R, Shift+R, `HandIntent` for a joined player) and
   `Hand/HandText` words it; `Alerts/PowerAlerts` tells of hands, paths and Divine Acts (ADR-030).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
@@ -627,7 +644,10 @@ nothing and no land hallowed. A missing,
   for each crack, slide and crater.
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast
-  along the way, and a label that fades out at strategic zoom.
+  along the way, and a label that fades out at strategic zoom. It owns the
+  `Presentation/Notables/NotablePresenter`, which keeps a `NotableView` per prophet and elder: a
+  robed figure in the god's colour (a prophet with a staff and a halo) that walks the same roads,
+  and a label (ADR-032).
 - `Bootstrap/NatureDebug` wires the weather, disaster, migration and Creature debug hotkeys (F8,
   F10, F11, F12, M, K) and the `--weather`, `--disaster`, `--migrate`, `--refugees` and `--meet`
   launch options.
@@ -1146,8 +1166,10 @@ flowchart LR
 ## Settlement simulation and population tiers
 
 Population is simulated statistically everywhere and shown in more detail near the camera
-(ADR-004, amended by ADR-008). Tier 1 is canonical; Tier 2 is derived from it and never saved.
-Tier 3 (full agents with promotion and demotion that write back) comes in a later milestone.
+(ADR-004, amended by ADR-008 and ADR-032). Tier 1 is canonical; Tier 2 is derived from it and
+never saved. Tier 3 is the individuals that matter, kept in `WorldState` everywhere: the
+Creatures, what the hands hold, and prophets and elders (see
+[Prophets and elders](#prophets-and-elders)). No villager is promoted into an agent by the camera.
 
 ### Tier 1: the statistical settlement step
 
@@ -1671,6 +1693,49 @@ flowchart LR
 - **Not modelled:** acts that change the terrain, carried offerings, Creatures above level 10 and
   the AI using the hand.
 
+## Prophets and elders
+
+ADR-032 records the decisions, and the plan
+([.docs/milestone-15-part-12-notables.md](../.docs/milestone-15-part-12-notables.md)) the numbers.
+
+```mermaid
+flowchart LR
+    beliefs[Settlement beliefs] --> rise[NotableSystem: rise]
+    anoint[Anoint a Prophet] --> raise[NotableModel.Raise]
+    rise --> raise
+    raise --> notables[WorldState.Notables]
+    notables --> elders[Elders: keep faith, or turn]
+    notables --> prophets[Prophets: preach, then walk]
+    prophets --> sermon[NotableModel.Preach]
+    sermon --> beliefs
+    elders --> beliefs
+    notables --> influence[InfluenceField]
+    temples[Temples] --> influence
+    danger[Danger] --> martyr[Martyrdom impulse]
+    martyr --> beliefs
+```
+
+- **Rising.** Every divine step `NotableSystem` gives each village of `ElderPopulation` or more an
+  elder of the god it follows most, and lets a village devout to a god (`DevoutTo`) call a
+  prophet by chance, within the god's `MaxProphetsPerGod`. The Anoint effect raises one at once.
+  A notable's name and lifespan come from the seed and their id.
+- **Elders** add faith and take doubt every step. When the village's resentment of their god
+  reaches `ElderTurnResentment`, they turn to the next god it follows, leaving `TurnDoubt`
+  (`ElderTurned`, `Resented`). When another god leads the village with more than twice their
+  god's following, they follow it quietly.
+- **Prophets** preach for `PreachSeconds`, then `NextVillage` picks the village within
+  `ProphetRange` with the most people not yet their god's, nearer ones first, and
+  `RegionPathfinder` the way. A sermon wins the godless and some of each rival's followers
+  (`NotablePreached`).
+- **Deaths.** Age, the loss of the village, or danger takes a notable (`NotableDied`). A prophet
+  taken by danger is a martyr, and the god's followers within `MartyrRadius` take the
+  `Martyrdom` impulse. Danger lived through is remembered once for each place.
+- **Influence.** `InfluenceField` adds a source at every temple to the god and at every prophet
+  of the god.
+- **Shown and shared.** `NotableAlerts`, the history (Prophet, Martyrdom, ElderTurned),
+  `NotableSection` in the book, `NotableReadout` in F1 and `NotableView` in the world.
+  `WorldSection.Notables` goes to joined players every second.
+
 ## Debug tools
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
@@ -1741,6 +1806,9 @@ the client.
   Migration overlay shows the routes, M sends 20 people out of the village under the cursor,
   `--migrate=<n>` sends n out of the focused village and `--refugees=welcome|convert|turnaway`
   sets the player's policy.
+- The F1 panel's notable lines (`NotableReadout`) count the prophets of each god and the elders,
+  list each prophet's walk, last deed and time left, and name the selected village's elder and
+  preachers. `--prophet=on` raises a prophet of the player's god at the focused village.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
 - O cycles the player map overlays (influence, religion, faith, food, weather, danger, migration),
   which double as debug views.
@@ -1774,11 +1842,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 22 (current)
+    alt version 23 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 21
+    else versions 1 to 22
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 22, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life)
+        Mig-->>Save: JsonObject at version 23, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException
@@ -1891,5 +1959,6 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   generation founds eight. Four gods share them since Milestone 9; more gods are more entries in
   `gods.json` (and god colours in `divine_view.json`), as the AI, belief, diplomacy and victory
   rules handle any number.
-- Tier 3 adds agents with effects and promotion and demotion that write back to the
-  aggregates; the milestone that adds it amends or supersedes ADR-008.
+- A new Tier 3 individual is state in `WorldState` with its own system, like the notables
+  (ADR-032). Promoting ordinary villagers into agents whose effects write back to the aggregates
+  would need a new ADR.

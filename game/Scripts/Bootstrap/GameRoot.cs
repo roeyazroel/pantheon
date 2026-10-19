@@ -256,13 +256,13 @@ public partial class GameRoot : Node3D
         .. _nature.Hotkeys(),
     ];
 
-    /// <summary>One hotkey per slot of the miracle bar; Shift with 1–3 selects the slots after the ninth, the domains' miracles (ADR-021).</summary>
+    /// <summary>One hotkey per slot of the miracle bar; Shift with 1–4 selects the slots after the tenth: Anoint a Prophet and the domains' miracles (ADR-021, ADR-032).</summary>
     private IEnumerable<(StringName Action, Action Run)> CreateMiracleHotkeys()
     {
         for (var i = 0; i < InputActions.MiracleSlots.Count; i++)
         {
             var slot = i;
-            yield return (InputActions.MiracleSlots[slot], () => _divine.SelectSlot(Input.IsKeyPressed(Key.Shift) && slot < 3 ? InputActions.MiracleSlots.Count + slot : slot));
+            yield return (InputActions.MiracleSlots[slot], () => _divine.SelectSlot(Input.IsKeyPressed(Key.Shift) && slot < 4 ? InputActions.MiracleSlots.Count + slot : slot));
         }
     }
 

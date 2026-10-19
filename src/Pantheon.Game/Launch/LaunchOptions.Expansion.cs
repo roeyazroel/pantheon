@@ -55,6 +55,9 @@ public sealed partial record LaunchOptions
     /// <summary>Whether the camera starts on the strategic overview (ADR-031), for captures.</summary>
     public bool Overview { get; init; }
 
+    /// <summary>Whether a prophet of the player's god rises at the focused village at the start (ADR-032), for captures.</summary>
+    public bool Prophet { get; init; }
+
     /// <summary>How to make the world these options ask for, with names the content knows.</summary>
     /// <param name="content">Validated content.</param>
     /// <returns>The species, size and victories; an unknown species or size is left to the content's own.</returns>
@@ -69,7 +72,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -158,6 +161,8 @@ public sealed partial record LaunchOptions
                     : Warn(options, warnings, $"'--book' needs world, religion, miracles or creature, got '{value}'.");
             case "overview":
                 return OnOff(value) is { } overview ? options with { Overview = overview } : Warn(options, warnings, $"'--overview' needs on or off, got '{value}'.");
+            case "prophet":
+                return OnOff(value) is { } prophet ? options with { Prophet = prophet } : Warn(options, warnings, $"'--prophet' needs on or off, got '{value}'.");
             case "hand":
                 return Enum.TryParse<HandAtStart>(trimmed, ignoreCase: true, out var hand) && Enum.IsDefined(hand) && !int.TryParse(trimmed, out _)
                     ? options with { Hand = hand }

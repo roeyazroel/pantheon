@@ -136,6 +136,15 @@ public sealed class HistoryRecorder
             case HandStruck { SettlementId: { } stoned } stoning when stoning.Deaths >= _rules.EarthquakeDeaths || stoning.HousesLost >= _rules.HousesLost:
                 Once(world, HistoryKind.Stoning, stoned, stoning.GodId, stoning.Deaths);
                 break;
+            case NotableRose { Kind: Domain.Notables.NotableKind.Prophet } prophet:
+                Add(world, HistoryKind.Prophet, god: prophet.GodId, settlement: prophet.SettlementId, count: prophet.Anointed ? 1 : 0, name: world.Notables.Find(n => n.Id == prophet.NotableId)?.Name);
+                break;
+            case NotableDied { Martyred: true } martyr:
+                Add(world, HistoryKind.Martyrdom, god: martyr.GodId, settlement: martyr.SettlementId, name: martyr.Name);
+                break;
+            case ElderTurned { Resented: true } turned:
+                Add(world, HistoryKind.ElderTurned, god: turned.FromGodId, other: turned.ToGodId, settlement: turned.SettlementId, name: world.Notables.Find(n => n.Id == turned.NotableId)?.Name);
+                break;
             case DivineActDone act:
                 Add(world, act.Act switch
                 {
@@ -301,7 +310,7 @@ public sealed class HistoryRecorder
     private long RepeatTicks => (long)MathF.Round(_rules.RepeatSeconds * SimulationTime.TicksPerSecond);
 
     /// <summary>Adds a record.</summary>
-    private static void Add(WorldState world, HistoryKind kind, int? god = null, int? other = null, int? settlement = null, int? creature = null, int? otherCreature = null, int count = 0) =>
+    private static void Add(WorldState world, HistoryKind kind, int? god = null, int? other = null, int? settlement = null, int? creature = null, int? otherCreature = null, int count = 0, string? name = null) =>
         world.History.Add(new HistoryRecord
         {
             Tick = world.Tick,
@@ -312,5 +321,6 @@ public sealed class HistoryRecorder
             CreatureId = creature,
             OtherCreatureId = otherCreature,
             Count = count,
+            Name = name,
         });
 }

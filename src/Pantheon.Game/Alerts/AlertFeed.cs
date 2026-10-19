@@ -175,6 +175,8 @@ public sealed class AlertFeed
                 return HazardAlerts.Describe(worldEvent, world, localGodId);
             case VillagersLifted or VillagersSetDown or HandStruck or CreatureSpecialised or DivineActDone:
                 return PowerAlerts.Describe(worldEvent, world, localGodId);
+            case NotableRose or NotablePreached or NotableDied or ElderTurned:
+                return NotableAlerts.Describe(worldEvent, world, localGodId);
             default:
                 return null;
         }

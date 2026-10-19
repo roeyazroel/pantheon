@@ -182,6 +182,9 @@ public enum WorldSection
 
     /// <summary>The rivers' levels and the lakes (ADR-022): a low rate.</summary>
     Water,
+
+    /// <summary>The prophets and elders (ADR-032): a low rate, when they change.</summary>
+    Notables,
 }
 
 /// <summary>A part of the host's world as it was at a tick (ADR-019), in the save format.</summary>

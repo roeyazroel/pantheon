@@ -82,7 +82,7 @@ public sealed class DomainTests
         Assert.True(before.DomainToChoose);
         Assert.Contains("choose your first [G]", before.Domains, StringComparison.Ordinal);
         var redirect = after.Miracles.Single(slot => slot.MiracleId == "redirect_storm");
-        Assert.Equal(11, redirect.Hotkey);
+        Assert.Equal(12, redirect.Hotkey);
         Assert.Equal(TestContent.Shipped.Miracles.Find("redirect_storm")!.PowerCost * Rules.DomainCostFactor, redirect.BaseCost, 3);
         Assert.Equal(TestContent.Shipped.Miracles.Find("rain")!.PowerCost * Rules.DomainCostFactor, after.Miracles.Single(s => s.MiracleId == "rain").BaseCost, 3);
         Assert.False(after.DomainToChoose);

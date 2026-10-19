@@ -25,7 +25,7 @@ namespace Pantheon.Game.Hud;
 public static class HudReadout
 {
     /// <summary>Most miracles that get a key: 1–9, 0, then Shift with 1–3 (ADR-022).</summary>
-    public const int MaxHotkeys = 13;
+    public const int MaxHotkeys = 14;
 
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 

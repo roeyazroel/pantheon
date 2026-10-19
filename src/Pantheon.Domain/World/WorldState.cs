@@ -76,4 +76,10 @@ public sealed class WorldState
 
     /// <summary>The world's seasons (spec §17, ADR-028), or <c>null</c> for a world made without them.</summary>
     public Weather.SeasonState? Seasons { get; set; }
+
+    /// <summary>The prophets and elders simulated in full (spec §80's Tier 3, ADR-032), ordered by id.</summary>
+    public List<Notables.NotableState> Notables { get; init; } = [];
+
+    /// <summary>Id the next notable will get.</summary>
+    public int NextNotableId { get; set; } = 1;
 }

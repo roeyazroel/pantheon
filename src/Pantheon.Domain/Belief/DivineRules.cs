@@ -161,6 +161,15 @@ public sealed record DivineRules
     /// <summary>Divine affinity a Creature gains per level above the first (spec §23, ADR-030): its influence reaches that much further.</summary>
     public float CreatureAffinityPerLevel { get; init; }
 
+    /// <summary>Prophets and elders (spec §10, §80, ADR-032); none without them.</summary>
+    public Notables.NotableRules Notables { get; init; } = Pantheon.Domain.Notables.NotableRules.None;
+
+    /// <summary>Influence a temple carries for its god (spec §10, ADR-032).</summary>
+    public float TempleInfluenceStrength { get; init; }
+
+    /// <summary>How far a temple's influence reaches, in metres.</summary>
+    public float TempleInfluenceReach { get; init; } = 250f;
+
     /// <summary>What the Divine Hand can do (spec §55, ADR-030); no hand without it.</summary>
     public Hand.HandRules Hand { get; init; } = Pantheon.Domain.Hand.HandRules.None;
 

@@ -155,6 +155,21 @@
       "Witness": { "Faith": 0.18, "Love": 0.2, "Fear": 0.0, "Doubt": -0.15 },
       "Gratitude": "Water"
     },
+    {
+      "Id": "anoint",
+      "Name": "Anoint a Prophet",
+      "Description": "Calls a prophet from the devout village beneath it: they walk from village to village preaching you, and carry your influence with them.",
+      "Domain": "Knowledge",
+      "Scale": "Regional",
+      "PowerCost": 300.0,
+      "CooldownTicks": 6000,
+      "Radius": 60.0,
+      "InfluenceRequirement": 0.3,
+      "MinimumRank": "LesserGod",
+      "Effects": [ { "Kind": "Anoint", "Amount": 1.0 } ],
+      "Witness": { "Faith": 0.2, "Love": 0.1, "Fear": 0.0, "Doubt": -0.1 },
+      "Gratitude": "None"
+    },
     // Signature miracles (ADR-021): RequiresDomain lets only a god holding the miracle's domain cast it.
     {
       "Id": "regrowth",

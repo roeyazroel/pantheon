@@ -74,4 +74,7 @@ public enum MiracleEffectKind
 
     /// <summary>Stills every disaster on the island at once: quakes, fires, floods, storms, tornadoes, locusts, blight and the volcano (a Divine Act, ADR-030).</summary>
     Still,
+
+    /// <summary>Anoints a prophet in the devout village beneath it (ADR-032).</summary>
+    Anoint,
 }

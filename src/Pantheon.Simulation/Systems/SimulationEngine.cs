@@ -141,6 +141,7 @@ public sealed class SimulationEngine
         [
             CreateSettlementStep(settlementRules, weatherRules, ecologyRules),
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
+            new IntervalSystem(new Notables.NotableSystem(divineRules.Notables, settlementRules, divineRules.StepIntervalTicks), divineRules.StepIntervalTicks),
         ]);
         if (societyRules is not null)
         {

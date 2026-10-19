@@ -45,6 +45,7 @@ public static class WorldSections
             WorldSection.Diplomacy => Json(world.Diplomacy),
             WorldSection.History => Json(world.History),
             WorldSection.HolySites => Json(world.HolySites),
+            WorldSection.Notables => Json(new NotablesPart(world.Notables, world.NextNotableId)),
             WorldSection.Water => Json(world.Water),
             WorldSection.Regions => throw new ArgumentException("Regions are written as changes, by WriteRegions.", nameof(section)),
         };
@@ -152,6 +153,11 @@ public static class WorldSections
             case WorldSection.History:
                 Replace(world.History, Read<List<Domain.History.HistoryRecord>>(data));
                 return null;
+            case WorldSection.Notables:
+                var notables = Read<NotablesPart>(data);
+                Replace(world.Notables, notables.Notables);
+                world.NextNotableId = notables.NextNotableId;
+                return null;
             case WorldSection.HolySites:
                 Replace(world.HolySites, Read<List<Domain.HolySites.HolySite>>(data));
                 return null;
@@ -184,6 +190,9 @@ public static class WorldSections
     /// <param name="Gods">The gods.</param>
     /// <param name="WinnerGodIds">The winners, if any.</param>
     private sealed record GodsPart(long Tick, RandomState Random, List<GodState> Gods, List<int> WinnerGodIds);
+
+    /// <summary>The prophets and elders, with the id the next one will get (ADR-032).</summary>
+    private sealed record NotablesPart(List<Domain.Notables.NotableState> Notables, int NextNotableId);
 }
 
 /// <summary>Where a Creature is and what it does now: what a player needs to see it move (ADR-019).</summary>

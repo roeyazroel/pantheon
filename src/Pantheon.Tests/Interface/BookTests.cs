@@ -28,7 +28,7 @@ public sealed class BookTests
         var page = BookReadout.Build(session, BookTab.World);
         var text = page.Lines.Select(l => l.Text).ToList();
 
-        Assert.Equal(["The world", "The gods", "The race", "Dangers", "Holy sites"], page.Lines.Where(l => l.Tone == BookTone.Heading).Select(l => l.Text));
+        Assert.Equal(["The world", "The gods", "The race", "Prophets and elders", "Dangers", "Holy sites"], page.Lines.Where(l => l.Tone == BookTone.Heading).Select(l => l.Text));
         Assert.StartsWith("Seed 77, an island", text[1], StringComparison.Ordinal);
         Assert.All(world.Gods, god => Assert.Contains(text, t => t.StartsWith(god.Name, StringComparison.Ordinal) && t.Contains(" follower", StringComparison.Ordinal)));
         Assert.Contains(text, t => t.StartsWith(session.LocalGod!.Name + " (you): ", StringComparison.Ordinal));
@@ -50,7 +50,7 @@ public sealed class BookTests
 
         var page = BookReadout.Build(session, BookTab.Religion);
 
-        Assert.Equal(["Your faith", "Your villages", "Every god's faith", "Old Faiths and the godless"], page.Lines.Where(l => l.Tone == BookTone.Heading).Select(l => l.Text));
+        Assert.Equal(["Your faith", "Your villages", "Your prophets and elders", "Every god's faith", "Old Faiths and the godless"], page.Lines.Where(l => l.Tone == BookTone.Heading).Select(l => l.Text));
         Assert.Contains(page.Lines, l => l.Tone == BookTone.Warning && l.Text.StartsWith(mine.Name + ":", StringComparison.Ordinal) && l.Text.Contains("doubt 0.60", StringComparison.Ordinal));
         Assert.Contains(page.Lines, l => l.Text == $"{other.Name}: 20% keep the Old Faith of {world.Gods[2].Name}");
         Assert.Equal(world.Gods.Count, page.Lines.SkipWhile(l => l.Text != "Every god's faith").Skip(1).TakeWhile(l => l.Tone != BookTone.Heading).Count());

@@ -127,6 +127,8 @@ public static class DivineText
                     return "no sleeping volcano on this island";
                 case Pantheon.Domain.Miracles.MiracleEffectKind.Still:
                     return "no disaster to still";
+                case Pantheon.Domain.Miracles.MiracleEffectKind.Anoint:
+                    return "no village devout enough, or you have all the prophets you may";
             }
         }
 

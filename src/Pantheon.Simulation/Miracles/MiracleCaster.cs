@@ -71,7 +71,7 @@ public sealed class MiracleCaster
         _rules = rules;
         _settlementRules = settlementRules;
         _book = book;
-        _effects = new MiracleEffects(settlementRules, ledger, weather, disasters, creatures, domains);
+        _effects = new MiracleEffects(settlementRules, ledger, weather, disasters, creatures, domains, rules.Notables);
     }
 
     /// <summary>The domain rules, if gods have domains (ADR-021).</summary>

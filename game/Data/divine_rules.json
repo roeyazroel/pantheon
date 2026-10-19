@@ -177,6 +177,48 @@
     "TraitThreshold": 5.0,
     "Contradiction": 1.0
   },
+  // A temple carries its god's influence, TempleInfluenceStrength fading to 0 at
+  // TempleInfluenceReach metres (spec section 10, ADR-032).
+  "TempleInfluenceStrength": 0.4,
+  "TempleInfluenceReach": 250.0,
+  // Prophets and elders (spec sections 10 and 80, ADR-032). A village of which Devotion follows its
+  // god in at least as much faith calls a prophet ProphetsPerHour; a god may anoint one where
+  // AnointAdherence follows it; a god has at most MaxProphetsPerGod. A prophet lives ProphetMinSeconds
+  // to ProphetMaxSeconds, walks at ProphetSpeed to villages within ProphetRange, preaches there for
+  // PreachSeconds, winning PreachConversion of the godless and half as much of rivals' followers, and
+  // carries ProphetInfluence for its god within ProphetReach metres. Danger kills a prophet at
+  // Mortality a second per unit of danger, a martyr, and those within MartyrRadius feel Martyrdom.
+  // Every village of ElderPopulation has an elder, who lives ElderMinSeconds to ElderMaxSeconds,
+  // gives ElderDevotionPerSecond faith (and takes as much doubt) among their god's followers, turns
+  // from a god the village resents to ElderTurnResentment (leaving TurnDoubt), and follows the
+  // village when another god leads it with more than twice their god's following. A notable
+  // remembers MemoryCapacity deeds.
+  "Notables": {
+    "Names": ["Asha", "Bram", "Corin", "Dela", "Eamon", "Fen", "Galen", "Hesta", "Iro", "Jessa", "Kael", "Lirien", "Moss", "Nera", "Oren", "Pell", "Quilla", "Rhun", "Sefa", "Tamsin", "Ulric", "Vesna", "Wren", "Yara", "Zorin", "Aldo", "Briar", "Cassia", "Dorran", "Elsa", "Faro", "Gwyn", "Hollin", "Isla", "Joren", "Kestra", "Lune", "Marek", "Nyssa", "Osric"],
+    "ProphetsPerHour": 0.6,
+    "Devotion": 0.6,
+    "AnointAdherence": 0.4,
+    "MaxProphetsPerGod": 2,
+    "ProphetMinSeconds": 900.0,
+    "ProphetMaxSeconds": 1800.0,
+    "ProphetSpeed": 4.0,
+    "ProphetRange": 1500.0,
+    "PreachSeconds": 40.0,
+    "PreachConversion": 0.025,
+    "PreachFaith": 0.05,
+    "ProphetInfluence": 0.4,
+    "ProphetReach": 250.0,
+    "Mortality": 0.01,
+    "Martyrdom": { "Faith": 0.12, "Love": 0.08, "Fear": 0.0, "Doubt": -0.1 },
+    "MartyrRadius": 400.0,
+    "ElderPopulation": 40,
+    "ElderMinSeconds": 1200.0,
+    "ElderMaxSeconds": 2400.0,
+    "ElderDevotionPerSecond": 0.0005,
+    "ElderTurnResentment": 0.5,
+    "TurnDoubt": 0.15,
+    "MemoryCapacity": 12
+  },
   // The Divine Hand (spec section 55, ADR-030), where the god's influence reaches at least
   // MinInfluence. Within Reach metres it lifts the god's Creature, else up to VillagersPerGrab people
   // (at most MaxShare of a village), else a tree from land at least TreeVegetation green (taking

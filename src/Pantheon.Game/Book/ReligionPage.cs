@@ -48,6 +48,9 @@ public static class ReligionPage
                     Format("{0}: {1:0%} of {2}; faith {3:0.00}, love {4:0.00}, fear {5:0.00}, doubt {6:0.00}{7}", settlement.Name, belief.Adherence, settlement.Population, belief.Faith, belief.Love, belief.Fear, belief.Doubt, leader),
                     belief.Doubt >= Failing ? BookTone.Warning : BookTone.Plain));
             }
+
+            lines.Add(new("Your prophets and elders", BookTone.Heading));
+            lines.AddRange(NotableSection.Yours(world, god.Id));
         }
 
         lines.Add(new("Every god's faith", BookTone.Heading));

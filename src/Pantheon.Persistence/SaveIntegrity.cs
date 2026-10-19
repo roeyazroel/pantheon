@@ -53,6 +53,7 @@ internal static class SaveIntegrity
         WaterIntegrity.Validate(world, errors);
         PoliticsIntegrity.Validate(world, godIds, errors);
         ConflictIntegrity.Validate(world, godIds, errors);
+        NotableIntegrity.Validate(world, godIds, errors);
 
         if (errors.Count > 0)
         {

@@ -283,6 +283,10 @@ covers:
   throwing, trees, the Creature in the hand, every refusal, through a host) and the Divine Acts
   (hallowing, waking the volcano, stilling every disaster, the rank and power they need), their
   alerts, history, card, panel and options, and the migration of part 9's saves;
+- prophets and elders: elders chosen, keeping faith and turning, prophets called and anointed up to
+  each god's limit, sermons, walking, martyrs, danger remembered, temples and prophets as
+  influence, the same notables for the same world, their alerts, history, book, readout, option,
+  save and section, the checks on their rules, and the migration of part 11's saves;
 - hazards: the volcano, its lava and ash, waves from coastal quakes and sea walls, landslides and
   the rubble that blocks the way, meteors, tornadoes, locusts and rain, blight and what cures it,
   evacuation routes, dams and irrigation, marks fading, the same hazards across a save and load,
@@ -333,7 +337,7 @@ covers:
 | Zoom (towards the cursor) | Mouse wheel, `=` / `-`, keypad `+` / `-` |
 | Rotate | Q / E, or hold the middle mouse button and drag |
 | Select a miracle (again to deselect) | 1–9 and 0, or click it in the miracle bar |
-| Select your domains' miracles, after the tenth | Shift+1, Shift+2, Shift+3 |
+| Select Anoint a Prophet, then your domains' miracles, after the tenth | Shift+1, then Shift+2, Shift+3, Shift+4 |
 | Show or hide the Domains panel: your domains, what each gives, the holy sites | G |
 | Show the Settlements panel for the village under the cursor (its society, technology, buildings and priority), or hide it | N |
 | Cast the selected miracle at the cursor | Left mouse button |
@@ -457,6 +461,23 @@ its cooldown); hover over a button to read what it does.
   the godless), **Miracles** (every miracle with what it costs you and what it still needs; Aim
   selects one) and your **Creature** (its growth, paths, what it has learned, remembers and thinks
   of the others). Backtick shows the whole island from afar, and again brings you back.
+- **Prophets and elders.** Some people matter more than the rest, and the world follows each of
+  them by name:
+  - **Elders:** every village of 40 or more chooses an elder of the god most of it follows, who
+    keeps its faith and calms its doubt. When the village comes to resent that god, the elder
+    turns to another, and the village doubts the god they left. When the village leaves that god
+    for another, the elder follows it.
+  - **Prophets:** a village devout to you (most of it yours, in strong faith) may call a prophet.
+    As a Lesser God you can also anoint one with **Anoint a Prophet** (Shift+1) over a village
+    where four in ten follow you. A prophet preaches where they stand, then walks to the next
+    village with the most people not yet yours, winning the godless and some of your rivals'
+    people in every sermon. You may have two at a time.
+  - **Martyrs:** a prophet caught by danger (a quake, fire or flood) may die a martyr, and your
+    followers nearby hold to you the harder.
+  - Prophets and temples carry your influence where they stand, so you can act beside a prophet
+    on the road or a temple to you even far from your followers.
+  - Look for the robed figures in each god's colour: a prophet carries a staff under a halo. The
+    alerts, the history, the book's World and Religion pages and F1 follow them.
 
 A good start: Food or Heal on the neighbours of your home village, then Bless Crops when your
 followers grow hungry. Try Lightning to see how fear behaves.
@@ -1200,6 +1221,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--overview=on\|off` | Start with the camera over the whole island. |
 | `--focus=<n>\|creature\|site<n>` | Start looking at settlement `n` (1 is your home; `--cast` targets it), at your Creature or at holy site `n`. |
 | `--judge=reward\|punish` | Reward or punish your Creature on the first frame (for captures of the hand). |
+| `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
 | `--hand=villagers\|creature` | Your hand lifts villagers of the focused settlement, or your Creature, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
@@ -1287,7 +1309,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 20`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 23`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1307,7 +1329,8 @@ their holy sites when they are loaded. Saves from before Milestone 15, part 7 ar
 Ascendancy alone. Saves from before part 8 keep an even climate, without seasons, with no snow or
 harm and their land's animals at its cover. Saves from before part 9 start with no blight, rubble,
 tornadoes, swarms or marks, and find their volcano when it is first needed. Saves from before part 10
-start with Creatures that have walked no path, empty hands and no hallowed land. A save keeps its world's
+start with Creatures that have walked no path, empty hands and no hallowed land. Saves from before part 12
+start with no prophets or elders; their villages choose elders at once. A save keeps its world's
 size, how it may be won and its seasons.
 
 Your settings are kept in `user://settings.json`; the start screen and the pause menu have a

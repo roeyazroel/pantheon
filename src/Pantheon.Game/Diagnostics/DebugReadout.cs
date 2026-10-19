@@ -54,6 +54,7 @@ public static class DebugReadout
         DisasterReadout.Append(lines, snapshot);
         MigrationReadout.Append(lines, snapshot);
         FaithReadout.Append(lines, snapshot);
+        NotableReadout.Append(lines, snapshot);
         AppendCursor(lines, world, snapshot.CursorWorldPosition);
         if (snapshot.CursorWorldPosition is { } cursor && world.Regions.TryGetRegionIdAt(cursor.X, cursor.Z, out var cursorRegion))
         {
@@ -71,6 +72,7 @@ public static class DebugReadout
                 AddLine(lines, DisasterReadout.DescribeSettlement(snapshot, settlement));
                 AddLine(lines, MigrationReadout.DescribeSettlement(snapshot, settlement));
                 AddLine(lines, FaithReadout.DescribeSettlement(snapshot, settlement));
+                AddLine(lines, NotableReadout.DescribeSettlement(snapshot, settlement));
                 BeliefReadout.AppendBeliefs(lines, snapshot, settlement);
             }
             else

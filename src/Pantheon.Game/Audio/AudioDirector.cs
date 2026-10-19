@@ -140,6 +140,7 @@ public static class AudioDirector
                 case MiracleEffectKind.Soak:
                 case MiracleEffectKind.Hallow:
                 case MiracleEffectKind.Still:
+                case MiracleEffectKind.Anoint:
                     continue;
             }
         }

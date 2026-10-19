@@ -49,6 +49,8 @@ public static class WorldPage
 
         lines.Add(new("The race", BookTone.Heading));
         lines.AddRange(Race(session));
+        lines.Add(new("Prophets and elders", BookTone.Heading));
+        lines.AddRange(NotableSection.World(world, session.LocalGodId));
         lines.Add(new("Dangers", BookTone.Heading));
         lines.Add(new(Dangers(world)));
         lines.Add(new("Holy sites", BookTone.Heading));

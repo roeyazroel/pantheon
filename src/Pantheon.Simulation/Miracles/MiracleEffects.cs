@@ -33,10 +33,12 @@ internal sealed class MiracleEffects
     private readonly DisasterRules? _disasters;
     private readonly CreatureRules? _creatures;
     private readonly DomainRules? _domains;
+    private readonly Domain.Notables.NotableRules _notables;
 
     /// <summary>Creates the effects over validated rules; any rules may be missing, and the effects that need them then do nothing.</summary>
-    public MiracleEffects(SettlementRules settlementRules, IActRecorder? ledger, WeatherRules? weather, DisasterRules? disasters, CreatureRules? creatures, DomainRules? domains)
+    public MiracleEffects(SettlementRules settlementRules, IActRecorder? ledger, WeatherRules? weather, DisasterRules? disasters, CreatureRules? creatures, DomainRules? domains, Domain.Notables.NotableRules? notables = null)
     {
+        _notables = notables ?? Domain.Notables.NotableRules.None;
         _settlementRules = settlementRules;
         _ledger = ledger;
         _weather = weather;
@@ -62,6 +64,7 @@ internal sealed class MiracleEffects
                 MiracleEffectKind.Judge => world.Settlements.Exists(s => Distance(s.Position, target) <= miracle.Radius && HasGuilty(world, godId, s)),
                 MiracleEffectKind.Awaken => DivineActs.CanAwaken(_disasters, world),
                 MiracleEffectKind.Still => DivineActs.Unquiet(_weather, world),
+                MiracleEffectKind.Anoint => Anointable(world, godId, target, miracle.Radius) is not null,
                 _ => true,
             };
             if (!found)
@@ -128,6 +131,7 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Hallow:
                 case MiracleEffectKind.Awaken:
                 case MiracleEffectKind.Still:
+                case MiracleEffectKind.Anoint:
                     break;
             }
         }
@@ -236,8 +240,36 @@ internal sealed class MiracleEffects
                 case MiracleEffectKind.Still:
                     DivineActs.Still(_weather, _disasters, world, godId, target, events);
                     break;
+                case MiracleEffectKind.Anoint when Anointable(world, godId, target, miracle.Radius) is { } village:
+                    Notables.NotableModel.Raise(_notables, world, Domain.Notables.NotableKind.Prophet, godId, village, anointed: true, events);
+                    break;
             }
         }
+    }
+
+    /// <summary>
+    /// The village within reach where the god may anoint a prophet (ADR-032): enough of it follows the
+    /// god, and the god has fewer prophets than it may; the most devout first.
+    /// </summary>
+    private Domain.Settlements.SettlementState? Anointable(WorldState world, int godId, GroundPosition target, float radius)
+    {
+        if (_notables.Names.Count == 0 || Notables.NotableModel.ProphetsOf(world, godId) >= _notables.MaxProphetsPerGod)
+        {
+            return null;
+        }
+
+        Domain.Settlements.SettlementState? best = null;
+        foreach (var settlement in world.Settlements)
+        {
+            var share = BeliefModel.Find(settlement, godId)?.Adherence ?? 0f;
+            if (settlement.Population > 0 && share >= _notables.AnointAdherence && Distance(settlement.Position, target) <= radius + 60f
+                && (best is null || share > (BeliefModel.Find(best, godId)?.Adherence ?? 0f)))
+            {
+                best = settlement;
+            }
+        }
+
+        return best;
     }
 
     /// <summary>Whether a god wronged the caster: they are at war, or the caster bears it a grudge of at least the Justice domain's measure (ADR-022).</summary>

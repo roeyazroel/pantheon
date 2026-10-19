@@ -86,6 +86,9 @@ public static class DivineRulesValidator
         ValidateSchism(rules.Schism, errors);
         ValidateCulture(rules.Culture, errors);
         Hand.HandRulesValidator.Check(errors, rules.Hand);
+        Notables.NotableRulesValidator.Check(errors, rules.Notables);
+        errors.RequireNonNegative(rules.TempleInfluenceStrength, nameof(rules.TempleInfluenceStrength));
+        errors.RequireNonNegative(rules.TempleInfluenceReach, nameof(rules.TempleInfluenceReach));
         errors.ThrowIfAny("divine rules", nameof(rules));
     }
 
