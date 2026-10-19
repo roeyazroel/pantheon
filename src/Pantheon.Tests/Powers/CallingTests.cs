@@ -65,6 +65,7 @@ public sealed class CallingTests
     {
         var (_, creature) = CreatureWorlds.Create(300f);
         (creature.Personality.Kindness, creature.Personality.Aggression, creature.Personality.Curiosity, creature.Personality.Laziness) = (0.1f, 0.9f, 0.5f, 0.2f);
+        (creature.Personality.Courage, creature.Personality.Protectiveness, creature.Personality.Jealousy, creature.Personality.Playfulness) = (0.2f, 0.2f, 0.2f, 0.2f);
 
         Assert.Equal(CreatureSpecialisation.Warrior, CreatureCalling.Next(creature));
         creature.Specialisations.Add(CreatureSpecialisation.Warrior);

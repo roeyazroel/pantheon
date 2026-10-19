@@ -79,7 +79,8 @@ internal static class CreatureIntegrity
         var needs = creature.Needs;
         var traits = creature.Personality;
         if (!IsShare(needs.Hunger) || !IsShare(needs.Fatigue) || !IsShare(needs.Boredom)
-            || !IsShare(traits.Kindness) || !IsShare(traits.Aggression) || !IsShare(traits.Laziness) || !IsShare(traits.Curiosity))
+            || !IsShare(traits.Kindness) || !IsShare(traits.Aggression) || !IsShare(traits.Laziness) || !IsShare(traits.Curiosity)
+            || !IsShare(traits.Courage) || !IsShare(traits.Protectiveness) || !IsShare(traits.Jealousy) || !IsShare(traits.Playfulness))
         {
             errors.Add($"{prefix} has a need or personality trait outside 0..1.");
         }

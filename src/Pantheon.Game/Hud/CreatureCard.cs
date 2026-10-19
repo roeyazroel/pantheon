@@ -15,6 +15,9 @@ public sealed record CreatureCard
     /// <summary>Loyalty and what its deeds add up to.</summary>
     public required string Temperament { get; init; }
 
+    /// <summary>Its character in §26's words (ADR-037), for example "brave, playful and loyal".</summary>
+    public string Character { get; init; } = string.Empty;
+
     /// <summary>The paths it walks and what the next calling level brings (ADR-030).</summary>
     public string Paths { get; init; } = string.Empty;
 

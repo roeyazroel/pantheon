@@ -155,10 +155,12 @@ public static class CreatureBonds
         };
         var ally = status == DiplomaticStatus.Alliance ? bonds.AllianceBefriendDrive : 0f;
         var confidence = Confidence(rules, creature, other);
-        var fight = (BaseFight + (0.5f * rivalry) + war - (0.8f * friendship) - (0.6f * fear)) * confidence;
+        // A protective Creature stands its ground near its god's people against any but an ally's or a friend (ADR-037).
+        var guard = status == DiplomaticStatus.Alliance || IsFriend(bonds, view) ? 0f : rules.Temperament.GuardFight * CreatureTemperament.Guard(rules, world, creature, other.Position);
+        var fight = (BaseFight + (0.5f * rivalry) + war + guard - (0.8f * friendship) - (0.6f * fear)) * confidence;
         var befriend = BaseBefriend + (0.5f * friendship) + (0.3f * trust) + ally + (0.2f * creature.Needs.Boredom) - (0.6f * rivalry) - war - (0.3f * fear);
         var threatened = war > 0f || rivalry > 0f || fear > 0f;
-        var flee = threatened ? (0.8f * fear) + (0.5f * ((1f / confidence) - 1f)) - 0.2f : 0f;
+        var flee = threatened ? (0.8f * fear) + (0.5f * ((1f / confidence) - 1f)) - 0.2f - guard : 0f;
         return new SocialDrives(Math.Max(0f, fight), Math.Max(0f, befriend), Math.Max(0f, flee), IgnoreDrive);
     }
 

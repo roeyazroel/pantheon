@@ -24,6 +24,9 @@ internal static class CreatureAlerts
             DescribeMeeting(met, actor, other, world, localGodId),
         CreatureFightEnded ended when Find(world, ended.CreatureId) is { } winner && Find(world, ended.OtherCreatureId) is { } loser =>
             DescribeEnd(ended, winner, loser, world, localGodId),
+        CreatureDefending defending when Find(world, defending.CreatureId) is { } guard && guard.GodId == localGodId
+            && world.Settlements.Find(s => s.Id == defending.SettlementId) is { } village =>
+            (Key("defend", defending.CreatureId), Format("{0} goes by itself to defend {1} from {2}.", guard.Name, village.Name, world.GreatEvents.Beast?.Name ?? "the beast"), AlertSeverity.Good, village.Position),
         _ => null,
     };
 

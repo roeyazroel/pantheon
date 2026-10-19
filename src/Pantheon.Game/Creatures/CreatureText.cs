@@ -54,7 +54,7 @@ public static class CreatureText
         CreatureAction.Play => At("playing in", place),
         CreatureAction.Attack => At("attacking", place),
         CreatureAction.Ignore => At("walking away from", place),
-        CreatureAction.GoTo => "going where it was sent",
+        CreatureAction.GoTo => place is null ? "going where it was sent" : At("going to defend", place),
         CreatureAction.Fight => With("fighting", place),
         CreatureAction.Befriend => With("playing with", place),
         CreatureAction.Flee => With("running from", place),

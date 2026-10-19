@@ -142,7 +142,7 @@ public sealed class BeastSystem : ISimulationSystem
 
         if (beast.RavagedTicks % (CallSeconds * SimulationTime.TicksPerSecond) < _intervalTicks)
         {
-            Call(world, beast, village);
+            Call(world, beast, village, events);
         }
 
         beast.RavagedTicks += _intervalTicks;
@@ -164,7 +164,9 @@ public sealed class BeastSystem : ISimulationSystem
             }
 
             BeastModel.Harm(beast, creature.GodId, CreatureBonds.Power(_creatures, creature) * _beast.CreatureHarm * seconds);
+            var before = creature.Health;
             creature.Health = Math.Max(0f, creature.Health - (_beast.Bite * seconds));
+            CreatureTemperament.Wounded(_creatures, creature, before - creature.Health);
             harmed = true;
             if (creature.Health <= _beast.FleeHealth)
             {
@@ -230,8 +232,11 @@ public sealed class BeastSystem : ISimulationSystem
         beast.Path.AddRange(RegionPathfinder.FindPath(world.Regions, beast.Position, lair) is { } way ? way : [lair]);
     }
 
-    /// <summary>The AI gods with followers in the village send their Creatures, if near enough, to fight it.</summary>
-    private void Call(WorldState world, BeastState beast, Domain.Settlements.SettlementState village)
+    /// <summary>
+    /// The AI gods with followers in the village send their Creatures, if near enough, to fight it; and
+    /// a protective, brave Creature of any god goes by itself, unless its god has sent it elsewhere (ADR-037).
+    /// </summary>
+    private void Call(WorldState world, BeastState beast, Domain.Settlements.SettlementState village, ICollection<WorldEvent> events)
     {
         if (_brain is null)
         {
@@ -241,14 +246,24 @@ public sealed class BeastSystem : ISimulationSystem
         foreach (var creature in world.Creatures)
         {
             var god = world.Gods.Find(g => g.Id == creature.GodId);
-            if (god is not { Controller: GodController.Ai } || creature.Activity.Phase == CreaturePhase.Banished || CreatureModel.IsHeld(world, creature)
+            var sent = god is { Controller: GodController.Ai };
+            var chooses = !sent && CreatureTemperament.Defends(_creatures, creature)
+                && !(creature.Activity.Situation == CreatureSituation.Commanded && creature.Activity.Action == CreatureAction.GoTo);
+            if (god is null || !(sent || chooses) || creature.Activity.Phase == CreaturePhase.Banished || CreatureModel.IsHeld(world, creature)
                 || BeliefModel.Find(village, god.Id) is not { Adherence: >= 0.2f } || BeastModel.Distance(creature.Position, beast.Position) > _beast.CallRange
                 || creature.Health <= _beast.FleeHealth * 2f)
             {
                 continue;
             }
 
-            _brain.Command(world, creature, beast.Position);
+            if (sent)
+            {
+                _brain.Command(world, creature, beast.Position);
+            }
+            else if ((creature.Activity.TargetSettlementId != village.Id || creature.Activity.Action != CreatureAction.GoTo) && _brain.Defend(world, creature, beast.Position, village.Id))
+            {
+                events.Add(new CreatureDefending { Tick = world.Tick, CreatureId = creature.Id, SettlementId = village.Id });
+            }
         }
     }
 

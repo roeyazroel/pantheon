@@ -89,6 +89,9 @@ public sealed class ContentTests
     [InlineData("\"RewardLearningRate\": 0.25", "\"RewardLearningRate\": 1.25", "RewardLearningRate")]
     [InlineData("{ \"Action\": \"Rest\", \"Seconds\": 25.0", "{ \"Action\": \"Wander\", \"Seconds\": 25.0", "no rule for Rest")]
     [InlineData("\"LevelExperience\": [40.0, 100.0", "\"LevelExperience\": [100.0, 40.0", "must rise")]
+    [InlineData("\"GuardFight\": 0.2", "\"GuardFight\": -0.2", "Temperament.GuardFight")]
+    [InlineData("\"CouragePerDefeat\": 0.08", "\"CouragePerDefeat\": 1.5", "Temperament.CouragePerDefeat")]
+    [InlineData("\"Courage\": 0.15", "\"Courage\": 1.5", "Stonehide.Courage")]
     public void CreatureRules_WithBadValues_FailValidation(string from, string to, string expected)
     {
         var text = TestContent.ReadText(ContentJson.CreaturesFileName);

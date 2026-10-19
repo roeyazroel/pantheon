@@ -175,7 +175,8 @@ files and compiled assemblies and fails when either rule is broken.
   beliefs.
 - `CreatureState` (ADR-010): a Tier 3 entity saved whole: position and heading, level, experience,
   health, loyalty, morality, `Needs` (hunger, fatigue, boredom), `Personality` (kindness,
-  aggression, laziness, curiosity), `Activity` (action, situation, phase, target, path, ticks
+  aggression, laziness, curiosity, and since ADR-037 courage, protectiveness, jealousy and
+  playfulness), `Activity` (action, situation, phase, target, path, ticks
   left), `Preferences` (learned weight per situation and action) and `Memories` (recent deeds with
   the god's feedback). `CreatureCommand` (reward, punish, go to) is the intent the authority
   checks. `World/SimulationTime` fixes 10 ticks per simulated second.
@@ -303,7 +304,9 @@ files and compiled assemblies and fails when either rule is broken.
   to act on, power), computes costs (less for the god's own domains and its holy sites) and
   applies accepted casts through `MiracleEffects` (settlements, land, weather, ground, Creatures
   and the gods' views).
-- `Creatures/`: `CreatureModel` (growth, needs and learning as pure functions), `CreatureBrain`
+- `Creatures/`: `CreatureModel` (growth, needs and learning as pure functions),
+  `CreatureTemperament` (the traits behind each action, judgement, guarding, envy, defending and
+  wounds, ADR-037), `CreatureBrain`
   (options and utilities, decisions, planned routes), `CreatureDeeds` (what a finished action does
   to the world), `CreatureSystem` (the per-tick state machine), `CreatureAuthority` (rewards,
   punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
@@ -413,7 +416,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (15 since ADR-036, whose Gods section carries the gods
+- `NetworkProtocol`: the protocol version (16 since ADR-037, whose Creatures carry their new traits;
+  15 since ADR-036, whose Gods section carries the gods
   each knows and its goals; 14 since ADR-035, whose GreatEvents section carries the
   beast; 13 since ADR-034, which added the GreatEvents section; 12
   since ADR-033, which added the Roads section and regions' forest, timber and stone; 11 since
@@ -475,7 +479,9 @@ starts with no roads. Version 24 → 25 (`GreatEventSaveMigration`) makes nobody
 starts no great event and sets the first eclipse on the first step. Version 25 → 26
 (`BeastSaveMigration`) leaves the beast's lair to be found, sets the first anomaly on the first step
 and gives the events under way no place. Version 26 → 27 (`PlanSaveMigration`) has every god know
-every other, hold no goal and plan on its next turn; `PlanIntegrity` checks known gods and goals. A missing,
+every other, hold no goal and plan on its next turn; `PlanIntegrity` checks known gods and goals.
+Version 27 → 28 (`TemperamentSaveMigration`) gives every Creature 0.5 of courage, protectiveness,
+jealousy and playfulness. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -565,7 +571,9 @@ every other, hold no goal and plan on its next turn; `PlanIntegrity` checks know
   `Creatures/CreatureText` words Creature activities and command outcomes;
   `Creatures/CreatureBondText` words how Creatures regard each other, and
   `Creatures/CreatureCommands` brings another Creature to the player's (K);
-  `Creatures/CreatureGrowthText` words its paths, callings and attributes (ADR-030).
+  `Creatures/CreatureGrowthText` words its paths, callings and attributes (ADR-030), and
+  `Creatures/TemperamentText` its character in §26's words; `CreatureCommands.SetTemperament`
+  serves `--temperament` (ADR-037).
 - `Book/BookReadout` builds the Book of the World's pages (`WorldPage`, `ReligionPage`,
   `MiraclesPage`, `CreaturePage`: `BookPage` of `BookLine`s, ADR-031); `Presentation/StateOverlays`
   paints the population, disaster risk and political control overlays; `Camera/GodCameraModel`
@@ -1410,7 +1418,16 @@ deeds.
   wins.
 - **Learning** (`CreatureAuthority`). A reward or punishment judges the current action, or the
   last one within `FeedbackWindowSeconds`. It moves the preference for that situation and action,
-  the trait behind it and loyalty; a punishment also stops the action.
+  the traits behind it (`CreatureTemperament.Judge`), jealousy and loyalty; a punishment also stops
+  the action.
+- **Temperament** (ADR-037). `CreatureTemperament.Traits` names the traits behind each action, and
+  the brain's personality factor is 0.5 plus their mean (fleeing draws on a lack of courage).
+  - `CreatureBonds.Drives` adds a protective Creature's guard near its god's villages.
+  - `CreatureMeetings` lets the jealous envy stronger Creatures.
+  - `BeastSystem` sends a brave, protective player's Creature against the beast
+    (`CreatureBrain.Defend`, `CreatureDefending`).
+  - `CreatureCombat`, `CreatureMeetings`, `CreatureDeeds`, `BeastSystem` and `MiracleEffects` move
+    courage, jealousy and playfulness by victories, defeats, flight, wounds and play.
 - **Deeds** (`CreatureDeeds`) change food, houses and population. They change the people's belief
   in the Creature's god and the Creature's morality, and they add experience and a memory. The
   Creature's presence carries its god's influence.
@@ -2032,11 +2049,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 27 (current)
+    alt version 28 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 26
+    else versions 1 to 27
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 27, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals)
+        Mig-->>Save: JsonObject at version 28, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

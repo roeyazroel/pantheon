@@ -74,6 +74,7 @@ public sealed class CreatureDeeds
         if (activity.Action == CreatureAction.Befriend && activity.TargetCreatureId is { } playmate)
         {
             CreatureBonds.Played(_rules.Bonds, creature, playmate, world.Tick);
+            CreatureTemperament.Shift(creature.Personality, CreatureTrait.Playfulness, _rules.Temperament.PlayfulnessPerPlay);
         }
 
         CreatureModel.Remember(_rules, creature, world.Tick, activity.Action, activity.Situation, settlement?.Id, activity.TargetCreatureId);

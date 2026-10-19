@@ -59,14 +59,12 @@ internal static class CreatureReadout
                 activity.Path.Count,
                 activity.TicksLeft));
             lines.Add(Format(
-                "  needs: hunger {0:0.00} fatigue {1:0.00} boredom {2:0.00}   personality: kind {3:0.00} aggressive {4:0.00} lazy {5:0.00} curious {6:0.00}",
+                "  needs: hunger {0:0.00} fatigue {1:0.00} boredom {2:0.00}   personality: {3} ({4})",
                 n.Hunger,
                 n.Fatigue,
                 n.Boredom,
-                p.Kindness,
-                p.Aggression,
-                p.Laziness,
-                p.Curiosity));
+                TemperamentText.Values(p),
+                TemperamentText.Describe(creature)));
             if (creature.Id == snapshot.LocalCreatureId && snapshot.CreatureOptions.Count > 0)
             {
                 lines.Add("  options: " + string.Join("   ", snapshot.CreatureOptions.Take(OptionsShown).Select(o => DescribeOption(o, world))));

@@ -6,13 +6,17 @@
   // Kindness and Aggression are added to the temperament it is born with. The first is the default.
   "Species": [
     { "Name": "Mossback", "Description": "A patient, moss-covered beast, steady in all things.",
-      "Toughness": 1.0, "Strength": 1.0, "Speed": 1.0, "Learning": 1.0, "Kindness": 0.0, "Aggression": 0.0 },
+      "Toughness": 1.0, "Strength": 1.0, "Speed": 1.0, "Learning": 1.0, "Kindness": 0.0, "Aggression": 0.0,
+      "Courage": 0.0, "Protectiveness": 0.1, "Jealousy": -0.1, "Playfulness": 0.0 },
     { "Name": "Stonehide", "Description": "Slow and massive, with a hide like granite: hard to hurt and strong, but slow to learn.",
-      "Toughness": 1.5, "Strength": 1.25, "Speed": 0.75, "Learning": 0.8, "Kindness": 0.05, "Aggression": 0.0 },
+      "Toughness": 1.5, "Strength": 1.25, "Speed": 0.75, "Learning": 0.8, "Kindness": 0.05, "Aggression": 0.0,
+      "Courage": 0.15, "Protectiveness": 0.05, "Jealousy": 0.0, "Playfulness": -0.1 },
     { "Name": "Swiftclaw", "Description": "Lean and quick to anger: it covers ground fast and strikes hard, but breaks easily.",
-      "Toughness": 0.8, "Strength": 1.1, "Speed": 1.4, "Learning": 1.0, "Kindness": -0.05, "Aggression": 0.15 },
+      "Toughness": 0.8, "Strength": 1.1, "Speed": 1.4, "Learning": 1.0, "Kindness": -0.05, "Aggression": 0.15,
+      "Courage": 0.05, "Protectiveness": -0.05, "Jealousy": 0.15, "Playfulness": 0.0 },
     { "Name": "Lumen", "Description": "A gentle, glowing beast that learns quickly from its god but is frail in a fight.",
-      "Toughness": 0.85, "Strength": 0.85, "Speed": 1.1, "Learning": 1.5, "Kindness": 0.15, "Aggression": -0.1 }
+      "Toughness": 0.85, "Strength": 0.85, "Speed": 1.1, "Learning": 1.5, "Kindness": 0.15, "Aggression": -0.1,
+      "Courage": -0.1, "Protectiveness": 0.0, "Jealousy": 0.0, "Playfulness": 0.15 }
   ],
   "BaseSpeed": 7.0,
   "SpeedPerLevel": 0.5,
@@ -211,5 +215,26 @@
     "MissionaryConversion": 0.02,
     "TricksterDoubt": 0.03,
     "CommanderDefence": 0.2
+  },
+
+  // Temperament (spec section 26, ADR-037): courage, protectiveness, jealousy and playfulness, with the
+  // traits above. Near a village its god leads (within GuardRadius metres) a Creature adds GuardFight times
+  // its protectiveness to its will to fight another Creature, and takes it from its will to flee. One whose
+  // protectiveness times courage reaches DefendDrive goes by itself against the beast ravaging its god's
+  // people. Meeting a stronger Creature adds EnvyRivalry times its jealousy to its rivalry. Victories,
+  // defeats, flight and wounds move its courage; defeats and punishments feed its jealousy, and rewards
+  // ease it; play makes it more playful.
+  "Temperament": {
+    "GuardFight": 0.2,
+    "GuardRadius": 250.0,
+    "DefendDrive": 0.3,
+    "EnvyRivalry": 0.03,
+    "CouragePerVictory": 0.04,
+    "CouragePerDefeat": 0.08,
+    "CouragePerFlight": 0.02,
+    "CouragePerWound": 0.1,
+    "JealousyPerDefeat": 0.05,
+    "JealousyPerReward": 0.01,
+    "PlayfulnessPerPlay": 0.02
   }
 }

@@ -270,6 +270,25 @@ public sealed class CreatureBrain
         return true;
     }
 
+    /// <summary>Sends the Creature by its own choice to defend a village of its god (ADR-037): it walks to the threat, for the village.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature, which is changed.</param>
+    /// <param name="target">Where the threat is.</param>
+    /// <param name="settlementId">The village it defends.</param>
+    /// <returns><c>false</c> when there is no way there.</returns>
+    public bool Defend(WorldState world, CreatureState creature, GroundPosition target, int settlementId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(creature);
+        if (RegionPathfinder.FindPath(world.Regions, creature.Position, target) is not { } path)
+        {
+            return false;
+        }
+
+        Start(creature, CreatureSituation.VillageInNeed, CreatureAction.GoTo, settlementId, target, path);
+        return true;
+    }
+
     /// <summary>
     /// The urge to attack a settlement: a base, more when most of its people follow a god at war with
     /// the Creature's own, far less when they follow an ally.
@@ -342,7 +361,7 @@ public sealed class CreatureBrain
             return;
         }
 
-        var personality = CreatureModel.TraitOf(action) is { } trait ? 0.5f + CreatureModel.Get(creature.Personality, trait) : 1f;
+        var personality = CreatureTemperament.Drive(creature.Personality, action);
         var utility = CreatureModel.Preference(creature, situation, action) * drive * personality;
         options.Add(new CreatureOption(situation, action, settlementId, target, utility, creatureId));
     }

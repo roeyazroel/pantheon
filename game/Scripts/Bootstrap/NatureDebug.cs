@@ -150,6 +150,11 @@ internal sealed class NatureDebug
             _setStatus(CreatureCommands.BringOther(_session, name));
         }
 
+        if (options.Temperament is { } temperament)
+        {
+            _setStatus(CreatureCommands.SetTemperament(_session, temperament));
+        }
+
         if (options.Disaster is { } disaster && focus is { } place)
         {
             _setStatus(disaster switch

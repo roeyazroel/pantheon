@@ -33,6 +33,7 @@ public static class CreatureFounder
         var random = new SimulationRandom(SeedMixer.Derive(seed, "creature.personality." + god.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)));
         float Trait() => SimMath.Clamp01(0.5f + (rules.PersonalitySpread * ((2f * random.NextFloat()) - 1f)));
         var (kindness, aggression, laziness, curiosity) = (Trait(), Trait(), Trait(), Trait());
+        var (courage, protectiveness, jealousy, playfulness) = (Trait(), Trait(), Trait(), Trait());
         var preferences = new List<LearnedPreference>(rules.StartingPreferences.Count);
         foreach (var seedPreference in rules.StartingPreferences)
         {
@@ -60,6 +61,10 @@ public static class CreatureFounder
                 Aggression = SimMath.Clamp01(aggression + kind.Aggression),
                 Laziness = laziness,
                 Curiosity = curiosity,
+                Courage = SimMath.Clamp01(courage + kind.Courage),
+                Protectiveness = SimMath.Clamp01(protectiveness + kind.Protectiveness),
+                Jealousy = SimMath.Clamp01(jealousy + kind.Jealousy),
+                Playfulness = SimMath.Clamp01(playfulness + kind.Playfulness),
             },
             Activity = new CreatureActivity
             {

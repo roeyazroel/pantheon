@@ -176,67 +176,6 @@ public static class CreatureModel
         return preference.Weight;
     }
 
-    /// <summary>The personality trait that drives an action, if any (kind acts: Kindness; cruel acts: Aggression; rest: Laziness; roaming: Curiosity).</summary>
-    /// <param name="action">The action.</param>
-    /// <returns>The trait, or <c>null</c> when no trait drives it.</returns>
-    public static CreatureTrait? TraitOf(CreatureAction action) => action switch
-    {
-        CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.Play or CreatureAction.Befriend => CreatureTrait.Kindness,
-        CreatureAction.Attack or CreatureAction.EatFromStores or CreatureAction.Fight => CreatureTrait.Aggression,
-        CreatureAction.Rest => CreatureTrait.Laziness,
-        CreatureAction.Wander or CreatureAction.Ignore => CreatureTrait.Curiosity,
-        CreatureAction.Forage or CreatureAction.GoTo or CreatureAction.Flee => null,
-    };
-
-    /// <summary>A personality trait's value.</summary>
-    /// <param name="personality">Personality.</param>
-    /// <param name="trait">Trait.</param>
-    /// <returns>The value (0..1).</returns>
-    public static float Get(CreaturePersonality personality, CreatureTrait trait)
-    {
-        ArgumentNullException.ThrowIfNull(personality);
-        return trait switch
-        {
-            CreatureTrait.Kindness => personality.Kindness,
-            CreatureTrait.Aggression => personality.Aggression,
-            CreatureTrait.Laziness => personality.Laziness,
-            CreatureTrait.Curiosity => personality.Curiosity,
-        };
-    }
-
-    /// <summary>Moves the trait behind a judged action: up when rewarded, down when punished (spec §26).</summary>
-    /// <param name="rules">Creature rules.</param>
-    /// <param name="personality">Personality to change.</param>
-    /// <param name="action">The judged action.</param>
-    /// <param name="feedback">Reward or punishment.</param>
-    public static void Nudge(CreatureRules rules, CreaturePersonality personality, CreatureAction action, CreatureFeedback feedback)
-    {
-        ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(personality);
-        if (TraitOf(action) is not { } trait || feedback == CreatureFeedback.None)
-        {
-            return;
-        }
-
-        var step = feedback == CreatureFeedback.Rewarded ? rules.PersonalityNudge : -rules.PersonalityNudge;
-        var value = SimMath.Clamp01(Get(personality, trait) + step);
-        switch (trait)
-        {
-            case CreatureTrait.Kindness:
-                personality.Kindness = value;
-                break;
-            case CreatureTrait.Aggression:
-                personality.Aggression = value;
-                break;
-            case CreatureTrait.Laziness:
-                personality.Laziness = value;
-                break;
-            case CreatureTrait.Curiosity:
-                personality.Curiosity = value;
-                break;
-        }
-    }
-
     /// <summary>Adds experience and raises the level it earns.</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="creature">The Creature.</param>
@@ -342,20 +281,4 @@ public static class CreatureModel
         needs.Fatigue = SimMath.Clamp01(needs.Fatigue - (rule.FatigueRelief * s));
         needs.Boredom = SimMath.Clamp01(needs.Boredom - (rule.BoredomRelief * s));
     }
-}
-
-/// <summary>A Creature personality trait.</summary>
-public enum CreatureTrait
-{
-    /// <summary><see cref="CreaturePersonality.Kindness"/>.</summary>
-    Kindness,
-
-    /// <summary><see cref="CreaturePersonality.Aggression"/>.</summary>
-    Aggression,
-
-    /// <summary><see cref="CreaturePersonality.Laziness"/>.</summary>
-    Laziness,
-
-    /// <summary><see cref="CreaturePersonality.Curiosity"/>.</summary>
-    Curiosity,
 }

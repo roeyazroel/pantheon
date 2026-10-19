@@ -29,4 +29,16 @@ public sealed record CreatureSpecies
 
     /// <summary>Added to the aggression it is born with (-1..1).</summary>
     public required float Aggression { get; init; }
+
+    /// <summary>Added to the courage it is born with (-1..1, ADR-037).</summary>
+    public float Courage { get; init; }
+
+    /// <summary>Added to the protectiveness it is born with (-1..1, ADR-037).</summary>
+    public float Protectiveness { get; init; }
+
+    /// <summary>Added to the jealousy it is born with (-1..1, ADR-037).</summary>
+    public float Jealousy { get; init; }
+
+    /// <summary>Added to the playfulness it is born with (-1..1, ADR-037).</summary>
+    public float Playfulness { get; init; }
 }

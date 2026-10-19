@@ -55,13 +55,16 @@ public sealed class CreatureModelTests
     {
         var personality = new CreaturePersonality { Kindness = 0.5f, Aggression = 0.5f, Laziness = 0.5f, Curiosity = 0.5f };
 
-        CreatureModel.Nudge(Rules, personality, CreatureAction.Feed, CreatureFeedback.Rewarded);
-        CreatureModel.Nudge(Rules, personality, CreatureAction.Attack, CreatureFeedback.Punished);
-        CreatureModel.Nudge(Rules, personality, CreatureAction.Forage, CreatureFeedback.Rewarded);
+        CreatureTemperament.Judge(Rules, personality, CreatureAction.Feed, CreatureFeedback.Rewarded);
+        CreatureTemperament.Judge(Rules, personality, CreatureAction.Attack, CreatureFeedback.Punished);
+        CreatureTemperament.Judge(Rules, personality, CreatureAction.Forage, CreatureFeedback.Rewarded);
+        CreatureTemperament.Judge(Rules, personality, CreatureAction.Flee, CreatureFeedback.Rewarded);
 
         Assert.Equal(0.5f + Rules.PersonalityNudge, personality.Kindness, 5);
         Assert.Equal(0.5f - Rules.PersonalityNudge, personality.Aggression, 5);
         Assert.Equal(0.5f, personality.Laziness);
+        Assert.Equal(0.5f - Rules.PersonalityNudge, personality.Courage, 5);
+        Assert.Equal(0.5f - (2f * Rules.Temperament.JealousyPerReward), personality.Jealousy, 5);
     }
 
     [Fact]

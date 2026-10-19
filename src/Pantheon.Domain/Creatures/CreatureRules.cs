@@ -114,6 +114,9 @@ public sealed record CreatureRules
 
     /// <summary>The paths Creatures take up and the attributes that grow with level (spec §23–24, ADR-030).</summary>
     public CallingRules Callings { get; init; } = CallingRules.None;
+
+    /// <summary>How the Creature's courage, protectiveness, jealousy and playfulness act and evolve (ADR-037); inert when absent.</summary>
+    public TemperamentRules Temperament { get; init; } = TemperamentRules.None;
 }
 
 /// <summary>How one Creature action plays out.</summary>

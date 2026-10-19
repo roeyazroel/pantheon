@@ -145,6 +145,9 @@ internal static class SaveMigrations
             case 26:
                 PlanSaveMigration.UpgradeFrom26(root);
                 break;
+            case 27:
+                TemperamentSaveMigration.UpgradeFrom27(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

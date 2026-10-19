@@ -157,7 +157,7 @@ public sealed class CreatureAuthority
 
         var knowledge = _domains is not null && Domains.DomainModel.Holds(world, creature.GodId, Domain.Gods.GodDomain.Knowledge) ? _domains.Boons.KnowledgeLearning : 0f;
         var preference = CreatureModel.Learn(_rules, creature, judged.Situation, judged.Action, feedback, knowledge);
-        CreatureModel.Nudge(_rules, creature.Personality, judged.Action, feedback);
+        CreatureTemperament.Judge(_rules, creature.Personality, judged.Action, feedback);
         var rewarded = feedback == CreatureFeedback.Rewarded;
         if (rewarded)
         {

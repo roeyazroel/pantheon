@@ -30,6 +30,36 @@ public static class CreatureCommands
             : string.IsNullOrEmpty(name) ? $"No other Creature can come to {mine.Name} now" : $"{name} cannot come to {mine.Name} now";
     }
 
+    /// <summary>Gives the player's Creature the traits named, strongly (<c>--temperament</c>, ADR-037). Host only.</summary>
+    /// <param name="session">Game session.</param>
+    /// <param name="words">Words from <see cref="TemperamentText.Words"/>.</param>
+    /// <returns>A status line.</returns>
+    public static string SetTemperament(GameSession session, IReadOnlyList<string> words)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(words);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
+        if (session.LocalCreature is not { } mine)
+        {
+            return "You have no Creature";
+        }
+
+        session.Command((_, _) =>
+        {
+            foreach (var word in words)
+            {
+                TemperamentText.Give(mine, word);
+            }
+
+            return true;
+        });
+        return $"{mine.Name} is {TemperamentText.Describe(mine)}";
+    }
+
     /// <summary>The Creature nearest the local Creature that is not banished, if any.</summary>
     /// <param name="session">Game session.</param>
     /// <returns>The Creature, or <c>null</c>.</returns>

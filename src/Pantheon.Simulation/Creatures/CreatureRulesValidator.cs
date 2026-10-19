@@ -17,6 +17,7 @@ public static class CreatureRulesValidator
         var errors = new RuleErrors();
         errors.RequireAtLeast(rules.DecisionIntervalTicks, 1, nameof(rules.DecisionIntervalTicks));
         ValidateSpecies(rules.Species, errors);
+        ValidateTemperament(rules.Temperament, errors);
 
         foreach (var (value, name) in new[]
         {
@@ -228,6 +229,34 @@ public static class CreatureRulesValidator
     }
 
     /// <summary>At least one species, each named once, with positive factors and temperaments within -1..1 (ADR-021).</summary>
+    private static void ValidateTemperament(TemperamentRules? temperament, RuleErrors errors)
+    {
+        if (temperament is null)
+        {
+            errors.Add("Temperament must not be null.");
+            return;
+        }
+
+        errors.RequireNonNegative(temperament.GuardFight, "Temperament.GuardFight");
+        errors.RequireNonNegative(temperament.GuardRadius, "Temperament.GuardRadius");
+        errors.RequireNonNegative(temperament.DefendDrive, "Temperament.DefendDrive");
+        foreach (var (value, name) in new[]
+        {
+            (temperament.EnvyRivalry, nameof(temperament.EnvyRivalry)),
+            (temperament.CouragePerVictory, nameof(temperament.CouragePerVictory)),
+            (temperament.CouragePerDefeat, nameof(temperament.CouragePerDefeat)),
+            (temperament.CouragePerFlight, nameof(temperament.CouragePerFlight)),
+            (temperament.CouragePerWound, nameof(temperament.CouragePerWound)),
+            (temperament.JealousyPerDefeat, nameof(temperament.JealousyPerDefeat)),
+            (temperament.JealousyPerReward, nameof(temperament.JealousyPerReward)),
+            (temperament.PlayfulnessPerPlay, nameof(temperament.PlayfulnessPerPlay)),
+        })
+        {
+            errors.RequireShare(value, "Temperament." + name);
+        }
+    }
+
+    /// <summary>Checks the species.</summary>
     private static void ValidateSpecies(IReadOnlyList<CreatureSpecies>? species, RuleErrors errors)
     {
         if (species is null || species.Count == 0)
@@ -250,6 +279,10 @@ public static class CreatureRulesValidator
             errors.RequirePositive(kind.Learning, kind.Name + ".Learning");
             errors.RequireSignedShare(kind.Kindness, kind.Name + ".Kindness");
             errors.RequireSignedShare(kind.Aggression, kind.Name + ".Aggression");
+            errors.RequireSignedShare(kind.Courage, kind.Name + ".Courage");
+            errors.RequireSignedShare(kind.Protectiveness, kind.Name + ".Protectiveness");
+            errors.RequireSignedShare(kind.Jealousy, kind.Name + ".Jealousy");
+            errors.RequireSignedShare(kind.Playfulness, kind.Name + ".Playfulness");
         }
     }
 }

@@ -128,6 +128,7 @@ public sealed class CreatureCombat
         var ratio = Math.Clamp(loser.Level / (float)winner.Level, 0.25f, 2f);
         Gain(winner, FightRule.Experience + (combat.WinnerExperience * ratio), tick, events);
         winner.Personality.Aggression = SimMath.Clamp01(winner.Personality.Aggression + combat.AggressionPerVictory);
+        CreatureTemperament.Shift(winner.Personality, CreatureTrait.Courage, _rules.Temperament.CouragePerVictory);
         CreatureCalling.Add(winner.Callings, Domain.Creatures.CreatureSpecialisation.Warrior, _rules.Callings.VictoryCalling);
         CreatureModel.Reinforce(winner, winner.Activity.Situation, CreatureAction.Fight, combat.FightLearningRate);
         Witness(world, winner, loser);
@@ -164,6 +165,8 @@ public sealed class CreatureCombat
         loser.Loyalty = SimMath.Clamp01(loser.Loyalty - combat.LoyaltyPerDefeat);
         CreatureModel.LoseProgress(_rules, loser, combat.DefeatExperienceLoss);
         loser.Personality.Aggression = SimMath.Clamp01(loser.Personality.Aggression - combat.AggressionPerDefeat);
+        CreatureTemperament.Shift(loser.Personality, CreatureTrait.Courage, -_rules.Temperament.CouragePerDefeat);
+        CreatureTemperament.Shift(loser.Personality, CreatureTrait.Jealousy, _rules.Temperament.JealousyPerDefeat);
         CreatureModel.Reinforce(loser, loser.Activity.Situation, CreatureAction.Fight, -2f * combat.FightLearningRate);
         if (winner.GodId != loser.GodId)
         {
@@ -195,6 +198,7 @@ public sealed class CreatureCombat
         }
 
         CreatureBonds.Fled(_rules.Bonds, leaver, stayer, world.Tick);
+        CreatureTemperament.Shift(leaver.Personality, CreatureTrait.Courage, -_rules.Temperament.CouragePerFlight);
         events.Add(new CreatureFightEnded { Tick = world.Tick, CreatureId = stayer.Id, OtherCreatureId = leaver.Id, Outcome = FightOutcome.BrokeOff });
     }
 
@@ -212,7 +216,7 @@ public sealed class CreatureCombat
 
     /// <summary>
     /// How merciful the winner is towards the loser: kindness tempered by aggression, plus friendship,
-    /// less when their gods are at war.
+    /// less when their gods are at war, and less for a rival it is jealous of (ADR-037).
     /// </summary>
     /// <param name="world">World state.</param>
     /// <param name="winner">The winner.</param>
@@ -224,9 +228,9 @@ public sealed class CreatureCombat
         ArgumentNullException.ThrowIfNull(winner);
         ArgumentNullException.ThrowIfNull(loser);
         var traits = winner.Personality;
-        var friendship = CreatureBonds.Find(winner, loser.Id)?.Friendship ?? 0f;
+        var view = CreatureBonds.Find(winner, loser.Id);
         var war = DiplomacyModel.AreAtWar(world, winner.GodId, loser.GodId) ? WarMercyPenalty : 0f;
-        return (traits.Kindness * (1f - traits.Aggression)) + friendship - war;
+        return (traits.Kindness * (1f - traits.Aggression)) + (view?.Friendship ?? 0f) - war - (0.5f * traits.Jealousy * (view?.Rivalry ?? 0f));
     }
 
     /// <summary>

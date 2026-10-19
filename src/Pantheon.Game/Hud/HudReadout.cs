@@ -383,6 +383,7 @@ public static class HudReadout
                 creature.Morality,
                 creature.CombatSkill,
                 creature.Scars switch { 0 => string.Empty, 1 => "   1 scar", _ => Format("   {0} scars", creature.Scars) }),
+            Character = Creatures.TemperamentText.Describe(creature),
             Paths = CreatureGrowthText.Paths(session.Content.Creatures, creature),
             Attributes = CreatureGrowthText.Attributes(session.Content.Creatures, session.Content.DivineRules, creature),
             Bonds = CreatureBondText.Summary(session.Content.Creatures.Bonds, world, creature),

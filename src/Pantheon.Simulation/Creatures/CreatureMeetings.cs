@@ -78,6 +78,8 @@ public sealed class CreatureMeetings
         var friends = CreatureBonds.IsFriend(bonds, viewA) && CreatureBonds.IsFriend(bonds, viewB);
         viewA.LastMetTick = tick;
         viewB.LastMetTick = tick;
+        CreatureTemperament.Envy(_rules, world, a, b);
+        CreatureTemperament.Envy(_rules, world, b, a);
         var answerA = _brain.Respond(world, a, b, random);
         var answerB = _brain.Respond(world, b, a, random);
         if (Politics.TreatyModel.SparesCreatures(world, a.GodId, b.GodId))
@@ -118,6 +120,7 @@ public sealed class CreatureMeetings
         if (defence == CreatureAction.Flee && _brain.Flee(world, defender, CreatureBonds.SituationFor(world, defender, attacker), attacker, random))
         {
             CreatureBonds.Fled(bonds, defender, attacker, world.Tick);
+            CreatureTemperament.Shift(defender.Personality, CreatureTrait.Courage, -_rules.Temperament.CouragePerFlight);
             StopSeeking(attacker, defender.Id);
             return (MeetingOutcome.Fled, defender.Id, false);
         }
@@ -139,6 +142,7 @@ public sealed class CreatureMeetings
             if (answer == CreatureAction.Flee && _brain.Flee(world, self, CreatureBonds.SituationFor(world, self, other), other, random))
             {
                 CreatureBonds.Fled(_rules.Bonds, self, other, world.Tick);
+                CreatureTemperament.Shift(self.Personality, CreatureTrait.Courage, -_rules.Temperament.CouragePerFlight);
                 first ??= self.Id;
             }
             else

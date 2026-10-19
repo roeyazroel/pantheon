@@ -39,12 +39,7 @@ public static class CreaturePage
             new(Format("Level {0}, {1:0} experience{2}. {3}.", creature.Level, creature.Experience, next, CreatureText.DescribeActivity(creature, world))),
             new(CreatureGrowthText.Attributes(rules, session.Content.DivineRules, creature)),
             new(Format("Health {0:0%}, loyalty {1:0%}, morality {2:+0.00;-0.00;0.00}, combat skill {3:0%}, {4} scars.", creature.Health, creature.Loyalty, creature.Morality, creature.CombatSkill, creature.Scars)),
-            new(Format(
-                "Kindness {0:0.00}, aggression {1:0.00}, laziness {2:0.00}, curiosity {3:0.00}.",
-                creature.Personality.Kindness,
-                creature.Personality.Aggression,
-                creature.Personality.Laziness,
-                creature.Personality.Curiosity)),
+            new(Format("It is {0}: {1}.", TemperamentText.Describe(creature), TemperamentText.Values(creature.Personality))),
             new("Paths", BookTone.Heading),
             new(CreatureGrowthText.Paths(rules, creature), BookTone.Good),
         };

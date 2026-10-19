@@ -395,7 +395,12 @@ internal sealed class MiracleEffects
         foreach (var creature in FindRivalCreatures(world, godId, target, radius))
         {
             var toughness = _creatures is null ? 1f : CreatureAttributes.Resilience(_creatures, creature);
+            var before = creature.Health;
             creature.Health = SimMath.Clamp01(creature.Health - (amount / toughness));
+            if (_creatures is not null)
+            {
+                CreatureTemperament.Wounded(_creatures, creature, before - creature.Health);
+            }
             _ledger?.Record(world, creature.GodId, godId, DiplomaticAct.Harmed, null);
         }
     }

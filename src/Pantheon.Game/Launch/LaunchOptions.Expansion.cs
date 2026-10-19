@@ -22,6 +22,9 @@ public sealed partial record LaunchOptions
     /// <summary>Whether the Divine Council meets at the start, for captures.</summary>
     public bool SummonCouncil { get; init; }
 
+    /// <summary>Traits the player's Creature has strongly at the start, by §26's words (ADR-037); none when <c>null</c>.</summary>
+    public IReadOnlyList<string>? Temperament { get; init; }
+
     /// <summary>Whether every god has met every other at the start (ADR-036), for captures.</summary>
     public bool GodsMet { get; init; }
 
@@ -84,7 +87,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -145,6 +148,11 @@ public sealed partial record LaunchOptions
                 return OnOff(value) is { } open ? options with { SettlementPanel = open } : Warn(options, warnings, $"'--settlement-panel' needs on or off, got '{value}'.");
             case "council-panel":
                 return OnOff(value) is { } council ? options with { CouncilPanel = council } : Warn(options, warnings, $"'--council-panel' needs on or off, got '{value}'.");
+            case "temperament":
+                var words = trimmed.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                return words.Length > 0 && Array.TrueForAll(words, w => System.Linq.Enumerable.Contains(Creatures.TemperamentText.Words, w.ToLowerInvariant()))
+                    ? options with { Temperament = words }
+                    : Warn(options, warnings, $"'--temperament' needs words such as brave, protective or jealous, separated by commas, got '{value}'.");
             case "gods-met":
                 return OnOff(value) is { } met ? options with { GodsMet = met } : Warn(options, warnings, $"'--gods-met' needs on or off, got '{value}'.");
             case "summon-council":

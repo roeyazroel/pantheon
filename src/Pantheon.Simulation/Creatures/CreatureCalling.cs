@@ -164,6 +164,10 @@ public static class CreatureCalling
             (p.Aggression, CreatureSpecialisation.Warrior),
             (p.Curiosity, CreatureSpecialisation.NatureKeeper),
             (p.Laziness, CreatureSpecialisation.Guardian),
+            (p.Protectiveness, CreatureSpecialisation.Guardian),
+            (p.Courage, CreatureSpecialisation.Commander),
+            (p.Playfulness, CreatureSpecialisation.Missionary),
+            (p.Jealousy, CreatureSpecialisation.Trickster),
         ];
         Array.Sort(leanings, (a, b) => b.Trait != a.Trait ? b.Trait.CompareTo(a.Trait) : a.Path.CompareTo(b.Path));
         foreach (var (_, path) in leanings)

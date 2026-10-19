@@ -14,9 +14,10 @@ public static class NetworkProtocol
     /// Divine Hand, Creatures' paths and the Divine Acts, version 11 (part 12) the prophets and elders,
     /// version 12 (part 13) the roads and the land's timber and stone, version 13 (part 14) the great
     /// events and the plague, version 14 (part 15) the ancient beast and the anomaly, version 15
-    /// (part 16) the gods each god knows and its goals.
+    /// (part 16) the gods each god knows and its goals, version 16 (part 17) Creatures' courage,
+    /// protectiveness, jealousy and playfulness.
     /// </summary>
-    public const int Version = 15;
+    public const int Version = 16;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

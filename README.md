@@ -1017,6 +1017,23 @@ now.
   A reward calls it further down the paths of the deed. No Creature walks more than three.
 - **It can be lost for a while.** If it starves, or loses a fight, it is banished for a minute
   and comes home weakened.
+- **It has a character** (ADR-037). Eight traits make it up: kindness, aggression, laziness,
+  curiosity, courage, protectiveness, jealousy and playfulness. Its card names the strong ones in
+  §26's words, for example "brave, protective, playful and loyal" (loyal or independent come from
+  its loyalty).
+  - A brave Creature fights where a coward runs.
+  - A protective one stands its ground near your villages, and goes by itself to defend them from
+    the ancient beast.
+  - A jealous one makes rivals of stronger Creatures.
+  - A playful one plays with the others.
+  - Its character changes:
+    - rewarding a deed strengthens the traits behind it (reward its running away, and it grows
+      cowardly);
+    - rewards ease its jealousy and punishments feed it;
+    - victories make it braver, while defeats and wounds cow it and make it jealous;
+    - play makes it more playful.
+
+  Its species shades it from birth: a Stonehide is brave, a Lumen playful, a Swiftclaw jealous.
 
 ## Creatures together
 
@@ -1326,6 +1343,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--upnp=on\|off` | Ask the router to forward the host's port. |
 | `--meet=on\|off\|<name>` | Bring the nearest other Creature (or the one with that name) beside yours at the start, so they meet. |
 | `--species=<name>` | The species of your Creature in a new world: Mossback, Stonehide, Swiftclaw or Lumen. |
+| `--temperament=<words>` | Give your Creature these traits strongly at the start, separated by commas: brave, cowardly, kind, sadistic, curious, lazy, protective, jealous, playful, aggressive, loyal or independent. |
 | `--world-size=small\|large\|huge\|vast` | The size of a new world (see [World sizes](#world-sizes)). An unknown size makes a small world. |
 | `--victory=all\|sandbox\|<list>` | How a new world may be won: every way, no way, or a list of `ascendancy`, `conquest` and `cultural` separated by commas, for example `--victory=conquest,cultural`. Default: ascendancy. |
 | `--seasons=on\|off` | Whether a new world turns through four seasons (default on; see [Seasons](#seasons)). |
@@ -1409,7 +1427,8 @@ start with Creatures that have walked no path, empty hands and no hallowed land.
 start with no prophets or elders; their villages choose elders at once. Saves from before part 14
 start with nobody sick and no great event, and set their first eclipse when loaded. Saves from before part 15
 find their beast's lair and set their first anomaly when loaded. In saves from before part 16
-every god has met every other, and the AI gods make their first plans when loaded. Saves from before part 13
+every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
+start with middling courage, protectiveness, jealousy and playfulness. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
