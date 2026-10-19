@@ -5,14 +5,18 @@ using System.Numerics;
 namespace Pantheon.Game.Population;
 
 /// <summary>
-/// A representative's routine as a closed-form function of simulation time: rest at home, walk to
-/// work, work, walk to the shrine, gather, walk home, and again. Because it depends only on the
-/// time, citizens freeze while the game is paused and hurry when it runs faster. Given its
-/// village's ways (ADR-046), a figure walks round what stands in its way, a little faster, so each
-/// leg still takes the time its straight line would.
+/// A representative's routine as a closed-form function of the crowds' time (<see cref="CrowdClock"/>,
+/// ADR-049): rest at home, walk to work, work, walk to the shrine, gather, walk home, and again.
+/// Because it depends only on that time, citizens freeze while the game is paused, and they keep a
+/// human pace when it runs faster. Given its village's ways (ADR-046), a figure walks round what
+/// stands in its way, a little faster, so each leg still takes the time its straight line would.
 /// </summary>
 public static class CitizenRoutine
 {
+    // Breaths while sitting or standing, and prayers at the shrine, in cycles a second.
+    private const float BreathsPerSecond = 0.25f;
+    private const float PrayersPerSecond = 0.125f;
+
     /// <summary>Length of one cycle of the routine.</summary>
     /// <param name="citizen">Representative.</param>
     /// <param name="settings">Routine durations and walking speed.</param>
@@ -43,7 +47,7 @@ public static class CitizenRoutine
 
         if (t < settings.RestSeconds)
         {
-            return Stay(citizen.Home, GroundMath.YawTowards(citizen.Home, citizen.Gathering), CitizenActivity.AtHome);
+            return Stay(citizen.Home, GroundMath.YawTowards(citizen.Home, citizen.Gathering), CitizenActivity.AtHome, t * BreathsPerSecond);
         }
 
         t -= settings.RestSeconds;
@@ -56,7 +60,7 @@ public static class CitizenRoutine
         t -= toWork;
         if (t < settings.WorkSeconds)
         {
-            return new RoutinePose(citizen.Work, citizen.WorkYaw, WorkLean(t, settings), 0f, CitizenActivity.Working);
+            return new RoutinePose(citizen.Work, citizen.WorkYaw, WorkLean(t, settings), 0f, CitizenActivity.Working, t * settings.WorkStrokesPerSecond);
         }
 
         t -= settings.WorkSeconds;
@@ -69,25 +73,38 @@ public static class CitizenRoutine
         t -= toGathering;
         if (t < settings.GatherSeconds)
         {
-            return Stay(citizen.Gathering, citizen.GatherYaw, CitizenActivity.Gathering);
+            return Stay(citizen.Gathering, citizen.GatherYaw, CitizenActivity.Gathering, t * PrayersPerSecond);
         }
 
         // Whatever is left of the cycle is the walk home; rounding can leave it a hair long.
         return Walk(citizen.Gathering, citizen.Home, t - settings.GatherSeconds, settings, ways?.Way(citizen.Index, CitizenLeg.ToHome, citizen.Gathering, citizen.Home));
     }
 
-    /// <summary>Height of the walking bob after walking a distance: one hop per stride.</summary>
+    /// <summary>
+    /// Height of the walking bob after walking a distance: the body rises gently over each step, as
+    /// it passes over the planted foot, and is lowest as the feet change.
+    /// </summary>
     /// <param name="walked">Distance walked, in metres.</param>
     /// <param name="settings">Stride length and bob height.</param>
     /// <returns>Lift above the ground, in metres.</returns>
     public static float Bounce(float walked, CitizenSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        return settings.StepBounce * MathF.Abs(MathF.Sin(MathF.PI * walked / settings.StrideLength));
+        return settings.StepBounce * 0.5f * (1f - MathF.Cos(MathF.Tau * walked / settings.StrideLength));
+    }
+
+    /// <summary>The walking cycle after walking a distance: one cycle is a stride of two steps.</summary>
+    /// <param name="walked">Distance walked, in metres.</param>
+    /// <param name="settings">Stride length.</param>
+    /// <returns>Cycles walked.</returns>
+    public static float Strides(float walked, CitizenSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return walked / (2f * settings.StrideLength);
     }
 
     /// <summary>Standing still at a spot.</summary>
-    private static RoutinePose Stay(Vector2 spot, float yaw, CitizenActivity activity) => new(spot, yaw, 0f, 0f, activity);
+    private static RoutinePose Stay(Vector2 spot, float yaw, CitizenActivity activity, float cycle = 0f) => new(spot, yaw, 0f, 0f, activity, cycle);
 
     /// <summary>
     /// Walking from one spot to another, <paramref name="t"/> seconds after setting off: straight at
@@ -101,11 +118,13 @@ public static class CitizenRoutine
             return Stay(to, 0f, CitizenActivity.Walking);
         }
 
+        var cycle = Strides(t * settings.WalkSpeed, settings);
+
         var share = Math.Clamp(t * settings.WalkSpeed / distance, 0f, 1f);
         if (way is not { Count: > 0 })
         {
             var walked = share * distance;
-            return new RoutinePose(Vector2.Lerp(from, to, share), GroundMath.YawTowards(from, to), 0f, Bounce(walked, settings), CitizenActivity.Walking);
+            return new RoutinePose(Vector2.Lerp(from, to, share), GroundMath.YawTowards(from, to), 0f, Bounce(walked, settings), CitizenActivity.Walking, cycle);
         }
 
         var length = Vector2.Distance(from, way[0]);
@@ -122,7 +141,7 @@ public static class CitizenRoutine
             if (along <= leg || next == way[^1])
             {
                 var ground = leg > 0f ? Vector2.Lerp(start, next, Math.Clamp(along / leg, 0f, 1f)) : next;
-                return new RoutinePose(ground, GroundMath.YawTowards(start, next), 0f, Bounce(share * length, settings), CitizenActivity.Walking);
+                return new RoutinePose(ground, GroundMath.YawTowards(start, next), 0f, Bounce(share * length, settings), CitizenActivity.Walking, Strides(share * length, settings));
             }
 
             along -= leg;

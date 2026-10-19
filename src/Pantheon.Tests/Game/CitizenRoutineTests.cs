@@ -159,10 +159,11 @@ public sealed class CitizenRoutineTests
 
     [Theory]
     [InlineData(0f, 0f)]
+    [InlineData(0.1875f, 0.035f)]
     [InlineData(0.375f, 0.07f)]
     [InlineData(0.75f, 0f)]
     [InlineData(1.125f, 0.07f)]
-    public void Bounce_HopsOncePerStride(float walked, float expected)
+    public void Bounce_RisesGentlyOverEachStep_NotInHops(float walked, float expected)
     {
         Assert.Equal(expected, CitizenRoutine.Bounce(walked, Settings), 4);
     }

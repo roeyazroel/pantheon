@@ -26,6 +26,12 @@ public sealed record CitizenSettings
     /// <summary>Speed at which a rerouted citizen catches up with its new routine; at least the walking speed.</summary>
     public required float CatchUpSpeed { get; init; }
 
+    /// <summary>
+    /// The most seconds of the crowds' routines that pass in a second of real time (ADR-049), so
+    /// people keep a human pace when the game runs faster.
+    /// </summary>
+    public float PaceCap { get; init; } = 1f;
+
     /// <summary>Time spent resting at home in each cycle.</summary>
     public required float RestSeconds { get; init; }
 
@@ -102,6 +108,7 @@ public sealed record CitizenSettings
         Require(errors, RegionalTierEnterDistance > 0f, "RegionalTierEnterDistance must be positive.");
         Require(errors, RegionalTierExitDistance >= RegionalTierEnterDistance, "RegionalTierExitDistance must be at least RegionalTierEnterDistance.");
         Require(errors, WalkSpeed > 0f, "WalkSpeed must be positive.");
+        Require(errors, PaceCap > 0f, "PaceCap must be positive.");
         Require(errors, CatchUpSpeed >= WalkSpeed, "CatchUpSpeed must be at least WalkSpeed, or citizens could never catch up with their routine.");
         Require(errors, RestSeconds >= 0f && WorkSeconds >= 0f && GatherSeconds >= 0f, "RestSeconds, WorkSeconds and GatherSeconds must not be negative.");
         Require(errors, RestSeconds + WorkSeconds + GatherSeconds > 0f, "RestSeconds, WorkSeconds and GatherSeconds must not all be 0.");

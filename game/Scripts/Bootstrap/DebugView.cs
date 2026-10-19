@@ -140,6 +140,7 @@ internal sealed class DebugView
         RegionBoundariesVisible = _presenter.RegionBoundariesVisible,
         StatusMessage = status,
         Crowds = _presenter.CrowdStatuses,
+        CrowdClock = (_session.Crowds.Seconds, _presenter.CrowdPace),
         HolySiteRules = _session.Content.HolySites,
         WaterRules = _session.Content.Water,
     };

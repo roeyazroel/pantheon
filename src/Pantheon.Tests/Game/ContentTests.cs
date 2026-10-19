@@ -221,7 +221,7 @@ public sealed class ContentTests
         var json = TestContent.ReadText(SettlementViewSettings.FileName)
             .Replace("\"FieldSize\": 10.0", "\"FieldSize\": -1.0", StringComparison.Ordinal)
             .Replace("\"RegionalTierExitDistance\": 550.0", "\"RegionalTierExitDistance\": 300.0", StringComparison.Ordinal)
-            .Replace("\"CatchUpSpeed\": 4.0", "\"CatchUpSpeed\": 1.0", StringComparison.Ordinal);
+            .Replace("\"CatchUpSpeed\": 2.6", "\"CatchUpSpeed\": 1.0", StringComparison.Ordinal);
 
         var exception = Assert.Throws<ContentFormatException>(() => SettlementViewSettings.Parse(json));
         Assert.Contains("Layout: ", exception.Message);

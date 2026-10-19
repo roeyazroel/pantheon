@@ -144,7 +144,7 @@ public static class VillagerCommands
         var roster = RepresentativeRoster.Build(session.World.Seed, settlement, SettlementEconomy.AllocateLabour(rules, settlement), site, view);
         foreach (var figure in roster)
         {
-            var pose = CitizenRoutine.Evaluate(figure, session.SimulationSeconds, view.Citizens);
+            var pose = CitizenRoutine.Evaluate(figure, session.Crowds.Seconds, view.Citizens);
             var work = figure.Role switch
             {
                 CitizenRole.Farmer => VillagerWork.Farming,

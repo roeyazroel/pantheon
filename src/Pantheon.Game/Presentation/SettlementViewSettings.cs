@@ -20,6 +20,9 @@ public sealed record SettlementViewSettings
     /// <summary>Representative citizens (Tier 2).</summary>
     public required CitizenSettings Citizens { get; init; }
 
+    /// <summary>How people look (ADR-049).</summary>
+    public required PeopleSettings People { get; init; }
+
     /// <summary>How religion shows in villages (ADR-042).</summary>
     public required StyleSettings Style { get; init; }
 
@@ -52,6 +55,7 @@ public sealed record SettlementViewSettings
         var errors = new List<string>();
         Collect(errors, nameof(Layout), Layout.Validate);
         Collect(errors, nameof(Citizens), Citizens.Validate);
+        Collect(errors, nameof(People), People.Validate);
         Collect(errors, nameof(Style), Style.Validate);
         Collect(errors, nameof(Debris), Debris.Validate);
         if (errors.Count > 0)

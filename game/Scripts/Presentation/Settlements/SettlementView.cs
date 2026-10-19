@@ -66,7 +66,7 @@ internal sealed class SettlementView
         _style = settings.Style;
         _styleView = new StyleView(root, _style);
         _crowd = new SettlementCrowd(seed, settlement.Id, settings);
-        _citizens = new CitizenView(root, assets, settings.Citizens);
+        _citizens = new CitizenView(root, People.PersonAssets.For(settings), settings.Citizens, seed);
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
         root.AddChild(_label);
 
@@ -106,7 +106,7 @@ internal sealed class SettlementView
 
     /// <summary>Chooses the tier for the camera distance and, in Tier 2, rebuilds and moves the representative citizens.</summary>
     /// <param name="settlement">Current settlement state.</param>
-    /// <param name="simulationSeconds">Simulation time, which drives the citizens' routines.</param>
+    /// <param name="simulationSeconds">The crowds' time (ADR-049), which drives the citizens' routines.</param>
     /// <param name="camera">Camera position in the world.</param>
     /// <param name="followed">The villagers the gods follow, whose figures in the crowd they replace (ADR-043).</param>
     /// <returns>The settlement's tier and representatives.</returns>
@@ -120,7 +120,7 @@ internal sealed class SettlementView
         }
 
         _crowd.Advance(simulationSeconds, _terrain);
-        _citizens.Show(_crowd, settlement.Id, followed);
+        _citizens.Show(_crowd, settlement.Id, followed, distance);
         return _crowd.GetStatus(settlement.Population, distance);
     }
 

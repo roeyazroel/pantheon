@@ -71,7 +71,8 @@ internal sealed partial class VillagerController : Node
             if (!_views.TryGetValue(villager.Id, out var view) || view.GodColor != color)
             {
                 view?.Free();
-                view = new VillagerView(_layer, villager, _presentation.SettlementView.Citizens.ColorOf(Role(villager.Work)).ToGodot(), color);
+                var look = Pantheon.Game.Population.PersonLooks.Of(_presentation.SettlementView.People, world.Seed.Value, villager.SettlementId, villager.Slot ?? villager.Id, Role(villager.Work));
+                view = new VillagerView(_layer, villager, Pantheon.Client.Presentation.People.PersonAssets.For(_presentation.SettlementView), look, color);
                 _views[villager.Id] = view;
             }
 

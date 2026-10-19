@@ -19,16 +19,19 @@ public sealed class MigrationPresenter
     private readonly Dictionary<int, MigrationView> _views = [];
     private readonly HashSet<int> _seen = [];
     private readonly NotablePresenter _notables;
+    private readonly People.PersonAssets _people;
     private TerrainField? _terrain;
 
     /// <summary>Creates the presenter; nothing is shown until <see cref="Rebuild"/>.</summary>
     /// <param name="parent">Node that holds the groups.</param>
     /// <param name="view">God colours.</param>
-    public MigrationPresenter(Node3D parent, DivineViewSettings view)
+    /// <param name="people">The person figures, for the walkers and the notables (ADR-049).</param>
+    public MigrationPresenter(Node3D parent, DivineViewSettings view, People.PersonAssets people)
     {
         _parent = parent;
         _view = view;
-        _notables = new NotablePresenter(parent, view);
+        _people = people;
+        _notables = new NotablePresenter(parent, view, people);
     }
 
     /// <summary>Drops every view, for a new or loaded world.</summary>
@@ -61,7 +64,7 @@ public sealed class MigrationPresenter
             if (!_views.TryGetValue(group.Id, out var view) || view.Color != color)
             {
                 view?.Free();
-                view = new MigrationView(_parent, group.Id, color);
+                view = new MigrationView(_parent, group.Id, color, _people, world.Seed);
                 _views[group.Id] = view;
             }
 

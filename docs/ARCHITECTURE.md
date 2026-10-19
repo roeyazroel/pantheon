@@ -756,8 +756,12 @@ keep it in 0..1. A missing,
       through instance colours), rewritten only when their placements change;
     - `ConstructionSiteView`: the house being built, as scaffold poles, a timber pile, walls
       that rise during the first 70% of the work and a roof during the rest;
-    - `CitizenView`: the settlement's Tier 2 representatives in one MultiMesh of a two-surface
-      figure (a body tinted per role, a head), recoloured when the roster changes;
+    - `CitizenView`: the settlement's Tier 2 representatives as people (ADR-049), in one
+      MultiMesh of the person figure (`People/PersonAssets`, the simpler figure beyond
+      `DetailDistance`). Each instance carries its clothes and skin tone in its colour and its
+      motion's cycle, the motion, its lean and its look in its custom data, and
+      `Shaders/person.gdshader` swings the limbs about the hips and shoulders, bends the body,
+      sits it down, shows the tools and headwear and paints each colour slot;
     - `StyleView`: the village's religious style (ADR-042), one MultiMesh per kind of piece
       (flower beds, bushes, obelisks, glowing braziers, columns), rebuilt only when the style or
       the houses change.
@@ -1396,10 +1400,21 @@ running for every settlement either way.
   from rendezvous hashing over house indices and field slots, so a new house or field draws a
   share of the representatives and leaves everyone else in place. The hashes mix the seed, the
   settlement id and the representative index; no random stream is consumed.
-- `CitizenRoutine` gives each representative a closed-form schedule in simulation time: rest
+- `CitizenRoutine` gives each representative a closed-form schedule in the crowds' time: rest
   by the door, walk to work (the fields, a ring around the building site, or chores near
   home), work with a forward lean per stroke, walk to the shrine, gather facing it, walk home.
-  Walks bob once per stride. Given the crowd's ways (`ICitizenWays`, ADR-046), a walk follows its
+  Each pose carries its motion's `Cycle` (strides of two steps, work strokes, breaths or
+  prayers), and the body rises gently over each step.
+- `CrowdClock` (ADR-049, amending ADR-008) is the crowds' time, held by `GameSession.Crowds`: it
+  runs with the game but never faster than `PaceCap` times real time, and stops when paused, so
+  people keep a human pace at any game speed. It is never saved, and `VillagerCommands.Pick`
+  poses the figures by it, as the client draws them.
+- `PersonLooks` gives each person their skin, hair, clothes (by work), height and headwear (a
+  straw hat, a scarf) and a dress from `PresentationHash`; prophets and elders wear a robe of their
+  god's colour and carry a staff. `PersonMotions` maps what a figure does to a motion (sitting,
+  walking, hoeing, hammering, chores, praying). `PersonMesh` builds the figure in two levels of
+  detail, each vertex tagged with its part and colour slot. The tuning is `People` in
+  `settlement_view.json`. Given the crowd's ways (`ICitizenWays`, ADR-046), a walk follows its
   leg's way round obstacles, a little faster, so the leg keeps its straight line's time.
 - `LocalNavGrid` is a village's local navigation (§85, ADR-046), baked from its layout:
   - cells of `NavCellSize` metres; huts, ruins, the building site, the shrine, a built temple and
@@ -1431,9 +1446,11 @@ flowchart LR
     Camera["Camera distance"] --> Tier["TierSelector"]
     Tier --> Crowd["SettlementCrowd<br/>roster, catch-up, terrain heights"]
     Roster --> Crowd
-    Time["Simulation seconds"] --> Routine["CitizenRoutine.Evaluate"]
+    Time["CrowdClock<br/>real time, capped"] --> Routine["CitizenRoutine.Evaluate"]
     Routine --> Crowd
-    Crowd --> View["CitizenView<br/>one MultiMesh per settlement"]
+    Crowd --> View["CitizenView<br/>one MultiMesh of people per settlement"]
+    Looks["PersonLooks"] --> View
+    View --> Shader["person.gdshader<br/>limbs, poses, colours"]
 ```
 
 ```mermaid
@@ -2119,7 +2136,7 @@ flowchart LR
 ```
 
 - **Choosing.** `VillagerCommands.Pick` rebuilds the village's roster with `RepresentativeRoster`
-  and poses it with `CitizenRoutine` at the session's time, as the client draws it, and takes the
+  and poses it with `CitizenRoutine` at the crowds' time (ADR-049), as the client draws it, and takes the
   figure within 6 m of the cursor. The command carries the figure's home, work and shrine spots;
   `VillagerAuthority` checks them and draws the person from `SeedMixer` with the village and slot,
   so the same figure is the same person.

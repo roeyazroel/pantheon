@@ -49,7 +49,17 @@ internal static class SettlementReadout
             outlook.ExpectedBirths * stepsPerSecond,
             outlook.ExpectedDeaths * stepsPerSecond,
             FormatConstruction(rules, settlement, outlook, houses)));
-        lines.Add(FormatTier(FindCrowd(snapshot.Crowds, settlement.Id)));
+        var crowd = FindCrowd(snapshot.Crowds, settlement.Id);
+        lines.Add(FormatTier(crowd));
+        if (crowd is { Tier: SimulationTier.Regional } && snapshot.CrowdClock is { } clock)
+        {
+            lines.Add(Format(
+                "  people: their own clock at {0:0} s, running x{1:0.##} with the game at x{2:0.##}{3}",
+                clock.Seconds,
+                snapshot.IsPaused ? 0.0 : System.Math.Min(snapshot.TimeScale, clock.PaceCap),
+                snapshot.TimeScale,
+                snapshot.TimeScale > clock.PaceCap ? ", kept to a human pace" : string.Empty));
+        }
         if (FindCrowd(snapshot.Crowds, settlement.Id)?.Navigation is { } navigation)
         {
             lines.Add(Format("  local nav: {0} cells, {1} blocked; {2} ways searched, {3} round something", navigation.Cells, navigation.Blocked, navigation.Searches, navigation.Detours));

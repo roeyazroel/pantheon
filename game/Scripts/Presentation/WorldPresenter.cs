@@ -56,7 +56,11 @@ public sealed class WorldPresenter
         _debris = new DebrisPresenter(root.AddLayer("Debris"), content.SettlementView.Debris, () => _terrainField!);
         _camera = camera;
         Style = content.SettlementView.Style;
+        CrowdPace = content.SettlementView.Citizens.PaceCap;
     }
+
+    /// <summary>The crowds' pace cap (ADR-049): the most seconds of their routines in a real second.</summary>
+    public float CrowdPace { get; }
 
     /// <summary>How religion shows in villages (ADR-042), for the debug view.</summary>
     public Pantheon.Game.Presentation.StyleSettings Style { get; }
@@ -125,7 +129,7 @@ public sealed class WorldPresenter
 
     /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens near it.</summary>
     /// <param name="world">Current world.</param>
-    /// <param name="simulationSeconds">Simulation time, which drives the citizens' routines.</param>
+    /// <param name="simulationSeconds">The crowds' time (ADR-049), which drives the citizens' routines.</param>
     /// <param name="camera">Camera position in the world.</param>
     public void UpdateCitizens(WorldState world, double simulationSeconds, Vector3 camera) =>
         _settlements.UpdateCitizens(world, simulationSeconds, camera);

@@ -77,7 +77,7 @@ public sealed class SettlementPresenter
 
     /// <summary>Chooses each settlement's tier from the camera and moves the representative citizens of those in Tier 2.</summary>
     /// <param name="world">Current world.</param>
-    /// <param name="simulationSeconds">Simulation time, which drives the citizens' routines.</param>
+    /// <param name="simulationSeconds">The crowds' time (ADR-049), which drives the citizens' routines.</param>
     /// <param name="camera">Camera position in the world.</param>
     public void UpdateCitizens(WorldState world, double simulationSeconds, Vector3 camera)
     {

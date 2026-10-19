@@ -10,6 +10,7 @@ namespace Pantheon.Client.Presentation.Notables;
 public sealed class NotablePresenter
 {
     private readonly Node3D _parent;
+    private readonly People.PersonAssets _people;
     private readonly DivineViewSettings _view;
     private readonly Dictionary<int, NotableView> _views = [];
     private readonly HashSet<int> _seen = [];
@@ -17,10 +18,12 @@ public sealed class NotablePresenter
     /// <summary>Creates the presenter.</summary>
     /// <param name="parent">Node that holds the notables; whoever owns it frees its children for a new world.</param>
     /// <param name="view">God colours.</param>
-    public NotablePresenter(Node3D parent, DivineViewSettings view)
+    /// <param name="people">The person figures.</param>
+    public NotablePresenter(Node3D parent, DivineViewSettings view, People.PersonAssets people)
     {
         _parent = parent;
         _view = view;
+        _people = people;
     }
 
     /// <summary>Forgets every view, whose nodes the owner has freed, for a new or loaded world.</summary>
@@ -42,7 +45,7 @@ public sealed class NotablePresenter
             {
                 // An elder who turns takes their new god's colour.
                 view?.Free();
-                view = new NotableView(_parent, notable, color);
+                view = new NotableView(_parent, notable, color, _people, world.Seed);
                 _views[notable.Id] = view;
             }
 

@@ -434,10 +434,13 @@ famine. Food runs out, your followers' doubt rises, and unless you help them som
 and if the land cannot feed the newcomers, health falls and deaths rise until it can.
 
 Near the camera (within 450 m of a settlement), the settlement switches to Tier 2 and shows
-representative citizens: one figure per inhabitant, up to 300, each standing for several
-people in a larger settlement. Farmers (red) work in the fields, builders (amber) at the
-building site and villagers (blue) do chores near home. Each follows a repeating round: rest by
-the door, work, gather at the shrine, go home. They find their way round the huts, the shrine,
+representative citizens: one person per inhabitant, up to 300, each standing for several
+people in a larger settlement (ADR-049). Each looks their own: skin, hair, height and clothes
+vary, many farmers wear straw hats, some people a scarf or a long dress. Farmers hoe the fields,
+builders hammer at the building site and villagers do chores near home. Each follows a repeating
+round: sit by the door, work, pray at the shrine with raised arms, go home. They walk at a human
+pace whatever the game's speed, on a clock of their own that stops when the game is paused, and
+the F1 panel shows it. They find their way round the huts, the shrine,
 the temple and water on the village's local navigation grid (ADR-046), so nobody walks through a
 wall. The citizens are derived from the settlement's numbers and never saved. Beyond 550 m the settlement shows only its houses, building site and
 fields (Tier 1); the simulation is the same in both tiers. Balance values are in

@@ -8,4 +8,5 @@ namespace Pantheon.Game.Population;
 /// <param name="Lean">Forward lean in radians while working.</param>
 /// <param name="Bounce">Height of the walking bob above the ground, in metres.</param>
 /// <param name="Activity">What it is doing.</param>
-public readonly record struct RoutinePose(Vector2 Ground, float Yaw, float Lean, float Bounce, CitizenActivity Activity);
+/// <param name="Cycle">How far its motion has gone, in cycles (ADR-049): strides of two steps while walking, strokes while working, breaths or prayers otherwise.</param>
+public readonly record struct RoutinePose(Vector2 Ground, float Yaw, float Lean, float Bounce, CitizenActivity Activity, float Cycle = 0f);

@@ -69,6 +69,9 @@ public sealed class GameSession
     /// <summary>Fixed-step simulation clock.</summary>
     public SimulationScheduler Scheduler { get; }
 
+    /// <summary>The time the village crowds live by (ADR-049): presentation only, never saved.</summary>
+    public Population.CrowdClock Crowds { get; } = new();
+
     /// <summary>The god the local player controls: the first god with a human controller, or a joined player's god.</summary>
     public int? LocalGodId { get; private set; }
 

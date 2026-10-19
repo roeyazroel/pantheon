@@ -27,13 +27,16 @@
     "RegionalTierEnterDistance": 450.0,
     "RegionalTierExitDistance": 550.0,
 
-    // Routine (simulated seconds): rest by the door, walk to work, work, walk to the shrine,
-    // gather, walk home. Rerouted citizens hurry to their new route at CatchUpSpeed (m/s).
-    "WalkSpeed": 1.4,
-    "CatchUpSpeed": 4.0,
-    "RestSeconds": 20.0,
-    "WorkSeconds": 45.0,
-    "GatherSeconds": 15.0,
+    // Routine: sit by the door, walk to work, work, walk to the shrine, pray, walk home. It runs on
+    // the crowds' own clock (ADR-049): with the game, but never more than PaceCap seconds of routine
+    // a real second, so people walk at a human pace however fast the world runs, and stop when it
+    // is paused. Rerouted citizens hurry to their new route at CatchUpSpeed (m/s).
+    "WalkSpeed": 1.3,
+    "CatchUpSpeed": 2.6,
+    "PaceCap": 1.0,
+    "RestSeconds": 50.0,
+    "WorkSeconds": 110.0,
+    "GatherSeconds": 30.0,
 
     // Spots: in front of the door, chores around home, a share of each field's side, a ring
     // around the building site and a ring around the shrine.
@@ -44,13 +47,13 @@
     "GatherRadiusMin": 4.0,
     "GatherRadiusMax": 8.5,
 
-    // Figures: a bob per stride while walking, a lean per work stroke (radians), and a size
-    // above life so they read from the god's-eye view.
-    "StrideLength": 0.75,
-    "StepBounce": 0.07,
-    "WorkLean": 0.45,
-    "WorkStrokesPerSecond": 0.8,
-    "FigureScale": 1.4,
+    // Figures: a step of StrideLength metres with a gentle rise of StepBounce, a lean per work
+    // stroke (radians), and a size a little above life so they read from the god's-eye view.
+    "StrideLength": 0.8,
+    "StepBounce": 0.035,
+    "WorkLean": 0.4,
+    "WorkStrokesPerSecond": 0.7,
+    "FigureScale": 1.15,
 
     // Local navigation (spec section 85, ADR-046): figures find their way round huts, the shrine, the
     // temple and water on a grid of NavCellSize metres, keeping NavClearance metres from walls.
@@ -59,6 +62,33 @@
     "FarmerColor": "#a8483a",
     "BuilderColor": "#e09a2a",
     "VillagerColor": "#4a6cb0"
+  },
+
+  // People (spec sections 61 and 80, ADR-049): each person's skin, hair, clothes, height and
+  // headwear come from a hash of who they are. Clothes are by work: farmers in earth colours, builders
+  // in greys and browns, everyone else in dyed linen. Some farmers wear straw hats and some builders
+  // and villagers a scarf; some farmers and villagers a long dress. Beyond DetailDistance metres a
+  // village's people use a simpler figure. Walking swings the legs LegSwing and the arms ArmSwing
+  // radians each way.
+  "People": {
+    "SkinTones": ["#f3d5bc", "#e2b893", "#c99068", "#a06d47", "#74492c", "#4b2e1c"],
+    "HairColors": ["#1c1511", "#3b2719", "#5e3c22", "#8f5f33", "#c9a66b", "#9a948c"],
+    "FarmerClothes": ["#a08155", "#7f6c3e", "#9a5f3b", "#6e7346", "#b9a073", "#8a6a48"],
+    "BuilderClothes": ["#7d736a", "#8f5d3e", "#5f5850", "#a6896b", "#6f4f3c"],
+    "VillagerClothes": ["#5d7290", "#6f8b6c", "#d9d0ba", "#8c5c6c", "#4f6b7b", "#b07a4a", "#c9b48a"],
+    "Trousers": "#4a3e31",
+    "Straw": "#d8bd72",
+    "Leather": "#3a2a1d",
+    "Wood": "#8c6b46",
+    "FarmerHatChance": 0.6,
+    "BuilderScarfChance": 0.35,
+    "VillagerScarfChance": 0.3,
+    "DressChance": 0.4,
+    "MinHeight": 0.9,
+    "MaxHeight": 1.07,
+    "DetailDistance": 170.0,
+    "LegSwing": 0.42,
+    "ArmSwing": 0.36
   },
 
   // Religion's look (spec section 61, ADR-042). The god most of a village follows gives it a motif:

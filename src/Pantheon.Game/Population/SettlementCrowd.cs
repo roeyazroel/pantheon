@@ -98,8 +98,8 @@ public sealed class SettlementCrowd : ICitizenWays
         _rosterInputs = inputs;
     }
 
-    /// <summary>Poses every representative for the simulation time, standing on the terrain.</summary>
-    /// <param name="simulationSeconds">Simulation time in seconds.</param>
+    /// <summary>Poses every representative for the crowds' time (<see cref="CrowdClock"/>), standing on the terrain.</summary>
+    /// <param name="simulationSeconds">The crowds' time in seconds.</param>
     /// <param name="terrain">Terrain, for the figures' heights.</param>
     public void Advance(double simulationSeconds, TerrainField terrain)
     {
@@ -112,7 +112,7 @@ public sealed class SettlementCrowd : ICitizenWays
         {
             var pose = Follow(i, CitizenRoutine.Evaluate(_roster[i], simulationSeconds, _settings.Citizens, this), maxStep, simulationSeconds);
             var height = terrain.SampleHeight(pose.Ground.X, pose.Ground.Y) + pose.Bounce;
-            _poses[i] = new CitizenPose(new Vector3(pose.Ground.X, height, pose.Ground.Y), pose.Yaw, pose.Lean, pose.Activity);
+            _poses[i] = new CitizenPose(new Vector3(pose.Ground.X, height, pose.Ground.Y), pose.Yaw, pose.Lean, pose.Activity, pose.Cycle);
         }
     }
 
@@ -172,7 +172,8 @@ public sealed class SettlementCrowd : ICitizenWays
                 GroundMath.YawAlong(gap),
                 0f,
                 CitizenRoutine.Bounce((float)(seconds * _settings.Citizens.CatchUpSpeed), _settings.Citizens),
-                CitizenActivity.Walking);
+                CitizenActivity.Walking,
+                CitizenRoutine.Strides((float)(seconds * _settings.Citizens.CatchUpSpeed), _settings.Citizens));
         _shown[index] = pose.Ground;
         return pose;
     }

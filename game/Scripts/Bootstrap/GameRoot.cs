@@ -92,7 +92,7 @@ public partial class GameRoot : Node3D
         _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
         _weather = new WeatherPresenter(worldNode.AddLayer("Weather"), presentation.WeatherView, content.Weather, GetNodeOrNull<DirectionalLight3D>("Sun"), GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment);
         _disasters = new DisasterPresenter(worldNode.AddLayer("Disasters"), _camera, content.Disasters.Hazards);
-        _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView);
+        _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView, Pantheon.Client.Presentation.People.PersonAssets.For(presentation.SettlementView));
         var hand = DivineHand.Create();
         worldNode.AddChild(hand);
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
@@ -184,7 +184,8 @@ public partial class GameRoot : Node3D
         _debug.Performance.Simulate(_session, delta);
         _debug.Performance.Frame(delta);
         _presenter.Sync(_session.World, delta);
-        _presenter.UpdateCitizens(_session.World, _session.SimulationSeconds, _camera.ViewCamera.GlobalPosition);
+        var crowds = _session.Crowds.Advance(delta, _session.Scheduler.TimeScale, _session.Scheduler.IsPaused, _presenter.CrowdPace);
+        _presenter.UpdateCitizens(_session.World, crowds, _camera.ViewCamera.GlobalPosition);
 
         _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId, _divine.HeldCreatureAt(_camera.CursorGroundPoint));
         var focus = new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);

@@ -1,5 +1,7 @@
 using System;
 using Godot;
+using Pantheon.Client.Presentation.People;
+using Pantheon.Game.Population;
 using Pantheon.Domain.Migration;
 using Pantheon.Domain.World;
 using Pantheon.Game.Migration;
@@ -16,7 +18,6 @@ internal sealed class MigrationView
 {
     private const float FollowRate = 3f;
     private const float Spacing = 3.2f;
-    private const float StrideHertz = 1.6f;
     private const int PeoplePerFigure = 3;
     private const int MinFigures = 3;
     private const int MaxFigures = 24;
@@ -26,17 +27,15 @@ internal sealed class MigrationView
     private const float LabelHideDistance = 1100f;
     private const float LabelFadeMargin = 200f;
 
-    private static readonly CapsuleMesh Figure = new()
-    {
-        Radius = 0.7f,
-        Height = 2.8f,
-        RadialSegments = 8,
-        Rings = 2,
-        Material = new StandardMaterial3D { VertexColorUseAsAlbedo = true, Roughness = 0.9f },
-    };
+    // The walkers are drawn a little larger than life, as the crowds are, so they read from afar.
+    private const float FigureScale = 1.3f;
 
     private readonly Node3D _root;
     private readonly MultiMesh _figures;
+    private readonly PersonAssets _people;
+    private readonly WorldSeed _seed;
+    private readonly int _groupId;
+    private float _strides;
     private readonly DeclutteredLabel _label;
     private Vector3 _shown;
     private float _heading;
@@ -47,11 +46,14 @@ internal sealed class MigrationView
     /// <param name="parent">Node that holds the groups.</param>
     /// <param name="groupId">The group's id.</param>
     /// <param name="color">Its main god's colour.</param>
-    public MigrationView(Node3D parent, int groupId, Color color)
+    /// <param name="people">The person figures.</param>
+    /// <param name="seed">The world seed, for the walkers' looks.</param>
+    public MigrationView(Node3D parent, int groupId, Color color, PersonAssets people, WorldSeed seed)
     {
+        (_people, _seed, _groupId) = (people, seed, groupId);
         _root = new Node3D { Name = "Group_" + groupId };
         parent.AddChild(_root);
-        _figures = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseColors = true, Mesh = Figure };
+        _figures = people.NewMultiMesh();
         _root.AddChild(new MultiMeshInstance3D { Name = "People", Multimesh = _figures });
         _label = new DeclutteredLabel
         {
@@ -88,7 +90,9 @@ internal sealed class MigrationView
     public void Sync(MigrationGroup group, WorldState world, TerrainField terrain, float delta, bool running)
     {
         var target = Ground(terrain, group.Position.X, group.Position.Z);
+        var before = _shown;
         _shown = _placed ? _shown.Lerp(target, 1f - Mathf.Exp(-FollowRate * delta)) : target;
+        _strides += _placed ? new Vector2(_shown.X - before.X, _shown.Z - before.Z).Length() / (2f * _people.StrideLength * FigureScale) : 0f;
         _placed = true;
         var next = group.Path.Count > 0 ? group.Path[0] : group.Position;
         var (dx, dz) = (next.X - _shown.X, next.Z - _shown.Z);
@@ -111,28 +115,40 @@ internal sealed class MigrationView
     /// <summary>Frees the group's nodes.</summary>
     public void Free() => _root.QueueFree();
 
-    /// <summary>Places the walkers two abreast behind the group's head, bobbing as they walk.</summary>
+    /// <summary>Places the walkers two abreast behind the group's head, each in step with the ground covered, out of step with the others.</summary>
     private void Walk(TerrainField terrain, int count)
     {
         if (_figures.InstanceCount != count)
         {
             _figures.InstanceCount = count;
+            for (var i = 0; i < count; i++)
+            {
+                _figures.SetInstanceColor(i, PersonAssets.InstanceColor(Look(i)));
+            }
         }
 
         var back = new Vector3(-MathF.Sin(_heading), 0f, -MathF.Cos(_heading));
         var side = new Vector3(back.Z, 0f, -back.X);
-        var basis = new Basis(Vector3.Up, _heading);
+        var moving = _strides != _lastStrides;
+        _lastStrides = _strides;
         for (var i = 0; i < count; i++)
         {
             var row = i / 2;
             var offset = (back * (row * Spacing)) + (side * (((i % 2) - 0.5f) * Spacing * 0.8f));
             var world = _shown + offset;
             var ground = Mathf.Max(terrain.SampleHeight(world.X, world.Z), 0f) - _shown.Y;
-            var bob = MathF.Abs(MathF.Sin((_clock * StrideHertz * MathF.PI) + (i * 1.3f))) * 0.18f;
-            _figures.SetInstanceTransform(i, new Transform3D(basis, new Vector3(offset.X, ground + 1.4f + bob, offset.Z)));
-            _figures.SetInstanceColor(i, Color.Darkened((i % 3) * 0.12f));
+            var look = Look(i);
+            var basis = new Basis(Vector3.Up, _heading).Scaled(Vector3.One * FigureScale * look.Height);
+            _figures.SetInstanceTransform(i, new Transform3D(basis, new Vector3(offset.X, ground, offset.Z)));
+            var motion = moving ? PersonMotion.Walking : PersonMotion.Standing;
+            _figures.SetInstanceCustomData(i, PersonAssets.InstanceCustom(motion, moving ? _strides + (i * 0.37f) : _clock * 0.25f, 0f, look));
         }
     }
+
+    private float _lastStrides;
+
+    /// <summary>A walker's look: the people of a group look as varied as a village's.</summary>
+    private PersonLook Look(int index) => PersonLooks.Of(_people.Settings, _seed.Value, -1_000_000 - _groupId, index, CitizenRole.Villager);
 
     /// <summary>The ground (or sea surface) point under a position.</summary>
     private static Vector3 Ground(TerrainField terrain, float x, float z) => new(x, Mathf.Max(terrain.SampleHeight(x, z), 0f), z);
