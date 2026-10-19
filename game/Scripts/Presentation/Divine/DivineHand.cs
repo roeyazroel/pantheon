@@ -71,7 +71,7 @@ internal sealed partial class DivineHand : Node3D
         });
         hand._held = new Node3D { Name = "Held", Position = new Vector3(0f, -0.55f, 0.3f) };
         hand.AddChild(hand._held);
-        foreach (var kind in new[] { HeldKind.Rock, HeldKind.Tree, HeldKind.Villagers })
+        foreach (var kind in new[] { HeldKind.Rock, HeldKind.Tree, HeldKind.Villagers, HeldKind.Offering })
         {
             var thing = HeldThing.Create(kind);
             thing.Visible = false;
@@ -99,7 +99,7 @@ internal sealed partial class DivineHand : Node3D
     /// <param name="kind">What it was.</param>
     public void Fling(Vector3 target, HeldKind kind)
     {
-        if (kind == HeldKind.Creature || GetParent() is not Node3D world)
+        if (kind is HeldKind.Creature or HeldKind.Offering || GetParent() is not Node3D world)
         {
             Press(target);
             return;

@@ -198,7 +198,7 @@ public sealed partial record LaunchOptions
             case "hand":
                 return Enum.TryParse<HandAtStart>(trimmed, ignoreCase: true, out var hand) && Enum.IsDefined(hand) && !int.TryParse(trimmed, out _)
                     ? options with { Hand = hand }
-                    : Warn(options, warnings, $"'--hand' needs villagers or creature, got '{value}'.");
+                    : Warn(options, warnings, $"'--hand' needs villagers, creature or offering, got '{value}'.");
             case "victory":
                 return ParseVictory(trimmed) is { } victory
                     ? options with { Victory = victory }

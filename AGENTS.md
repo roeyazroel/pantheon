@@ -143,7 +143,7 @@ rule is followed by the conventions that meet it in this repository.
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
   F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), L (a
   flood), M
-  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), ; (the next great event), R and Shift+R (the hand lifts, sets down and throws), Tab (the Book of the World: world, religion, miracles, Creature), ` (the strategic overview), the launch
+  (people leave the village at the cursor) and K (the nearest Creature comes to yours), J (the council meets), T (veiled casting), Y (the next season), I (the next hazard at the cursor), ; (the next great event), R, Shift+R and Ctrl+R (the hand lifts, sets down, throws and takes offerings), Tab (the Book of the World: world, religion, miracles, Creature), ` (the strategic overview), the launch
   options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,

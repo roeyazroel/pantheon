@@ -8,4 +8,7 @@ public enum HandAtStart
 
     /// <summary>The player's own Creature.</summary>
     Creature,
+
+    /// <summary>An offering from the focused settlement's stores (ADR-039).</summary>
+    Offering,
 }

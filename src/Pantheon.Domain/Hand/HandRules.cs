@@ -59,6 +59,30 @@ public sealed record HandRules
     /// <summary>What a village struck by something thrown, and those who saw it, feel.</summary>
     public BeliefImpulse Smiting { get; init; } = new() { Faith = 0.02f, Love = -0.1f, Fear = 0.2f, Doubt = 0f };
 
+    /// <summary>The share of a village's food, wood and stone an offering takes (ADR-039).</summary>
+    public float OfferingShare { get; init; } = 0.25f;
+
+    /// <summary>The most food an offering holds.</summary>
+    public float OfferingFood { get; init; } = 80f;
+
+    /// <summary>The most wood an offering holds.</summary>
+    public float OfferingWood { get; init; } = 20f;
+
+    /// <summary>The most stone an offering holds.</summary>
+    public float OfferingStone { get; init; } = 12f;
+
+    /// <summary>What a village feels when its god takes its offering.</summary>
+    public BeliefImpulse Offered { get; init; } = new() { Faith = 0.03f, Love = 0.02f, Fear = 0f, Doubt = -0.01f };
+
+    /// <summary>What a village given an offering feels, at its fullest need; half as much when it lacks nothing.</summary>
+    public BeliefImpulse Gift { get; init; } = new() { Faith = 0.04f, Love = 0.12f, Fear = 0f, Doubt = -0.04f };
+
+    /// <summary>Hunger an offering eases in the god's Creature, per unit of food.</summary>
+    public float CreatureFeedPerFood { get; init; } = 0.01f;
+
+    /// <summary>Loyalty the god's Creature gains when fed from its hand.</summary>
+    public float CreatureFeedLoyalty { get; init; } = 0.02f;
+
     /// <summary>What a village sees when a tree is planted beside it.</summary>
     public BeliefImpulse Planting { get; init; } = new() { Faith = 0.01f, Love = 0.03f, Fear = 0f, Doubt = 0f };
 

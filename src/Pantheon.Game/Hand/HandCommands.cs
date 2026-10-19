@@ -4,17 +4,18 @@ using Pantheon.Domain.World;
 
 namespace Pantheon.Game.Hand;
 
-/// <summary>The player's Divine Hand (spec §55, ADR-030): R picks up or sets down at the cursor, Shift+R throws. Each returns a status line.</summary>
+/// <summary>The player's Divine Hand (spec §55, ADR-030): R picks up or sets down at the cursor, Shift+R throws, Ctrl+R takes an offering (ADR-039). Each returns a status line.</summary>
 public static class HandCommands
 {
-    /// <summary>What R does now: pick up with an empty hand, set down (or throw) what it holds.</summary>
+    /// <summary>What R does now: pick up with an empty hand (take an offering with Ctrl), set down (or throw) what it holds.</summary>
     /// <param name="session">The session.</param>
     /// <param name="shift">Whether Shift is held, to throw.</param>
+    /// <param name="ctrl">Whether Ctrl is held, to take an offering.</param>
     /// <returns>The action.</returns>
-    public static HandAction ActionFor(GameSession session, bool shift)
+    public static HandAction ActionFor(GameSession session, bool shift, bool ctrl = false)
     {
         ArgumentNullException.ThrowIfNull(session);
-        return session.LocalGod?.Held is null ? HandAction.PickUp : shift ? HandAction.Throw : HandAction.SetDown;
+        return session.LocalGod?.Held is null ? (ctrl ? HandAction.TakeOffering : HandAction.PickUp) : shift ? HandAction.Throw : HandAction.SetDown;
     }
 
     /// <summary>Uses the local player's hand at a point; a joined player asks the host.</summary>
@@ -41,9 +42,15 @@ public static class HandCommands
         ArgumentNullException.ThrowIfNull(session);
         var world = session.World;
         var before = world.Gods.Find(g => g.Id == godId)?.Held;
-        var rejection = session.Command((authorities, events) => authorities.Hand?.Execute(world, new HandCommand(godId, action, target), events) ?? HandRejection.NoHand);
-        return rejection == HandRejection.None
-            ? new CommandOutcome(true, HandText.Done(world, godId, action, before ?? world.Gods.Find(g => g.Id == godId)?.Held))
-            : new CommandOutcome(false, HandText.Describe(rejection));
+        Domain.Events.OfferingGiven? given = null;
+        var rejection = session.Command((authorities, events) =>
+        {
+            var verdict = authorities.Hand?.Execute(world, new HandCommand(godId, action, target), events) ?? HandRejection.NoHand;
+            given = System.Linq.Enumerable.LastOrDefault(System.Linq.Enumerable.OfType<Domain.Events.OfferingGiven>(events));
+            return verdict;
+        });
+        return rejection != HandRejection.None ? new CommandOutcome(false, HandText.Describe(rejection))
+            : given is not null ? new CommandOutcome(true, HandText.Given(world, given))
+            : new CommandOutcome(true, HandText.Done(world, godId, action, before ?? world.Gods.Find(g => g.Id == godId)?.Held));
     }
 }

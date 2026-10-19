@@ -13,6 +13,9 @@ public enum HandAction
 
     /// <summary>Throws what the hand holds at the point.</summary>
     Throw,
+
+    /// <summary>Takes an offering from the stores of a village the god leads (ADR-039).</summary>
+    TakeOffering,
 }
 
 /// <summary>Why the hand could not do what was asked (spec §73).</summary>
@@ -47,6 +50,12 @@ public enum HandRejection
 
     /// <summary>The Creature is in the middle of a fight.</summary>
     CreatureFighting,
+
+    /// <summary>No village the god leads, with anything in store, lies at the point (ADR-039).</summary>
+    NoOffering,
+
+    /// <summary>An offering is given only to a village or to the god's Creature (ADR-039).</summary>
+    NoPlaceForOffering,
 }
 
 /// <summary>A god's use of its Divine Hand at a point.</summary>

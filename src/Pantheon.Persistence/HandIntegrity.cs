@@ -28,5 +28,11 @@ internal static class HandIntegrity
         {
             errors.Add($"God {god.Id}'s hand holds something unknown, an amount out of range, villagers from no settlement, or a Creature it does not have.");
         }
+
+        if (!(held.Food is >= 0f and < float.PositiveInfinity) || !(held.Wood is >= 0f and < float.PositiveInfinity) || !(held.Stone is >= 0f and < float.PositiveInfinity)
+            || (held.Kind != HeldKind.Offering && (held.Food > 0f || held.Wood > 0f || held.Stone > 0f)))
+        {
+            errors.Add($"God {god.Id}'s hand holds stores out of range, or stores in something that is not an offering (ADR-039).");
+        }
     }
 }

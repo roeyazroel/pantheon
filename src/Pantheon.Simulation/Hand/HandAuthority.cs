@@ -15,7 +15,7 @@ namespace Pantheon.Simulation.Hand;
 /// <summary>
 /// Checks and carries out what gods do with their Divine Hands (spec §55, §73, ADR-030): lifting
 /// villagers, the god's Creature, a tree or a rock where the god's influence reaches, and setting it
-/// down or throwing it. Villagers lifted out of danger and set down safe love the god for it;
+/// down or throwing it; and taking and giving offerings (ADR-039). Villagers lifted out of danger and set down safe love the god for it;
 /// villagers taken from a safe home, and the villages things are thrown at, fear it.
 /// </summary>
 public sealed class HandAuthority
@@ -24,6 +24,7 @@ public sealed class HandAuthority
     private readonly DivineRules _divine;
     private readonly SettlementRules _settlements;
     private readonly HandCreatures _creatures;
+    private readonly HandOfferings _offerings;
 
     /// <summary>Creates the authority.</summary>
     /// <param name="rules">Hand rules.</param>
@@ -38,6 +39,7 @@ public sealed class HandAuthority
         _divine = divine;
         _settlements = settlements;
         _creatures = new HandCreatures(rules);
+        _offerings = new HandOfferings(rules, divine, settlements);
     }
 
     /// <summary>Checks a use of the hand and, if allowed, carries it out.</summary>
@@ -62,6 +64,7 @@ public sealed class HandAuthority
             HandAction.PickUp => PickUp(world, god!, command.Target, events),
             HandAction.SetDown => SetDown(world, god!, god!.Held!, command.Target, thrown: false, events),
             HandAction.Throw => SetDown(world, god!, god!.Held!, command.Target, thrown: true, events),
+            HandAction.TakeOffering => _offerings.Take(world, god!, command.Target),
         };
     }
 
@@ -83,9 +86,10 @@ public sealed class HandAuthority
             return HandRejection.OffTheWorld;
         }
 
-        if (command.Action == HandAction.PickUp ? god.Held is not null : god.Held is null)
+        var lifting = command.Action is HandAction.PickUp or HandAction.TakeOffering;
+        if (lifting ? god.Held is not null : god.Held is null)
         {
-            return command.Action == HandAction.PickUp ? HandRejection.HandFull : HandRejection.HandEmpty;
+            return lifting ? HandRejection.HandFull : HandRejection.HandEmpty;
         }
 
         return InfluenceField.Build(_divine, world, god.Id).At(command.Target) < _rules.MinInfluence ? HandRejection.NoInfluence : HandRejection.None;
@@ -144,6 +148,12 @@ public sealed class HandAuthority
     {
         world.Regions.TryGetRegionIdAt(target.X, target.Z, out var regionId);
         var sea = world.Regions.Cells[regionId].Biome == Biome.Sea;
+        if (held.Kind == HeldKind.Offering)
+        {
+            // An offering is given, not hurled: thrown, it lands as gently (ADR-039).
+            return _offerings.Give(world, god, held, target, events);
+        }
+
         if (held.Kind == HeldKind.Creature)
         {
             if (sea)

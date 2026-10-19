@@ -173,7 +173,7 @@ internal sealed class DivineController
     /// <summary>Uses the hand at the cursor (R, ADR-030): picks up, sets down, or with Shift throws what it holds.</summary>
     /// <param name="cursor">Ground point under the cursor.</param>
     /// <param name="shift">Whether Shift is held.</param>
-    public void UseHand(NVector3? cursor, bool shift)
+    public void UseHand(NVector3? cursor, bool shift, bool ctrl = false)
     {
         if (cursor is not { } point)
         {
@@ -182,7 +182,7 @@ internal sealed class DivineController
         }
 
         var held = _session.LocalGod?.Held;
-        var action = Pantheon.Game.Hand.HandCommands.ActionFor(_session, shift);
+        var action = Pantheon.Game.Hand.HandCommands.ActionFor(_session, shift, ctrl);
         var status = Pantheon.Game.Hand.HandCommands.Use(_session, action, new GroundPosition(point.X, point.Z));
         _setStatus(status);
         if (action == Pantheon.Domain.Hand.HandAction.Throw && held is not null && _session.LocalGod?.Held is null)

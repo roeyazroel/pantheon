@@ -23,6 +23,31 @@ public static class HandText
             HeldKind.Rock => "a rock",
             HeldKind.Tree => "a tree",
             HeldKind.Creature => world.Creatures.Find(c => c.GodId == godId)?.Name ?? "your Creature",
+            HeldKind.Offering => "an offering of " + Goods(held.Food, held.Wood, held.Stone) + " from " + (world.Settlements.Find(s => s.Id == held.SettlementId)?.Name ?? "a lost village"),
+        };
+    }
+
+    /// <summary>Stores in words, leaving out what there is none of.</summary>
+    /// <param name="food">Food.</param>
+    /// <param name="wood">Wood.</param>
+    /// <param name="stone">Stone.</param>
+    /// <returns>For example "40 food, 8 wood and 3 stone".</returns>
+    public static string Goods(float food, float wood, float stone)
+    {
+        var parts = new System.Collections.Generic.List<string>();
+        foreach (var (amount, name) in new[] { (food, "food"), (wood, "wood"), (stone, "stone") })
+        {
+            if (amount >= 0.5f)
+            {
+                parts.Add(Format("{0:0} {1}", amount, name));
+            }
+        }
+
+        return parts.Count switch
+        {
+            0 => "nothing",
+            1 => parts[0],
+            _ => string.Join(", ", parts.GetRange(0, parts.Count - 1)) + " and " + parts[^1],
         };
     }
 
@@ -43,6 +68,7 @@ public static class HandText
         var thing = Thing(world, godId, held);
         return action switch
         {
+            HandAction.TakeOffering => Format("You take {0}. R gives it to the village or your Creature you point at", thing),
             HandAction.PickUp => held.Kind == HeldKind.Villagers && held.FromDanger
                 ? Format("You lift {0} out of danger. R sets them down, Shift+R throws", thing)
                 : Format("You lift {0}. R sets {1} down, Shift+R throws", thing, held.Kind == HeldKind.Villagers ? "them" : "it"),
@@ -52,9 +78,29 @@ public static class HandText
                 HeldKind.Tree => "You plant the tree",
                 HeldKind.Rock => "You set the rock down",
                 HeldKind.Creature => Format("You set {0} down", thing),
+                HeldKind.Offering => "You give the offering",
             },
             HandAction.Throw => Format("You hurl {0}", thing),
         };
+    }
+
+    /// <summary>Where an offering went (ADR-039).</summary>
+    /// <param name="world">World state, for names.</param>
+    /// <param name="given">The offering given.</param>
+    /// <returns>For example "You give Elar 40 food and 8 wood" or "Bramble eats the offering's 40 food".</returns>
+    public static string Given(WorldState world, Domain.Events.OfferingGiven given)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(given);
+        if (given.ToCreatureId is { } id)
+        {
+            return Format("{0} eats the offering's {1:0} food", world.Creatures.Find(c => c.Id == id)?.Name ?? "Your Creature", given.Food);
+        }
+
+        var place = world.Settlements.Find(s => s.Id == given.ToSettlementId)?.Name ?? "a lost village";
+        return given.ToSettlementId == given.FromSettlementId
+            ? Format("You give {0} back its own offering", place)
+            : Format("You give {0} {1}", place, Goods(given.Food, given.Wood, given.Stone));
     }
 
     /// <summary>Why the hand could not do it.</summary>
@@ -72,6 +118,8 @@ public static class HandText
         HandRejection.NoHand => "Gods have no hands in this world",
         HandRejection.NotOnLand => "Set your Creature down on land",
         HandRejection.CreatureFighting => "Your Creature is fighting and will not be lifted",
+        HandRejection.NoOffering => "Ctrl+R takes an offering from a village of yours with something in store",
+        HandRejection.NoPlaceForOffering => "Give the offering to a village or to your Creature",
     };
 
     /// <summary>Invariant-culture formatting.</summary>

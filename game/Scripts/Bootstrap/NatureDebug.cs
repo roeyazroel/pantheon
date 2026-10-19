@@ -106,7 +106,7 @@ internal sealed class NatureDebug
 
         if (options.Hand is { } hand && (hand == HandAtStart.Creature ? _session.LocalCreature?.Position : focus) is { } grip)
         {
-            _setStatus(Pantheon.Game.Hand.HandCommands.Use(_session, Pantheon.Domain.Hand.HandAction.PickUp, grip));
+            _setStatus(Pantheon.Game.Hand.HandCommands.Use(_session, hand == HandAtStart.Offering ? Pantheon.Domain.Hand.HandAction.TakeOffering : Pantheon.Domain.Hand.HandAction.PickUp, grip));
         }
 
         if (options.GreatEvent is { } great && focus is { } site)

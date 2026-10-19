@@ -64,6 +64,7 @@ internal static class PowerAlerts
         HeldKind.Tree => "a tree",
         HeldKind.Villagers => "people",
         HeldKind.Creature => "a Creature",
+        HeldKind.Offering => "an offering",
     };
 
     /// <summary>Where a thrown thing lands.</summary>

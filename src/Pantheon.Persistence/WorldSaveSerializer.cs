@@ -39,9 +39,10 @@ public static class WorldSaveSerializer
     /// events; version 26 (part 15) added the ancient beast, the anomaly and great events' places;
     /// version 27 (part 16) added the gods each god knows, its goals and its next plan; version 28
     /// (part 17) added Creatures' courage, protectiveness, jealousy and playfulness; version 29
-    /// (part 18) added the generation's landforms.
+    /// (part 18) added the generation's landforms; version 30 (part 19) added the stores of an
+    /// offering in a god's hand.
     /// </summary>
-    public const int CurrentSaveVersion = 29;
+    public const int CurrentSaveVersion = 30;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

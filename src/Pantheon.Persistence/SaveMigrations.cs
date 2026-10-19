@@ -151,6 +151,9 @@ internal static class SaveMigrations
             case 28:
                 LandformSaveMigration.UpgradeFrom28(root);
                 break;
+            case 29:
+                OfferingSaveMigration.UpgradeFrom29(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

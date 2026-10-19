@@ -17,6 +17,9 @@ public enum HeldKind
 
     /// <summary>The god's own Creature.</summary>
     Creature,
+
+    /// <summary>An offering from a village's stores: food, wood and stone (ADR-039).</summary>
+    Offering,
 }
 
 /// <summary>What a god's Divine Hand holds now (spec §55, ADR-030).</summary>
@@ -28,7 +31,7 @@ public sealed class HeldObject
     /// <summary>How many people, for villagers; 1 for anything else.</summary>
     public required int Amount { get; init; }
 
-    /// <summary>The settlement villagers were lifted from; <c>null</c> for anything else.</summary>
+    /// <summary>The settlement villagers or an offering were taken from; <c>null</c> for anything else.</summary>
     public int? SettlementId { get; init; }
 
     /// <summary>Whether villagers were lifted out of danger (a fire, a flood, shaking ground, a burning mountain).</summary>
@@ -42,4 +45,13 @@ public sealed class HeldObject
 
     /// <summary>The tick it was picked up.</summary>
     public required long Tick { get; init; }
+
+    /// <summary>The food an offering holds (ADR-039).</summary>
+    public float Food { get; init; }
+
+    /// <summary>The wood an offering holds (ADR-039).</summary>
+    public float Wood { get; init; }
+
+    /// <summary>The stone an offering holds (ADR-039).</summary>
+    public float Stone { get; init; }
 }

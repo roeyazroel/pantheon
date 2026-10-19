@@ -246,7 +246,7 @@ public partial class GameRoot : Node3D
         (InputActions.CreatureReward, () => _divine.JudgeCreature(CreatureCommandKind.Reward)),
         (InputActions.CreaturePunish, () => _divine.JudgeCreature(CreatureCommandKind.Punish)),
         (InputActions.CreatureSend, () => _divine.SendCreature(_camera.CursorGroundPoint)),
-        (InputActions.HandGrab, () => _divine.UseHand(_camera.CursorGroundPoint, Input.IsKeyPressed(Key.Shift))),
+        (InputActions.HandGrab, () => _divine.UseHand(_camera.CursorGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),

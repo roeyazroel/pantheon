@@ -322,8 +322,8 @@ files and compiled assemblies and fails when either rule is broken.
   fights and disasters) and `CreatureAttributes` (intelligence, resilience, divine affinity) are the
   paths and attributes of ADR-030.
 - `Hand/`: `HandAuthority` checks and carries out the Divine Hand's commands, with `HandModel`
-  (belief), `HandCarry` (villagers set down), `HandThrow` (things thrown) and `HandCreatures` (the
-  Creature lifted). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
+  (belief), `HandCarry` (villagers set down), `HandThrow` (things thrown), `HandCreatures` (the
+  Creature lifted) and `HandOfferings` (offerings taken and given, ADR-039). See [Paths, the hand and the Divine Acts](#paths-the-hand-and-the-divine-acts).
 - `Miracles/DivineActs`: hallowing the land, waking the volcano and stilling every disaster
   (ADR-030), applied by `MiracleEffects`.
 - `GreatEvents/`: `PlagueModel` (ripeness, course, shield, catching, cure), `EclipseModel`,
@@ -422,7 +422,8 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Networking (`Pantheon.Networking`)
 
-- `NetworkProtocol`: the protocol version (17 since ADR-038, whose regions and generation carry the
+- `NetworkProtocol`: the protocol version (18 since ADR-039, for the hand's offering and its
+  action; 17 since ADR-038, whose regions and generation carry the
   new biomes and landforms; 16 since ADR-037, whose Creatures carry their new traits;
   15 since ADR-036, whose Gods section carries the gods
   each knows and its goals; 14 since ADR-035, whose GreatEvents section carries the
@@ -489,7 +490,8 @@ and gives the events under way no place. Version 26 → 27 (`PlanSaveMigration`)
 every other, hold no goal and plan on its next turn; `PlanIntegrity` checks known gods and goals.
 Version 27 → 28 (`TemperamentSaveMigration`) gives every Creature 0.5 of courage, protectiveness,
 jealousy and playfulness. Version 28 → 29 (`LandformSaveMigration`) gives the generation no
-landforms, so the terrain grows as it was. A missing,
+landforms, so the terrain grows as it was. Version 29 → 30 (`OfferingSaveMigration`) gives
+whatever a hand holds no stores. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -597,7 +599,7 @@ landforms, so the terrain grows as it was. A missing,
 - `Notables/NotableText` words prophets and elders and `Notables/NotableCommands` raises a prophet
   (`--prophet`); `Alerts/NotableAlerts` tells of them, `Book/NotableSection` lists them on the
   World and Religion pages, and `Diagnostics/NotableReadout` gives their F1 lines (ADR-032).
-- `Hand/HandCommands` uses the player's hand (R, Shift+R, `HandIntent` for a joined player) and
+- `Hand/HandCommands` uses the player's hand (R, Shift+R, Ctrl+R for an offering, `HandIntent` for a joined player) and
   `Hand/HandText` words it; `Alerts/PowerAlerts` tells of hands, paths and Divine Acts (ADR-030).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
   `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging,
@@ -1753,7 +1755,7 @@ flowchart LR
     callings --> grow[CreatureCalling.Grow at levels 3, 6 and 9]
     grow --> paths[CreatureState.Specialisations]
     paths --> effects[CallingEffects: deeds, fights, disasters]
-    key[R and Shift+R] --> hand[HandAuthority]
+    key[R, Shift+R and Ctrl+R] --> hand[HandAuthority]
     hand --> held[GodState.Held]
     hand --> carry[HandCarry: join, walk or drown]
     hand --> throw[HandThrow: ruin, crater, fear]
@@ -1774,6 +1776,10 @@ flowchart LR
   and the god's influence, then lifts the nearest of the Creature and villagers, else a tree or a
   rock, sets it down or throws it. It is one of the `Authorities`, so the player's commands and a
   joined player's `HandIntent` take the same path.
+- **Offerings (ADR-039).** `HandAction.TakeOffering` has `HandOfferings` take a share of the stores
+  of a village the god leads. Setting it down or throwing it gives it to the nearer of a village
+  (stores, and gratitude by its food need) or the god's Creature (its hunger and loyalty), and
+  raises `OfferingGiven`.
 - **Divine Acts.** `MiracleScale.DivineAct` miracles leave the miracle bar
   (`HudReadout.AvailableMiracles`) for the Domains panel, which selects them for the targeting ring.
   `MiracleEffects` hallows regions and calls `DivineActs` to wake the volcano or still every
@@ -2057,11 +2063,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 29 (current)
+    alt version 30 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 28
+    else versions 1 to 29
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 29, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms)
+        Mig-->>Save: JsonObject at version 30, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

@@ -3,7 +3,7 @@ using Pantheon.Domain.Hand;
 
 namespace Pantheon.Client.Presentation.Divine;
 
-/// <summary>What the Divine Hand holds, drawn (presentation only, ADR-030): a rock, a tree or a few villagers, and their flight when thrown.</summary>
+/// <summary>What the Divine Hand holds, drawn (presentation only, ADR-030): a rock, a tree, a few villagers or an offering's basket (ADR-039), and their flight when thrown.</summary>
 internal sealed partial class HeldThing : Node3D
 {
     private const float FlightSeconds = 0.7f;
@@ -35,6 +35,13 @@ internal sealed partial class HeldThing : Node3D
                     thing.AddChild(Mesh(new CapsuleMesh { Radius = 0.08f, Height = 0.36f }, Clothes[i], new Vector3(-0.27f + (i * 0.18f), 0f, (i % 2) * 0.12f)));
                 }
 
+                break;
+            case HeldKind.Offering:
+                // A wicker basket heaped with grain and fruit, a log across it (ADR-039).
+                thing.AddChild(Mesh(new CylinderMesh { TopRadius = 0.32f, BottomRadius = 0.24f, Height = 0.3f, RadialSegments = 10 }, new Color(0.62f, 0.45f, 0.24f), new Vector3(0f, -0.1f, 0f)));
+                thing.AddChild(Mesh(new SphereMesh { Radius = 0.27f, Height = 0.24f, RadialSegments = 10, Rings = 4 }, new Color(0.9f, 0.75f, 0.3f), new Vector3(0f, 0.07f, 0f)));
+                thing.AddChild(Mesh(new SphereMesh { Radius = 0.08f, Height = 0.16f }, new Color(0.75f, 0.2f, 0.15f), new Vector3(0.1f, 0.17f, 0.05f)));
+                thing.AddChild(Mesh(new CylinderMesh { TopRadius = 0.05f, BottomRadius = 0.05f, Height = 0.7f }, new Color(0.45f, 0.3f, 0.17f), new Vector3(0f, 0.15f, -0.08f)) is var log ? Rotated(log) : null!);
                 break;
             case HeldKind.Creature:
                 break;
@@ -74,6 +81,13 @@ internal sealed partial class HeldThing : Node3D
         {
             QueueFree();
         }
+    }
+
+    /// <summary>A mesh laid on its side.</summary>
+    private static MeshInstance3D Rotated(MeshInstance3D mesh)
+    {
+        mesh.RotationDegrees = new Vector3(0f, 0f, 90f);
+        return mesh;
     }
 
     /// <summary>A plain coloured mesh.</summary>

@@ -365,6 +365,7 @@ covers:
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
 | Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
+| Your hand takes an offering from a village that follows you (R gives it) | Ctrl+R |
 | Show or hide the diplomacy panel | P |
 | Show or hide the Divine Council: the vote in session, decrees, and motions to table | U |
 | Toggle region boundaries | B |
@@ -477,6 +478,12 @@ its cooldown); hover over a button to read what it does.
     the world will see you so.
   - **Your Creature:** it waits in your hand until you set it down; thrown, it is hurt and resents
     it.
+  - **Offerings (Ctrl+R):** your hand takes an offering from the stores of a village that follows
+    you: a quarter of its food, wood and stone, and its people are glad you accept it (ADR-039).
+    - R gives it to the village or your Creature you point at.
+    - A village's stores fill, and it is grateful by its need, so feed the starving from the rich.
+    - Your Creature eats the food and is the more loyal for it, and the wood and stone go home.
+    - Generous gods are seen as generous.
 - **Divine Acts.** A Greater God can do the dearest miracles of all, from the Domains panel (G):
   Hallow the Land (its blessing never fades), Wake the Volcano and Still the World (every quake,
   fire, flood, storm, swarm, blight and drought ends at once). The world's history remembers each.
@@ -1342,7 +1349,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--stores=full\|empty` | Every village's wood and stone start full or empty. |
 | `--great-event=plague\|eclipse\|reformation\|beast\|anomaly` | Start a great event at the start: the plague in the focused settlement, an eclipse, your faith's reformation, the beast's waking or the anomaly at the focused settlement; the camera looks at the beast or the anomaly. |
 | `--prophet=on\|off` | A prophet of your god rises at the focused settlement at the start (for captures). |
-| `--hand=villagers\|creature` | Your hand lifts villagers of the focused settlement, or your Creature, at the start (for captures). |
+| `--hand=villagers\|creature\|offering` | Your hand lifts villagers of the focused settlement, your Creature, or an offering from the focused settlement's stores, at the start (for captures). |
 | `--debug-panel=on\|off` | Show or hide the F1 debug panel at the start. |
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm\|heatwave\|coldwave\|hurricane` | Start in a weather spell, or with a storm or a hurricane over the focused settlement. |
@@ -1457,7 +1464,7 @@ start with nobody sick and no great event, and set their first eclipse when load
 find their beast's lair and set their first anomaly when loaded. In saves from before part 16
 every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
 start with middling courage, protectiveness, jealousy and playfulness. Worlds from before part 18
-keep their four biomes. Saves from before part 13
+keep their four biomes. Hands from before part 19 hold no offering. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
