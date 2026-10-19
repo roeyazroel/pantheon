@@ -15,6 +15,9 @@ public sealed record CreatureCard
     /// <summary>Loyalty and what its deeds add up to.</summary>
     public required string Temperament { get; init; }
 
+    /// <summary>How it regards the Creatures it has met (ADR-017).</summary>
+    public required string Bonds { get; init; }
+
     /// <summary>What a reward or punishment would judge now, or why there is nothing to judge.</summary>
     public required string JudgeHint { get; init; }
 

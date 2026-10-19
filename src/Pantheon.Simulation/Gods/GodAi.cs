@@ -28,6 +28,9 @@ public sealed class GodAi
     private const float MaxPopulationFactor = 2f;
     private const float JudgeThreshold = 0.3f;
 
+    // An AI god sends its Creature against an enemy Creature only when it is at least this sure of it (power and health).
+    private const float MatchConfidence = 0.8f;
+
     private readonly GodAiRules _rules;
     private readonly DivineRules _divine;
     private readonly MiracleBook _book;
@@ -161,12 +164,37 @@ public sealed class GodAi
             return;
         }
 
-        var approval = CreatureModel.RuleFor(_creatureRules, judged.Action).Kindness * profile.CreatureKindness;
+        var approval = SocialApproval(world, god, judged.Action, judged.Memory.OtherCreatureId)
+            ?? (CreatureModel.RuleFor(_creatureRules, judged.Action).Kindness * profile.CreatureKindness);
         var kind = approval >= JudgeThreshold ? CreatureCommandKind.Reward : approval <= -JudgeThreshold ? CreatureCommandKind.Punish : (CreatureCommandKind?)null;
         if (kind is { } command)
         {
             _creatures.Execute(world, new CreatureCommand(god.Id, id, command), god.Id, events);
         }
+    }
+
+    /// <summary>
+    /// What any god makes of its Creature's dealings with another god's Creature (ADR-017): fighting
+    /// an enemy's Creature and playing with an ally's are good; fighting an ally's and playing with an
+    /// enemy's are not. With neither, the deed is judged by its kindness.
+    /// </summary>
+    private static float? SocialApproval(WorldState world, GodState god, CreatureAction action, int? otherCreatureId)
+    {
+        if (otherCreatureId is not { } id || world.Creatures.Find(c => c.Id == id) is not { } other)
+        {
+            return null;
+        }
+
+        var war = DiplomacyModel.AreAtWar(world, god.Id, other.GodId);
+        var allied = DiplomacyModel.AreAllied(world, god.Id, other.GodId);
+        return action switch
+        {
+            CreatureAction.Fight when war => 1f,
+            CreatureAction.Fight when allied => -1f,
+            CreatureAction.Befriend when war => -1f,
+            CreatureAction.Befriend when allied => 1f,
+            _ => null,
+        };
     }
 
     /// <summary>Adds the cast of a miracle on a settlement, when it is allowed and worth something.</summary>
@@ -301,7 +329,7 @@ public sealed class GodAi
     private void AddSendCreature(List<AiCandidate> candidates, WorldState world, GodState god, GodProfile profile)
     {
         if (profile.SendCreature <= 0f || god.CreatureId is not { } id || world.Creatures.Find(c => c.Id == id) is not { } creature
-            || creature.Activity.Phase == CreaturePhase.Banished || creature.Activity.Action == CreatureAction.GoTo || !IsFitToSend(creature))
+            || creature.Activity.Phase == CreaturePhase.Banished || creature.Activity.Action == CreatureAction.GoTo || CreatureBrain.IsEngaged(creature) || !IsFitToSend(creature))
         {
             return;
         }
@@ -325,6 +353,54 @@ public sealed class GodAi
         {
             var value = profile.SendCreature * bestCourt;
             candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, best.Id, best.Position, value, 0f, value, Format("court {0} {1:0.00}", best.Name, value)));
+        }
+
+        AddConfrontCreature(candidates, world, god, profile, creature);
+    }
+
+    /// <summary>
+    /// Adds sending the Creature against the Creature of a god at war with this one (ADR-017): worth
+    /// more the more of this god's people it threatens (Protect) and the more warlike the god
+    /// (Aggression), and only when its own Creature is a match for it.
+    /// </summary>
+    private void AddConfrontCreature(List<AiCandidate> candidates, WorldState world, GodState god, GodProfile profile, CreatureState creature)
+    {
+        if (_creatureRules is null)
+        {
+            return;
+        }
+
+        foreach (var enemy in world.Creatures)
+        {
+            if (enemy.GodId == god.Id || enemy.Activity.Phase == CreaturePhase.Banished || !DiplomacyModel.AreAtWar(world, god.Id, enemy.GodId))
+            {
+                continue;
+            }
+
+            var confidence = CreatureBonds.Confidence(_creatureRules, creature, enemy);
+            var dx = enemy.Position.X - creature.Position.X;
+            var dz = enemy.Position.Z - creature.Position.Z;
+            if (confidence < MatchConfidence || MathF.Sqrt((dx * dx) + (dz * dz)) <= _creatureRules.Bonds.MeetRadius)
+            {
+                continue;
+            }
+
+            var threat = 0f;
+            foreach (var settlement in world.Settlements)
+            {
+                var sx = settlement.Position.X - enemy.Position.X;
+                var sz = settlement.Position.Z - enemy.Position.Z;
+                if ((sx * sx) + (sz * sz) <= _creatureRules.PerceptionRadius * _creatureRules.PerceptionRadius)
+                {
+                    threat = Math.Max(threat, BeliefModel.Find(settlement, god.Id)?.Adherence ?? 0f);
+                }
+            }
+
+            var value = profile.SendCreature * ((profile.Protect * threat) + (0.5f * profile.Aggression)) * confidence;
+            if (value > 0f)
+            {
+                candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, null, enemy.Position, value, 0f, value, Format("confront {0} {1:0.00}", enemy.Name, value)));
+            }
         }
     }
 

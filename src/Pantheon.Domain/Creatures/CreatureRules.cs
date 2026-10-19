@@ -105,6 +105,12 @@ public sealed record CreatureRules
 
     /// <summary>The preferences a new Creature is born with (spec §25's "initially").</summary>
     public required IReadOnlyList<PreferenceSeed> StartingPreferences { get; init; }
+
+    /// <summary>How Creatures meet and regard each other (ADR-017).</summary>
+    public required CreatureBondRules Bonds { get; init; }
+
+    /// <summary>How Creatures fight (ADR-017).</summary>
+    public required CreatureCombatRules Combat { get; init; }
 }
 
 /// <summary>How one Creature action plays out.</summary>
@@ -119,7 +125,8 @@ public sealed record CreatureActionRule
     /// <summary>
     /// Its size, times the Creature's strength where it does work: food given (Feed), food eaten
     /// from the stores (EatFromStores), builder-steps (HelpBuild), people killed (Attack), metres
-    /// wandered (Wander); unused otherwise.
+    /// wandered (Wander) or run (Flee); unused otherwise. A fight's <see cref="Seconds"/> is its
+    /// longest length.
     /// </summary>
     public required float Amount { get; init; }
 

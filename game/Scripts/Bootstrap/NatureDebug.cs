@@ -5,6 +5,7 @@ using Pantheon.Client.Camera;
 using Pantheon.Domain.Weather;
 using Pantheon.Domain.World;
 using Pantheon.Game;
+using Pantheon.Game.Creatures;
 using Pantheon.Game.Disasters;
 using Pantheon.Game.Launch;
 using Pantheon.Game.Migration;
@@ -13,10 +14,10 @@ using Pantheon.Game.Weather;
 namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
-/// The debug drivers of weather, disasters and migration (ADR-013, ADR-014, ADR-016): the F8, F10,
-/// F11, F12 and M hotkeys and the <c>--weather</c>, <c>--disaster</c>, <c>--migrate</c> and
-/// <c>--refugees</c> launch options. Every change goes through the engine-agnostic commands; this
-/// class only wires them to input.
+/// The debug drivers of weather, disasters, migration and Creature meetings (ADR-013, ADR-014,
+/// ADR-016, ADR-017): the F8, F10, F11, F12, M and K hotkeys and the <c>--weather</c>,
+/// <c>--disaster</c>, <c>--migrate</c>, <c>--refugees</c> and <c>--meet</c> launch options. Every
+/// change goes through the engine-agnostic commands; this class only wires them to input.
 /// </summary>
 internal sealed class NatureDebug
 {
@@ -44,6 +45,7 @@ internal sealed class NatureDebug
         (InputActions.DebugQuake, () => AtCursor("start an earthquake", point => DisasterCommands.StartQuake(_session, point))),
         (InputActions.DebugFire, () => AtCursor("start a fire", point => DisasterCommands.StartFire(_session, point))),
         (InputActions.DebugMigrate, () => AtCursor("send people away", point => MigrationCommands.SendFrom(_session, point))),
+        (InputActions.DebugMeet, () => _setStatus(CreatureCommands.BringOther(_session))),
     ];
 
     /// <summary>Sets up the weather, disaster, refugee policy and migration the launch options ask for, at the focused settlement where a place is needed.</summary>
@@ -65,6 +67,11 @@ internal sealed class NatureDebug
         if (options.Migrate is { } people && focus is { } home)
         {
             _setStatus(MigrationCommands.SendFrom(_session, home, people));
+        }
+
+        if (options.Meet is { } name)
+        {
+            _setStatus(CreatureCommands.BringOther(_session, name));
         }
 
         if (options.Disaster is { } disaster && focus is { } place)

@@ -144,4 +144,45 @@ internal static class RecentSaveMigrations
             }
         }
     }
+
+    /// <summary>
+    /// Version 10 to 11 (Milestone 11): every Creature gains combat skill, scars and its views of the
+    /// other Creatures; its activity and memories may concern another Creature. Version 10 Creatures
+    /// had never dealt with each other, so they have no skill, scars or views, and nothing they did
+    /// concerned another Creature.
+    /// </summary>
+    internal static void UpgradeFrom10(JsonObject root)
+    {
+        if (root["World"] is not JsonObject world || world["Creatures"] is not JsonArray creatures)
+        {
+            return;
+        }
+
+        foreach (var node in creatures)
+        {
+            if (node is not JsonObject creature)
+            {
+                continue;
+            }
+
+            AddMember(creature, "CombatSkill", 0f, fromVersion: 10);
+            AddNode(creature, "Scars", 0, fromVersion: 10);
+            AddNode(creature, "Relations", new JsonArray(), fromVersion: 10);
+            if (creature["Activity"] is JsonObject activity)
+            {
+                AddNullMember(activity, "TargetCreatureId", fromVersion: 10);
+            }
+
+            if (creature["Memories"] is JsonArray memories)
+            {
+                foreach (var memory in memories)
+                {
+                    if (memory is JsonObject remembered)
+                    {
+                        AddNullMember(remembered, "OtherCreatureId", fromVersion: 10);
+                    }
+                }
+            }
+        }
+    }
 }

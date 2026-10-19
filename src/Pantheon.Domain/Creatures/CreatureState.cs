@@ -59,4 +59,13 @@ public sealed class CreatureState
 
     /// <summary>The settlement it calls home: it returns there after a banishment.</summary>
     public required int HomeSettlementId { get; set; }
+
+    /// <summary>How well it fights (spec §23's CombatSkill, 0..1): it grows with every fight (ADR-017).</summary>
+    public required float CombatSkill { get; set; }
+
+    /// <summary>Scars from defeats (spec §28); they never heal.</summary>
+    public required int Scars { get; set; }
+
+    /// <summary>How it regards the other Creatures it has met (spec §27), one entry per Creature.</summary>
+    public required List<CreatureRelation> Relations { get; init; }
 }

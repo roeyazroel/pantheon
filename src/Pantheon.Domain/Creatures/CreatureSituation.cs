@@ -26,4 +26,10 @@ public enum CreatureSituation
 
     /// <summary>Its god told it where to go.</summary>
     Commanded,
+
+    /// <summary>Another Creature is near, whose god is not at war with or hostile to its own (ADR-017).</summary>
+    MeetsCreature,
+
+    /// <summary>Another Creature is near, whose god is at war with or hostile to its own.</summary>
+    MeetsEnemyCreature,
 }

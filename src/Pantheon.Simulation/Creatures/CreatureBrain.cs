@@ -81,8 +81,146 @@ public sealed class CreatureBrain
             }
         }
 
+        AddCreatureOptions(options, world, creature);
         options.Sort(static (a, b) => b.Utility.CompareTo(a.Utility));
         return options;
+    }
+
+    /// <summary>
+    /// How the Creature answers another it meets (ADR-017): by its learned preferences for fighting,
+    /// playing, fleeing and walking on in that situation, its urges towards the other, its
+    /// personality and a little jitter. A Creature that came looking for the other keeps its purpose.
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="other">The one it meets.</param>
+    /// <param name="random">The simulation's random stream (for jitter).</param>
+    /// <returns><see cref="CreatureAction.Fight"/>, <see cref="CreatureAction.Befriend"/>, <see cref="CreatureAction.Flee"/> or <see cref="CreatureAction.Ignore"/>.</returns>
+    public CreatureAction Respond(WorldState world, CreatureState creature, CreatureState other, SimulationRandom random)
+    {
+        ArgumentNullException.ThrowIfNull(random);
+        ArgumentNullException.ThrowIfNull(other);
+        if (IsSeeking(creature, other.Id))
+        {
+            return creature.Activity.Action;
+        }
+
+        var options = ListResponses(world, creature, other);
+        var best = CreatureAction.Ignore;
+        var bestScore = float.MinValue;
+        foreach (var option in options)
+        {
+            var score = option.Utility + (_rules.DecisionJitter * random.NextFloat());
+            if (score > bestScore)
+            {
+                (best, bestScore) = (option.Action, score);
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>The answers the Creature weighs when it meets another, best first, without jitter (for decisions and the debug view).</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="other">The one it meets.</param>
+    /// <returns>Fight, play, flee and walk on, with their utilities.</returns>
+    public List<CreatureOption> ListResponses(WorldState world, CreatureState creature, CreatureState other)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(other);
+        var situation = CreatureBonds.SituationFor(world, creature, other);
+        var drives = CreatureBonds.Drives(_rules, world, creature, other);
+        var options = new List<CreatureOption>(4);
+        Add(options, creature, situation, CreatureAction.Fight, null, other.Position, drives.Fight, other.Id);
+        Add(options, creature, situation, CreatureAction.Befriend, null, other.Position, drives.Befriend, other.Id);
+        Add(options, creature, situation, CreatureAction.Flee, null, other.Position, drives.Flee, other.Id);
+        Add(options, creature, situation, CreatureAction.Ignore, null, creature.Position, drives.Ignore, other.Id);
+        options.Sort(static (a, b) => b.Utility.CompareTo(a.Utility));
+        return options;
+    }
+
+    /// <summary>Starts a fight or a game with another Creature, face to face, where the Creature stands (ADR-017).</summary>
+    /// <param name="creature">The Creature, which is changed.</param>
+    /// <param name="action"><see cref="CreatureAction.Fight"/> or <see cref="CreatureAction.Befriend"/>.</param>
+    /// <param name="situation">The situation it meets the other in.</param>
+    /// <param name="other">Its opponent or playmate.</param>
+    public void Engage(CreatureState creature, CreatureAction action, CreatureSituation situation, CreatureState other)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(other);
+        Start(creature, situation, action, null, other.Position, [], other.Id);
+        var dx = other.Position.X - creature.Position.X;
+        var dz = other.Position.Z - creature.Position.Z;
+        if ((dx * dx) + (dz * dz) > 1e-6f)
+        {
+            creature.Heading = MathF.Atan2(dx, dz);
+        }
+    }
+
+    /// <summary>Sends the Creature running from another, about <c>Flee.Amount</c> metres away from it.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature, which is changed.</param>
+    /// <param name="situation">The situation it meets the other in.</param>
+    /// <param name="from">The Creature it runs from.</param>
+    /// <param name="random">The simulation's random stream (for the direction).</param>
+    /// <returns><c>false</c> when there is nowhere to run, so it stays.</returns>
+    public bool Flee(WorldState world, CreatureState creature, CreatureSituation situation, CreatureState from, SimulationRandom random)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(from);
+        return TryStart(world, creature, new CreatureOption(situation, CreatureAction.Flee, null, from.Position, 0f, from.Id), random);
+    }
+
+    /// <summary>Whether the Creature is on its way to fight or play with another.</summary>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="otherId">The other Creature.</param>
+    /// <returns><c>true</c> while it seeks the other.</returns>
+    public static bool IsSeeking(CreatureState creature, int otherId)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        var activity = creature.Activity;
+        return activity.Phase == CreaturePhase.Travelling && activity.TargetCreatureId == otherId && activity.Action is CreatureAction.Fight or CreatureAction.Befriend;
+    }
+
+    /// <summary>Whether the Creature is fighting or playing with another now, so nothing else can draw it in.</summary>
+    /// <param name="creature">The Creature.</param>
+    /// <returns><c>true</c> while it is engaged.</returns>
+    public static bool IsEngaged(CreatureState creature)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        var activity = creature.Activity;
+        return activity.Phase == CreaturePhase.Performing && activity.TargetCreatureId is not null && activity.Action is CreatureAction.Fight or CreatureAction.Befriend;
+    }
+
+    /// <summary>Options to seek out the other Creatures in sight, to fight or play with them, and to flee those near.</summary>
+    private void AddCreatureOptions(List<CreatureOption> options, WorldState world, CreatureState creature)
+    {
+        var bonds = _rules.Bonds;
+        foreach (var other in world.Creatures)
+        {
+            if (other.Id == creature.Id || other.Activity.Phase == CreaturePhase.Banished || IsEngaged(other))
+            {
+                continue;
+            }
+
+            var distance = Distance(creature.Position, other.Position);
+            if (distance > bonds.SeekRadius || !CreatureBonds.CanMeet(bonds, CreatureBonds.Find(creature, other.Id), world.Tick))
+            {
+                continue;
+            }
+
+            var situation = CreatureBonds.SituationFor(world, creature, other);
+            var drives = CreatureBonds.Drives(_rules, world, creature, other);
+            var closeness = 1f / (1f + (distance / _rules.DistanceHalfUtility));
+            Add(options, creature, situation, CreatureAction.Fight, null, other.Position, drives.Fight * closeness, other.Id);
+            Add(options, creature, situation, CreatureAction.Befriend, null, other.Position, drives.Befriend * closeness, other.Id);
+            if (distance <= bonds.FleeRadius)
+            {
+                Add(options, creature, situation, CreatureAction.Flee, null, other.Position, drives.Flee * closeness, other.Id);
+            }
+        }
     }
 
     /// <summary>
@@ -197,7 +335,7 @@ public sealed class CreatureBrain
     }
 
     /// <summary>Adds an option scored by preference × drive × personality.</summary>
-    private static void Add(List<CreatureOption> options, CreatureState creature, CreatureSituation situation, CreatureAction action, int? settlementId, GroundPosition target, float drive)
+    private static void Add(List<CreatureOption> options, CreatureState creature, CreatureSituation situation, CreatureAction action, int? settlementId, GroundPosition target, float drive, int? creatureId = null)
     {
         if (drive <= 0f)
         {
@@ -206,7 +344,7 @@ public sealed class CreatureBrain
 
         var personality = CreatureModel.TraitOf(action) is { } trait ? 0.5f + CreatureModel.Get(creature.Personality, trait) : 1f;
         var utility = CreatureModel.Preference(creature, situation, action) * drive * personality;
-        options.Add(new CreatureOption(situation, action, settlementId, target, utility));
+        options.Add(new CreatureOption(situation, action, settlementId, target, utility, creatureId));
     }
 
     /// <summary>Plans the route to an option's target and starts it; wandering and ignoring pick a destination first.</summary>
@@ -214,10 +352,12 @@ public sealed class CreatureBrain
     {
         var target = option.Action switch
         {
-            CreatureAction.Wander => PickRoamTarget(world, creature.Position, creature.Position, random),
-            CreatureAction.Ignore => PickRoamTarget(world, creature.Position, option.Target, random, away: true),
+            CreatureAction.Wander => PickRoamTarget(world, creature.Position, creature.Position, random, CreatureAction.Wander),
+            CreatureAction.Ignore => PickRoamTarget(world, creature.Position, option.Target, random, CreatureAction.Wander, away: true),
+            CreatureAction.Flee => PickRoamTarget(world, creature.Position, option.Target, random, CreatureAction.Flee, away: true),
             CreatureAction.Forage or CreatureAction.Rest or CreatureAction.EatFromStores or CreatureAction.Feed
-                or CreatureAction.HelpBuild or CreatureAction.Play or CreatureAction.Attack or CreatureAction.GoTo => option.Target,
+                or CreatureAction.HelpBuild or CreatureAction.Play or CreatureAction.Attack or CreatureAction.GoTo
+                or CreatureAction.Fight or CreatureAction.Befriend => option.Target,
         };
         if (target is not { } destination)
         {
@@ -226,7 +366,7 @@ public sealed class CreatureBrain
 
         if (Distance(creature.Position, destination) < 0.5f)
         {
-            Start(creature, option.Situation, option.Action, option.SettlementId, destination, []);
+            Start(creature, option.Situation, option.Action, option.SettlementId, destination, [], option.CreatureId);
             return true;
         }
 
@@ -235,14 +375,14 @@ public sealed class CreatureBrain
             return false;
         }
 
-        Start(creature, option.Situation, option.Action, option.SettlementId, destination, path);
+        Start(creature, option.Situation, option.Action, option.SettlementId, destination, path, option.CreatureId);
         return true;
     }
 
-    /// <summary>A land point about <c>Wander.Amount</c> metres away, in a random direction (or away from a place).</summary>
-    private GroundPosition? PickRoamTarget(WorldState world, GroundPosition from, GroundPosition avoid, SimulationRandom random, bool away = false)
+    /// <summary>A land point about the action's <c>Amount</c> in metres away, in a random direction (or away from a place).</summary>
+    private GroundPosition? PickRoamTarget(WorldState world, GroundPosition from, GroundPosition avoid, SimulationRandom random, CreatureAction action, bool away = false)
     {
-        var distance = CreatureModel.RuleFor(_rules, CreatureAction.Wander).Amount;
+        var distance = CreatureModel.RuleFor(_rules, action).Amount;
         var baseAngle = MathF.Atan2(from.X - avoid.X, from.Z - avoid.Z);
         for (var i = 0; i < WanderAttempts; i++)
         {
@@ -258,12 +398,13 @@ public sealed class CreatureBrain
     }
 
     /// <summary>Starts an activity: travelling when there is a path, performing at once when it is already there.</summary>
-    private void Start(CreatureState creature, CreatureSituation situation, CreatureAction action, int? settlementId, GroundPosition target, List<GroundPosition> path)
+    private void Start(CreatureState creature, CreatureSituation situation, CreatureAction action, int? settlementId, GroundPosition target, List<GroundPosition> path, int? creatureId = null)
     {
         var activity = creature.Activity;
         activity.Action = action;
         activity.Situation = situation;
         activity.TargetSettlementId = settlementId;
+        activity.TargetCreatureId = creatureId;
         activity.Target = target;
         activity.Path.Clear();
         activity.Path.AddRange(path);

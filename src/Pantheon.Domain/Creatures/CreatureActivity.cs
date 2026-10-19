@@ -18,6 +18,9 @@ public sealed class CreatureActivity
     /// <summary>The settlement the action concerns, if any.</summary>
     public required int? TargetSettlementId { get; set; }
 
+    /// <summary>The Creature the action concerns, if any: the one it fights, plays with, seeks or flees (ADR-017).</summary>
+    public required int? TargetCreatureId { get; set; }
+
     /// <summary>Where the action takes place.</summary>
     public required GroundPosition Target { get; set; }
 

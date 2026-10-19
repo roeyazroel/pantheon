@@ -175,21 +175,89 @@ public sealed class GameSession
     }
 
     /// <summary>What a reward or punishment of the local Creature would judge now, if anything.</summary>
-    /// <returns>The situation, the action and the settlement it concerned, or <c>null</c>.</returns>
-    public (CreatureSituation Situation, CreatureAction Action, int? SettlementId)? FindJudgedAction()
+    /// <returns>The situation, the action, and the settlement or other Creature it concerned, or <c>null</c>.</returns>
+    public (CreatureSituation Situation, CreatureAction Action, int? SettlementId, int? OtherCreatureId)? FindJudgedAction()
     {
         if (LocalCreature is not { } creature || _authorities.Creatures.FindJudged(World, creature) is not { } judged)
         {
             return null;
         }
 
-        return (judged.Situation, judged.Action, judged.Memory is { } memory ? memory.SettlementId : creature.Activity.TargetSettlementId);
+        return judged.Memory is { } memory
+            ? (judged.Situation, judged.Action, memory.SettlementId, memory.OtherCreatureId)
+            : (judged.Situation, judged.Action, creature.Activity.TargetSettlementId, creature.Activity.TargetCreatureId);
     }
 
     /// <summary>The local Creature's options now, best first, for the debug view.</summary>
     /// <returns>The options; none without a Creature.</returns>
     public IReadOnlyList<CreatureOption> PreviewCreatureOptions() =>
         LocalCreature is { } creature ? _engine.Creatures!.Brain.ListOptions(World, creature) : [];
+
+    /// <summary>The Creature nearest the local Creature that is not banished, if any (ADR-017).</summary>
+    /// <returns>The Creature, or <c>null</c>.</returns>
+    public CreatureState? NearestOtherCreature()
+    {
+        if (LocalCreature is not { } mine)
+        {
+            return null;
+        }
+
+        CreatureState? nearest = null;
+        var best = float.MaxValue;
+        foreach (var other in World.Creatures)
+        {
+            var dx = other.Position.X - mine.Position.X;
+            var dz = other.Position.Z - mine.Position.Z;
+            var distance = (dx * dx) + (dz * dz);
+            if (other.Id != mine.Id && other.Activity.Phase != CreaturePhase.Banished && distance < best)
+            {
+                (nearest, best) = (other, distance);
+            }
+        }
+
+        return nearest;
+    }
+
+    /// <summary>How the local Creature would answer the nearest other Creature if they met now, best first, for the debug view.</summary>
+    /// <returns>The answers; none without two Creatures.</returns>
+    public IReadOnlyList<CreatureOption> PreviewCreatureResponses() =>
+        LocalCreature is { } mine && NearestOtherCreature() is { } other ? _engine.Creatures!.Brain.ListResponses(World, mine, other) : [];
+
+    /// <summary>
+    /// Debug (ADR-017): brings the nearest other Creature beside the local Creature, free to meet it
+    /// at once, as the M key brings migrants. The meeting itself happens in the simulation.
+    /// </summary>
+    /// <param name="name">The Creature to bring, by name (any case); the nearest when <c>null</c> or empty.</param>
+    /// <returns>The Creature brought, or <c>null</c> without such a Creature or room beside the local one.</returns>
+    public CreatureState? BringOtherCreature(string? name = null)
+    {
+        var other = string.IsNullOrEmpty(name)
+            ? NearestOtherCreature()
+            : World.Creatures.Find(c => c.Id != LocalCreature?.Id && c.Activity.Phase != CreaturePhase.Banished && string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (LocalCreature is not { Activity.Phase: not CreaturePhase.Banished } mine || other is null)
+        {
+            return null;
+        }
+
+        if (CreatureFounder.Beside(World.Regions, mine.Position) is not { } spot)
+        {
+            return null;
+        }
+
+        other.Position = spot;
+        other.Activity.Path.Clear();
+        other.Activity.Phase = CreaturePhase.Deciding;
+        other.Activity.TicksLeft = 0;
+        foreach (var view in new[] { CreatureBonds.Find(mine, other.Id), CreatureBonds.Find(other, mine.Id) })
+        {
+            if (view is not null)
+            {
+                view.LastMetTick = -1;
+            }
+        }
+
+        return other;
+    }
 
     /// <summary>
     /// Sends a diplomatic command from the local player's god to another god (spec §113, ADR-012); the

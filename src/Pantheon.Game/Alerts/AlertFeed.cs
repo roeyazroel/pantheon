@@ -148,6 +148,8 @@ public sealed class AlertFeed
                 return (Key("damage" + damage.Cause, settlement.Id), Format("{0} struck {1}: {2} destroyed, {3} dead.", Capitalize(DisasterText.Kind(damage.Cause)), settlement.Name, Count(damage.HousesLost, "house", "houses"), damage.Deaths), AlertSeverity.Danger, settlement.Position);
             case MigrationStarted or MigrationEnded or MigrantsTurnedAway or RefugeePolicyChanged:
                 return MigrationAlerts.Describe(worldEvent, world, localGodId);
+            case CreaturesMet or CreatureFightEnded:
+                return CreatureAlerts.Describe(worldEvent, world, localGodId);
             case StormStruck storm when Settlement(world, storm.SettlementId) is { } settlement && Concerns(settlement, localGodId):
                 return (Key("storm", settlement.Id), Format("A storm strikes {0}: its stores and building work are being ruined.", settlement.Name), AlertSeverity.Danger, settlement.Position);
             default:

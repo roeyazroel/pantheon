@@ -63,6 +63,7 @@ public sealed class DiplomacyLedger : IActRecorder
                 break;
             case DiplomaticAct.WrongedAlly:
             case DiplomaticAct.TurnedAway:
+            case DiplomaticAct.CreatureDefeated:
                 relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
                 relation.Rivalry = SimMath.Clamp01(relation.Rivalry + (_rules.HarmRivalry / 2f));
                 break;

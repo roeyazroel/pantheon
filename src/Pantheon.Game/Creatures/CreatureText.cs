@@ -25,7 +25,23 @@ public static class CreatureText
         CreatureAction.Attack => At("attacking", place),
         CreatureAction.Ignore => At("walking away from", place),
         CreatureAction.GoTo => "going where it was sent",
+        CreatureAction.Fight => With("fighting", place),
+        CreatureAction.Befriend => With("playing with", place),
+        CreatureAction.Flee => With("running from", place),
     };
+
+    /// <summary>The name of what an activity or memory concerns: its settlement, or the other Creature.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="settlementId">The settlement, if any.</param>
+    /// <param name="creatureId">The other Creature, if any.</param>
+    /// <returns>The name, or <c>null</c> when it concerns neither or they are gone.</returns>
+    public static string? Concerning(WorldState world, int? settlementId, int? creatureId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        return settlementId is { } id ? world.Settlements.Find(s => s.Id == id)?.Name
+            : creatureId is { } other ? world.Creatures.Find(c => c.Id == other)?.Name
+            : null;
+    }
 
     /// <summary>What the Creature is doing now, in a few words.</summary>
     /// <param name="creature">The Creature.</param>
@@ -36,11 +52,14 @@ public static class CreatureText
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentNullException.ThrowIfNull(world);
         var activity = creature.Activity;
-        var place = activity.TargetSettlementId is { } id ? world.Settlements.Find(s => s.Id == id)?.Name : null;
+        var place = Concerning(world, activity.TargetSettlementId, activity.TargetCreatureId);
         var doing = Doing(activity.Action, place);
         return activity.Phase switch
         {
             CreaturePhase.Deciding => "Thinking what to do",
+            CreaturePhase.Travelling when activity.Action == CreatureAction.Fight => "Going after " + (place ?? "another Creature"),
+            CreaturePhase.Travelling when activity.Action == CreatureAction.Befriend => "Going to play with " + (place ?? "another Creature"),
+            CreaturePhase.Travelling when activity.Action == CreatureAction.Flee => Capitalise(doing),
             CreaturePhase.Travelling => "On the way: " + doing,
             CreaturePhase.Performing => Capitalise(doing),
             CreaturePhase.Banished => string.Create(
@@ -72,6 +91,9 @@ public static class CreatureText
 
     /// <summary>"verb place", or the verb with "a settlement" when the place is unknown.</summary>
     private static string At(string verb, string? place) => $"{verb} {place ?? "a settlement"}";
+
+    /// <summary>"verb name", or the verb with "another Creature" when the Creature is unknown.</summary>
+    private static string With(string verb, string? name) => $"{verb} {name ?? "another Creature"}";
 
     /// <summary>Upper-cases the first letter.</summary>
     private static string Capitalise(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];

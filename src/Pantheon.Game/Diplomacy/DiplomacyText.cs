@@ -117,6 +117,7 @@ public static class DiplomacyText
                 .Replace("its followers", "your followers", StringComparison.Ordinal)
                 .Replace("betrayed it", "betrayed you", StringComparison.Ordinal)
                 .Replace("declared war on it", "declared war on you", StringComparison.Ordinal)
+                .Replace("let your Creature beat its Creature", "let its Creature beat yours", StringComparison.Ordinal)
                 .Replace("let your Creature", "let its Creature", StringComparison.Ordinal)
                 .Replace("wronged its ally", "wronged your ally", StringComparison.Ordinal))
             .ToList();
@@ -199,6 +200,7 @@ public static class DiplomacyText
             DiplomaticAct.WrongedAlly => "wronged its ally" + (where.Length > 0 ? " in" + where : string.Empty),
             DiplomaticAct.Sheltered => "took in its followers" + (where.Length > 0 ? " in" + where : string.Empty),
             DiplomaticAct.TurnedAway => "turned its followers away" + (where.Length > 0 ? " from" + where : string.Empty),
+            DiplomaticAct.CreatureDefeated => "let your Creature beat its Creature",
         };
     }
 

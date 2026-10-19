@@ -251,7 +251,7 @@ public static class HudReadout
         var world = session.World;
         var judged = session.FindJudgedAction();
         var needs = creature.Needs;
-        var place = judged?.SettlementId is { } id ? world.Settlements.Find(s => s.Id == id)?.Name : null;
+        var place = judged is { } subject ? CreatureText.Concerning(world, subject.SettlementId, subject.OtherCreatureId) : null;
         var morality = creature.Morality switch
         {
             > 0.3f => "kind",
@@ -263,7 +263,14 @@ public static class HudReadout
             Title = Format("{0} the {1} - level {2}", creature.Name, creature.Species, creature.Level),
             Doing = CreatureText.DescribeActivity(creature, world),
             Condition = Format("health {0:0%}   hunger {1:0%}   tiredness {2:0%}   boredom {3:0%}", creature.Health, needs.Hunger, needs.Fatigue, needs.Boredom),
-            Temperament = Format("loyalty {0:0%}   {1} ({2:+0.00;-0.00;0.00})", creature.Loyalty, morality, creature.Morality),
+            Temperament = Format(
+                "loyalty {0:0%}   {1} ({2:+0.00;-0.00;0.00})   combat skill {3:0%}{4}",
+                creature.Loyalty,
+                morality,
+                creature.Morality,
+                creature.CombatSkill,
+                creature.Scars switch { 0 => string.Empty, 1 => "   1 scar", _ => Format("   {0} scars", creature.Scars) }),
+            Bonds = CreatureBondText.Summary(session.Content.Creatures.Bonds, world, creature),
             JudgeHint = judged is { } j
                 ? Format("Reward or punish: {0}", CreatureText.Doing(j.Action, place))
                 : "Nothing to reward or punish right now",

@@ -38,4 +38,7 @@ public enum DiplomaticAct
 
     /// <summary>It turned away migrants who followed the remembering god (ADR-016).</summary>
     TurnedAway,
+
+    /// <summary>Its Creature defeated and banished the remembering god's Creature (ADR-017).</summary>
+    CreatureDefeated,
 }

@@ -15,6 +15,9 @@ public sealed class CreatureMemory
     /// <summary>The settlement it acted on, if any.</summary>
     public required int? SettlementId { get; init; }
 
+    /// <summary>The Creature it acted towards, if any (ADR-017).</summary>
+    public required int? OtherCreatureId { get; init; }
+
     /// <summary>The god's reward or punishment.</summary>
     public required CreatureFeedback Feedback { get; set; }
 }

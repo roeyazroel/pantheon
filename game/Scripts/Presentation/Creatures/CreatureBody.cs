@@ -13,6 +13,12 @@ internal sealed class CreatureBody
     private const float HipHeight = 1.6f;
     private const float ShoulderHeight = 4.7f;
 
+    // Scars drawn at most; more are not told apart.
+    private const int MostScarsShown = 6;
+
+    private readonly StandardMaterial3D _scar;
+    private int _scarsShown;
+
     /// <summary>Builds the body under a root node.</summary>
     /// <param name="root">Node that holds the body; it is moved and turned as a whole.</param>
     /// <param name="godColor">The god's colour.</param>
@@ -46,6 +52,7 @@ internal sealed class CreatureBody
             Add(Head, new CylinderMesh { TopRadius = 0.02f, BottomRadius = 0.28f, Height = 1.5f, Material = horn }, new Vector3(side * 0.75f, 1.1f, -0.1f), new Vector3(-0.35f, 0f, -side * 0.55f));
         }
 
+        _scar = Material(new Color(0.22f, 0.08f, 0.07f));
         LeftArm = Limb(Torso, "LeftArm", new Vector3(-1.85f, ShoulderHeight - HipHeight, 0.2f), hide, 0.5f, 2.6f);
         RightArm = Limb(Torso, "RightArm", new Vector3(1.85f, ShoulderHeight - HipHeight, 0.2f), hide, 0.5f, 2.6f);
         LeftLeg = Limb(root, "LeftLeg", new Vector3(-0.9f, HipHeight, 0f), hide, 0.6f, 1.9f);
@@ -73,6 +80,20 @@ internal sealed class CreatureBody
 
     /// <summary>The body's materials, for a flash of colour when it is slapped or praised.</summary>
     public StandardMaterial3D[] Materials { get; }
+
+    /// <summary>Draws the Creature's scars (spec §28): dark slashes on its flanks, one per defeat, up to six.</summary>
+    /// <param name="scars">How many scars it has.</param>
+    public void ShowScars(int scars)
+    {
+        var wanted = Mathf.Clamp(scars, 0, MostScarsShown);
+        for (; _scarsShown < wanted; _scarsShown++)
+        {
+            // Alternate flanks, rising, each slanting down towards the tail, where the god's camera sees them.
+            var side = _scarsShown % 2 == 0 ? -1f : 1f;
+            var height = 1.5f + (0.55f * (_scarsShown / 2));
+            Add(Torso, new BoxMesh { Size = new Vector3(0.12f, 0.16f, 1.4f), Material = _scar }, new Vector3(side * 1.66f, height, 0.1f), new Vector3(0.55f, 0f, 0f));
+        }
+    }
 
     /// <summary>A limb hanging from a pivot.</summary>
     private static Node3D Limb(Node3D parent, string name, Vector3 pivot, Material material, float radius, float length)

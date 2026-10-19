@@ -58,6 +58,7 @@ public static class CreatureFounder
                 Situation = CreatureSituation.Idle,
                 Phase = CreaturePhase.Deciding,
                 TargetSettlementId = null,
+                TargetCreatureId = null,
                 Target = position,
                 Path = [],
                 TicksLeft = 0,
@@ -65,7 +66,30 @@ public static class CreatureFounder
             Preferences = preferences,
             Memories = [],
             HomeSettlementId = home.Id,
+            CombatSkill = 0f,
+            Scars = 0,
+            Relations = [],
         };
+    }
+
+    /// <summary>A land point a few metres from a position, trying the four sides in turn (ADR-017's debug meeting).</summary>
+    /// <param name="grid">Region grid.</param>
+    /// <param name="center">The position.</param>
+    /// <returns>The point, or <c>null</c> when every side is water.</returns>
+    public static GroundPosition? Beside(RegionGrid grid, GroundPosition center)
+    {
+        ArgumentNullException.ThrowIfNull(grid);
+        const float near = 25f;
+        foreach (var (dx, dz) in new[] { (near, 0f), (-near, 0f), (0f, near), (0f, -near) })
+        {
+            var point = new GroundPosition(center.X + dx, center.Z + dz);
+            if (grid.TryGetRegionIdAt(point.X, point.Z, out var region) && RegionPathfinder.IsWalkable(grid.Cells[region]))
+            {
+                return point;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>A land point beside a settlement: east of it when that is land, else its centre.</summary>

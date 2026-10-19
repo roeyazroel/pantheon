@@ -117,19 +117,23 @@ rule is followed by the conventions that meet it in this repository.
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
 - Current tools: the F1 debug panel (gods, the god AI's goal and top candidates with reasons
   and its diplomatic moves with their factors, influence, the Creature's behaviour, needs,
-  options, learned weights and memories, the weather's spell and cells, earthquakes and fires,
+  options, learned weights and memories, every Creature's combat skill, scars and views of the
+  others, and how yours would meet the nearest one, the weather's spell and cells, earthquakes and fires,
   migration groups and refugee policies, the selected settlement's economy, tier, water, dangers,
   pressure to leave and belief),
-  the P diplomacy panel (status, each god's alliances, wars and refugee policy, attitude, memories,
-  grievances, every diplomatic move and your refugee policy), the B region grid, the F3 region
+  the P diplomacy panel (status, each god's alliances, wars and refugee policy, how your Creature
+  and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
+  your refugee policy), the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire and scorch), the O map overlays
   (influence, religion, faith, food, weather, danger, migration), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
-  F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire) and M
-  (people leave the village at the cursor), the launch options
+  F8 (next weather spell), F10 (a storm at the cursor), F11 (an earthquake), F12 (a fire), M
+  (people leave the village at the cursor) and K (the nearest Creature comes to yours), the launch
+  options
   `--seed`, `--load`, `--terrain`, `--advance-ticks`, `--camera-distance`, `--divine-power`,
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement or `creature`), `--judge`,
-  `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate` and `--refugees`,
+  `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees` and
+  `--meet`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`. The README lists them.
 

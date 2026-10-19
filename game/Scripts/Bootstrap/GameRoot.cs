@@ -392,6 +392,7 @@ public partial class GameRoot : Node3D
         LocalGodId = _session.LocalGodId,
         LocalCreatureId = _session.LocalCreature?.Id,
         CreatureOptions = _session.PreviewCreatureOptions(),
+        CreatureResponses = _session.PreviewCreatureResponses(),
         GodDiplomacyCandidates = _session.World.Gods
             .Where(god => god.Controller == GodController.Ai)
             .Select(god => (god.Id, _session.PreviewGodDiplomacy(god)))

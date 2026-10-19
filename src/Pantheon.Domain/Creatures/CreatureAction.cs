@@ -32,4 +32,13 @@ public enum CreatureAction
 
     /// <summary>Walks where its god told it to go, and waits there.</summary>
     GoTo,
+
+    /// <summary>Fights another Creature (spec §27–28, ADR-017).</summary>
+    Fight,
+
+    /// <summary>Plays with another Creature, or goes to find it to play.</summary>
+    Befriend,
+
+    /// <summary>Runs away from another Creature.</summary>
+    Flee,
 }

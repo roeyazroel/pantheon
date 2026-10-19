@@ -139,11 +139,11 @@ public static class CreatureModel
     /// <returns>The trait, or <c>null</c> when no trait drives it.</returns>
     public static CreatureTrait? TraitOf(CreatureAction action) => action switch
     {
-        CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.Play => CreatureTrait.Kindness,
-        CreatureAction.Attack or CreatureAction.EatFromStores => CreatureTrait.Aggression,
+        CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.Play or CreatureAction.Befriend => CreatureTrait.Kindness,
+        CreatureAction.Attack or CreatureAction.EatFromStores or CreatureAction.Fight => CreatureTrait.Aggression,
         CreatureAction.Rest => CreatureTrait.Laziness,
         CreatureAction.Wander or CreatureAction.Ignore => CreatureTrait.Curiosity,
-        CreatureAction.Forage or CreatureAction.GoTo => null,
+        CreatureAction.Forage or CreatureAction.GoTo or CreatureAction.Flee => null,
     };
 
     /// <summary>A personality trait's value.</summary>
@@ -192,6 +192,85 @@ public static class CreatureModel
             case CreatureTrait.Curiosity:
                 personality.Curiosity = value;
                 break;
+        }
+    }
+
+    /// <summary>Adds experience and raises the level it earns.</summary>
+    /// <param name="rules">Creature rules.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="experience">Experience to add; negative amounts add nothing.</param>
+    /// <returns><c>true</c> when the Creature reached a new level.</returns>
+    public static bool AddExperience(CreatureRules rules, CreatureState creature, float experience)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(creature);
+        creature.Experience += Math.Max(0f, experience);
+        var level = LevelFor(rules, creature.Experience);
+        if (level <= creature.Level)
+        {
+            return false;
+        }
+
+        creature.Level = level;
+        return true;
+    }
+
+    /// <summary>Takes away a share of the experience gained since the current level began; a level is never lost (spec §28).</summary>
+    /// <param name="rules">Creature rules.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="share">Share of that progress to lose (0..1).</param>
+    public static void LoseProgress(CreatureRules rules, CreatureState creature, float share)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(creature);
+        var start = creature.Level >= 2 && creature.Level - 2 < rules.LevelExperience.Count ? rules.LevelExperience[creature.Level - 2] : 0f;
+        var progress = Math.Max(0f, creature.Experience - start);
+        creature.Experience -= SimMath.Clamp01(share) * progress;
+    }
+
+    /// <summary>Moves a preference by the Creature's own experience (spec §26), without its god: up towards 1 or down towards 0.</summary>
+    /// <param name="creature">The Creature; a missing preference is added first.</param>
+    /// <param name="situation">The situation.</param>
+    /// <param name="action">The action.</param>
+    /// <param name="change">Share of the gap to 1 to close (positive) or of the preference to remove (negative), from -1 to 1.</param>
+    public static void Reinforce(CreatureState creature, CreatureSituation situation, CreatureAction action, float change)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        var preference = FindPreference(creature, situation, action);
+        if (preference is null)
+        {
+            preference = new LearnedPreference { Situation = situation, Action = action, Weight = UnknownPreference };
+            creature.Preferences.Add(preference);
+        }
+
+        var step = Math.Clamp(change, -1f, 1f);
+        preference.Weight = SimMath.Clamp01(step >= 0f ? preference.Weight + (step * (1f - preference.Weight)) : preference.Weight * (1f + step));
+    }
+
+    /// <summary>Adds a memory of a deed, forgetting the oldest beyond the capacity.</summary>
+    /// <param name="rules">Creature rules.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="tick">Tick at which it finished.</param>
+    /// <param name="action">The action.</param>
+    /// <param name="situation">The situation it acted in.</param>
+    /// <param name="settlementId">The settlement it acted on, if any.</param>
+    /// <param name="otherCreatureId">The Creature it acted towards, if any.</param>
+    public static void Remember(CreatureRules rules, CreatureState creature, long tick, CreatureAction action, CreatureSituation situation, int? settlementId, int? otherCreatureId)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(creature);
+        creature.Memories.Add(new CreatureMemory
+        {
+            Tick = tick,
+            Action = action,
+            Situation = situation,
+            SettlementId = settlementId,
+            OtherCreatureId = otherCreatureId,
+            Feedback = CreatureFeedback.None,
+        });
+        if (creature.Memories.Count > rules.MemoryCapacity)
+        {
+            creature.Memories.RemoveRange(0, creature.Memories.Count - rules.MemoryCapacity);
         }
     }
 

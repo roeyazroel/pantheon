@@ -38,6 +38,7 @@ public sealed record LaunchOptions
         "disaster",
         "refugees",
         "migrate",
+        "meet",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -102,6 +103,12 @@ public sealed record LaunchOptions
 
     /// <summary>People sent out of the focused settlement at the start (ADR-016).</summary>
     public int? Migrate { get; init; }
+
+    /// <summary>
+    /// The Creature brought beside the player's at the start, to meet it (ADR-017): an empty name for
+    /// the nearest, <c>null</c> for none.
+    /// </summary>
+    public string? Meet { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -236,6 +243,14 @@ public sealed record LaunchOptions
                 return TryParsePositiveInt(value.Trim(), out var migrants)
                     ? options with { Migrate = migrants }
                     : Warn(options, warnings, $"'--migrate' needs a positive whole number of people, got '{value}'.");
+            case "meet":
+                return value.Trim() switch
+                {
+                    "" => Warn(options, warnings, "'--meet' needs on, off or a Creature's name."),
+                    var on when on.Equals("on", StringComparison.OrdinalIgnoreCase) => options with { Meet = string.Empty },
+                    var off when off.Equals("off", StringComparison.OrdinalIgnoreCase) => options with { Meet = null },
+                    var creature => options with { Meet = creature },
+                };
             case "debug-panel":
                 return value.Trim().ToLowerInvariant() switch
                 {

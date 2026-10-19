@@ -1,6 +1,6 @@
 # PANTHEON — Progress Summary
 
-This document sums up the work so far, Milestones 1 to 10, against the owner's complete
+This document sums up the work so far, Milestones 1 to 11, against the owner's complete
 specification, [PANTHEON_SPEC.md](PANTHEON_SPEC.md), which is the source of truth. Section numbers
 (§) refer to it. It describes `main` on 2026-10-19.
 
@@ -19,10 +19,11 @@ followed or the target has been measured.
 
 ## In short
 
-- Ten of the specification's fifteen milestones are implemented: 1 Foundation (§116),
+- Eleven of the specification's fifteen milestones are implemented: 1 Foundation (§116),
   2 Living Settlement (§117), 3 First God (§118), 4 Creature (§119), 5 Rival God (§120),
-  6 Diplomacy (§121), 7 Weather (§122), 8 Disaster Simulation (§123), 9 Four Gods (§124) and
-  10 Population Movement (§125). Their playable outcomes hold:
+  6 Diplomacy (§121), 7 Weather (§122), 8 Disaster Simulation (§123), 9 Four Gods (§124),
+  10 Population Movement (§125) and 11 Creature Relationships (§126). Their playable outcomes
+  hold (§126 names deliverables rather than an outcome):
   - the player can explore a seeded island;
   - its settlements visibly live and change;
   - the player can gain and spend belief;
@@ -32,7 +33,8 @@ followed or the target has been measured.
   - the world produces environmental pressure;
   - disasters produce emergent consequences;
   - basic politics emerges;
-  - populations can abandon gods.
+  - populations can abandon gods;
+  - rival Creatures befriend, fight and remember each other.
 - The world is one 2 km island with eight settlements. Each settlement is simulated
   statistically (Tier 1) and, near the camera, shown by up to 300 representative citizens
   (Tier 2).
@@ -68,9 +70,12 @@ followed or the target has been measured.
   wish to leave. Groups walk to better places, giving up gods they fear or doubt. Where they
   arrive, the host god welcomes them, makes them convert or turns them away, and their own god
   remembers it.
-- Not built yet: history, audio, multiplayer, Creatures dealing with each other, and picking
-  things up with the hand.
-- 683 xUnit tests pass headless (646 at the end of Milestone 9). The solution builds with no
+- The gods' Creatures meet, play, run and fight. Each remembers the others with friendship, fear,
+  rivalry, respect and trust. Allies' Creatures become friends, friends refuse to fight when their
+  gods go to war, and a beaten Creature is banished with a scar, shaken loyalty and its people's
+  doubt.
+- Not built yet: history, audio, multiplayer, and picking things up with the hand.
+- 724 xUnit tests pass headless (683 at the end of Milestone 10). The solution builds with no
   warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -90,8 +95,8 @@ followed or the target has been measured.
 | 8 | Disaster Simulation (§123) | Implemented, on `main` |
 | 9 | Four Gods (§124) | Implemented, on `main` |
 | 10 | Population Movement (§125) | Implemented, on `main` |
-| 11 | Creature Relationships (§126) | Not started; next |
-| 12 | Multiplayer Foundation (§127) | Not started; decided in ADR-003. Miracles, Creature commands, diplomatic moves and refugee policies are already requests that an authority checks (§73). |
+| 11 | Creature Relationships (§126) | Implemented, on `main` |
+| 12 | Multiplayer Foundation (§127) | Not started; next. Decided in ADR-003. Miracles, Creature commands, diplomatic moves and refugee policies are already requests that an authority checks (§73). |
 | 13 | Multiplayer Simulation (§128) | Not started |
 | 14 | Complete Vertical Slice (§129) | Not started |
 | 15 | Polish and Expansion (§130) | Not started |
@@ -292,6 +297,30 @@ Victories came at 27.5 and 32 minutes, as in Milestone 9. Walkers in their god's
 Migration overlay, label marks, alerts, F1 lines, M and `--migrate` show and drive it. The plan is
 [.docs/milestone-10-population-movement.md](../.docs/milestone-10-population-movement.md).
 
+### Milestone 11: Creature Relationships (§126)
+
+| §126 deliverable | Status | What exists |
+| --- | --- | --- |
+| Rival Creatures | Implemented | The four gods' Creatures meet when they come within 40 m and answer by learned preference, urge and personality: fight, play, run or walk on (ADR-017). Rivals seek each other, and an AI god at war sends its Creature against an enemy Creature threatening its people. |
+| Friendship | Implemented | Play and greetings build friendship and trust. Alliance draws Creatures together. Friends whose gods go to war will not fight, and the player is told. A friend that attacks is remembered as a betrayal. |
+| Rivalry | Implemented | War, fights and attacks on a god's people build rivalry. Winning halves it, and it fades. |
+| Combat | Implemented | Blows traded by strength and combat skill, on a stream derived from the seed and the tick. The fight ends in banishment (§28: absence, a scar, lost loyalty and progress, witnesses' doubt, the god's grudge), mercy, a draw or a broken-off fight. Gods can reward or punish a fight like any deed. |
+| Memories | Implemented | Each Creature keeps its own view of every other (friendship, fear, rivalry, respect, trust) and its latest encounters: met, greeted, played, won, lost, spared, was spared, drew, fled, chased off, betrayed, saw it attack our people. |
+
+In 60-minute headless runs with a passive player (seeds 1234, 42, 7), the four Creatures:
+
+- met 25–35 times;
+- fought 8–9 times, nearly all between gods at war;
+- befriended each other up to 0.6, including allies' Creatures at 0.48.
+
+Vael's Creature, the Tyrant's, fought and lost most: 6–7 scars an hour. Over 40 seeds the contest
+kept its pace: 24 games won within an hour against Milestone 10's 22, median 37.6 minutes against
+35.2.
+
+Poses, scars, labels, the card's bonds, the panel's line, alerts, F1 lines, K and `--meet` show
+and drive it. The plan is
+[.docs/milestone-11-creature-relationships.md](../.docs/milestone-11-creature-relationships.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -344,15 +373,15 @@ Sections that only state intent are summarised at the end of this part.
 
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
-| 22 | The Creature | Implemented (one per god) | Companion and physical avatar; its deeds act for its god. Combat, missionary work and political roles come later. |
-| 23 | Progression | Partial | Level, experience, health, strength and speed (from level), loyalty and morality. Intelligence, resilience, divine affinity and combat skill are not modelled. |
+| 22 | The Creature | Implemented (one per god) | Companion, physical avatar and champion: its deeds act for its god, and it fights other gods' Creatures (ADR-017). Missionary work and political roles come later. |
+| 23 | Progression | Partial | Level, experience, health, strength and speed (from level), combat skill, loyalty, morality and relationships. Intelligence, resilience and divine affinity are not modelled. |
 | 24 | Specialisations | Not started | |
 | 25 | Learning | Implemented | Preferences per situation and action, from §25's starting values, moved by reward and punishment. |
-| 26 | Personality | Partial | Kindness, aggression, laziness and curiosity, born from the seed and shaped by feedback. The other §26 traits are not modelled. |
-| 27 | Relationships | Not started | Milestone 11. |
-| 28 | Defeat | Partial | Banishment on starvation, with a return home. Scars and other consequences are not modelled. |
-| 86 | Creature AI architecture | Partial | Our own state machine, utility values, learned weights and memory in the core (ADR-010). No behaviour tree yet, and LimboAI is not used. |
-| 111 | MVP Creature | Partial | Movement, health, needs, XP, levels 1–10, basic personality, helping and attacking villagers, reward, punishment and learned preferences. Combat and fighting other Creatures wait for Milestone 11. |
+| 26 | Personality | Partial | Kindness, aggression, laziness and curiosity, born from the seed and shaped by feedback, by experience (victories embolden) and by trauma (defeats cow). The other §26 traits are not modelled. |
+| 27 | Relationships | Implemented | Friendship, fear, rivalry, respect and trust, one view per Creature met, with remembered encounters (ADR-017). Allied Creatures become friends; friends whose gods fight refuse to fight. |
+| 28 | Defeat | Implemented | Banishment (temporary absence) on starvation or defeat. A defeat also brings a scar, lost loyalty, lost progress towards the next level and reputation: witnesses' belief and the god's grudge. Permanent death is not modelled. |
+| 86 | Creature AI architecture | Partial | Our own state machine, utility values, learned weights, memory and relationship memory in the core (ADR-010, ADR-017). No behaviour tree yet, and LimboAI is not used. |
+| 111 | MVP Creature | Implemented | Movement, health, needs, combat, XP, levels 1–10, basic personality, helping and attacking villagers, fighting Creatures, reward, punishment and learned preferences. |
 
 ### Nature
 
@@ -377,7 +406,7 @@ Sections that only state intent are summarised at the end of this part.
 | 40 | Betrayal | Implemented | Any alliance can be broken; it costs the victim's trust, every god's trust and future goodwill, and is long remembered. |
 | 41 | Favours | Partial | Help to another god's followers in need is remembered as gratitude. Asking for and owing favours are not built. |
 | 42–43, 45–46 | Divine Council, information and deception, proxy wars, mortal holy wars | Not started | |
-| 44 | War between gods | Partial | Declared war makes the enemy's followers resist conversion, draws Creatures and AI miracles to the enemy and lasts until peace is agreed. War goals and their outcomes are not modelled. |
+| 44 | War between gods | Partial | Declared war makes the enemy's followers resist conversion, draws Creatures and AI miracles to the enemy, sets the gods' Creatures against each other and lasts until peace is agreed. War goals and their outcomes are not modelled. |
 | 113 | MVP diplomacy | Implemented | The five statuses and the four actions, plus accepting and declining; the AI remembers betrayal. |
 | 50–52 | History, sacred locations, world events | Not started | |
 | 53 | Victory conditions | Partial | Divine Ascendancy (§115's MVP form) and Pantheon Victory: allied gods, and allies of allies, count their followers together and win together (ADR-015). Conquest and cultural victories and a sandbox switch are not built. |
@@ -391,9 +420,9 @@ Sections that only state intent are summarised at the end of this part.
 | --- | --- | --- | --- |
 | 55 | Player interaction | Partial | Miracles are cast with a click (ADR-009). A visual Divine Hand follows the cursor, presses when casting or sending, and pats or swats the Creature (ADR-010). Picking up, carrying and throwing are not built. |
 | 56 | Camera | Partial | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands. Missing: a strategic overview. |
-| 57 | User interface | Partial | HUD with Divine Power, income, followers, rank, the rivals with their status, the race for victory (a bloc's when allied), the miracle bar and hint, the Creature card and alerts, and the Diplomacy panel (P) with each god's alliances and wars. Missing: the other panels (World, Settlements, Religion, History, Domains, Miracles). |
+| 57 | User interface | Partial | HUD with Divine Power, income, followers, rank, the rivals with their status, the race for victory (a bloc's when allied), the miracle bar and hint, the Creature card (with its bonds, combat skill and scars) and alerts, and the Diplomacy panel (P) with each god's alliances and wars. Missing: the other panels (World, Settlements, Religion, History, Domains, Miracles). |
 | 58 | Map overlays | Partial | Influence (strongest god per region), religion (main god per settlement), faith, food, weather (soil water), danger (fires, ash, shields) and migration (pressure to leave, groups' ways) for the player; the F3 debug map adds the region statistics, blessing, influence, soil water, fire and scorch. Missing: population, ecology, disaster risk and political control. |
-| 59 | Alert system | Partial | Starving followers, settlements gained or lost, ranks, Creature deeds, rival miracles on the player's followers, dominance and victory (a bloc's included), diplomacy (proposals, war, betrayal, answers, and alliances between other gods), weather (dry spells, droughts and storms among the player's people) and disasters (earthquakes, fires near the player's people and the damage done). Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
+| 59 | Alert system | Partial | Starving followers, settlements gained or lost, ranks, Creature deeds, rival miracles on the player's followers, dominance and victory (a bloc's included), diplomacy (proposals, war, betrayal, answers, and alliances between other gods), weather (dry spells, droughts and storms among the player's people), disasters (earthquakes, fires near the player's people and the damage done), migration, and Creatures' meetings and fights. Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
 | 60 | Audio | Not started | |
 | 61 | Visual direction | Partial | Stylised terrain, sea, huts, fields, figures, glowing miracle effects, soft clouds, rain, lightning and storm-dimmed light, flames, smoke, ash, rubble and shield domes, and god colours on labels and overlays. No original art assets, and religion does not yet change how settlements look. |
 
@@ -419,15 +448,15 @@ Sections that only state intent are summarised at the end of this part.
 | 67–69, 71–72, 95–98 | Multiplayer, ENet, Steam, host disconnect and migration, replication, prediction, cheating | Not started | ADR-003 decides host-authoritative ENet without lockstep. |
 | 73 | Network authority | Partial (local) | Miracle, Creature and diplomatic commands and refugee policies are intents. `MiracleCaster`, `CreatureAuthority`, `DiplomacyAuthority` and `MigrationAuthority` check them (power, location, influence, cooldown, rank, authorisation, reachability, diplomatic status and proposals) before anything changes. AI gods use the same path. There is no network yet. |
 | 70 | No required server infrastructure | Implemented | |
-| 75 | Save architecture | Partial | One quicksave holds the seed, generation settings, tick, random state, regions (with soil water, fire and scorch), settlements (with ruins, shields and the wish to leave), gods (with refugee policies), beliefs, Creatures, diplomacy, weather, disasters and migration groups. No GameTime; the other listed state does not exist yet. |
+| 75 | Save architecture | Partial | One quicksave holds the seed, generation settings, tick, random state, regions (with soil water, fire and scorch), settlements (with ruins, shields and the wish to leave), gods (with refugee policies), beliefs, Creatures (with their views of each other), diplomacy, weather, disasters and migration groups. No GameTime; the other listed state does not exist yet. |
 | 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 10 and migrations from versions 1 to 9, each tested against a save written by the previous build. |
 | 77–78 | Core rule, layered architecture | Implemented | The core projects never reference Godot (tested). |
 | 79 | Simulation systems | Partial | Weather, disaster, settlement, population, belief, victory, diplomacy, migration, Creature and god AI systems, and the miracle, Creature, diplomacy and migration authorities. |
-| 90 | Core data models | Partial | `GodState` (subset), `SettlementState` with belief, love, fear and doubt per god, `CreatureState` (no relationships), `RegionState` (soil water, fire and scorch; no wildlife or pollution), `WeatherState` with §90's weather cells, `DisasterState` with earthquakes, `MigrationState` with §82's groups, and `GodRelation` and `GodStance` for §90's DiplomacyRelation (no treaties). No WorldEvent records with duration. |
+| 90 | Core data models | Partial | `GodState` (subset), `SettlementState` with belief, love, fear and doubt per god, `CreatureState` (with combat skill, scars and relationships), `RegionState` (soil water, fire and scorch; no wildlife or pollution), `WeatherState` with §90's weather cells, `DisasterState` with earthquakes, `MigrationState` with §82's groups, and `GodRelation` and `GodStance` for §90's DiplomacyRelation (no treaties). No WorldEvent records with duration. |
 | 100 | Repository structure | Implemented, with differences | As recommended, plus `World/` and `Miracles/` in `Pantheon.Domain`, `game/Data/`, `game/addons/`, `.docs/` and `AGENTS.md`. |
 | 101 | Architecture decision records | Implemented | ADR-001 to ADR-016. |
 | 102–103 | Testing, deterministic testing | Implemented | Every rule has tests, including §102's "Fear decreases after prolonged safety" and "God cannot cast miracle without enough power". Randomness is seeded and checked. |
-| 106 | Debug tools | Partial | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons, and relationship reasoning: the diplomatic moves weighed with their factors), weather cells (spell, wind, the strongest cells, soil and rain under the cursor, a settlement's water), disasters (earthquakes, the fiercest fires, a settlement's dangers), and migration routes (groups on the road, refugee policies with the AI's reasons, a settlement's pressure to leave, the Migration overlay). Missing: navmesh, network authority and other performance metrics. |
+| 106 | Debug tools | Partial | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons, and relationship reasoning: the diplomatic moves weighed with their factors), weather cells (spell, wind, the strongest cells, soil and rain under the cursor, a settlement's water), disasters (earthquakes, the fiercest fires, a settlement's dangers), migration routes (groups on the road, refugee policies with the AI's reasons, a settlement's pressure to leave, the Migration overlay), and Creatures' relationships (views, encounters, combat skill, scars, power and how the player's Creature would meet the nearest one; K and `--meet` bring two together). Missing: navmesh, network authority and other performance metrics. |
 | 107 | Content data | Partial | World generation, settlement and divine balance, miracles, the gods of a new world, Creature rules, AI personalities, diplomacy rules, weather and disaster rules and presentation are data files, parsed strictly. No domain trees yet. |
 | 108 | MVP world | Implemented | One map, three land biomes, 8 settlements, four gods (1 human, 3 AI) and four Creatures. |
 | 131 | Non-goals | Respected | |
@@ -467,34 +496,36 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-014](ADR/ADR-014-disasters-as-processes.md) | Disasters as processes: wildfires in regions, earthquakes that shake, ruins to rebuild (Milestone 8) | Accepted |
 | [ADR-015](ADR/ADR-015-four-gods-coalitions-and-pantheon-victory.md) | Four gods: coalitions, allies' memory and pantheon victory (Milestone 9) | Accepted; amends ADR-011 |
 | [ADR-016](ADR/ADR-016-migration-groups-and-refugee-policies.md) | Migration as groups on the road, and gods' refugee policies (Milestone 10) | Accepted |
+| [ADR-017](ADR/ADR-017-creature-relationships-and-combat.md) | Creature relationships, meetings and combat (Milestone 11) | Accepted |
 
 No decision has been reversed.
 
 ## Tests
 
-The xUnit suite in `src/Pantheon.Tests` has 683 tests, and they all pass headless in about ten
+The xUnit suite in `src/Pantheon.Tests` has 724 tests, and they all pass headless in about ten
 seconds, without Godot (`dotnet test Pantheon.sln`).
 
-| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | Now |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
-| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
-| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 |
-| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 |
-| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 |
-| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 |
-| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 |
-| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 |
-| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 |
-| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
-| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V9Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 |
-| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
-| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
-| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 |
-| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
-| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
-| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** |
+| Area | Test classes | M2 | M3 | M4 | M5 | M6 | M7 | M8 | M9 | M10 | Now |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| World generation and determinism | `WorldGenerationTests`, `BiomeClassifierTests`, `WorldSeedTests`, `DeterminismTests`, `SimulationRandomTests`, `TerrainRaycasterTests` | 47 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 | 49 |
+| Settlement rules and step (Tier 1) | `SettlementEconomyTests`, `SettlementSystemTests`, `IntervalSystemTests` | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 | 43 |
+| Belief, influence, miracles and rivals | `BeliefModelTests`, `BeliefSystemTests`, `InfluenceFieldTests`, `MiracleCasterTests`, `RivalGodTests` | 0 | 45 | 45 | 55 | 55 | 55 | 55 | 55 | 55 | 55 |
+| Pantheon and politics | `PantheonTests`, `PoliticsTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 18 | 18 | 18 |
+| Diplomacy | `DiplomacyTests` | 0 | 0 | 0 | 0 | 14 | 14 | 14 | 14 | 14 | 14 |
+| Weather and water | `WeatherModelTests`, `WeatherSystemTests`, `WaterTests` | 0 | 0 | 0 | 0 | 0 | 32 | 32 | 32 | 32 | 32 |
+| Disasters | `DisasterModelTests`, `DisasterSystemTests`, `ResponseTests` | 0 | 0 | 0 | 0 | 0 | 0 | 27 | 27 | 27 | 27 |
+| Migration | `MigrationModelTests`, `MigrationSystemTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 23 | 23 |
+| Creature relationships | `CreatureBondsTests`, `CreatureEncounterTests`, `CreatureRivalryAiTests` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 28 |
+| The Creature and navigation | `CreatureModelTests`, `CreatureBehaviourTests`, `CreatureAuthorityTests`, `RegionPathfinderTests` | 0 | 0 | 27 | 29 | 29 | 29 | 29 | 29 | 29 | 29 |
+| Representative citizens (Tier 2) | `RepresentativeRosterTests`, `CitizenRoutineTests`, `SettlementCrowdTests`, `TierSelectorTests` | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 | 68 |
+| Saves and migration | `SaveLoadTests`, `SaveMigrationTests`, `SaveMigrationV2Tests` to `V10Tests`, `DivineSaveTests` | 34 | 47 | 52 | 57 | 62 | 68 | 73 | 80 | 86 | 92 |
+| Session, scheduler, commands, launch options | `GameSessionTests`, `SimulationSchedulerTests`, `SessionCommandsTests`, `LaunchOptionsTests`, `DivineSessionTests`, `CreatureSessionTests` | 38 | 51 | 60 | 60 | 60 | 60 | 60 | 60 | 60 | 60 |
+| Camera | `GodCameraModelTests`, `EdgeScrollTests` | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 | 27 |
+| Presentation, HUD, alerts and layout | `PresentationTests`, `SettlementLayoutTests`, `Terrain3DShaderPatchTests`, `DivinePresentationTests`, `RivalPresentationTests`, `DiplomacyPresentationTests`, `WeatherPresentationTests`, `DisasterPresentationTests`, `PantheonPresentationTests`, `MigrationPresentationTests`, `CreatureRelationsPresentationTests` | 30 | 45 | 45 | 51 | 57 | 74 | 83 | 89 | 97 | 104 |
+| Debug readouts and region map | `DebugReadoutTests`, `RegionDebugMapTests` | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Content parsing | `ContentTests` | 11 | 18 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 |
+| Architecture rules | `ArchitectureRulesTests` | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 | 11 |
+| **Total** | | **331** | **426** | **471** | **494** | **519** | **574** | **615** | **646** | **683** | **724** |
 
 Not covered by automated tests: the Godot client (`game/Scripts`), which is checked by building
 it and by scripted runs with captures, and Windows.
@@ -586,7 +617,11 @@ The [README](../README.md) lists every control and option.
 
 ### The Creature
 
-- Four Creatures, one per god, but they neither fight nor befriend each other (Milestone 11).
+- Creatures fight one on one: no group fights, no defending a settlement as such (rivalry from
+  attacks stands in for it), no escorting migrants, no permanent death, and no command to attack a
+  chosen Creature; the player sends it and teaches it.
+- The player's untaught Creature, never sent away by a god, levels fastest and wins most of its
+  fights. The Tyrant's Creature, nearly always at war, collects 6–7 scars an hour.
 - The hand is visual: it cannot pick up, carry or throw anything. Jolt is chosen but no physics
   gameplay exists.
 - The Creature walks through houses and people: there is no local avoidance, and paths follow
@@ -640,23 +675,26 @@ The [README](../README.md) lists every control and option.
 
 ## Recommended next steps
 
-### Milestone 11: Creature Relationships (§126)
+### Milestone 12: Multiplayer Foundation (§127)
 
-Deliverables: rival Creatures, friendship, rivalry, combat and memories. §27 lists friendship,
-fear, rivalry, respect and trust between Creatures; §28 covers banishment with its consequences.
+Deliverables: an ENet host, joining, player assignment, action authority and synchronized god
+state, for two players first. ADR-003 decided a host-authoritative model over ENet, without
+lockstep (§67–74).
 
-1. Creatures' views of each other (§27): friendship, fear, rivalry, respect and trust, with
-   memories of meetings, fights and help. They are saved, and they fade like the gods' memories.
-2. Meetings: Creatures that come near each other greet, play, ignore or threaten each other, by
-   their personalities, their gods' status and their memories. Allied gods' Creatures may become
-   friends, and friends whose gods go to war pose interesting choices (§27).
-3. Combat: an attack between Creatures resolved by strength, health, level and rage, with
-   defeat as banishment (§28) and its consequences: scars, reputation, loyalty and experience.
-4. Learning: the player rewards or punishes how the Creature treats others, and AI gods teach
-   theirs by personality (ADR-010).
-5. Seeing it: Creature relationships in the Creature view and F1, alerts for fights and
-   friendships, and a debug command to bring two Creatures together.
-6. Save version 11, with a fixture written by the Milestone 10 build.
+1. Message contracts in the core (`Pantheon.Networking`, no Godot): joining, the god assigned, the
+   player's intents (miracles, Creature commands, diplomatic moves, refugee policy), their
+   verdicts, and state snapshots.
+2. A transport behind an interface: Godot's ENet in the client, and an in-memory loopback for
+   headless tests.
+3. The host runs the only simulation. It assigns a joining player a god the AI was playing, and
+   checks every intent with the existing authorities, issued as that player's god (§73).
+4. A client receives the world once, then the god state (power, rank, followers, cooldowns,
+   diplomacy) and the changes it needs at the rates of §96. It shows them with the same
+   presenters, and predicts nothing that matters (§97).
+5. `--host` and `--join=<address>`, a status line for the connection, and debug lines for peers,
+   latency and messages.
+6. Tests over the loopback: assignment, refused and accepted intents, the same god state on both
+   sides, a client leaving and joining again.
 
 ### Alongside
 

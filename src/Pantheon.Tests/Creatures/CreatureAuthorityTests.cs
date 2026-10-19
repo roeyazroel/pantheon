@@ -50,7 +50,7 @@ public sealed class CreatureAuthorityTests
     public void Feedback_JudgesTheLastDeed_OnlyWithinTheWindow()
     {
         var (world, creature) = CreatureWorlds.Create(200f);
-        creature.Memories.Add(new CreatureMemory { Tick = 100, Action = CreatureAction.Play, Situation = CreatureSituation.VillageThriving, SettlementId = 1, Feedback = CreatureFeedback.None });
+        creature.Memories.Add(new CreatureMemory { Tick = 100, Action = CreatureAction.Play, Situation = CreatureSituation.VillageThriving, SettlementId = 1, OtherCreatureId = null, Feedback = CreatureFeedback.None });
         world.Tick = 100 + (long)(CreatureWorlds.Rules.FeedbackWindowSeconds * SimulationTime.TicksPerSecond);
 
         var inWindow = Authority.Execute(world, Command(creature, CreatureCommandKind.Reward), creature.GodId, new List<WorldEvent>());

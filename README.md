@@ -67,6 +67,12 @@ or doubt of their god drive villagers to pack up and walk to a better place, and
 god they fled. Where they arrive, the god most followed there welcomes them, makes them convert or
 turns them away, and their own god remembers it. You choose what your people do with newcomers.
 
+**Milestone 11 (Creature Relationships)** lets the Creatures deal with each other. They meet,
+play, greet, run and fight. Each remembers the others: who it plays with, who beat it, who
+betrayed it. Allies' Creatures become friends, and friends refuse to fight when their gods go to
+war. A beaten Creature is banished for a while with a scar, its loyalty shaken and its people's
+faith dented, and its god holds a grudge.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -133,8 +139,12 @@ covers:
 - migration: what pushes people out and what keeps them, the wish to leave, groups setting out,
   the gods they give up, where they go, the road, welcome, conversion and refusal, and refugee
   policies for you and the AI;
+- Creatures together: the views they hold of each other, meetings, play, greetings, flight,
+  betrayal, fights and how they end (banishment, scars, loyalty, experience, mercy, draws), what
+  gods teach their Creatures about others and when AI gods send them against an enemy's;
 - the HUD model, alerts, map overlays, the diplomacy panel, the weather's and disasters' looks and
-  tools, migration's walkers, overlay and alerts, and the migration of Milestone 1 to 9 saves;
+  tools, migration's walkers, overlay and alerts, Creatures' bonds on the card, panel and debug
+  panel, and the migration of Milestone 1 to 10 saves;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -176,6 +186,7 @@ covers:
 | Start an earthquake at the cursor (debug) | F11 (fn+F11 on Mac laptops) |
 | Start a fire at the cursor (debug) | F12 (fn+F12 on Mac laptops) |
 | Send 20 people out of the village under the cursor (debug) | M |
+| Bring the nearest other Creature to yours, so they meet (debug) | K |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
 120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m). The simulation runs at a
@@ -423,8 +434,41 @@ now.
 - **Send it.** Press V to send it to the cursor; it waits there longer the more loyal it is.
 - **It grows.** Its deeds earn experience. Each level, up to 10, makes it bigger, stronger and
   faster.
-- **It can be lost for a while.** If it starves, it is banished for a minute and comes home
-  weakened.
+- **It can be lost for a while.** If it starves, or loses a fight, it is banished for a minute
+  and comes home weakened.
+
+## Creatures together
+
+Every god's Creature roams the same island, and they remember each other.
+
+- **Meetings.** When two Creatures come within about 40 m they meet. Each decides by what it has
+  learned, how it feels about the other and its personality: fight, play, run or walk on.
+  - Creatures of gods at war want to fight; allies' Creatures want to play.
+  - A beaten or weaker Creature wants to run.
+  - Rivals go looking for each other, and a Creature sent on its god's errand greets a friend in
+    passing but does not stop to play.
+- **Bonds.** Each Creature keeps its own view of every other: friendship, fear, rivalry, respect
+  and trust, and its latest memories of it ("beat it", "was spared by it", "was betrayed by it").
+  - Playing and greeting make friends.
+  - A friend who attacks is a betrayer.
+  - Friends whose gods go to war will not fight each other, and you are told when yours refuses.
+  - A Creature that attacks your followers becomes your Creature's rival.
+- **Fights.** Two Creatures fight face to face, their health on their labels, until one gives up.
+  Strength (its level) and combat skill (it grows with every fight) decide it.
+  - A kind winner may let the loser go.
+  - Otherwise the loser is banished for a minute, scarred (the scars show on its flanks), less
+    loyal and set back towards its next level, and its god holds the defeat against the winner's.
+  - People of the winner's god who saw it believe more; the loser's doubt.
+  - A fight that lasts 40 seconds is a draw.
+  - Punishing your Creature (X) calls it out of a fight.
+- **Teach it.** Reward or punish a fight or a game like any deed: Bramble learns whom to fight and
+  whom to befriend. AI gods teach theirs to fight enemies and befriend allies, and at war send
+  their Creature against yours when it threatens their people.
+- **Seeing it.** Bramble's card lists its bonds, combat skill and scars. Each rival's card in the
+  diplomacy panel (P) says how your Creature and theirs regard each other. Alerts report your
+  Creature's games, flights, fights and refusals.
+
+The rules are in the `Bonds` and `Combat` sections of `game/Data/creatures.json`.
 
 ## Debug tools
 
@@ -435,7 +479,9 @@ now.
   disasters (earthquakes and the fiercest fires), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
   view (level, health, loyalty, morality, activity, needs, personality, its best options with
-  their scores, its learned preferences by situation and its latest memories), the region
+  their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
+  view of every Creature it has met with their latest encounters, its learned preferences by
+  situation and its latest memories), the region
   under the cursor with its statistics, soil, rain and wind and every god's influence there, one
   line per settlement, and, for the settlement nearest the cursor:
   - its belief: the share that follows no god, its hardship and comfort, and for each god the
@@ -461,6 +507,8 @@ now.
   vegetation come blessing, your god's influence, the soil's water, fire and scorch, all on a
   fixed 0 to 1 scale.
 - **O** cycles the map overlays: influence, religion, faith, food, weather, danger and migration.
+- **K** brings the nearest other Creature beside yours, so they meet at once and you can watch them
+  play, run or fight.
 - **F4** grants your god 500 Divine Power.
 - **`.`** pauses the simulation and runs exactly one tick, so the panel shows what a single
   tick changed. Space resumes.
@@ -503,6 +551,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--disaster=quake\|fire` | Start an earthquake or a fire at the focused settlement. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
+| `--meet=on\|off\|<name>` | Bring the nearest other Creature (or the one with that name) beside yours at the start, so they meet. |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -515,7 +564,7 @@ F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a 
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 8`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 11`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -525,7 +574,10 @@ settlement. Saves from Milestones 1 to 3 get a newborn Creature, Bramble, for ev
 Milestones 1 to 4 stay single-god worlds with nobody to compete with. Saves from Milestones 1 to 5
 start with every pair of gods neutral, with no memories of each other. Saves from Milestones 1 to 6
 start under clear skies, with each region's soil as moist as its climate. Saves from Milestones 1
-to 7 start with nothing burning, shaking or in ruins.
+to 7 start with nothing burning, shaking or in ruins. Saves from Milestones 1 to 8 keep their one
+winner, if any, as the list of winners. Saves from Milestones 1 to 9 start with nobody on the road
+and every god welcoming migrants. Saves from Milestones 1 to 10 start with Creatures that have
+never dealt with each other: no combat skill, no scars and no views of the others.
 
 ## Repository layout
 

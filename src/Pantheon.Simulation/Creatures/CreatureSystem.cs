@@ -31,6 +31,8 @@ public sealed class CreatureSystem : ISimulationSystem
     private readonly CreatureRules _rules;
     private readonly CreatureBrain _brain;
     private readonly CreatureDeeds _deeds;
+    private readonly CreatureMeetings _meetings;
+    private readonly CreatureCombat _combat;
 
     /// <summary>Creates the system over validated rules.</summary>
     /// <param name="rules">Creature rules.</param>
@@ -46,19 +48,43 @@ public sealed class CreatureSystem : ISimulationSystem
         _rules = rules;
         _brain = new CreatureBrain(rules, divine, settlementRules, diplomacy);
         _deeds = new CreatureDeeds(rules, divine, settlementRules, ledger);
+        _meetings = new CreatureMeetings(rules, _brain);
+        _combat = new CreatureCombat(rules, ledger);
     }
 
     /// <summary>The brain, for previews and commands.</summary>
     public CreatureBrain Brain => _brain;
 
-    /// <inheritdoc />
+    /// <summary>The meetings between Creatures, for debug tools.</summary>
+    public CreatureMeetings Meetings => _meetings;
+
+    /// <summary>
+    /// Steps every Creature, then lets free Creatures that are close meet (on decision ticks), plays a
+    /// tick of every fight, and once a second lets the Creatures' views of each other fade (ADR-017).
+    /// </summary>
+    /// <param name="context">The tick.</param>
     public void Update(TickContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        var decides = IntervalSystem.IsDue(context.World.Tick, _rules.DecisionIntervalTicks);
-        foreach (var creature in context.World.Creatures)
+        var world = context.World;
+        var decides = IntervalSystem.IsDue(world.Tick, _rules.DecisionIntervalTicks);
+        foreach (var creature in world.Creatures)
         {
             Step(context, creature, decides);
+        }
+
+        if (decides)
+        {
+            _meetings.Update(world, context.Random, context.Events);
+        }
+
+        _combat.Update(world, context.Events);
+        if (IntervalSystem.IsDue(world.Tick, SimulationTime.TicksPerSecond))
+        {
+            foreach (var creature in world.Creatures)
+            {
+                CreatureBonds.Fade(_rules.Bonds, creature, 1f);
+            }
         }
     }
 
@@ -102,13 +128,29 @@ public sealed class CreatureSystem : ISimulationSystem
                     break;
                 }
 
+                if (activity.TargetCreatureId is { } sought && !IsAround(world, sought))
+                {
+                    activity.Path.Clear();
+                    activity.Phase = CreaturePhase.Deciding;
+                    break;
+                }
+
                 Walk(creature);
                 if (activity.Path.Count == 0)
                 {
-                    activity.Phase = CreaturePhase.Performing;
-                    activity.TicksLeft = _brain.PerformTicks(creature, activity.Action);
+                    // A Creature that went looking for another thinks again when it gets there; meeting it is up to the meetings.
+                    var seeking = activity.Action is CreatureAction.Fight or CreatureAction.Befriend;
+                    activity.Phase = seeking ? CreaturePhase.Deciding : CreaturePhase.Performing;
+                    activity.TicksLeft = seeking ? 0 : _brain.PerformTicks(creature, activity.Action);
                 }
 
+                break;
+            case CreaturePhase.Performing when CreatureCombat.IsFighting(creature):
+                // The combat plays the fight out.
+                break;
+            case CreaturePhase.Performing when activity.Action == CreatureAction.Befriend && activity.TicksLeft > 1 && !IsPlayingWith(world, activity.TargetCreatureId, creature.Id):
+                // Its playmate went off before the game was over (both finish on the same tick otherwise).
+                activity.Phase = CreaturePhase.Deciding;
                 break;
             case CreaturePhase.Performing:
                 if (activity.Action == CreatureAction.GoTo && IsDesperate(creature))
@@ -127,6 +169,14 @@ public sealed class CreatureSystem : ISimulationSystem
                 break;
         }
     }
+
+    /// <summary>Whether a Creature is playing with the given one.</summary>
+    private static bool IsPlayingWith(WorldState world, int? playmateId, int creatureId) =>
+        world.Creatures.Find(c => c.Id == playmateId) is { Activity: { Phase: CreaturePhase.Performing, Action: CreatureAction.Befriend } activity } && activity.TargetCreatureId == creatureId;
+
+    /// <summary>Whether another Creature is in the world and not banished.</summary>
+    private static bool IsAround(WorldState world, int creatureId) =>
+        world.Creatures.Find(c => c.Id == creatureId) is { } other && other.Activity.Phase != CreaturePhase.Banished;
 
     /// <summary>Whether a need is so pressing that the Creature gives up walking to, or waiting at, where it was sent.</summary>
     private static bool IsDesperate(CreatureState creature) => creature.Needs.Hunger >= DesperateNeed || creature.Needs.Fatigue >= DesperateNeed;
@@ -179,14 +229,10 @@ public sealed class CreatureSystem : ISimulationSystem
         }
     }
 
-    /// <summary>Defeat (spec §28): the Creature leaves for a while.</summary>
+    /// <summary>Starvation (spec §28): the Creature leaves for a while.</summary>
     private void Banish(WorldState world, CreatureState creature, List<WorldEvent> events)
     {
-        var activity = creature.Activity;
-        activity.Phase = CreaturePhase.Banished;
-        activity.Path.Clear();
-        activity.TargetSettlementId = null;
-        activity.TicksLeft = Math.Max(1, (int)MathF.Round(_rules.BanishedSeconds * SimulationTime.TicksPerSecond));
+        CreatureBanishment.Banish(_rules, creature);
         events.Add(new CreatureChanged { Tick = world.Tick, CreatureId = creature.Id, Change = CreatureChange.Banished });
     }
 

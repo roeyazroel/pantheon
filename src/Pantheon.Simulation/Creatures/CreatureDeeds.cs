@@ -69,7 +69,12 @@ public sealed class CreatureDeeds
             Gain(creature, rule.Experience, world.Tick, events);
         }
 
-        Remember(creature, world.Tick, activity.Action, activity.Situation, settlement?.Id);
+        if (activity.Action == CreatureAction.Befriend && activity.TargetCreatureId is { } playmate)
+        {
+            CreatureBonds.Played(_rules.Bonds, creature, playmate, world.Tick);
+        }
+
+        CreatureModel.Remember(_rules, creature, world.Tick, activity.Action, activity.Situation, settlement?.Id, activity.TargetCreatureId);
         events.Add(new CreatureActed
         {
             Tick = world.Tick,
@@ -115,6 +120,9 @@ public sealed class CreatureDeeds
             case CreatureAction.Play:
             case CreatureAction.Ignore:
             case CreatureAction.GoTo:
+            case CreatureAction.Fight:
+            case CreatureAction.Befriend:
+            case CreatureAction.Flee:
                 return (0f, 0, 1f);
             default:
                 throw new ArgumentOutOfRangeException(nameof(rule), rule.Action, "Unknown creature action.");
@@ -148,42 +156,33 @@ public sealed class CreatureDeeds
         BeliefModel.ApplyImpulse(belief, rule.Witness, 1f, loveScale);
     }
 
-    /// <summary>Every other god whose followers the Creature attacked remembers it.</summary>
+    /// <summary>Every other god whose followers the Creature attacked remembers it, and so does that god's Creature (ADR-017).</summary>
     private void NoteAttack(WorldState world, CreatureState creature, SettlementState settlement)
     {
-        if (_ledger is null)
-        {
-            return;
-        }
-
         foreach (var belief in settlement.Beliefs)
         {
-            if (belief.GodId != creature.GodId && belief.Adherence > 0.05f)
+            if (belief.GodId == creature.GodId || belief.Adherence <= 0.05f)
             {
-                _ledger.Record(world, belief.GodId, creature.GodId, DiplomaticAct.CreatureAttacked, settlement.Id);
+                continue;
+            }
+
+            _ledger?.Record(world, belief.GodId, creature.GodId, DiplomaticAct.CreatureAttacked, settlement.Id);
+            foreach (var other in world.Creatures)
+            {
+                if (other.GodId == belief.GodId && other.Id != creature.Id)
+                {
+                    CreatureBonds.AttackedOurPeople(_rules.Bonds, other, creature.Id, world.Tick);
+                }
             }
         }
     }
 
-    /// <summary>Adds experience and raises the level it earns.</summary>
+    /// <summary>Adds experience and reports a new level.</summary>
     private void Gain(CreatureState creature, float experience, long tick, List<WorldEvent> events)
     {
-        creature.Experience += Math.Max(0f, experience);
-        var level = CreatureModel.LevelFor(_rules, creature.Experience);
-        if (level > creature.Level)
+        if (CreatureModel.AddExperience(_rules, creature, experience))
         {
-            creature.Level = level;
             events.Add(new CreatureChanged { Tick = tick, CreatureId = creature.Id, Change = CreatureChange.LevelledUp });
-        }
-    }
-
-    /// <summary>Adds a memory, forgetting the oldest beyond the capacity.</summary>
-    private void Remember(CreatureState creature, long tick, CreatureAction action, CreatureSituation situation, int? settlementId)
-    {
-        creature.Memories.Add(new CreatureMemory { Tick = tick, Action = action, Situation = situation, SettlementId = settlementId, Feedback = CreatureFeedback.None });
-        if (creature.Memories.Count > _rules.MemoryCapacity)
-        {
-            creature.Memories.RemoveRange(0, creature.Memories.Count - _rules.MemoryCapacity);
         }
     }
 }

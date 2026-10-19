@@ -63,7 +63,15 @@
     { "Action": "Attack", "Seconds": 5.0, "Amount": 3.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.15, "BoredomRelief": 0.3, "Kindness": -1.0,
       "Witness": { "Faith": 0.12, "Love": -0.25, "Fear": 0.35, "Doubt": -0.05 } },
     { "Action": "Ignore", "Seconds": 2.0, "Amount": 160.0, "Experience": 0.5, "HungerRelief": 0.0, "FatigueRelief": 0.0, "BoredomRelief": 0.2, "Kindness": -0.1,
-      "Witness": { "Faith": 0.0, "Love": -0.03, "Fear": 0.0, "Doubt": 0.02 } }
+      "Witness": { "Faith": 0.0, "Love": -0.03, "Fear": 0.0, "Doubt": 0.02 } },
+    // Dealings with other Creatures (ADR-017). A fight lasts at most Seconds; Flee's Amount is the
+    // distance run. They concern no settlement, so Witness is unused; a fight's witnesses are in Combat.
+    { "Action": "Fight", "Seconds": 40.0, "Amount": 0.0, "Experience": 4.0, "HungerRelief": 0.0, "FatigueRelief": -0.3, "BoredomRelief": 0.6, "Kindness": -0.2,
+      "Witness": { "Faith": 0.0, "Love": 0.0, "Fear": 0.0, "Doubt": 0.0 } },
+    { "Action": "Befriend", "Seconds": 10.0, "Amount": 0.0, "Experience": 3.0, "HungerRelief": 0.0, "FatigueRelief": -0.05, "BoredomRelief": 0.3, "Kindness": 0.3,
+      "Witness": { "Faith": 0.0, "Love": 0.0, "Fear": 0.0, "Doubt": 0.0 } },
+    { "Action": "Flee", "Seconds": 1.0, "Amount": 150.0, "Experience": 0.5, "HungerRelief": 0.0, "FatigueRelief": -0.1, "BoredomRelief": 0.0, "Kindness": 0.0,
+      "Witness": { "Faith": 0.0, "Love": 0.0, "Fear": 0.0, "Doubt": 0.0 } }
   ],
 
   // What a newborn Creature prefers (spec section 25's example: Feed 0.40, Ignore 0.30, Eat 0.55, Steal 0.20, Attack 0.05).
@@ -83,6 +91,70 @@
     { "Situation": "VillageBuilding", "Action": "Attack", "Weight": 0.05 },
     { "Situation": "VillageThriving", "Action": "Play", "Weight": 0.45 },
     { "Situation": "VillageThriving", "Action": "Ignore", "Weight": 0.3 },
-    { "Situation": "VillageThriving", "Action": "Attack", "Weight": 0.05 }
-  ]
+    { "Situation": "VillageThriving", "Action": "Attack", "Weight": 0.05 },
+    { "Situation": "MeetsCreature", "Action": "Befriend", "Weight": 0.5 },
+    { "Situation": "MeetsCreature", "Action": "Ignore", "Weight": 0.3 },
+    { "Situation": "MeetsCreature", "Action": "Flee", "Weight": 0.15 },
+    { "Situation": "MeetsCreature", "Action": "Fight", "Weight": 0.1 },
+    { "Situation": "MeetsEnemyCreature", "Action": "Fight", "Weight": 0.4 },
+    { "Situation": "MeetsEnemyCreature", "Action": "Flee", "Weight": 0.3 },
+    { "Situation": "MeetsEnemyCreature", "Action": "Ignore", "Weight": 0.25 },
+    { "Situation": "MeetsEnemyCreature", "Action": "Befriend", "Weight": 0.15 }
+  ],
+
+  // How Creatures meet and regard each other (spec section 27, ADR-017). Gains close that share of
+  // the gap to 1; losses remove that share. Two Creatures meet within MeetRadius metres, at most once
+  // every MeetCooldownSeconds; a Creature may go looking for another within SeekRadius, and run from
+  // one within FleeRadius.
+  "Bonds": {
+    "MeetRadius": 40.0,
+    "MeetCooldownSeconds": 120.0,
+    "SeekRadius": 400.0,
+    "FleeRadius": 150.0,
+    "StartingTrust": 0.3,
+    "WarFightDrive": 0.4,
+    "AllianceBefriendDrive": 0.3,
+    "FriendThreshold": 0.5,
+    "RivalThreshold": 0.5,
+    "FriendshipPerPlay": 0.25,
+    "TrustPerPlay": 0.15,
+    "FriendshipPerGreeting": 0.12,
+    "RivalryPerFight": 0.25,
+    "FriendshipLossPerFight": 0.5,
+    "BetrayalTrustLoss": 0.6,
+    "FearPerDefeat": 0.4,
+    "RespectPerDefeat": 0.25,
+    "RespectPerFight": 0.1,
+    "FearPerFlight": 0.1,
+    "TrustPerSpare": 0.3,
+    "FriendshipPerSpare": 0.15,
+    "RivalryPerAttack": 0.15,
+    "FearFadePerSecond": 0.0005,
+    "RivalryFadePerSecond": 0.001,
+    "FriendshipFadePerSecond": 0.0001,
+    "TrustDriftPerSecond": 0.0005,
+    "EncounterMemory": 6
+  },
+
+  // Fights (spec sections 28 and 111, ADR-017). Each of two equal Creatures loses DamagePerSecond of
+  // health per second; power is strength x (1 + SkillPower x combat skill). At YieldHealth a
+  // Creature is beaten: a winner whose mercy reaches SpareThreshold lets it go, otherwise it is
+  // banished with a scar and loses loyalty and a share of its progress towards the next level.
+  "Combat": {
+    "DamagePerSecond": 0.05,
+    "Jitter": 0.5,
+    "SkillPower": 1.0,
+    "YieldHealth": 0.25,
+    "SkillPerFight": 0.1,
+    "WinnerExperience": 6.0,
+    "DefeatExperienceLoss": 0.15,
+    "LoyaltyPerDefeat": 0.03,
+    "AggressionPerVictory": 0.01,
+    "AggressionPerDefeat": 0.03,
+    "FightLearningRate": 0.03,
+    "SpareThreshold": 0.5,
+    "WitnessRadius": 300.0,
+    "VictoryWitness": { "Faith": 0.06, "Love": 0.0, "Fear": 0.08, "Doubt": -0.04 },
+    "DefeatWitness": { "Faith": -0.04, "Love": 0.0, "Fear": 0.0, "Doubt": 0.08 }
+  }
 }

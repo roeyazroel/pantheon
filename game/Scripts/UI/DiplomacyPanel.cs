@@ -116,6 +116,10 @@ public partial class DiplomacyPanel : CanvasLayer
         card.AddChild(header);
         var practice = MigrationText.Practice(entry.RefugeePolicy);
         card.AddChild(Text((entry.Ties.Length > 0 ? entry.Ties + ". " : string.Empty) + char.ToUpperInvariant(practice[0]) + practice[1..] + ".", 14, new Color(0.62f, 0.8f, 1f)));
+        if (entry.Creatures.Length > 0)
+        {
+            card.AddChild(Text(entry.Creatures, 14, new Color(0.75f, 0.85f, 0.6f)));
+        }
 
         card.AddChild(Text(char.ToUpperInvariant(entry.Attitude[0]) + entry.Attitude[1..] + ".", 14, Muted));
         if (entry.Explanation.Length > 0)
@@ -187,7 +191,7 @@ public partial class DiplomacyPanel : CanvasLayer
     {
         foreach (var entry in entries)
         {
-            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Proposal}:{string.Join(",", entry.Available)}";
+            yield return $"{entry.GodId}:{entry.Status}:{entry.Attitude}:{entry.Explanation}:{entry.Grievances}:{entry.Ties}:{entry.RefugeePolicy}:{entry.Creatures}:{entry.Proposal}:{string.Join(",", entry.Available)}";
         }
     }
 }

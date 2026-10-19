@@ -11,7 +11,8 @@ namespace Pantheon.Client.Presentation.Creatures;
 /// One Creature on screen (presentation only, ADR-010): it follows the simulated position and
 /// heading smoothly, grows with its level, walks with a stride that matches its speed, and poses
 /// for what it is doing: lying down to rest, working with its arms, hopping in play, lunging in
-/// an attack. A label above it says what it is doing.
+/// an attack, trading blows in a fight (ADR-017). Its scars show on its chest. A label above it
+/// says what it is doing, with its health while it fights.
 /// </summary>
 internal sealed class CreatureView
 {
@@ -34,6 +35,7 @@ internal sealed class CreatureView
     private float _clock;
     private float _flash;
     private Color _flashColor;
+    private readonly float _phase;
     private bool _placed;
     private string _owner = string.Empty;
 
@@ -45,6 +47,7 @@ internal sealed class CreatureView
     public CreatureView(Node3D parent, int creatureId, Color godColor, string owner)
     {
         _owner = owner;
+        _phase = creatureId * 1.7f;
         _root = new Node3D { Name = "Creature_" + creatureId };
         parent.AddChild(_root);
         _pose = new Node3D { Name = "Pose" };
@@ -121,8 +124,11 @@ internal sealed class CreatureView
         _label.Scale = new Vector3(1f / scale, 1f / scale, 1f / scale);
         Pose(creature.Activity, moved / Math.Max(delta, 1e-3f));
         UpdateFlash(delta);
+        _body.ShowScars(creature.Scars);
         var title = _owner.Length > 0 ? $"{creature.Name} ({_owner})" : creature.Name;
-        var text = $"{title}\n{CreatureText.DescribeActivity(creature, world)}";
+        var fighting = creature.Activity.Action == CreatureAction.Fight && creature.Activity.Phase == CreaturePhase.Performing;
+        var health = fighting ? $"  {creature.Health:0%}" : string.Empty;
+        var text = $"{title}\n{CreatureText.DescribeActivity(creature, world)}{health}";
         if (_label.Text != text)
         {
             _label.Text = text;
@@ -173,6 +179,22 @@ internal sealed class CreatureView
                     lean = 0.2f + (0.45f * lunge);
                     arms = new Vector2(-2.4f + lunge, -2.4f + lunge);
                     headPitch = -0.2f;
+                    break;
+                case CreatureAction.Fight:
+                    // Blows trade back and forth: each fighter's swing is offset by its id.
+                    var blow = Mathf.Max(0f, Mathf.Sin((_clock * 7f) + _phase));
+                    lean = 0.25f + (0.5f * blow);
+                    arms = new Vector2(-2.6f + (1.4f * blow), -1.2f - (1.2f * blow));
+                    lift = 0.3f * Mathf.Abs(Mathf.Sin(_clock * 3.5f));
+                    headPitch = -0.25f;
+                    break;
+                case CreatureAction.Befriend:
+                    lift = Mathf.Abs(Mathf.Sin((_clock * 4f) + _phase)) * 1.2f;
+                    arms = new Vector2(-2.4f, -1.4f + Mathf.Sin(_clock * 4f));
+                    break;
+                case CreatureAction.Flee:
+                    lean = 0.3f;
+                    breathe *= 4f;
                     break;
                 case CreatureAction.GoTo:
                 case CreatureAction.Wander:

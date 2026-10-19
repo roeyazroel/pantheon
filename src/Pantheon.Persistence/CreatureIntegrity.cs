@@ -48,6 +48,11 @@ internal static class CreatureIntegrity
             ValidateCreature(creature, settlementIds, errors);
         }
 
+        foreach (var creature in creatures.Values)
+        {
+            ValidateBonds(creature, creatures, errors);
+        }
+
         foreach (var god in world.Gods)
         {
             if (god?.CreatureId is { } id && (!creatures.TryGetValue(id, out var creature) || creature.GodId != god.Id))
@@ -94,6 +99,39 @@ internal static class CreatureIntegrity
             || creature.Activity.TicksLeft < 0)
         {
             errors.Add($"{prefix} names a missing settlement or has a negative tick count.");
+        }
+    }
+
+    /// <summary>Checks a Creature's combat numbers, its views of the others and its references to them (ADR-017).</summary>
+    private static void ValidateBonds(CreatureState creature, Dictionary<int, CreatureState> creatures, List<string> errors)
+    {
+        var prefix = $"Creature {creature.Id}";
+        if (!IsShare(creature.CombatSkill) || creature.Scars < 0 || creature.Relations is null)
+        {
+            errors.Add($"{prefix} has combat skill or scars out of range, or no relations.");
+            return;
+        }
+
+        bool Known(int? id) => id is not { } other || (other != creature.Id && creatures.ContainsKey(other));
+        if (!Known(creature.Activity.TargetCreatureId) || creature.Memories.Exists(m => m is null || !Known(m.OtherCreatureId)))
+        {
+            errors.Add($"{prefix} names a missing Creature, or itself, in its activity or memories.");
+        }
+
+        var seen = new HashSet<int>();
+        foreach (var view in creature.Relations)
+        {
+            if (view is null || view.Encounters is null || !Known(view.OtherCreatureId) || !seen.Add(view.OtherCreatureId))
+            {
+                errors.Add($"{prefix} has a missing, duplicate or self relation.");
+                continue;
+            }
+
+            if (!IsShare(view.Friendship) || !IsShare(view.Fear) || !IsShare(view.Rivalry) || !IsShare(view.Respect) || !IsShare(view.Trust)
+                || view.LastMetTick < -1 || view.Encounters.Exists(e => e is null || !Enum.IsDefined(e.Kind)))
+            {
+                errors.Add($"{prefix} has a view of Creature {view.OtherCreatureId} out of range.");
+            }
         }
     }
 

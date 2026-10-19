@@ -53,6 +53,7 @@ public sealed class SaveMigrationV6Tests
         Version8Expectations.Apply(expected);
         Version9Expectations.Apply(expected);
         Version10Expectations.Apply(expected);
+        Version11Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version6SavePath)));
 

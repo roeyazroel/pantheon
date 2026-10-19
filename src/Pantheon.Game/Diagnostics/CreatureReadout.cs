@@ -66,9 +66,38 @@ internal static class CreatureReadout
                 lines.Add("  options: " + string.Join("   ", snapshot.CreatureOptions.Take(OptionsShown).Select(o => DescribeOption(o, world))));
             }
 
+            if (creature.Id == snapshot.LocalCreatureId && snapshot.CreatureResponses.Count > 0)
+            {
+                var other = CreatureText.Concerning(world, null, snapshot.CreatureResponses[0].CreatureId) ?? "another Creature";
+                lines.Add(Format("  meeting {0}: ", other) + string.Join("   ", snapshot.CreatureResponses.Select(o => Format("{0} {1:0.00}", o.Action, o.Utility))));
+            }
+
+            AppendBonds(lines, creature, snapshot);
             AppendPreferences(lines, creature);
             AppendMemories(lines, creature, world);
         }
+    }
+
+    /// <summary>Its fighting power, skill and scars, and its views of the other Creatures with their latest encounters (ADR-017).</summary>
+    private static void AppendBonds(List<string> lines, CreatureState creature, DebugSnapshot snapshot)
+    {
+        var world = snapshot.World;
+        var power = snapshot.CreatureRules is { } rules ? Format("   power {0:0.00}", CreatureBonds.Power(rules, creature)) : string.Empty;
+        var views = creature.Relations.Select(view =>
+        {
+            var name = CreatureText.Concerning(world, null, view.OtherCreatureId) ?? "?";
+            var recent = view.Encounters.AsEnumerable().Reverse().Take(MemoriesShown).Select(e => CreatureBondText.Encounter(e.Kind));
+            return Format(
+                "{0} friend {1:0.00} fear {2:0.00} rival {3:0.00} respect {4:0.00} trust {5:0.00} [{6}]",
+                name,
+                view.Friendship,
+                view.Fear,
+                view.Rivalry,
+                view.Respect,
+                view.Trust,
+                string.Join(", ", recent));
+        });
+        lines.Add(Format("  combat skill {0:0.00}   scars {1}{2}   bonds: ", creature.CombatSkill, creature.Scars, power) + (creature.Relations.Count == 0 ? "none" : string.Join(" | ", views)));
     }
 
     /// <summary>The learned preferences, grouped by situation.</summary>
@@ -94,7 +123,7 @@ internal static class CreatureReadout
             .Take(MemoriesShown)
             .Select(memory =>
             {
-                var place = memory.SettlementId is { } id ? world.Settlements.Find(s => s.Id == id)?.Name : null;
+                var place = CreatureText.Concerning(world, memory.SettlementId, memory.OtherCreatureId);
                 var feedback = memory.Feedback == CreatureFeedback.None ? string.Empty : " (" + memory.Feedback.ToString().ToLowerInvariant() + ")";
                 return CreatureText.Doing(memory.Action, place) + feedback;
             });
@@ -104,7 +133,7 @@ internal static class CreatureReadout
     /// <summary>One option with its utility.</summary>
     private static string DescribeOption(CreatureOption option, WorldState world)
     {
-        var place = option.SettlementId is { } id ? world.Settlements.Find(s => s.Id == id)?.Name : null;
+        var place = CreatureText.Concerning(world, option.SettlementId, option.CreatureId);
         return Format("{0} {1:0.00}", CreatureText.Doing(option.Action, place), option.Utility);
     }
 

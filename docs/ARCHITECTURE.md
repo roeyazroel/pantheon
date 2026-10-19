@@ -119,7 +119,8 @@ files and compiled assemblies and fails when either rule is broken.
   (RNG state), `Regions` (`RegionGrid`), `Settlements`, `Gods`, `Creatures`, `Diplomacy`,
   `Weather`, `Disasters`, `Migration` (groups on the road, ADR-016) and `WinnerGodIds` (the god
   or allied gods that have won, spec §53 and §115; ADR-015). Settlements carry their people's
-  wish to leave (`Emigration`) and gods their `RefugeePolicy`.
+  wish to leave (`Emigration`) and gods their `RefugeePolicy`. Creatures carry their combat
+  skill, scars and views of each other (`CreatureRelation`, ADR-017).
 - `RegionGrid`: `Columns × Rows` cells of `RegionState`, each `RegionSize` metres square, with a
   row-major `Id = row * Columns + column`.
 - `RegionState`: `Id`, `Biome`, `Elevation` (mean metres, sea level = 0), `Temperature`,
@@ -159,13 +160,14 @@ files and compiled assemblies and fails when either rule is broken.
 - `Events/`: transient `WorldEvent` records (`MiracleCast`, `FollowingChanged`, `RankAchieved`,
   `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
   `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged`, `MigrationStarted`, `MigrationEnded`,
-  `MigrantsTurnedAway` and others) raised during a tick or a command and never saved.
+  `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded` and others) raised during a tick or a
+  command and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
   (the per-step balance of the settlement model, `game/Data/settlement_rules.json`),
   `DivineRules` (belief, worship, power, influence and ranks, `divine_rules.json`),
   `MiracleCatalog` and `MiracleDefinition` (`miracles.json`), `PantheonSetup` (the gods of a
   new world, their personalities and their Creatures' names, `gods.json`), `CreatureRules`
-  (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
+  with its `CreatureBondRules` and `CreatureCombatRules` (`creatures.json`), `GodAiRules` with one `GodProfile` per personality, including its
   diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
   (`weather.json`), `DisasterRules` (`disasters.json`) and `MigrationRules` (`migration.json`).
 
@@ -204,6 +206,8 @@ files and compiled assemblies and fails when either rule is broken.
   (options and utilities, decisions, planned routes), `CreatureDeeds` (what a finished action does
   to the world), `CreatureSystem` (the per-tick state machine), `CreatureAuthority` (rewards,
   punishments and go-to, checked) and `CreatureFounder` (see [The Creature](#the-creature)).
+  `CreatureBonds` (views and urges), `CreatureMeetings` and `CreatureCombat` are the Creatures'
+  dealings with each other (see [Creature relationships](#creature-relationships)).
   `Navigation/RegionPathfinder` runs A* over land regions and smooths the path.
 - `Gods/GodAi` is the strategic utility AI of AI gods (see [Rival gods](#rival-gods)), run by
   `GodAiSystem`; `Gods/GodDiplomat` adds its diplomatic moves. `Belief/VictorySystem` tracks
@@ -252,13 +256,16 @@ files and compiled assemblies and fails when either rule is broken.
   wind) and gives each region its climate's moisture as soil water. Version 7 → 8 adds no
   earthquakes, no fire or scorch, and no ruins or shields. Version 8 → 9 turns the one winner
   into the list of winners (that god, or none). Version 9 → 10 adds no migration groups, no wish
-  to leave and a welcoming refugee policy for every god. A missing, unsupported or newer version
+  to leave and a welcoming refugee policy for every god. Version 10 → 11 gives every Creature no
+  combat skill, scars or views of the others, and marks nothing it did as concerning another
+  Creature. A missing, unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
   against the generation settings, settlement ids and regions, non-negative quantities, health
   and blessing in 0..1, god ids and Divine Power, and beliefs (known gods, one each, values in
   0..1, shares adding up to at most 1), Creatures (`CreatureIntegrity`: owners, home and
-  target settlements, levels, values in range), diplomacy (`DiplomacyIntegrity`: known gods,
+  target settlements, levels, values in range, combat skill and scars, one view per other known
+  Creature, references to Creatures that exist), diplomacy (`DiplomacyIntegrity`: known gods,
   one relation per observer and subject and one stance per pair, values in range), soil moisture
   in 0..1, and weather (`WeatherIntegrity`: unique cell ids below the next id, finite positions,
   values in range, known gods), fire and scorch in 0..1, ruins and shields not negative, and
@@ -309,21 +316,23 @@ files and compiled assemblies and fails when either rule is broken.
   settings.
 - `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
-  target hint and the Creature card (level, activity, needs, loyalty, morality, what feedback would
-  judge), the rival gods with their status towards the player, the race for victory (a bloc's
+  target hint and the Creature card (level, activity, needs, loyalty, morality, combat skill,
+  scars, its bonds with the Creatures it has met, what feedback would judge), the rival gods with their status towards the player, the race for victory (a bloc's
   shared share when allied, ADR-015), and the
   weather and dangers when they matter (a dry or wet spell; droughts, storms, fires and earthquakes
   among the player's people).
   `Divine/DivineText` words ranks, personalities, clocks and cast verdicts;
-  `Creatures/CreatureText` words Creature activities and command outcomes.
+  `Creatures/CreatureText` words Creature activities and command outcomes;
+  `Creatures/CreatureBondText` words how Creatures regard each other, and
+  `Creatures/CreatureCommands` brings another Creature to the player's (K).
 - `Disasters/DisasterText` words fire causes, disasters and the marks on labels;
   `Disasters/DisasterCommands` starts an earthquake (F11) or a fire (F12) at a point for debugging.
 - `Weather/WeatherText` words spells, kinds, the wind's direction and droughts;
   `Weather/WeatherCommands` drives the weather for debugging (F8 next spell, F10 a storm at the
   cursor).
 - `Diplomacy/DiplomacyReadout` builds the diplomacy panel's entries (status, the rival's ties
-  with the other gods, its attitude and why, the player's grievances, the proposal waiting and the
-  moves allowed now), and
+  with the other gods, how the two gods' Creatures regard each other, its attitude and why, the
+  player's grievances, the proposal waiting and the moves allowed now), and
   `DiplomacyText` words statuses, commands, memories and rejections.
 - `Alerts/AlertFeed` turns events into alerts for the local player (§59): only those about the
   player's god or followers, plus wars, betrayals and alliances between other gods and every
@@ -385,8 +394,11 @@ files and compiled assemblies and fails when either rule is broken.
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast
   along the way, and a label that fades out at strategic zoom.
-- `Bootstrap/NatureDebug` wires the weather, disaster and migration debug hotkeys (F8, F10, F11,
-  F12, M) and the `--weather`, `--disaster`, `--migrate` and `--refugees` launch options.
+- `Bootstrap/NatureDebug` wires the weather, disaster, migration and Creature debug hotkeys (F8,
+  F10, F11, F12, M, K) and the `--weather`, `--disaster`, `--migrate`, `--refugees` and `--meet`
+  launch options.
+- `Presentation/Creatures/CreatureView` poses fights (blows traded face to face), games and
+  flight, shows a fighter's health on its label, and `CreatureBody` draws scars on the flanks.
 - `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
   buttons send the moves through `SessionCommands.CommandDiplomacy`, and its refugee row sets the
   player's policy through `MigrationCommands.SetPolicy`.
@@ -438,7 +450,7 @@ sequenceDiagram
             Engine->>State: victory check, diplomacy step (drift, fading, status, lapsed proposals)
             Engine->>State: migration step (wish to leave, departures, the road, arrivals)
         end
-        Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds)
+        Engine->>State: Creature system (needs, decide at 5 Hz, walk, deeds, meetings at 5 Hz, fights, views fade at 1 Hz)
         opt every 30 ticks
             Engine->>State: AI gods (miracles, Creature, diplomacy, refugee policy) through the authorities
         end
@@ -656,6 +668,42 @@ flowchart LR
     Player["God: reward / punish"] --> Learn["Preferences, traits, loyalty"]
     Learn --> Score
     Deeds --> Villages
+```
+
+## Creature relationships
+
+ADR-017 records the decisions, and the Milestone 11 plan
+([.docs/milestone-11-creature-relationships.md](../.docs/milestone-11-creature-relationships.md))
+has the rules with their shipped values and the measured runs.
+
+- **Views** (`CreatureRelation`, one per Creature met, each side its own): friendship, fear,
+  rivalry, respect and trust, the last meeting and the latest encounters. `CreatureBonds` holds the
+  pure rules: the urges to fight, play and flee, what each encounter does to both views, and how
+  views fade.
+- **Meetings** (`CreatureMeetings`, on decision ticks): two free Creatures within `MeetRadius`
+  meet once a cooldown. Each answers through `CreatureBrain.Respond`: preference × drive ×
+  personality in the `MeetsCreature` or `MeetsEnemyCreature` situation (gods at war). The answers
+  make a fight, a game, a greeting, a flight or nothing. Creatures in sight are also options in the
+  brain's ordinary decisions, to seek or flee.
+- **Combat** (`CreatureCombat`, every tick): blows by strength × combat skill with jitter from a
+  stream derived from the seed and the tick. It ends in a banishment (scar, loyalty, experience,
+  witnesses' belief, the god's `CreatureDefeated` memory), mercy, a draw or a broken-off fight.
+- **Gods**: `GodAi` rewards fights with enemies' Creatures and play with allies', and at war may
+  send its Creature against an enemy's Creature that threatens its people.
+
+```mermaid
+flowchart LR
+    Brain["CreatureBrain<br/>options and answers"] --> Meet["CreatureMeetings"]
+    Bonds["CreatureBonds<br/>views and urges"] --> Brain
+    Stance["Gods at war / allied"] --> Bonds
+    Meet -->|play, greet, flee| Bonds
+    Meet -->|fight| Combat["CreatureCombat<br/>(derived stream)"]
+    Combat --> Bonds
+    Combat --> Banish["Banishment, scars,<br/>loyalty, experience"]
+    Combat --> Belief["Witnesses' belief"]
+    Combat --> Ledger["DiplomacyLedger:<br/>CreatureDefeated"]
+    Player["God: reward / punish / send"] --> Brain
+    Ai["GodAi: teach, confront"] --> Brain
 ```
 
 ## Rival gods
@@ -892,7 +940,11 @@ the client.
   health falls, deaths rise and the settlement recovers once the land feeds it again.
 - The F1 panel's Creature view (`CreatureReadout`, §106) shows its level, health, loyalty,
   morality and position, its activity, needs and personality, its best options with their
-  utilities, its learned preferences and its latest memories.
+  utilities, its learned preferences and its latest memories. Since Milestone 11 it also shows
+  each Creature's combat skill, scars and power, its view of every Creature it has met (friendship,
+  fear, rivalry, respect, trust and the latest encounters), and how the player's Creature would
+  answer the nearest one if they met now. K brings the nearest Creature beside the player's, and
+  `--meet=on|<name>` does so at the start.
 - The F1 panel's god AI view (`GodAiReadout`, §106) shows each AI god's personality, its goal now
   (its best candidate) and its top three candidates with utilities and reasons, followed by its
   diplomatic candidates and the factors behind them.
@@ -1028,7 +1080,10 @@ Default world: 1024 × 1024 height samples at 2 m spacing (a 2048 m island), 32 
   (against `save-v8.json`). Since Milestone 10 it covers migration's pressure, abandonment, appeal,
   conversion and merging, the migration step from leaving to arriving, refugee policies for the
   player and the AI, migration's presentation and tools, and the version 9 → 10 migration
-  (against `save-v9.json`). The tests load the shipped `game/Data/*.json`; rule tests
+  (against `save-v9.json`). Since Milestone 11 it covers the Creatures' views and urges,
+  meetings, play, flight, betrayal, fights and their outcomes, the AI's teaching and confronting,
+  their presentation and tools, and the version 10 → 11 migration (against `save-v10.json`). The
+  tests load the shipped `game/Data/*.json`; rule tests
   pin their own rules (`SettlementWorlds.Rules`, `DivineWorlds.Rules`, `DiplomacyWorlds.Rules`,
   `WeatherWorlds.Rules`, `DisasterWorlds.Rules`, `MigrationWorlds.Rules`)
   so retuning the data does not change their meaning.

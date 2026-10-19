@@ -78,7 +78,100 @@ public static class CreatureRulesValidator
             errors.RequireShare(preference.Weight, $"StartingPreferences {preference.Situation}/{preference.Action}");
         }
 
+        ValidateBonds(rules.Bonds, rules.PerceptionRadius, errors);
+        ValidateCombat(rules.Combat, errors);
         errors.ThrowIfAny("creature rules", nameof(rules));
+    }
+
+    /// <summary>Distances within sight, shares in 0..1 and non-negative rates (ADR-017).</summary>
+    private static void ValidateBonds(CreatureBondRules bonds, float perception, RuleErrors errors)
+    {
+        if (bonds is null)
+        {
+            errors.Add("Bonds is required.");
+            return;
+        }
+
+        errors.RequirePositive(bonds.MeetRadius, "Bonds.MeetRadius");
+        errors.RequireNonNegative(bonds.MeetCooldownSeconds, "Bonds.MeetCooldownSeconds");
+        if (!(bonds.SeekRadius >= bonds.MeetRadius && bonds.SeekRadius <= perception) || !(bonds.FleeRadius >= bonds.MeetRadius && bonds.FleeRadius <= bonds.SeekRadius))
+        {
+            errors.Add("Bonds.SeekRadius must lie between MeetRadius and PerceptionRadius, and FleeRadius between MeetRadius and SeekRadius.");
+        }
+
+        foreach (var (value, name) in new[]
+        {
+            (bonds.StartingTrust, nameof(bonds.StartingTrust)),
+            (bonds.WarFightDrive, nameof(bonds.WarFightDrive)),
+            (bonds.AllianceBefriendDrive, nameof(bonds.AllianceBefriendDrive)),
+            (bonds.FriendThreshold, nameof(bonds.FriendThreshold)),
+            (bonds.RivalThreshold, nameof(bonds.RivalThreshold)),
+            (bonds.FriendshipPerPlay, nameof(bonds.FriendshipPerPlay)),
+            (bonds.TrustPerPlay, nameof(bonds.TrustPerPlay)),
+            (bonds.FriendshipPerGreeting, nameof(bonds.FriendshipPerGreeting)),
+            (bonds.RivalryPerFight, nameof(bonds.RivalryPerFight)),
+            (bonds.FriendshipLossPerFight, nameof(bonds.FriendshipLossPerFight)),
+            (bonds.BetrayalTrustLoss, nameof(bonds.BetrayalTrustLoss)),
+            (bonds.FearPerDefeat, nameof(bonds.FearPerDefeat)),
+            (bonds.RespectPerDefeat, nameof(bonds.RespectPerDefeat)),
+            (bonds.RespectPerFight, nameof(bonds.RespectPerFight)),
+            (bonds.FearPerFlight, nameof(bonds.FearPerFlight)),
+            (bonds.TrustPerSpare, nameof(bonds.TrustPerSpare)),
+            (bonds.FriendshipPerSpare, nameof(bonds.FriendshipPerSpare)),
+            (bonds.RivalryPerAttack, nameof(bonds.RivalryPerAttack)),
+            (bonds.FearFadePerSecond, nameof(bonds.FearFadePerSecond)),
+            (bonds.RivalryFadePerSecond, nameof(bonds.RivalryFadePerSecond)),
+            (bonds.FriendshipFadePerSecond, nameof(bonds.FriendshipFadePerSecond)),
+            (bonds.TrustDriftPerSecond, nameof(bonds.TrustDriftPerSecond)),
+        })
+        {
+            errors.RequireShare(value, "Bonds." + name);
+        }
+
+        errors.RequireAtLeast(bonds.EncounterMemory, 1, "Bonds.EncounterMemory");
+    }
+
+    /// <summary>Positive damage, shares in 0..1 and impulses in -1..1 (ADR-017).</summary>
+    private static void ValidateCombat(CreatureCombatRules combat, RuleErrors errors)
+    {
+        if (combat is null)
+        {
+            errors.Add("Combat is required.");
+            return;
+        }
+
+        errors.RequirePositive(combat.DamagePerSecond, "Combat.DamagePerSecond");
+        errors.RequireNonNegative(combat.SkillPower, "Combat.SkillPower");
+        errors.RequireNonNegative(combat.WinnerExperience, "Combat.WinnerExperience");
+        errors.RequireNonNegative(combat.WitnessRadius, "Combat.WitnessRadius");
+        errors.RequireNonNegative(combat.SpareThreshold, "Combat.SpareThreshold");
+        foreach (var (value, name) in new[]
+        {
+            (combat.Jitter, nameof(combat.Jitter)),
+            (combat.YieldHealth, nameof(combat.YieldHealth)),
+            (combat.SkillPerFight, nameof(combat.SkillPerFight)),
+            (combat.DefeatExperienceLoss, nameof(combat.DefeatExperienceLoss)),
+            (combat.LoyaltyPerDefeat, nameof(combat.LoyaltyPerDefeat)),
+            (combat.AggressionPerVictory, nameof(combat.AggressionPerVictory)),
+            (combat.AggressionPerDefeat, nameof(combat.AggressionPerDefeat)),
+            (combat.FightLearningRate, nameof(combat.FightLearningRate)),
+        })
+        {
+            errors.RequireShare(value, "Combat." + name);
+        }
+
+        if (!(combat.YieldHealth < 1f))
+        {
+            errors.Add("Combat.YieldHealth must be below 1, or no fight could start.");
+        }
+
+        foreach (var (impulse, name) in new[] { (combat.VictoryWitness, "Combat.VictoryWitness"), (combat.DefeatWitness, "Combat.DefeatWitness") })
+        {
+            errors.RequireSignedShare(impulse.Faith, name + ".Faith");
+            errors.RequireSignedShare(impulse.Love, name + ".Love");
+            errors.RequireSignedShare(impulse.Fear, name + ".Fear");
+            errors.RequireSignedShare(impulse.Doubt, name + ".Doubt");
+        }
     }
 
     /// <summary>Rising, positive thresholds, at most one per level above the first.</summary>

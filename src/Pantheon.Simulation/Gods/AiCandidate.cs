@@ -11,7 +11,7 @@ public enum AiActionKind
     /// <summary>Cast a miracle on a settlement.</summary>
     CastMiracle,
 
-    /// <summary>Send its Creature to a settlement.</summary>
+    /// <summary>Send its Creature to a settlement, or against an enemy's Creature (ADR-017).</summary>
     SendCreature,
 }
 

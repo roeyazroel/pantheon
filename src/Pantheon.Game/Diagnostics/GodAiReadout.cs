@@ -58,6 +58,7 @@ internal static class GodAiReadout
         {
             AiActionKind.Wait => "wait and save power",
             AiActionKind.CastMiracle => Format("{0} on {1}", candidate.MiracleId, place),
+            AiActionKind.SendCreature when candidate.SettlementId is null => "send its Creature against an enemy's (" + candidate.Reason + ")",
             AiActionKind.SendCreature => Format("send its Creature to {0}", place),
         };
     }

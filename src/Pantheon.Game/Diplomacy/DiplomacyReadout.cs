@@ -33,6 +33,9 @@ public sealed record DiplomacyEntry
     /// <summary>What it does with migrants arriving where it is followed (ADR-016).</summary>
     public required Domain.Migration.RefugeePolicy RefugeePolicy { get; init; }
 
+    /// <summary>How your Creature and its Creature regard each other (ADR-017); empty when either has none.</summary>
+    public required string Creatures { get; init; }
+
     /// <summary>What it has proposed to you, if anything.</summary>
     public ProposalKind? Proposal { get; init; }
 
@@ -94,6 +97,7 @@ public static class DiplomacyReadout
                 Grievances = DiplomacyText.Grievances(DiplomacyModel.FindRelation(world, me, god.Id), world, god.Name),
                 Ties = DiplomacyText.Ties(world, god.Id, me),
                 RefugeePolicy = god.RefugeePolicy,
+                Creatures = CreaturesOf(session, god),
                 Proposal = DiplomacyAuthority.FindProposal(world, god.Id, me)?.Kind,
                 Available = available,
             });
@@ -101,4 +105,10 @@ public static class DiplomacyReadout
 
         return entries;
     }
+
+    /// <summary>How the player's Creature and the god's Creature regard each other, or empty.</summary>
+    private static string CreaturesOf(GameSession session, Domain.Gods.GodState god) =>
+        session.LocalCreature is { } mine && god.CreatureId is { } id && session.World.Creatures.Find(c => c.Id == id) is { } theirs
+            ? Creatures.CreatureBondText.Between(session.Content.Creatures.Bonds, mine, theirs)
+            : string.Empty;
 }

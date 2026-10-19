@@ -63,6 +63,9 @@ public sealed record DebugSnapshot
     /// <summary>The local Creature's options now, best first.</summary>
     public IReadOnlyList<CreatureOption> CreatureOptions { get; init; } = [];
 
+    /// <summary>How the local Creature would answer the nearest other Creature if they met now, best first (ADR-017).</summary>
+    public IReadOnlyList<CreatureOption> CreatureResponses { get; init; } = [];
+
     /// <summary>Settlement shown in detail; the others get one line each. <c>null</c> shows the first.</summary>
     public int? SelectedSettlementId { get; init; }
 

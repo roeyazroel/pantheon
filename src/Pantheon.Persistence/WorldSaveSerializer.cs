@@ -25,7 +25,7 @@ public static class WorldSaveSerializer
     /// version 9 (Milestone 9) replaced the one winner with the winners, for victories won together;
     /// version 10 (Milestone 10) added migration, settlements' wish to leave and gods' refugee policies.
     /// </summary>
-    public const int CurrentSaveVersion = 10;
+    public const int CurrentSaveVersion = 11;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;
