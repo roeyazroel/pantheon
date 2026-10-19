@@ -44,6 +44,7 @@ internal static class DisasterWorlds
         HouseQuakeResistance = 0.3f,
         HouseFireResistance = 0.5f,
         ShieldedDamage = 0.1f,
+        Preparedness = Preparedness.None,
     };
 
     /// <summary>Makes every region parched and fully vegetated, so it burns as readily as land can.</summary>

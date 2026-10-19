@@ -250,6 +250,7 @@ internal static class SaveIntegrity
 
             ValidateBeliefs(settlement.Beliefs, $"Settlement {settlement.Id}", godIds, errors);
             HolySiteIntegrity.ValidateFaith(world, settlement, godIds, errors);
+            SocietyIntegrity.Validate(settlement, godIds, errors);
         }
     }
 }

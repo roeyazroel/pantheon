@@ -54,6 +54,8 @@ public sealed record LaunchOptions
         "domains",
         "domains-panel",
         "settings-page",
+        "priority",
+        "settlement-panel",
     };
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
@@ -172,6 +174,12 @@ public sealed record LaunchOptions
 
     /// <summary>Whether the settings page is open from the start, for captures.</summary>
     public bool SettingsPage { get; init; }
+
+    /// <summary>A priority the player's god asks of the focused settlement at the start (ADR-023).</summary>
+    public Domain.Society.SettlementPriority? Priority { get; init; }
+
+    /// <summary>Whether the Settlements panel is open at the start, on the focused settlement.</summary>
+    public bool SettlementPanel { get; init; }
 
     /// <summary>Problems found while parsing.</summary>
     public IReadOnlyList<string> Warnings { get; init; } = [];
@@ -355,6 +363,12 @@ public sealed record LaunchOptions
                 return OnOff(value) is { } panel ? options with { DomainsPanel = panel } : Warn(options, warnings, $"'--domains-panel' needs on or off, got '{value}'.");
             case "settings-page":
                 return OnOff(value) is { } settings ? options with { SettingsPage = settings } : Warn(options, warnings, $"'--settings-page' needs on or off, got '{value}'.");
+            case "priority":
+                return Enum.TryParse<Domain.Society.SettlementPriority>(value.Trim(), ignoreCase: true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(value.Trim(), out _)
+                    ? options with { Priority = priority }
+                    : Warn(options, warnings, $"'--priority' needs a priority such as Temple or Preparation, got '{value}'.");
+            case "settlement-panel":
+                return OnOff(value) is { } open ? options with { SettlementPanel = open } : Warn(options, warnings, $"'--settlement-panel' needs on or off, got '{value}'.");
             case "guide":
                 return OnOff(value) is { } guide ? options with { Guide = guide } : Warn(options, warnings, $"'--guide' needs on or off, got '{value}'.");
             case "upnp":

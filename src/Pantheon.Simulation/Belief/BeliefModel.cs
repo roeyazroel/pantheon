@@ -212,7 +212,8 @@ public static class BeliefModel
         ArgumentNullException.ThrowIfNull(settlement);
         ArgumentNullException.ThrowIfNull(belief);
         var workers = Math.Max(0, settlement.Population) * settlementRules.WorkforceShare;
-        return workers * settlementRules.WorshipWorkforceShare * SimMath.Clamp01(belief.Adherence) * SimMath.Clamp01(belief.Faith);
+        return workers * settlementRules.WorshipWorkforceShare * SimMath.Clamp01(belief.Adherence) * SimMath.Clamp01(belief.Faith)
+            * Settlements.CivicModel.WorshipFactor(settlementRules, settlement);
     }
 
     /// <summary>
@@ -229,8 +230,24 @@ public static class BeliefModel
         ArgumentNullException.ThrowIfNull(rules);
         return ComputeWorshippers(settlementRules, settlement, belief)
             * ComputeWorshipIntensity(rules, belief)
-            * rules.ShrineInfrastructure
+            * ComputeInfrastructure(rules, settlement, belief.GodId)
             * rules.PowerPerWorshipperPerStep;
+    }
+
+    /// <summary>
+    /// The religious infrastructure a god's worship has in a settlement (spec §9, ADR-023): the
+    /// shrine, a temple raised to the god, and the people's religion technology.
+    /// </summary>
+    /// <param name="rules">Divine rules.</param>
+    /// <param name="settlement">The settlement.</param>
+    /// <param name="godId">The god.</param>
+    /// <returns>The infrastructure multiplier.</returns>
+    public static float ComputeInfrastructure(DivineRules rules, SettlementState settlement, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(settlement);
+        var temple = Settlements.CivicModel.HasTemple(settlement, godId) ? rules.TempleInfrastructure : 1f;
+        return rules.ShrineInfrastructure * temple * (1f + (rules.ReligionPerLevel * settlement.Society.Technology.Religion));
     }
 
     /// <summary>Applies one value of an impulse: a positive change closes that share of the gap to 1, a negative one removes that share of the value.</summary>

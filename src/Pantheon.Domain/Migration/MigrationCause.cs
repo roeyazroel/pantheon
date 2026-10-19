@@ -20,4 +20,10 @@ public enum MigrationCause
 
     /// <summary>They have lost confidence in the god they follow.</summary>
     Doubt,
+
+    /// <summary>They are unhappy (ADR-023).</summary>
+    Unhappiness,
+
+    /// <summary>Their settlement's order is breaking down (ADR-023).</summary>
+    Unrest,
 }

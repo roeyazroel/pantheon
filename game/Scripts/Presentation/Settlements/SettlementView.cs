@@ -29,6 +29,7 @@ internal sealed class SettlementView
     private readonly SettlementRules _rules;
     private readonly SettlementLayoutSettings _layout;
     private readonly SiteView _siteView;
+    private readonly CivicView _civicView;
     private readonly SettlementCrowd _crowd;
     private readonly CitizenView _citizens;
     private readonly Label3D _label;
@@ -58,6 +59,7 @@ internal sealed class SettlementView
         AddPart(root, "ShrinePillar", assets.ShrinePillar, center + SettlementAssets.ShrinePillarOffset);
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
         _siteView = new SiteView(root, assets, _layout);
+        _civicView = new CivicView(root, assets);
         _crowd = new SettlementCrowd(seed, settlement.Id, settings);
         _citizens = new CitizenView(root, assets, settings.Citizens);
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
@@ -80,6 +82,9 @@ internal sealed class SettlementView
         {
             ShowSite(settlement);
         }
+
+        var temple = settlement.Society.Buildings.Find(b => b.Kind == Domain.Society.BuildingKind.Temple);
+        _civicView.Show(settlement, Site, _terrain, temple?.GodId is { } god ? _divine.GodColor(god).ToGodot() : null);
     }
 
     /// <summary>Chooses the tier for the camera distance and, in Tier 2, rebuilds and moves the representative citizens.</summary>

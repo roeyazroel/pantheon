@@ -144,6 +144,7 @@ public sealed class PresentationTests
             Water = 0f,
             Housing = 60,
             Health = 1f,
+            Society = Pantheon.Domain.Society.SocietyState.Founded(),
             Beliefs = [],
             ConstructionProgress = 0f,
             Ruins = 0,

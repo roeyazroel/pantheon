@@ -46,6 +46,8 @@ public static class MigrationModel
             rules.WarWeight * War(rules, world, settlement),
             rules.FearWeight * feelings.Fear,
             rules.DoubtWeight * feelings.Doubt,
+            rules.UnhappinessWeight * Squared(1f - settlement.Society.Happiness),
+            rules.InstabilityWeight * Squared(1f - settlement.Society.Stability),
         ];
         var total = 0f;
         var strongest = 0;
@@ -61,6 +63,9 @@ public static class MigrationModel
         var pressure = SimMath.Clamp01(total) * (1f - (rules.LoveLoyalty * feelings.Love));
         return new MigrationPressure(SimMath.Clamp01(pressure), (MigrationCause)strongest);
     }
+
+    /// <summary>The square of a share, so only a large one weighs much.</summary>
+    private static float Squared(float share) => SimMath.Clamp01(share) * SimMath.Clamp01(share);
 
     /// <summary>How far gods at war over the settlement drive its people out: 1 when two gods at war each hold half of them.</summary>
     /// <param name="rules">Migration rules.</param>

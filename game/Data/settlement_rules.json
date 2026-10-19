@@ -66,5 +66,27 @@
   "NeighbourWaterAccess": 0.8,
   "WellFloor": 0.25,
   "WellAccess": 0.5,
-  "ThirstHealthLossPerStep": 0.015
+  "ThirstHealthLossPerStep": 0.015,
+
+  // What a settlement's technology (per level, society.json caps it at 5) and buildings do (ADR-023):
+  // richer harvests, faster healing and fewer deaths from ill health, houses that take less work,
+  // larger stores with a granary or cistern, and walls and arms that turn attacks away. A priority
+  // (spec 29) brings FoodPriorityYield more harvest, HealthPriorityRecovery health a step, GrowthPriorityBirths
+  // more births, or WorshipPriorityFactor times the worship.
+  "Civics": {
+    "AgriculturePerLevel": 0.06,
+    "MedicinePerLevel": 0.002,
+    "MedicineDeathsPerLevel": 0.08,
+    "ArchitecturePerLevel": 0.06,
+    "GranaryStorage": 1.5,
+    "CisternStorage": 2.0,
+    "HospitalRecovery": 0.005,
+    "HospitalDeaths": 0.3,
+    "WallsDefence": 0.5,
+    "WarfarePerLevel": 0.08,
+    "FoodPriorityYield": 0.15,
+    "HealthPriorityRecovery": 0.003,
+    "GrowthPriorityBirths": 0.4,
+    "WorshipPriorityFactor": 2.0
+  }
 }

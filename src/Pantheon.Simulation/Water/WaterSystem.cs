@@ -130,10 +130,10 @@ public sealed class WaterSystem : ISimulationSystem
                 continue;
             }
 
-            var severity = flood * seconds;
+            var severity = flood * seconds * _damage.Exposure(settlement, DisasterKind.Flood);
             var houses = _damage.Destroy(settlement, random, _rules.FloodHousingLossPerSecond * severity * _damage.Fragility(world, settlement));
-            var deaths = DisasterDamage.Kill(settlement, random, _rules.FloodDeathsPerSecond * severity);
-            settlement.Food *= Math.Max(0f, 1f - (_rules.FloodFoodLossPerSecond * severity));
+            var deaths = DisasterDamage.Kill(settlement, random, _rules.FloodDeathsPerSecond * severity * _damage.Deadliness(settlement, DisasterKind.Flood));
+            settlement.Food *= Math.Max(0f, 1f - (_rules.FloodFoodLossPerSecond * severity * _damage.FoodLoss(settlement)));
             _damage.Frighten(settlement, _rules.FloodDreadPerSecond * severity);
             DisasterDamage.Report(world, settlement, DisasterKind.Flood, houses, deaths, events);
         }

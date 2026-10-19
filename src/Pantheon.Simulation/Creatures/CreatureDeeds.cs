@@ -99,7 +99,7 @@ public sealed class CreatureDeeds
         switch (rule.Action)
         {
             case CreatureAction.Feed:
-                var storage = SettlementEconomy.ComputeStorage(_settlementRules, settlement.Housing);
+                var storage = SettlementEconomy.StorageOf(_settlementRules, settlement);
                 var before = settlement.Food;
                 settlement.Food = Math.Max(before, Math.Min(storage, before + size));
                 return (settlement.Food - before, 0, 1f);
@@ -111,7 +111,7 @@ public sealed class CreatureDeeds
                 Build(settlement, size);
                 return (0f, 0, 1f);
             case CreatureAction.Attack:
-                var killed = Math.Min(settlement.Population, (int)MathF.Round(size));
+                var killed = Math.Min(settlement.Population, (int)MathF.Round(size * (1f - CivicModel.Defence(_settlementRules, settlement))));
                 settlement.Population -= killed;
                 return (0f, killed, 1f);
             case CreatureAction.Wander:

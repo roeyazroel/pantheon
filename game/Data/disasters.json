@@ -48,5 +48,16 @@
   // Buildings (spec 94): the share of the damage houses escape. A Shield leaves ShieldedDamage of it.
   "HouseQuakeResistance": 0.3,
   "HouseFireResistance": 0.5,
-  "ShieldedDamage": 0.1
+  "ShieldedDamage": 0.1,
+
+  // Preparation (spec 21, ADR-023): architecture and engineering (per level) and a settlement's shelters,
+  // firebreaks, levees and granary spare it these shares of a disaster's houses, deaths, damage and food.
+  "Preparedness": {
+    "ArchitecturePerLevel": 0.06,
+    "EngineeringPerLevel": 0.06,
+    "ShelterDeaths": 0.6,
+    "FirebreakDamage": 0.5,
+    "LeveeDamage": 0.6,
+    "GranaryFood": 0.5
+  }
 }

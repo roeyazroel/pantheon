@@ -28,6 +28,12 @@ public sealed record DivineRules
     /// <summary>Religious infrastructure multiplier of a settlement's shrine.</summary>
     public required float ShrineInfrastructure { get; init; }
 
+    /// <summary>Factor on the infrastructure of a god whose temple the settlement raised (spec §9, ADR-023).</summary>
+    public required float TempleInfrastructure { get; init; }
+
+    /// <summary>Extra share of the infrastructure per level of the settlement's religion technology (spec §36).</summary>
+    public required float ReligionPerLevel { get; init; }
+
     /// <summary>Stored food per person at which a settlement feels secure.</summary>
     public required float ComfortFoodPerPerson { get; init; }
 

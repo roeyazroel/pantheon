@@ -229,6 +229,12 @@ public sealed class GameSession
     public Simulation.Domains.DomainRejection ChooseDomainAs(int godId, GodDomain domain) =>
         Chronicled(() => _authorities.Domains?.Choose(World, godId, domain, godId, _queue.Pending) ?? Simulation.Domains.DomainRejection.UnknownDomain);
 
+    /// <summary>Runs a command through the authorities as the host; its events reach the next frame and the history (ADR-023).</summary>
+    /// <typeparam name="T">The command's verdict.</typeparam>
+    /// <param name="command">The command, given the authorities and where to raise its events.</param>
+    /// <returns>The verdict.</returns>
+    public T Command<T>(Func<Simulation.Systems.Authorities, ICollection<Domain.Events.WorldEvent>, T> command) => Chronicled(() => command(_authorities, _queue.Pending));
+
     /// <summary>Whether the local player's god may take up a domain now.</summary>
     /// <param name="domain">The domain.</param>
     /// <returns>Why it would be refused, or <see cref="Simulation.Domains.DomainRejection.None"/>.</returns>

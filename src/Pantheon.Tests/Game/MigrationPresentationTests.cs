@@ -182,6 +182,6 @@ public sealed class MigrationPresentationTests
         Assert.Equal(RefugeePolicy.Welcome, profiles.Single(p => p.Personality == Domain.Gods.GodPersonality.Guardian).RefugeePolicy);
         Assert.Equal(RefugeePolicy.DemandConversion, profiles.Single(p => p.Personality == Domain.Gods.GodPersonality.Tyrant).RefugeePolicy);
         Assert.Equal(RefugeePolicy.TurnAway, profiles.Single(p => p.Personality == Domain.Gods.GodPersonality.Isolationist).RefugeePolicy);
-        Assert.Equal(MigrationWorlds.Rules, TestContent.Shipped.Migration);
+        Assert.Equal(MigrationWorlds.Rules, TestContent.Shipped.Migration with { UnhappinessWeight = 0f, InstabilityWeight = 0f, NavigationPerLevel = 0f });
     }
 }

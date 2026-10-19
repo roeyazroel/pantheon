@@ -68,6 +68,12 @@ public enum HistoryKind
 
     /// <summary>A settlement's wells ran dry (ADR-022).</summary>
     Thirst,
+
+    /// <summary>Settlers founded a new settlement; the record names it, and <see cref="HistoryRecord.Count"/> is how many came (ADR-023).</summary>
+    Founding,
+
+    /// <summary>A settlement raised a temple to a god (ADR-023).</summary>
+    Temple,
 }
 
 /// <summary>

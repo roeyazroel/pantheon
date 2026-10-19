@@ -65,6 +65,7 @@ public static class SettlementFounder
                 OldFaith = null,
                 SanctuaryGodId = null,
                 SanctuaryUntilTick = 0,
+                Society = Domain.Society.SocietyState.Founded(),
                 Beliefs = [],
             });
         }

@@ -87,7 +87,8 @@ public sealed class SimulationEngine
     /// <param name="domainRules">God domains (ADR-021); <c>null</c> for gods without domains.</param>
     /// <param name="holySiteRules">Holy sites (ADR-021); <c>null</c> for a world without them.</param>
     /// <param name="waterRules">Rivers and floods (ADR-022); <c>null</c> for still water.</param>
-    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null, Domain.Water.WaterRules? waterRules = null)
+    /// <param name="societyRules">Settlements' society (ADR-023); <c>null</c> for settlements without one.</param>
+    public SimulationEngine(SettlementRules settlementRules, DivineRules divineRules, CreatureRules creatureRules, GodAiRules godAiRules, MiracleBook miracles, DiplomacyRules diplomacyRules, WeatherRules weatherRules, DisasterRules disasterRules, MigrationRules migrationRules, Domain.History.HistoryRules? historyRules = null, DomainRules? domainRules = null, Domain.HolySites.HolySiteRules? holySiteRules = null, Domain.Water.WaterRules? waterRules = null, Domain.Society.SocietyRules? societyRules = null)
     {
         History = historyRules is null ? null : new History.HistoryRecorder(historyRules);
         var ledger = new DiplomacyLedger(diplomacyRules);
@@ -97,12 +98,14 @@ public sealed class SimulationEngine
             new CreatureAuthority(creatureRules, Creatures.Brain, domainRules),
             new DiplomacyAuthority(diplomacyRules, ledger),
             new MigrationAuthority(),
-            domainRules is null ? null : new Domains.DomainAuthority(domainRules));
+            domainRules is null ? null : new Domains.DomainAuthority(domainRules),
+            societyRules is null ? null : new Society.SocietyAuthority(societyRules));
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy);
         Gods = new GodAiSystem(
             new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains),
             godAiRules.EvaluationIntervalTicks,
-            new RefugeeAdvisor(migrationRules, Authorities.Migration));
+            new RefugeeAdvisor(migrationRules, Authorities.Migration),
+            societyRules is null ? null : new Society.PriorityAdvisor(societyRules, settlementRules, divineRules, Authorities.Society!));
         Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger);
         HolySites = holySiteRules is null ? null : new HolySites.HolySiteSystem(holySiteRules, divineRules, creatureRules, ledger);
         var systems = new List<ISimulationSystem>
@@ -120,6 +123,10 @@ public sealed class SimulationEngine
             CreateSettlementStep(settlementRules),
             new IntervalSystem(new BeliefSystem(divineRules, settlementRules, diplomacyRules, ledger), divineRules.StepIntervalTicks),
         ]);
+        if (societyRules is not null)
+        {
+            systems.Add(new IntervalSystem(new Society.SocietySystem(societyRules, settlementRules, divineRules), societyRules.StepIntervalTicks));
+        }
         if (domainRules is not null)
         {
             systems.Add(new IntervalSystem(new Domains.DomainSystem(domainRules, divineRules, settlementRules, weatherRules), divineRules.StepIntervalTicks));

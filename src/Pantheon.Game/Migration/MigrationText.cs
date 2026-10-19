@@ -22,6 +22,8 @@ public static class MigrationText
         MigrationCause.War => "war",
         MigrationCause.Fear => "fear of their god",
         MigrationCause.Doubt => "doubt in their god",
+        MigrationCause.Unhappiness => "unhappiness",
+        MigrationCause.Unrest => "unrest",
     };
 
     /// <summary>A refugee policy, as a button says it.</summary>

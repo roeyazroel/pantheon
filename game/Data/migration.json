@@ -60,5 +60,12 @@
   "ConversionFear": 0.3,
   "ConversionDoubt": 0.3,
   "TurnedAwayLoss": 0.3,
-  "OverwhelmedHomeless": 0.2
+  "OverwhelmedHomeless": 0.2,
+
+  // Society (ADR-023): unhappiness and instability add UnhappinessWeight x (1 - happiness)^2 and
+  // InstabilityWeight x (1 - stability)^2 to the pressure to leave; navigation speeds a group by
+  // NavigationPerLevel of its speed per level of its origin's technology.
+  "UnhappinessWeight": 0.25,
+  "InstabilityWeight": 0.2,
+  "NavigationPerLevel": 0.1
 }

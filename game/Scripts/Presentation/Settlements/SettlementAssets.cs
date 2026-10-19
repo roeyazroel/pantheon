@@ -59,6 +59,8 @@ internal sealed class SettlementAssets
         HutWall = new CylinderMesh { TopRadius = WallRadius, BottomRadius = WallRadius * 1.05f, Height = WallHeight, RadialSegments = RadialSegments, Rings = 1, Material = wall };
         HutRoof = new CylinderMesh { TopRadius = 0f, BottomRadius = RoofRadius, Height = RoofHeight, RadialSegments = RadialSegments, Rings = 1, Material = LoadMaterial("hut_roof") };
         HutDoor = new BoxMesh { Size = DoorSize, Material = LoadMaterial("hut_door") };
+        Stone = stone;
+        Timber = timber;
         ShrineBase = new CylinderMesh { TopRadius = 2.4f, BottomRadius = 2.8f, Height = ShrineBaseHeight, RadialSegments = RadialSegments, Rings = 1, Material = stone };
         ShrinePillar = new CylinderMesh { TopRadius = 0.55f, BottomRadius = 0.9f, Height = ShrinePillarHeight, RadialSegments = RadialSegments, Rings = 1, Material = stone };
         ShrineCrown = new SphereMesh { Radius = ShrineCrownRadius, Height = 2f * ShrineCrownRadius, Material = LoadMaterial("shrine_crown") };
@@ -74,6 +76,12 @@ internal sealed class SettlementAssets
 
     /// <summary>Radius of the ring of scaffold poles around a building site.</summary>
     public static float ScaffoldRadius => 2.6f;
+
+    /// <summary>The shrines' stone, for temples too (ADR-023).</summary>
+    public Material Stone { get; }
+
+    /// <summary>The scaffolds' timber, for walls too (ADR-023).</summary>
+    public Material Timber { get; }
 
     /// <summary>Hut wall cylinder.</summary>
     public Mesh HutWall { get; }

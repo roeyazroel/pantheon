@@ -52,6 +52,9 @@ internal static class MigrationWorlds
         ConversionDoubt = 0.3f,
         TurnedAwayLoss = 0.3f,
         OverwhelmedHomeless = 0.2f,
+        UnhappinessWeight = 0f,
+        InstabilityWeight = 0f,
+        NavigationPerLevel = 0f,
     };
 
     /// <summary>

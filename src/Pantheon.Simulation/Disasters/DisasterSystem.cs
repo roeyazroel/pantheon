@@ -102,8 +102,8 @@ public sealed class DisasterSystem : ISimulationSystem
 
                 var severity = shaking * share;
                 var houses = _damage.Destroy(settlement, random, _rules.QuakeHousingLoss * (1f - _rules.HouseQuakeResistance) * severity * _damage.Fragility(world, settlement));
-                var deaths = DisasterDamage.Kill(settlement, random, _rules.QuakeDeaths * severity);
-                settlement.Food *= 1f - (_rules.QuakeFoodLoss * severity);
+                var deaths = DisasterDamage.Kill(settlement, random, _rules.QuakeDeaths * severity * _damage.Deadliness(settlement, DisasterKind.Earthquake));
+                settlement.Food *= 1f - (_rules.QuakeFoodLoss * severity * _damage.FoodLoss(settlement));
                 settlement.ConstructionProgress *= 1f - severity;
                 _damage.Frighten(settlement, severity);
                 DisasterDamage.Report(world, settlement, DisasterKind.Earthquake, houses, deaths, events);
@@ -127,10 +127,10 @@ public sealed class DisasterSystem : ISimulationSystem
                 continue;
             }
 
-            var severity = fire * seconds;
+            var severity = fire * seconds * _damage.Exposure(settlement, DisasterKind.Fire);
             var houses = _damage.Destroy(settlement, random, _rules.FireHousingLossPerSecond * (1f - _rules.HouseFireResistance) * severity * _damage.Fragility(world, settlement));
             var deaths = DisasterDamage.Kill(settlement, random, _rules.FireDeathsPerSecond * severity);
-            settlement.Food *= Math.Max(0f, 1f - (_rules.FireFoodLossPerSecond * severity));
+            settlement.Food *= Math.Max(0f, 1f - (_rules.FireFoodLossPerSecond * severity * _damage.FoodLoss(settlement)));
             _damage.Frighten(settlement, _rules.FireDreadPerSecond * severity);
             DisasterDamage.Report(world, settlement, DisasterKind.Fire, houses, deaths, events);
         }

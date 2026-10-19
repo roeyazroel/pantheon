@@ -12,6 +12,8 @@
   "LoveWorshipIntensity": 0.3,
   "FearWorshipIntensity": 0.6,
   "ShrineInfrastructure": 1.0,
+  "TempleInfrastructure": 1.5,
+  "ReligionPerLevel": 0.06,
 
   // Conditions: hardship is the worst of ill health, hunger (stores below ComfortFoodPerPerson per
   // person), DroughtWorry x the drought of the farmland and DangerWorry x the danger (fire or

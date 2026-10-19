@@ -103,6 +103,12 @@ public sealed class HistoryRecorder
             case ThirstStarted thirst:
                 Once(world, HistoryKind.Thirst, thirst.SettlementId, null, 0);
                 break;
+            case SettlementFounded founded:
+                Add(world, HistoryKind.Founding, god: world.Settlements.Find(s => s.Id == founded.SettlementId) is { } village ? Domains.DomainModel.MajorityGodId(village) : null, settlement: founded.SettlementId, count: founded.Settlers);
+                break;
+            case BuildingCompleted { Kind: Domain.Society.BuildingKind.Temple, GodId: { } templeGod } temple:
+                Add(world, HistoryKind.Temple, god: templeGod, settlement: temple.SettlementId);
+                break;
             case MigrationStarted exodus when exodus.People >= _rules.ExodusPeople:
                 Once(world, HistoryKind.Exodus, exodus.OriginSettlementId, exodus.GodId, exodus.People);
                 break;

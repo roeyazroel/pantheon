@@ -34,7 +34,7 @@ public readonly record struct Hazards(float Drought, float Danger, float Thirst 
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(settlement);
-        var half = 0.5f * SettlementEconomy.ComputeWaterStorage(rules, settlement.Housing);
+        var half = 0.5f * SettlementEconomy.WaterStorageOf(rules, settlement);
         return rules.WaterPerPersonPerStep <= 0f || half <= 0f || settlement.Population <= 0 ? 0f : 1f - SimMath.Clamp01(settlement.Water / half);
     }
 }

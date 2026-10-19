@@ -101,4 +101,35 @@ public sealed record DisasterRules
 
     /// <summary>Share of disaster damage a shielded settlement still takes.</summary>
     public required float ShieldedDamage { get; init; }
+
+    /// <summary>How a settlement's preparations and technology lessen disasters (spec §21, ADR-023).</summary>
+    public required Preparedness Preparedness { get; init; }
+}
+
+/// <summary>How a settlement's buildings and technology lessen what disasters do to it (spec §21, §36, ADR-023).</summary>
+public sealed record Preparedness
+{
+    /// <summary>Share of the houses a disaster would destroy saved per level of architecture.</summary>
+    public required float ArchitecturePerLevel { get; init; }
+
+    /// <summary>Share of flood and fire damage saved per level of engineering.</summary>
+    public required float EngineeringPerLevel { get; init; }
+
+    /// <summary>Share of the deaths in earthquakes and floods that shelters prevent.</summary>
+    public required float ShelterDeaths { get; init; }
+
+    /// <summary>Share of a fire's damage to the settlement that firebreaks prevent.</summary>
+    public required float FirebreakDamage { get; init; }
+
+    /// <summary>Share of a flood's damage to the settlement that levees prevent.</summary>
+    public required float LeveeDamage { get; init; }
+
+    /// <summary>Share of the food a disaster would spoil that a granary keeps.</summary>
+    public required float GranaryFood { get; init; }
+
+    /// <summary>No preparedness at all.</summary>
+    public static Preparedness None { get; } = new()
+    {
+        ArchitecturePerLevel = 0f, EngineeringPerLevel = 0f, ShelterDeaths = 0f, FirebreakDamage = 0f, LeveeDamage = 0f, GranaryFood = 0f,
+    };
 }

@@ -123,12 +123,13 @@ rule is followed by the conventions that meet it in this repository.
   migration groups and refugee policies, a shared session's players, round trips, traffic per
   second and the sections a player received, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, the selected settlement's economy, tier,
-  water, dangers, pressure to leave, belief, Old Faith and sanctuary),
+  water, society and technology, dangers, pressure to leave, belief, Old Faith and sanctuary),
   the H history panel (the world's chronicle), the start screen and pause menu (Esc), the P
   diplomacy panel (status, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
-  holy sites and who keeps them), the settings page, the B region grid, the F3 region
+  holy sites and who keeps them), the N Settlements panel (a village's faiths, stores, society,
+  technology, buildings and work, and its priority), the settings page, the B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire, scorch, fresh water and flood), the
   O map overlays (influence, religion, faith, food, weather, danger, migration), the `.` single-tick step, the
   `,` settlement step, F4 (+500 Divine Power), F6 (spoil the food stores), F7 (settlers arrive),
@@ -140,7 +141,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times and, in shared sessions, the

@@ -206,7 +206,9 @@ public sealed class MigrationSystem : ISimulationSystem
     /// <summary>A step on the road: walk, eat, perhaps die, perhaps arrive.</summary>
     private void Travel(WorldState world, MigrationGroup group, SimulationRandom random, float seconds, ICollection<WorldEvent> events)
     {
-        Walk(group, _rules.Speed * seconds);
+        var origin = world.Settlements.Find(s => s.Id == group.OriginSettlementId);
+        var navigation = origin is null ? 0f : _rules.NavigationPerLevel * origin.Society.Technology.Navigation;
+        Walk(group, _rules.Speed * (1f + navigation) * seconds);
         var need = group.Population * _rules.FoodPerPersonPerSecond * seconds;
         if (group.Food >= need)
         {

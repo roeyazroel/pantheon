@@ -58,6 +58,9 @@ public sealed class SettlementState
     /// <summary>Tick until which the Sanctuary holds; 0 when there is none.</summary>
     public required long SanctuaryUntilTick { get; set; }
 
+    /// <summary>Its people's safety, happiness, wealth, learning, order, technology, buildings and priority (spec §29–30, §36, ADR-023).</summary>
+    public required Society.SocietyState Society { get; init; }
+
     /// <summary>How the people regard each god they know of, at most one entry per god (ADR-009).</summary>
     public required List<GodBelief> Beliefs { get; init; }
 }

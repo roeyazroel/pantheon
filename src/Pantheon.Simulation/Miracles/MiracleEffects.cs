@@ -81,7 +81,7 @@ internal sealed class MiracleEffects
             switch (effect.Kind)
             {
                 case MiracleEffectKind.AddFood:
-                    var storage = SettlementEconomy.ComputeStorage(_settlementRules, settlement.Housing);
+                    var storage = SettlementEconomy.StorageOf(_settlementRules, settlement);
                     settlement.Food = Math.Max(settlement.Food, Math.Min(storage, settlement.Food + effect.Amount));
                     break;
                 case MiracleEffectKind.Heal:
@@ -106,7 +106,7 @@ internal sealed class MiracleEffects
                     Terrify(world, settlement, godId, effect.Amount);
                     break;
                 case MiracleEffectKind.Water:
-                    var cisterns = SettlementEconomy.ComputeWaterStorage(_settlementRules, settlement.Housing);
+                    var cisterns = SettlementEconomy.WaterStorageOf(_settlementRules, settlement);
                     settlement.Water = Math.Max(settlement.Water, Math.Min(cisterns, settlement.Water + effect.Amount));
                     break;
                 case MiracleEffectKind.Judge:

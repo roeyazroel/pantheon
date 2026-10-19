@@ -21,6 +21,7 @@ namespace Pantheon.Networking.Protocol;
 [JsonDerivedType(typeof(DiplomacyIntent), "Diplomacy")]
 [JsonDerivedType(typeof(RefugeeIntent), "Refugees")]
 [JsonDerivedType(typeof(DomainIntent), "Domain")]
+[JsonDerivedType(typeof(PriorityIntent), "Priority")]
 [JsonDerivedType(typeof(Verdict), "Verdict")]
 [JsonDerivedType(typeof(Goodbye), "Goodbye")]
 [JsonDerivedType(typeof(SectionUpdate), "Section")]
@@ -97,6 +98,12 @@ public sealed record RefugeeIntent(int RequestId, RefugeePolicy Policy) : NetMes
 /// <param name="RequestId">The player's number for the request.</param>
 /// <param name="Domain">The domain.</param>
 public sealed record DomainIntent(int RequestId, Pantheon.Domain.Gods.GodDomain Domain) : NetMessage;
+
+/// <summary>A player asks one of its god's settlements to put something first (ADR-023).</summary>
+/// <param name="RequestId">The player's number for the request.</param>
+/// <param name="SettlementId">The settlement.</param>
+/// <param name="Priority">The priority.</param>
+public sealed record PriorityIntent(int RequestId, int SettlementId, Pantheon.Domain.Society.SettlementPriority Priority) : NetMessage;
 
 /// <summary>The host's answer to an intent: whether it was carried out, and what happened or why not.</summary>
 /// <param name="RequestId">The request it answers.</param>

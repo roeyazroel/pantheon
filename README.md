@@ -110,6 +110,17 @@ domains:
   sends the sea over a low coast. A Justice god's villages keep its law, and its Judgement strikes
   only those who wronged it.
 
+**Milestone 15, part 3 (Society)** gives every village a life of its own beyond food and houses:
+
+- **Safety, happiness, order, wealth and learning** rise and fall with how its people fare.
+- **Priorities.** A god followed by enough of a village asks it to increase food, improve health,
+  grow, focus on worship, prepare for war or disaster, expand, or build a temple (the
+  Settlements panel, N).
+- **Buildings.** Temples, granaries, hospitals, walls, levees, firebreaks, shelters and cisterns.
+- **Technology.** Eight fields, from agriculture to religion, that grow with learning and spread
+  between neighbours, never past the world of fantasy.
+- **Expansion.** Crowded villages found new ones, so worlds grow.
+
 ## Requirements
 
 - [Godot 4.7.2-stable, .NET edition](https://godotengine.org/download/archive/4.7.2-stable/)
@@ -214,6 +225,7 @@ covers:
 | Select a miracle (again to deselect) | 1–9 and 0, or click it in the miracle bar |
 | Select your domains' miracles, after the tenth | Shift+1, Shift+2, Shift+3 |
 | Show or hide the Domains panel: your domains, what each gives, the holy sites | G |
+| Show the Settlements panel for the village under the cursor (its society, technology, buildings and priority), or hide it | N |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
 | Next map overlay (influence, religion, faith, food, weather, danger, migration), then off | O |
@@ -430,6 +442,40 @@ The rules are in `game/Data/weather.json`; how dry the soil must be for drought 
   scorched land in ash and shielded villages in blue.
 
 The rules are in `game/Data/disasters.json`.
+
+## Society and priorities
+
+- **A village's life.** Safety falls with danger and war and rises behind walls. Happiness
+  follows food, health, water, safety and the people's love for their gods, and falls with fear
+  and homelessness. Order follows happiness, unity of faith and peace, and falls with a schism.
+  Unhappy or unsettled villages lose people.
+- **Wealth and learning.** Villages put by goods from their surplus harvests and from trade with
+  neighbours, and learn faster when they are rich and settled.
+- **Technology.** Agriculture (richer harvests), architecture (lighter building, sturdier
+  houses), medicine (healing), warfare (defence), navigation (faster migrants, more trade),
+  engineering (works against floods and fires), science (learning) and religion (stronger
+  worship). Each grows with learning, fastest where the village's priority lies, and spreads
+  from its most advanced neighbour. None passes level 5.
+- **Priorities.** Press N with the cursor over a village to see it. If at least 40% of its people
+  follow you, choose what it puts first; a course holds at least a minute. AI gods set the course
+  of the villages they lead.
+
+  | Priority | What happens |
+  | --- | --- |
+  | Increase food | More is harvested; a granary keeps more and saves food from disasters |
+  | Improve health | Healers tend the sick; a hospital saves lives |
+  | Grow | More births while there is food and room |
+  | Focus on worship | Twice the worship, so more power for its gods |
+  | Prepare for war | Watchmen; walls turn attacks away |
+  | Prepare for disaster | Levees beside water, firebreaks, shelters and cisterns |
+  | Expand | Settlers found new villages on free land nearby |
+  | Build a temple | A temple to you: half again as much power from its worship |
+- **Buildings** rise once the village has put by the wealth for them. Temples (roofed in their
+  god's colour) and walls show in the village.
+
+The rules are in `game/Data/society.json`, with what technology and buildings do in
+`settlement_rules.json` (`Civics`), `disasters.json` (`Preparedness`), `divine_rules.json` and
+`migration.json`.
 
 ## Rivers, lakes and floods
 
@@ -729,6 +775,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--diplomacy-panel=on\|off` | Show or hide the diplomacy panel (P) at the start. |
 | `--weather=normal\|dry\|wet\|storm` | Start in a weather spell, or with a storm over the focused settlement. |
 | `--disaster=quake\|fire\|flood` | Start an earthquake, a fire or a flood at the focused settlement. |
+| `--priority=<priority>` | Ask the focused settlement to put something first (Food, Health, Growth, Worship, Defence, Preparation, Expansion, Temple). |
+| `--settlement-panel=on\|off` | Open the Settlements panel (N) on the focused settlement at the start. |
 | `--migrate=<n>` | Send `n` people out of the focused settlement at the start. |
 | `--refugees=welcome\|convert\|turnaway` | Your refugee policy from the start. |
 | `--menu=on\|off` | Start on the start screen (the default without options) or not. |

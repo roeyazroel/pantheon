@@ -67,6 +67,7 @@ internal static class SettlementWorlds
         WellFloor = 0.35f,
         WellAccess = 0.6f,
         ThirstHealthLossPerStep = 0.015f,
+        Civics = CivicEffects.None,
     };
 
     /// <summary><see cref="Rules"/> without births or deaths, so food, health and construction can be tested alone.</summary>
@@ -134,6 +135,7 @@ internal static class SettlementWorlds
                     OldFaith = null,
                     SanctuaryGodId = null,
                     SanctuaryUntilTick = 0,
+                    Society = Pantheon.Domain.Society.SocietyState.Founded(),
                     Beliefs = [],
                 },
             },

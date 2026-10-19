@@ -35,6 +35,8 @@ internal static class DivineWorlds
         LoveWorshipIntensity = 0.3f,
         FearWorshipIntensity = 0.6f,
         ShrineInfrastructure = 1f,
+        TempleInfrastructure = 1f,
+        ReligionPerLevel = 0f,
         ComfortFoodPerPerson = 2f,
         DroughtWorry = 0.5f,
         DangerWorry = 0.6f,
@@ -143,6 +145,7 @@ internal static class DivineWorlds
                 OldFaith = null,
                 SanctuaryGodId = null,
                 SanctuaryUntilTick = 0,
+                Society = Pantheon.Domain.Society.SocietyState.Founded(),
                 Beliefs = [],
             });
         }

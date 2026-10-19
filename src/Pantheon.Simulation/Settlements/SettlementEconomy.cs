@@ -79,6 +79,26 @@ public static class SettlementEconomy
         return Math.Max(0, housing) * rules.FoodStoragePerHousing;
     }
 
+    /// <summary>Most food a settlement can store, a granary included (ADR-023).</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="settlement">The settlement.</param>
+    /// <returns>Storage capacity in food units.</returns>
+    public static float StorageOf(SettlementRules rules, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(settlement);
+        return ComputeStorage(rules, settlement.Housing) * CivicModel.StorageFactor(rules, settlement);
+    }
+
+    /// <summary>Most water a settlement's wells and cisterns hold, a cistern included (ADR-023).</summary>
+    /// <param name="rules">Settlement rules.</param>
+    /// <param name="settlement">The settlement.</param>
+    /// <returns>Water storage.</returns>
+    public static float WaterStorageOf(SettlementRules rules, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(settlement);
+        return ComputeWaterStorage(rules, settlement.Housing) * CivicModel.WaterStorageFactor(rules, settlement);
+    }
+
     /// <summary>Number of houses that provide a housing capacity; a part-filled last house still counts.</summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="housing">Housing capacity in people.</param>
@@ -97,7 +117,8 @@ public static class SettlementEconomy
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(settlement);
-        return settlement.Ruins > 0 ? rules.WorkPerHouse * rules.RuinWorkShare : rules.WorkPerHouse;
+        var work = settlement.Ruins > 0 ? rules.WorkPerHouse * rules.RuinWorkShare : rules.WorkPerHouse;
+        return work * CivicModel.HouseWorkFactor(rules, settlement);
     }
 
     /// <summary>Share of the people without a roof: those beyond the housing, after a disaster or an influx.</summary>
@@ -176,7 +197,7 @@ public static class SettlementEconomy
             builders = Math.Min(Math.Min(workers * rules.MaxBuilderShare, rules.BuildersPerSite), remainingWork);
         }
 
-        var worshippers = Math.Min(workers - builders, workers * rules.WorshipWorkforceShare * ComputeDevotion(settlement));
+        var worshippers = Math.Min(workers - builders, workers * rules.WorshipWorkforceShare * ComputeDevotion(settlement) * CivicModel.WorshipFactor(rules, settlement));
         return new LabourAllocation(workers, workers - builders - worshippers, builders, worshippers);
     }
 
@@ -313,12 +334,13 @@ public static class SettlementEconomy
     /// <summary>Chance per person per step of a death: the baseline plus the ill-health chance times (1 - health) squared.</summary>
     /// <param name="rules">Settlement rules.</param>
     /// <param name="health">Population health (0..1).</param>
+    /// <param name="illnessFactor">Share of the deaths from ill health that happen: medicine and a hospital prevent the rest (ADR-023).</param>
     /// <returns>A probability.</returns>
-    public static double ComputeDeathChance(SettlementRules rules, float health)
+    public static double ComputeDeathChance(SettlementRules rules, float health, float illnessFactor = 1f)
     {
         ArgumentNullException.ThrowIfNull(rules);
         var illness = 1.0 - SimMath.Clamp01(health);
-        return rules.DeathChancePerPersonPerStep + (rules.IllHealthDeathChancePerPersonPerStep * illness * illness);
+        return rules.DeathChancePerPersonPerStep + (rules.IllHealthDeathChancePerPersonPerStep * illness * illness * illnessFactor);
     }
 
     /// <summary>
@@ -364,9 +386,9 @@ public static class SettlementEconomy
 
         var land = SurveyFarmland(regions, settlement.RegionId, rules.FarmlandRadius);
         var labour = AllocateLabour(rules, settlement);
-        var production = ComputeProduction(rules, labour.Farmers, land);
+        var production = ComputeProduction(rules, labour.Farmers, land) * CivicModel.YieldFactor(rules, settlement);
         var consumption = ComputeConsumption(rules, settlement.Population);
-        var storage = ComputeStorage(rules, settlement.Housing);
+        var storage = StorageOf(rules, settlement);
         var available = settlement.Food + production;
         var fedShare = ComputeFedShare(available, consumption);
         var foodAfter = Math.Clamp(available - consumption, 0f, storage);
@@ -374,14 +396,16 @@ public static class SettlementEconomy
         var waterAccess = ComputeWaterAccess(rules, regions, settlement.RegionId);
         var drinking = Math.Max(0, settlement.Population) * rules.WaterPerPersonPerStep;
         var drawn = drinking * rules.WaterGatherFactor * waterAccess;
-        var waterStorage = ComputeWaterStorage(rules, settlement.Housing);
+        var waterStorage = WaterStorageOf(rules, settlement);
         var wateredShare = ComputeFedShare(settlement.Water + drawn, drinking);
         var waterAfter = Math.Clamp(settlement.Water + drawn - drinking, 0f, waterStorage);
         var thirst = rules.ThirstHealthLossPerStep * (1f - wateredShare);
-        var healthAfter = Math.Max(0f, ComputeHealth(rules, settlement.Health, fedShare) - exposure - thirst);
+        var healed = ComputeHealth(rules, settlement.Health, fedShare);
+        healed += (1f - healed) * CivicModel.HealingShare(rules, settlement);
+        var healthAfter = Math.Max(0f, healed - exposure - thirst);
         var blocker = FindBirthBlocker(rules, settlement, production, consumption, foodAfter);
-        var birthChance = ComputeBirthChance(rules, healthAfter);
-        var deathChance = ComputeDeathChance(rules, healthAfter);
+        var birthChance = ComputeBirthChance(rules, healthAfter) * CivicModel.BirthFactor(rules, settlement);
+        var deathChance = ComputeDeathChance(rules, healthAfter, CivicModel.IllnessDeathFactor(rules, settlement));
         var population = Math.Max(0, settlement.Population);
 
         return new SettlementOutlook

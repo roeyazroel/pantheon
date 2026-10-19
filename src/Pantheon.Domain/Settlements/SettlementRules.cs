@@ -117,4 +117,61 @@ public sealed record SettlementRules
 
     /// <summary>Health lost per step by the share of the people who go without water.</summary>
     public required float ThirstHealthLossPerStep { get; init; }
+
+    /// <summary>What a settlement's technology and buildings do for its life (ADR-023); all zero for none.</summary>
+    public required CivicEffects Civics { get; init; }
+}
+
+/// <summary>What a settlement's technology (per level) and buildings do for its harvests, health, houses, stores and defence (spec §21, §36, ADR-023).</summary>
+public sealed record CivicEffects
+{
+    /// <summary>Extra share of the harvest per level of agriculture.</summary>
+    public required float AgriculturePerLevel { get; init; }
+
+    /// <summary>Health per step per level of medicine, closing that share of the gap to full health.</summary>
+    public required float MedicinePerLevel { get; init; }
+
+    /// <summary>Share of the deaths from ill health prevented per level of medicine.</summary>
+    public required float MedicineDeathsPerLevel { get; init; }
+
+    /// <summary>Share of a house's work saved per level of architecture.</summary>
+    public required float ArchitecturePerLevel { get; init; }
+
+    /// <summary>Factor on food storage with a granary.</summary>
+    public required float GranaryStorage { get; init; }
+
+    /// <summary>Factor on water storage with a cistern.</summary>
+    public required float CisternStorage { get; init; }
+
+    /// <summary>Health per step a hospital adds, closing that share of the gap to full health.</summary>
+    public required float HospitalRecovery { get; init; }
+
+    /// <summary>Share of the deaths from ill health a hospital prevents.</summary>
+    public required float HospitalDeaths { get; init; }
+
+    /// <summary>Share of the harm an attack does that walls turn away.</summary>
+    public required float WallsDefence { get; init; }
+
+    /// <summary>Share of the harm an attack does turned away per level of warfare.</summary>
+    public required float WarfarePerLevel { get; init; }
+
+    /// <summary>Extra share of the harvest under a Food priority (spec §29).</summary>
+    public required float FoodPriorityYield { get; init; }
+
+    /// <summary>Health per step under a Health priority, closing that share of the gap to full health.</summary>
+    public required float HealthPriorityRecovery { get; init; }
+
+    /// <summary>Extra share of births under a Growth priority.</summary>
+    public required float GrowthPriorityBirths { get; init; }
+
+    /// <summary>Factor on the share of the day spent worshipping under a Worship priority.</summary>
+    public required float WorshipPriorityFactor { get; init; }
+
+    /// <summary>No effects at all: for rules built before technology and buildings.</summary>
+    public static CivicEffects None { get; } = new()
+    {
+        AgriculturePerLevel = 0f, MedicinePerLevel = 0f, MedicineDeathsPerLevel = 0f, ArchitecturePerLevel = 0f, GranaryStorage = 1f,
+        CisternStorage = 1f, HospitalRecovery = 0f, HospitalDeaths = 0f, WallsDefence = 0f, WarfarePerLevel = 0f,
+        FoodPriorityYield = 0f, HealthPriorityRecovery = 0f, GrowthPriorityBirths = 0f, WorshipPriorityFactor = 1f,
+    };
 }

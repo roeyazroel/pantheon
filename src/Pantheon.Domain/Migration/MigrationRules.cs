@@ -116,4 +116,13 @@ public sealed record MigrationRules
 
     /// <summary>A god's followers short of this share of room makes a welcoming AI god turn migrants away.</summary>
     public required float OverwhelmedHomeless { get; init; }
+
+    /// <summary>Weight of unhappiness in the pressure to leave (ADR-023).</summary>
+    public required float UnhappinessWeight { get; init; }
+
+    /// <summary>Weight of instability in the pressure to leave (ADR-023).</summary>
+    public required float InstabilityWeight { get; init; }
+
+    /// <summary>Extra share of a group's speed per level of its origin's navigation (spec §36).</summary>
+    public required float NavigationPerLevel { get; init; }
 }

@@ -35,6 +35,7 @@ internal static class SettlementReadout
             settlement.Health));
         lines.Add(FormatFood(settlement, outlook, stepsPerSecond));
         lines.Add(FormatWater(snapshot, settlement, outlook, stepsPerSecond));
+        lines.AddRange(SocietyReadout.Describe(settlement));
         lines.Add(FormatJobs(settlement, outlook));
         lines.Add(Format(
             "  births {0:0.00}/s   deaths {1:0.00}/s   {2}",

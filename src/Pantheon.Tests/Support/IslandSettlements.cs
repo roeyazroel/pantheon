@@ -57,6 +57,7 @@ internal static class IslandSettlements
             OldFaith = null,
             SanctuaryGodId = null,
             SanctuaryUntilTick = 0,
+            Society = Pantheon.Domain.Society.SocietyState.Founded(),
             Beliefs = [],
         };
     }

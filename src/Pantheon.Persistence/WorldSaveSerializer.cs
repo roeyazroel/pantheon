@@ -27,9 +27,11 @@ public static class WorldSaveSerializer
     /// version 11 (Milestone 11) added Creatures' combat skill, scars and views of each other;
     /// version 12 (Milestone 14) added the world's history; version 13 (Milestone 15) added gods'
     /// domains, holy sites, and settlements' Old Faiths and sanctuaries; version 14 (Milestone 15,
-    /// part 2) added rivers and lakes, regions' fresh water and floods, and settlements' water.
+    /// part 2) added rivers and lakes, regions' fresh water and floods, and settlements' water;
+    /// version 15 (part 3) added settlements' society: safety, happiness, wealth, education,
+    /// stability, technology, buildings and priority.
     /// </summary>
-    public const int CurrentSaveVersion = 14;
+    public const int CurrentSaveVersion = 15;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

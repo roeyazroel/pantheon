@@ -38,9 +38,37 @@ internal sealed class DisasterDamage
     public float Protection(SettlementState settlement, long tick) =>
         DisasterModel.IsShielded(settlement, tick) ? _rules.ShieldedDamage : 1f;
 
-    /// <summary>Share of the houses a disaster would destroy that fall: fewer where the majority's god holds Protection (ADR-021).</summary>
-    public float Fragility(WorldState world, SettlementState settlement) =>
-        _domains is not null && DomainModel.MajorityHolds(world, settlement, GodDomain.Protection) ? 1f - _domains.Boons.ProtectionResilience : 1f;
+    /// <summary>Share of the houses a disaster would destroy that fall: fewer where the majority's god holds Protection (ADR-021), and with architecture (ADR-023).</summary>
+    public float Fragility(WorldState world, SettlementState settlement)
+    {
+        var protection = _domains is not null && DomainModel.MajorityHolds(world, settlement, GodDomain.Protection) ? 1f - _domains.Boons.ProtectionResilience : 1f;
+        return protection * (1f - Math.Clamp(_rules.Preparedness.ArchitecturePerLevel * settlement.Society.Technology.Architecture, 0f, MaxPrepared));
+    }
+
+    /// <summary>Share of a fire's or a flood's harm a settlement takes: firebreaks or levees, and engineering, spare it some (ADR-023).</summary>
+    public float Exposure(SettlementState settlement, DisasterKind kind)
+    {
+        var prepared = _rules.Preparedness;
+        var works = kind switch
+        {
+            DisasterKind.Fire => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Firebreak) ? prepared.FirebreakDamage : 0f,
+            DisasterKind.Flood => Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Levee) ? prepared.LeveeDamage : 0f,
+            DisasterKind.Earthquake => 0f,
+        };
+        var engineering = kind == DisasterKind.Earthquake ? 0f : prepared.EngineeringPerLevel * settlement.Society.Technology.Engineering;
+        return 1f - Math.Clamp(works + engineering, 0f, MaxPrepared);
+    }
+
+    /// <summary>Share of the deaths a disaster would cause that happen: shelters save people from quakes and floods (ADR-023).</summary>
+    public float Deadliness(SettlementState settlement, DisasterKind kind) =>
+        kind != DisasterKind.Fire && Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Shelter) ? 1f - _rules.Preparedness.ShelterDeaths : 1f;
+
+    /// <summary>Share of the food a disaster would spoil that is lost: a granary keeps some (ADR-023).</summary>
+    public float FoodLoss(SettlementState settlement) =>
+        Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Granary) ? 1f - _rules.Preparedness.GranaryFood : 1f;
+
+    // Preparations never spare more than this share of a disaster.
+    private const float MaxPrepared = 0.9f;
 
     /// <summary>Destroys a Poisson draw of the settlement's houses; their housing is lost and they become ruins.</summary>
     /// <returns>Houses destroyed.</returns>

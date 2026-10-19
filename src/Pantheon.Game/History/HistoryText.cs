@@ -59,6 +59,8 @@ public static class HistoryText
             HistoryKind.Reunion => Format("The Old Faith of {0} returns to {1}", place, god),
             HistoryKind.Flood => Format("The Flood of {0}", place),
             HistoryKind.Thirst => Format("The Thirst of {0}", place),
+            HistoryKind.Founding => Format("The Founding of {0}", place),
+            HistoryKind.Temple => Format("{0} raises a temple to {1}", place, god),
         };
     }
 
@@ -75,6 +77,7 @@ public static class HistoryText
             HistoryKind.Earthquake => record.Count > 0 ? Format("{0} dead", record.Count) : "houses fell",
             HistoryKind.Fire => Format("{0} houses lost", record.Count),
             HistoryKind.Flood => record.Count > 0 ? Format("{0} houses lost", record.Count) : "people drowned",
+            HistoryKind.Founding => Format("{0} settlers", record.Count),
             HistoryKind.Exodus => Format("{0} people left", record.Count),
             HistoryKind.Battle => Format("{0} prevailed", CreatureName(world, record.CreatureId)),
             HistoryKind.Betrayal => Format("broken by {0}", GodName(world, record.GodId)),
@@ -82,7 +85,7 @@ public static class HistoryText
             HistoryKind.Claimed => record.OtherGodId is null ? string.Empty : Format("taken from {0}", GodName(world, record.OtherGodId)),
             HistoryKind.Schism => Format("{0} keep the Old Faith of {1}", record.Count, GodName(world, record.GodId)),
             HistoryKind.Alliance or HistoryKind.War or HistoryKind.Peace or HistoryKind.Dominion or HistoryKind.Victory or HistoryKind.Rank or HistoryKind.Conversion
-                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst => string.Empty,
+                or HistoryKind.Famine or HistoryKind.Fall or HistoryKind.Resettled or HistoryKind.Domain or HistoryKind.Reunion or HistoryKind.Thirst or HistoryKind.Temple => string.Empty,
         };
     }
 

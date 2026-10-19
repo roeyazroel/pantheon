@@ -1,0 +1,66 @@
+{
+  // Society (spec 29-30 and 36, ADR-023): a settlement's safety, happiness, wealth, learning, order,
+  // technology, buildings and priority. The society step runs once every StepIntervalTicks ticks
+  // (10 ticks = one simulated second at x1). Rates are per simulated second; values without units are 0..1.
+  "StepIntervalTicks": 10,
+
+  // Safety, happiness and stability move towards their targets, closing DriftPerSecond of the gap.
+  // Safety's target is 1 - (danger + WarUnsafety x war), plus DefenceSafety under walls or a Defence priority.
+  "DriftPerSecond": 0.02,
+  "WarUnsafety": 0.8,
+  "DefenceSafety": 0.2,
+  // Happiness's target: the weighted food security, health, water, safety and love of their gods, less
+  // fear and homelessness.
+  "Happiness": { "Food": 0.25, "Health": 0.2, "Water": 0.1, "Safety": 0.2, "Love": 0.25, "Fear": 0.3, "Homeless": 0.4 },
+  // Stability's target: weighted happiness, unity of faith (the largest religion's share) and peace, less
+  // the share keeping an Old Faith.
+  "Stability": { "Happiness": 0.5, "Unity": 0.3, "Peace": 0.2, "Schism": 0.6 },
+
+  // Wealth: SurplusWealth per food unit harvested beyond what is eaten while the stores are FullStores
+  // full, and TradePerNeighbour per second for each settlement within TradeRange regions (more with
+  // navigation); WealthUsePerSecond of it is used up.
+  "SurplusWealth": 0.3,
+  "FullStores": 0.9,
+  "TradePerNeighbour": 0.02,
+  "TradeRange": 6,
+  "WealthUsePerSecond": 0.001,
+
+  // Education grows by EducationPerSecond x stability x min(1, wealth per person / LearnedWealth) (more
+  // with science) and fades by EducationLossPerSecond of itself.
+  "EducationPerSecond": 0.0015,
+  "LearnedWealth": 2.0,
+  "EducationLossPerSecond": 0.0003,
+
+  // Technology: each field gains TechnologyPerSecond x education levels a second, FocusFactor times as
+  // much in the field the priority and buildings favour, closes DiffusionPerSecond of the gap to the
+  // most advanced neighbour within TradeRange, and stops at MaxTechnology (the world stays one of fantasy).
+  "TechnologyPerSecond": 0.0012,
+  "FocusFactor": 2.5,
+  "DiffusionPerSecond": 0.002,
+  "MaxTechnology": 5.0,
+
+  // Buildings rise under their priority: each worker adds ProjectWorkPerWorker work a second once the
+  // wealth is paid.
+  "ProjectWorkPerWorker": 0.05,
+
+  // Priorities (spec 29): a god followed by at least PriorityShare of a settlement may set it, at most
+  // once every PriorityCooldownSeconds.
+  "PriorityShare": 0.4,
+  "PriorityCooldownSeconds": 60.0,
+
+  "Buildings": [
+    { "Kind": "Temple", "Priority": "Temple", "Work": 300.0, "Wealth": 60.0, "Field": "Religion" },
+    { "Kind": "Granary", "Priority": "Food", "Work": 200.0, "Wealth": 30.0, "Field": "Agriculture" },
+    { "Kind": "Hospital", "Priority": "Health", "Work": 250.0, "Wealth": 40.0, "Field": "Medicine" },
+    { "Kind": "Walls", "Priority": "Defence", "Work": 300.0, "Wealth": 50.0, "Field": "Warfare" },
+    { "Kind": "Levee", "Priority": "Preparation", "Work": 250.0, "Wealth": 35.0, "Field": "Engineering" },
+    { "Kind": "Firebreak", "Priority": "Preparation", "Work": 150.0, "Wealth": 20.0, "Field": "Engineering" },
+    { "Kind": "Shelter", "Priority": "Preparation", "Work": 200.0, "Wealth": 30.0, "Field": "Architecture" },
+    { "Kind": "Cistern", "Priority": "Preparation", "Work": 150.0, "Wealth": 25.0, "Field": "Engineering" }
+  ],
+
+  // Expansion (spec 29): under an Expansion priority, a settlement of at least MinPopulation sends
+  // Settlers, with FoodPerSettler each, to found a village on the best free land within Range regions
+  // and at least Spacing regions from every other, at most once every CooldownSeconds.
+  "Expansion": { "MinPopulation": 100, "Settlers": 20, "FoodPerSettler": 3.0, "Range": 8, "Spacing": 4, "CooldownSeconds": 240.0 }
+}

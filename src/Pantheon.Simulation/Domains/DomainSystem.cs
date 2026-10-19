@@ -91,7 +91,7 @@ public sealed class DomainSystem : ISimulationSystem
         if (DomainModel.Holds(god, GodDomain.Ocean))
         {
             var catches = Math.Min(boons.OceanMaxWaterRegions, CountWaters(world.Regions, settlement.RegionId, _settlementRules.FarmlandRadius));
-            var storage = Settlements.SettlementEconomy.ComputeStorage(_settlementRules, settlement.Housing);
+            var storage = Settlements.SettlementEconomy.StorageOf(_settlementRules, settlement);
             settlement.Food = Math.Max(settlement.Food, Math.Min(storage, settlement.Food + (boons.OceanFishPerWaterRegion * catches)));
         }
 

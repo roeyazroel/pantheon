@@ -121,6 +121,9 @@ public partial class GameRoot : Node3D
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);
         faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);
+        var society = new SocietyController { Name = "Society" };
+        AddChild(society);
+        society.Setup(_session, _camera, SetStatus, options);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         _session.Scheduler.TimeScale = options.Speed ?? _session.Scheduler.TimeScale;
         if (options.AdvanceTicks is { } ticks)

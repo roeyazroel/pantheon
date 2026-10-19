@@ -138,7 +138,9 @@ files and compiled assemblies and fails when either rule is broken.
   river or lake waters, fixed at generation) and `Flood` (0..1, how deep it lies under a flood now;
   ADR-022).
 - `SettlementState`: `Id`, `Name`, `RegionId`, `Position`, `Population`, `Food`, `Water` (in its
-  wells and cisterns; ADR-022), `Housing`
+  wells and cisterns; ADR-022), `Society` (`SocietyState`: safety, happiness, stability,
+  wealth, education, `TechnologyLevels` in §36's eight fields, buildings, priority and the
+  building under way; ADR-023), `Housing`
   (capacity in people), `Health` (0..1), `ConstructionProgress` (work done on the one house
   being built; 0 when none is under way), `Ruins` (houses destroyed and not yet rebuilt),
   `ShieldedUntilTick` (while a Shield miracle protects it), `OldFaith` (the share of its people
@@ -175,7 +177,8 @@ files and compiled assemblies and fails when either rule is broken.
   `FamineStarted`, `DiplomacyChanged`, `WeatherSpellChanged`, `StormStruck`, `DroughtChanged`,
   `EarthquakeStruck`, `WildfireStarted`, `SettlementDamaged`, `MigrationStarted`, `MigrationEnded`,
   `MigrantsTurnedAway`, `CreaturesMet`, `CreatureFightEnded`, `DomainChosen`, `HolySiteContested`,
-  `HolySiteClaimed`, `SchismStarted`, `SchismEnded`, `FloodStarted`, `ThirstStarted` and others)
+  `HolySiteClaimed`, `SchismStarted`, `SchismEnded`, `FloodStarted`, `ThirstStarted`,
+  `PriorityChanged`, `BuildingCompleted`, `TechnologyAdvanced`, `SettlementFounded` and others)
   raised during a tick or a command
   and never saved.
 - Content contracts: `WorldGenSettings` (and its nested settings records), `SettlementRules`
@@ -187,7 +190,10 @@ files and compiled assemblies and fails when either rule is broken.
   diplomacy weights (`god_ai.json`), `DiplomacyRules` (`diplomacy.json`), `WeatherRules`
   (`weather.json`), `DisasterRules` (`disasters.json`), `MigrationRules` (`migration.json`),
   `HistoryRules` (`history.json`), `DomainRules` with its slots, definitions and `DomainBoons`
-  (`domains.json`), `HolySiteRules` (`holy_sites.json`) and `WaterRules` (`water.json`, ADR-022).
+  (`domains.json`), `HolySiteRules` (`holy_sites.json`), `WaterRules` (`water.json`, ADR-022) and
+  `SocietyRules` (`society.json`, ADR-023). What technology and buildings do lives with the rules
+  of the system it changes: `SettlementRules.Civics`, `DisasterRules.Preparedness`, the temple and
+  religion factors in `DivineRules`, and unhappiness, unrest and navigation in `MigrationRules`.
   `WorldGenSettings.Hydrology` (optional) shapes the rivers and lakes. `DivineRules` carries the
   `SchismRules` and the holy sites' influence, and `CreatureRules` the `CreatureSpecies`
   (ADR-021).
@@ -252,6 +258,11 @@ files and compiled assemblies and fails when either rule is broken.
   fire or flood does to a settlement) and `DisasterSystem` (the disaster step). `Belief/Hazards`
   carries a settlement's drought, danger and thirst into its conditions. See
   [Disasters](#disasters).
+- `Society/`: `SocietyModel` (targets of safety, happiness and stability, wealth, learning,
+  focus, the next building), `SocietySystem` (the society step), `Expansion` (settlers founding
+  villages), `SocietyAuthority` (priorities, checked) and `PriorityAdvisor` (AI gods' priorities).
+  `Settlements/CivicModel` turns technology, buildings and priorities into the settlement model's
+  factors (ADR-023). See [Settlements' society](#settlements-society).
 - `Water/`: `WaterModel` (a river's level, overflow, spreading floods, waves) and `WaterSystem`
   (the water step: levels, floods, silt, irrigation, drowning). `WorldGen/WaterFounder` records
   the rivers and lakes in the state. See [Rivers, lakes and floods](#rivers-lakes-and-floods).
@@ -269,7 +280,7 @@ files and compiled assemblies and fails when either rule is broken.
   `Systems/Authorities` bundles the miracle, Creature, diplomacy, migration and domain
   authorities; the first three, the migration step and the holy sites share one ledger.
 - `SimulationEngine.Step(WorldState, events)` runs the systems in order (the weather step, the
-  water step, the disaster step, the settlement step, the belief step, the domains' boons, the holy sites, the
+  water step, the disaster step, the settlement step, the belief step, the society step, the domains' boons, the holy sites, the
   victory check, the diplomacy step and the migration step, each in an
   `IntervalSystem`, then the Creature system every tick, then the AI gods every
   `EvaluationIntervalTicks`) with a
@@ -293,7 +304,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 14, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 15, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -316,7 +327,8 @@ files and compiled assemblies and fails when either rule is broken.
   domains, every settlement no Old Faith or sanctuary and the world no holy sites; a session finds
   the sites as a new world would. Version 13 → 14 gives the world no rivers or lakes, every region
   no fresh water or flood and every settlement full wells (six per unit of housing); its
-  generation settings have no hydrology, so its land regenerates unchanged. A missing,
+  generation settings have no hydrology, so its land regenerates unchanged. Version 14 → 15
+  (`SocietySaveMigration`) gives every settlement a newly founded society. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -330,7 +342,8 @@ files and compiled assemblies and fails when either rule is broken.
   values in range, known gods), fire and scorch in 0..1, ruins and shields not negative, and
   disasters (`DisasterIntegrity`: unique quake ids below the next id, valid values, known gods),
   rivers and lakes (`WaterIntegrity`: unique ids, names, regions that exist, valid levels), fresh
-  water and flood in 0..1, water not negative,
+  water and flood in 0..1, water not negative, societies (`SocietyIntegrity`: values in range,
+  each building once, temples to known gods, known priorities),
   and migration (`MigrationIntegrity`: unique group ids below the next id, known settlements, valid
   sizes, food, health and positions, and beliefs as a settlement's), and holy sites and faiths
   (`HolySiteIntegrity`: unique sites in known regions with known gods, Old Faiths of known gods
@@ -663,6 +676,33 @@ flowchart LR
 - The client draws the rivers and lakes once from the `HydrologyMap`, and floodwater as the
   nearest water risen by the regions' floods, rebuilt when a flood changes visibly.
 
+## Settlements' society
+
+ADR-023 records the decisions, and the plan
+([.docs/milestone-15-part-3-society.md](../.docs/milestone-15-part-3-society.md)) the numbers.
+
+```mermaid
+flowchart LR
+    life[Food, health, water, danger, war, love, fear] --> step[SocietySystem]
+    step --> values[Safety, happiness, stability]
+    step --> wealth[Wealth: surplus and trade]
+    wealth --> learning[Education]
+    learning --> tech[Technology, spread by neighbours]
+    priority[Priority: SocietyAuthority, PriorityAdvisor, PriorityIntent] --> projects[Buildings]
+    wealth --> projects
+    priority --> found[Expansion: new villages]
+    tech --> civic[CivicModel: economy, attacks]
+    projects --> civic
+    projects --> prepared[DisasterDamage: preparedness]
+    projects --> temples[BeliefModel: infrastructure]
+    values --> push[MigrationModel: unhappiness, unrest]
+```
+
+- The player sets a village's priority from the Settlements panel (N), through `SocietyCommands`
+  (an intent for a joined player); AI gods through `PriorityAdvisor` at their evaluation interval.
+- New villages join `WorldState.Settlements` with the next id and an unused name, and the
+  settlement presenter adds their views on its next sync.
+
 ## Sound and settings
 
 ```mermaid
@@ -701,7 +741,7 @@ has the measured run.
   - Creature motion at 5 Hz near the player's view (`ViewFocus`) and 1 Hz elsewhere;
   - gods at 4 Hz;
   - migration at 2 Hz;
-  - settlements, weather, disasters and the rivers (ADR-022) at 1 Hz;
+  - settlements (with their society, ADR-023), weather, disasters and the rivers (ADR-022) at 1 Hz;
   - whole Creatures, changed regions, the history and the holy sites every 2 s;
   - diplomacy when a status, proposal or memory changes.
 
