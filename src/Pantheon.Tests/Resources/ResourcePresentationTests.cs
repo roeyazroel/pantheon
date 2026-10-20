@@ -115,9 +115,16 @@ public sealed class ResourcePresentationTests
 
         road.Built = length / 2f;
         var half = RoadLayout.Ribbon(road, session.Terrain);
-        var end = (half[^1].Left + half[^1].Right) / 2f;
+        var end = half[^1].Centre;
         Assert.Equal(length / 2f, Vector2.Distance(new Vector2(a.X, a.Z), new Vector2(end.X, end.Z)), 1);
-        Assert.All(half, e => Assert.Equal(RoadLayout.Width, Vector2.Distance(new Vector2(e.Left.X, e.Left.Z), new Vector2(e.Right.X, e.Right.Z)), 2));
+        Assert.Equal(length / 2f, half[^1].Along, 1);
+        Assert.All(half, e => Assert.InRange(Vector2.Distance(new Vector2(e.Left.X, e.Left.Z), new Vector2(e.Right.X, e.Right.Z)), RoadLayout.Width * 0.89f, RoadLayout.Width * 1.11f));
+        Assert.All(half, e =>
+        {
+            var middle = (e.Left + e.Right) / 2f;
+            Assert.Equal(middle.X, e.Centre.X, 2);
+            Assert.Equal(middle.Z, e.Centre.Z, 2);
+        });
         Assert.InRange(half.Count, (int)(length / 2f / RoadLayout.Step), (int)(length / 2f / RoadLayout.Step) + 3);
     }
 

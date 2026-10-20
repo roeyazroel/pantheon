@@ -10,20 +10,20 @@ using Pantheon.Simulation.Terrain;
 namespace Pantheon.Client.Presentation.Land;
 
 /// <summary>
-/// Draws the roads (spec §29, ADR-033): a ribbon of beaten earth along the part of each road built
-/// so far, darker where a disaster has cut it. A road is redrawn as it grows or is cut or mended.
+/// Draws the roads (spec §29, ADR-033, ADR-073): a track worn into the ground along the part of each
+/// road built so far (<see cref="RoadLayout"/>), its edges, ruts and verges drawn by the road shader,
+/// darker where a disaster has cut it. A road is redrawn as it grows or is cut or mended.
 /// </summary>
 public sealed class RoadPresenter
 {
     // A road is redrawn once this many more metres are built.
     private const float RedrawMetres = 4f;
 
-    private static readonly Color Open = new(0.55f, 0.45f, 0.31f);
-    private static readonly Color Cut = new(0.33f, 0.25f, 0.2f);
+    private const string ShaderPath = "res://Shaders/road.gdshader";
 
     private readonly Node3D _parent;
     private readonly RoadRules _rules;
-    private readonly StandardMaterial3D _material = new() { VertexColorUseAsAlbedo = true, VertexColorIsSrgb = true, Roughness = 1f };
+    private readonly ShaderMaterial _material;
     private readonly Dictionary<int, (MeshInstance3D Node, float Built, bool Open)> _views = [];
     private readonly HashSet<int> _seen = [];
     private TerrainField? _terrain;
@@ -37,11 +37,12 @@ public sealed class RoadPresenter
         _parent = parent;
         _rules = rules;
         _buildings = buildings;
-        _bridge = Meshes.ToArrayMesh(BridgeLayout.Mesh(), buildings.Material);
+        _material = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
+        _material.SetShaderParameter("noise", PlantTextures.Noise);
+
     }
 
     private readonly Buildings.BuildingAssets _buildings;
-    private readonly ArrayMesh _bridge;
 
     /// <summary>Drops every road, for a new or loaded world.</summary>
     /// <param name="world">World to show.</param>
@@ -89,7 +90,7 @@ public sealed class RoadPresenter
         }
     }
 
-    /// <summary>A road's ribbon.</summary>
+    /// <summary>A road's track: two strips, its left edge to its middle and its middle to its right edge.</summary>
     private MeshInstance3D Draw(RoadState road, bool open)
     {
         var ribbon = RoadLayout.Ribbon(road, _terrain!);
@@ -98,17 +99,32 @@ public sealed class RoadPresenter
         {
             var tool = new SurfaceTool();
             tool.Begin(Mesh.PrimitiveType.Triangles);
-            tool.SetColor(open ? Open : Cut);
             tool.SetNormal(Vector3.Up);
+            for (var i = 0; i < ribbon.Count; i++)
+            {
+                var section = ribbon[i];
+                Vertex(tool, section.Left, 0f, section.Along);
+                Vertex(tool, section.Centre, 0.5f, section.Along);
+                Vertex(tool, section.Right, 1f, section.Along);
+            }
+
             for (var i = 1; i < ribbon.Count; i++)
             {
-                var (a, b) = (Point(ribbon[i - 1].Left), Point(ribbon[i - 1].Right));
-                var (c, d) = (Point(ribbon[i].Left), Point(ribbon[i].Right));
-                Quad(tool, a, b, c, d);
+                var (a, b) = ((i - 1) * 3, i * 3);
+                for (var strip = 0; strip < 2; strip++)
+                {
+                    tool.AddIndex(a + strip);
+                    tool.AddIndex(b + strip);
+                    tool.AddIndex(a + strip + 1);
+                    tool.AddIndex(a + strip + 1);
+                    tool.AddIndex(b + strip);
+                    tool.AddIndex(b + strip + 1);
+                }
             }
 
             node.Mesh = tool.Commit();
             node.MaterialOverride = _material;
+            node.SetInstanceShaderParameter("cut", open ? 0f : 1f);
         }
 
         _parent.AddChild(node);
@@ -116,23 +132,11 @@ public sealed class RoadPresenter
         return node;
     }
 
-    /// <summary>Two triangles of the ribbon between two cross-sections (a-b, then c-d), each facing up.</summary>
-    private static void Quad(SurfaceTool tool, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+    /// <summary>A vertex of the track: across it (0 left, 0.5 middle, 1 right) and metres along it.</summary>
+    private static void Vertex(SurfaceTool tool, System.Numerics.Vector3 point, float across, float along)
     {
-        Upward(tool, a, b, c);
-        Upward(tool, b, d, c);
-    }
-
-    /// <summary>
-    /// A triangle seen from above: Godot's front faces are clockwise, so their right-hand normal
-    /// points away from the viewer, down.
-    /// </summary>
-    private static void Upward(SurfaceTool tool, Vector3 p, Vector3 q, Vector3 r)
-    {
-        var (second, third) = (q - p).Cross(r - p).Y < 0f ? (q, r) : (r, q);
-        tool.AddVertex(p);
-        tool.AddVertex(second);
-        tool.AddVertex(third);
+        tool.SetUV(new Vector2(across, along));
+        tool.AddVertex(Point(point));
     }
 
     /// <summary>A layout point as a Godot vector.</summary>
@@ -145,9 +149,9 @@ public sealed class RoadPresenter
         {
             var (a, b) = (new Vector3(start.X, start.Y, start.Z), new Vector3(finish.X, finish.Y, finish.Z));
             var length = a.DistanceTo(b) + 2f;
-            var multimesh = Buildings.BuildingAssets.NewMultiMesh(_bridge);
+            var multimesh = Buildings.BuildingAssets.NewMultiMesh(Meshes.ToArrayMesh(BridgeLayout.Mesh(length), _buildings.Material));
             multimesh.InstanceCount = 1;
-            var basis = new Basis(Vector3.Up, Mathf.Atan2(b.X - a.X, b.Z - a.Z)).Scaled(new Vector3(1f, 1f, length));
+            var basis = new Basis(Vector3.Up, Mathf.Atan2(b.X - a.X, b.Z - a.Z));
             multimesh.SetInstanceTransform(0, new Transform3D(basis, (a + b) / 2f));
             multimesh.SetInstanceColor(0, Buildings.BuildingAssets.InstanceColor(_buildings.Settings.Styles[Pantheon.Game.Presentation.HouseStyle.Longhouse].Walls[0]));
             multimesh.SetInstanceCustomData(0, Buildings.BuildingAssets.InstanceCustom(_buildings.Settings.Trim, Pantheon.Game.Presentation.SurfacePattern.Planks, Pantheon.Game.Presentation.SurfacePattern.Planks));

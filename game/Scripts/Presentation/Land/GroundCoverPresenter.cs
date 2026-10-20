@@ -5,20 +5,22 @@ using Godot;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
+using Pantheon.Game.Presentation.Nature;
 using Pantheon.Simulation.Terrain;
 
 namespace Pantheon.Client.Presentation.Land;
 
 /// <summary>
-/// The ground cover near the camera (spec §61, §84, ADR-053): grass, flowers, bushes, stones and
-/// reeds laid out by <see cref="GroundCoverLayout"/>, streamed in small chunks around the camera,
-/// one multimesh per chunk and kind, swaying in the weather's wind. Every few seconds the planted
-/// chunks are laid out again, for the snow, the vegetation and the villages' clearings.
+/// The ground cover near the camera (spec §61, §84, ADR-053, ADR-073): grass, flowers, bushes,
+/// ferns, stones and reeds laid out by <see cref="GroundCoverLayout"/> and grown by
+/// <see cref="GroundPlants"/>, streamed in small chunks around the camera, one multimesh per chunk,
+/// kind and variant, swaying in the weather's wind; grass only within its own radius. Every few
+/// seconds the planted chunks are laid out again, for the snow, the vegetation and the villages'
+/// clearings.
 /// </summary>
 public sealed class GroundCoverPresenter
 {
-    private const string ShaderPath = "res://Shaders/tree.gdshader";
-    private const int ChunksPerFrame = 8;
+    private const int ChunksPerFrame = 6;
     private const float RefreshSeconds = 5f;
     private const float FadeMargin = 30f;
 
@@ -29,6 +31,7 @@ public sealed class GroundCoverPresenter
         [GroundCoverKind.Bush] = new Color(0.25f, 0.2f, 0.12f),
         [GroundCoverKind.Rock] = new Color(0.4f, 0.4f, 0.38f),
         [GroundCoverKind.Reeds] = new Color(0.42f, 0.29f, 0.17f),
+        [GroundCoverKind.Fern] = new Color(0.25f, 0.2f, 0.12f),
     };
 
     private readonly Node3D _parent;
@@ -37,9 +40,9 @@ public sealed class GroundCoverPresenter
     private readonly float _rockSlope;
     private readonly ShaderMaterial _swaying;
     private readonly ShaderMaterial _still;
-    private readonly Dictionary<GroundCoverKind, ArrayMesh> _meshes = [];
+    private readonly Dictionary<(GroundCoverKind Kind, int Variant), ArrayMesh> _meshes = [];
     private readonly List<GroundCoverPlacement> _placed = [];
-    private Dictionary<GroundCoverKind, MultiMeshInstance3D>?[] _chunks = [];
+    private Dictionary<(GroundCoverKind Kind, int Variant), MultiMeshInstance3D>?[] _chunks = [];
     private ChunkStreamer? _streamer;
     private List<Clearing> _clearings = [];
     private TerrainField? _terrain;
@@ -56,14 +59,17 @@ public sealed class GroundCoverPresenter
     public GroundCoverPresenter(Node3D parent, SettlementViewSettings view, SettlementRules rules, float rockSlope)
     {
         (_parent, _view, _rules, _rockSlope) = (parent, view, rules, rockSlope);
-        _swaying = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
+        _swaying = PlantTextures.Material();
         _swaying.SetShaderParameter("reference_height", 0.8f);
         _swaying.SetShaderParameter("gust_speed", 1.8f);
-        _still = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
+        _still = PlantTextures.Material();
         _still.SetShaderParameter("wind", Vector2.Zero);
         foreach (var kind in Enum.GetValues<GroundCoverKind>())
         {
-            _meshes[kind] = Meshes.ToArrayMesh(GroundCoverMesh.Build(kind));
+            for (var variant = 0; variant < GroundPlants.Variants(kind); variant++)
+            {
+                _meshes[(kind, variant)] = Meshes.ToArrayMesh(GroundPlants.Grow(kind, variant));
+            }
         }
     }
 
@@ -79,7 +85,7 @@ public sealed class GroundCoverPresenter
         _terrain = terrain;
         var settings = _view.GroundCover;
         _perSide = (int)MathF.Ceiling(world.Regions.Columns * world.Regions.RegionSize / settings.ChunkMetres);
-        _chunks = new Dictionary<GroundCoverKind, MultiMeshInstance3D>?[_perSide * _perSide];
+        _chunks = new Dictionary<(GroundCoverKind, int), MultiMeshInstance3D>?[_perSide * _perSide];
         _streamer = new ChunkStreamer(_perSide, settings.ChunkMetres, settings.Radius, settings.Radius + settings.ChunkMetres);
         _clearings = Clearings(world);
         (_firstStream, _sinceRefresh) = (true, 0.0);
@@ -148,27 +154,28 @@ public sealed class GroundCoverPresenter
         var near = _clearings.Where(c => MathF.Abs(c.Center.X - midX) < reach + c.Radius && MathF.Abs(c.Center.Y - midZ) < reach + c.Radius).ToList();
         GroundCoverLayout.Place(world, _terrain!, minX, minZ, settings.ChunkMetres, near, settings, _rockSlope, _placed);
         var nodes = _chunks[chunk]!;
-        foreach (var kind in Enum.GetValues<GroundCoverKind>())
+        var centre = new Vector3(midX, MathF.Max(0f, _terrain!.SampleHeight(midX, midZ)), midZ);
+        foreach (var key in _meshes.Keys)
         {
-            var count = _placed.Count(p => p.Kind == kind);
-            if (count == 0 && !nodes.ContainsKey(kind))
+            var count = _placed.Count(p => p.Kind == key.Kind && p.Variant == key.Variant);
+            if (count == 0 && !nodes.ContainsKey(key))
             {
                 continue;
             }
 
-            if (!nodes.TryGetValue(kind, out var node))
+            if (!nodes.TryGetValue(key, out var node))
             {
-                node = Node(kind, $"{kind}_{chunk}");
-                nodes[kind] = node;
+                node = Node(key, $"{key.Kind}_{key.Variant}_{chunk}", centre);
+                nodes[key] = node;
             }
 
             var mesh = node.Multimesh;
             mesh.InstanceCount = count;
             var index = 0;
-            foreach (var thing in _placed.Where(p => p.Kind == kind))
+            foreach (var thing in _placed.Where(p => p.Kind == key.Kind && p.Variant == key.Variant))
             {
                 var basis = new Basis(Vector3.Up, thing.Yaw).Scaled(Vector3.One * thing.Scale);
-                mesh.SetInstanceTransform(index, new Transform3D(basis, new Vector3(thing.Position.X, thing.Position.Y, thing.Position.Z)));
+                mesh.SetInstanceTransform(index, new Transform3D(basis, new Vector3(thing.Position.X, thing.Position.Y, thing.Position.Z) - centre));
                 var tint = thing.Tint.ToGodot().SrgbToLinear();
                 mesh.SetInstanceCustomData(index, new Color(tint.R, tint.G, tint.B, thing.Yaw / Mathf.Tau));
                 index++;
@@ -176,16 +183,18 @@ public sealed class GroundCoverPresenter
         }
     }
 
-    /// <summary>A chunk's node for one kind.</summary>
-    private MultiMeshInstance3D Node(GroundCoverKind kind, string name)
+    /// <summary>A chunk's node for one kind and variant, at the chunk's middle: grass only within its own radius.</summary>
+    private MultiMeshInstance3D Node((GroundCoverKind Kind, int Variant) key, string name, Vector3 centre)
     {
+        var kind = key.Kind;
         var node = new MultiMeshInstance3D
         {
             Name = name,
-            Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseCustomData = true, Mesh = _meshes[kind] },
+            Position = centre,
+            Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseCustomData = true, Mesh = _meshes[key] },
             MaterialOverride = kind == GroundCoverKind.Rock ? _still : _swaying,
-            CastShadow = kind is GroundCoverKind.Bush or GroundCoverKind.Rock or GroundCoverKind.Reeds ? GeometryInstance3D.ShadowCastingSetting.On : GeometryInstance3D.ShadowCastingSetting.Off,
-            VisibilityRangeEnd = _view.GroundCover.Radius,
+            CastShadow = kind is GroundCoverKind.Bush or GroundCoverKind.Rock or GroundCoverKind.Reeds or GroundCoverKind.Fern ? GeometryInstance3D.ShadowCastingSetting.On : GeometryInstance3D.ShadowCastingSetting.Off,
+            VisibilityRangeEnd = kind == GroundCoverKind.Grass ? _view.GroundCover.GrassRadius : _view.GroundCover.Radius,
             VisibilityRangeEndMargin = FadeMargin,
             VisibilityRangeFadeMode = GeometryInstance3D.VisibilityRangeFadeModeEnum.Self,
         };

@@ -77,8 +77,8 @@ internal static class GroundTextures
     /// <summary>A kind's pattern (0 dark .. 1 light), how strongly it bumps, and how rough it is.</summary>
     private static (float[] Pattern, float Bump, float Roughness) Pattern(GroundKind kind) => kind switch
     {
-        // Grass: broad patches of lush and dry, mottled, with fine tufts.
-        GroundKind.Grass => (Mix(Mix(Fbm(11, 0.007f, 5), 0.6f, Fbm(13, 0.045f, 3), 0.4f), 0.75f, Cells(12, 0.22f, FastNoiseLite.CellularReturnTypeEnum.CellValue), 0.25f), 3f, 0.95f),
+        // Grass: soft patches of lush and dry under thousands of fine blades seen from above (ADR-073).
+        GroundKind.Grass => (Mix(Mix(Fbm(11, 0.006f, 4), 0.55f, Fbm(13, 0.03f, 3), 0.45f), 0.45f, Strokes(12, 70000, (3f, 9f), 0.9f), 0.55f), 2.5f, 0.95f),
         // Forest floor: dark soil with scattered leaves.
         GroundKind.ForestFloor => (Mix(Mix(Fbm(21, 0.01f, 5), 0.6f, Fbm(23, 0.05f, 3), 0.4f), 0.65f, Cells(22, 0.12f, FastNoiseLite.CellularReturnTypeEnum.CellValue), 0.35f), 4f, 0.9f),
         // Earth: soil with pebbles.
@@ -104,6 +104,33 @@ internal static class GroundTextures
     /// <summary>Seamless cellular noise, 0..1.</summary>
     private static float[] Cells(int seed, float frequency, FastNoiseLite.CellularReturnTypeEnum kind) =>
         Sample(new FastNoiseLite { NoiseType = FastNoiseLite.NoiseTypeEnum.Cellular, Seed = seed, Frequency = frequency, FractalType = FastNoiseLite.FractalTypeEnum.None, CellularReturnType = kind, CellularJitter = 0.9f });
+
+    /// <summary>
+    /// Blades of grass seen from above: many short strokes, mostly upright in the tile, each of its own
+    /// shade, wrapping round its edges so it tiles.
+    /// </summary>
+    private static float[] Strokes(int seed, int count, (float From, float To) length, float lean)
+    {
+        var values = new float[Size * Size];
+        Array.Fill(values, 0.45f);
+        var random = Pantheon.Game.Presentation.Nature.PlantRandom.For((ulong)seed, 0xB1ADE);
+        for (var i = 0; i < count; i++)
+        {
+            var (x, y) = (random.Range(0f, Size), random.Range(0f, Size));
+            var angle = (MathF.PI / 2f) + random.Range(-lean, lean);
+            var reach = random.Range(length.From, length.To);
+            var shade = random.Range(0.15f, 1f);
+            for (var t = 0f; t <= reach; t += 0.7f)
+            {
+                var (px, py) = ((int)MathF.Floor(x + (MathF.Cos(angle) * t)), (int)MathF.Floor(y - (MathF.Sin(angle) * t)));
+                var at = ((((py % Size) + Size) % Size) * Size) + (((px % Size) + Size) % Size);
+                // A blade is lighter towards its tip.
+                values[at] = shade * (0.7f + (0.3f * t / reach));
+            }
+        }
+
+        return values;
+    }
 
     /// <summary>Wind ripples: bands bent by noise.</summary>
     private static float[] Ripples(int seed, float frequency)

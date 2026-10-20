@@ -151,26 +151,31 @@
       "Snag": { "Trunk": "#4a423c", "Leaves": "#4a423c" }
     },
     "Sway": 0.15,
-    "StormSway": 0.9
+    "StormSway": 0.9,
+    // Trees within DetailDistance metres of the camera are grown in full detail (ADR-073); beyond,
+    // their lighter forms, with fewer and larger cards of leaves, stand in.
+    "DetailDistance": 420.0
   },
 
-  // Ground cover (spec section 61, ADR-053): within Radius metres of the camera, in chunks of
-  // ChunkMetres, each cell of CellMetres may hold one thing, by its biome's chances: grass and
-  // flowers as thick as the land's vegetation, bushes, stones and reeds. Nothing grows in water, on
-  // bare rock, in a village's clearing or on a road; snow pales it. A biome not listed is bare.
+  // Ground cover (spec section 61, ADR-053, ADR-073): within Radius metres of the camera, in chunks
+  // of ChunkMetres, each cell of CellMetres may hold one thing, by its biome's chances: grass and
+  // flowers as thick as the land's vegetation, bushes, ferns, stones and reeds. Grass shows within
+  // GrassRadius. Nothing grows in water, on bare rock, in a village's clearing or on a road; snow
+  // pales it. A biome not listed is bare.
   "GroundCover": {
-    "CellMetres": 1.2,
+    "CellMetres": 0.8,
     "ChunkMetres": 32.0,
     "Radius": 100.0,
+    "GrassRadius": 55.0,
     "Biomes": {
-      "Grassland": { "Grass": 0.7, "Flowers": 0.07, "Bush": 0.025, "Rock": 0.01 },
-      "RiverValley": { "Grass": 0.75, "Flowers": 0.08, "Bush": 0.02, "Rock": 0.005 },
-      "Coast": { "Grass": 0.55, "Flowers": 0.04, "Bush": 0.02, "Rock": 0.02 },
-      "Island": { "Grass": 0.6, "Flowers": 0.06, "Bush": 0.03, "Rock": 0.015 },
-      "Forest": { "Grass": 0.3, "Flowers": 0.02, "Bush": 0.12, "Rock": 0.03 },
+      "Grassland": { "Grass": 0.7, "Flowers": 0.05, "Bush": 0.012, "Rock": 0.005 },
+      "RiverValley": { "Grass": 0.75, "Flowers": 0.06, "Bush": 0.01, "Rock": 0.003, "Fern": 0.01 },
+      "Coast": { "Grass": 0.55, "Flowers": 0.03, "Bush": 0.01, "Rock": 0.01 },
+      "Island": { "Grass": 0.6, "Flowers": 0.04, "Bush": 0.015, "Rock": 0.008 },
+      "Forest": { "Grass": 0.3, "Flowers": 0.015, "Bush": 0.05, "Rock": 0.015, "Fern": 0.1 },
       "Highland": { "Grass": 0.3, "Bush": 0.02, "Rock": 0.08 },
       "Tundra": { "Grass": 0.2, "Rock": 0.08 },
-      "Swamp": { "Grass": 0.2, "Reeds": 0.35, "Bush": 0.03 },
+      "Swamp": { "Grass": 0.2, "Reeds": 0.3, "Bush": 0.02, "Fern": 0.03 },
       "Desert": { "Grass": 0.04, "Bush": 0.04, "Rock": 0.05 },
       "Volcanic": { "Rock": 0.1, "Grass": 0.05 }
     },

@@ -34,7 +34,7 @@
   // TintStrength; UvScale is how often they repeat (Terrain3D's UV scale).
   "Ground": {
     "Textures": {
-      "Grass": ["#355a22", "#a9b866"],
+      "Grass": ["#3d6326", "#9db25e"],
       "ForestFloor": ["#2b3420", "#7d6642"],
       "Earth": ["#5f4a33", "#9c8058"],
       "Rock": ["#57524c", "#a39d93"],

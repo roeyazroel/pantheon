@@ -695,7 +695,7 @@ and a Lumen an Ape. A missing,
 - `Resources/ResourceText` words the stores, roads and forests, and `Resources/ResourceCommands`
   builds every planned road (`--roads`) or sets the stores (`--stores`); `Alerts/RoadAlerts` tells
   of roads, `Diagnostics/ResourceReadout` gives their F1 lines, and `Presentation/ForestLayout` and
-  `RoadLayout` place the trees and the roads' ribbons (ADR-033).
+  `RoadLayout` place the trees and the roads' tracks (ADR-033), the tracks rounded and laid on the ground (ADR-073).
 - `Notables/NotableText` words prophets and elders and `Notables/NotableCommands` raises a prophet
   (`--prophet`); `Alerts/NotableAlerts` tells of them, `Book/NotableSection` lists them on the
   World and Religion pages, and `Diagnostics/NotableReadout` gives their F1 lines (ADR-032).
@@ -904,12 +904,24 @@ and a Lumen an Ape. A missing,
 - `Presentation/GreatEvents/GreatEventPresenter` draws the beast (the Creature body with the
   "Beast" look, half-buried asleep, walking awake, on its side fallen, with its label) and the
   anomaly's column of light (ADR-035).
-- `Presentation/Land/`: `ForestPresenter` draws the trees in chunks, one MultiMesh per species
-  present (`TreeMesh`, ADR-053), planting only the chunks the camera is near and clearing those it
-  leaves (ADR-050), and redraws a planted chunk when its timber, snow, villages or roads change.
-  `tree.gdshader` tints each tree's leaves, colours its trunk by species and bends it in the wind
-  `Breeze.At` finds in the weather over the camera. `GroundCoverPresenter` streams the ground cover
-  (`GroundCoverLayout`, `GroundCoverMesh`) in 32 m chunks within 100 m, swaying in the same wind; `RoadPresenter` draws each road's ribbon (ADR-033).
+- `Presentation/Land/` (ADR-053, ADR-073):
+  - **`ForestPresenter`** draws the trees in chunks: one MultiMesh per species and variant of near
+    trees (`TreeGrowth`, `PlantDetail.Near`) within `Trees.DetailDistance`, and one per species of
+    far trees beyond it, cross-fading by visibility range.
+    - Each chunk's nodes stand at its middle at the ground's height. Far trees cast no shadows.
+    - It plants only the chunks the camera is near and clears those it leaves (ADR-050), and
+      redraws a planted chunk when its timber, snow, villages or roads change.
+  - **`plant.gdshader`** draws:
+    - bark in its pattern (rough, birch or palm) and its species' colour;
+    - leaf cards cut from `LeafAtlas` (`PlantTextures`), tinted by species and letting light
+      through;
+    - blades, stones and petals.
+
+    All of them sway in the wind `Breeze.At` finds in the weather over the camera.
+  - **`GroundCoverPresenter`** streams the ground cover (`GroundCoverLayout`, `GroundPlants`) in
+    32 m chunks within 100 m, grass within `GrassRadius`, one node per kind and variant.
+  - **`RoadPresenter`** draws each road's track from `RoadLayout`'s sections with `road.gdshader`,
+    and its bridges built to their span (ADR-033).
 - `Presentation/Migration/`: `MigrationPresenter` keeps a `MigrationView` per group on the road:
   walkers in the migrants' god's colour (about one per three people), strung out two abreast
   along the way, and a label that fades out at strategic zoom. It owns the
@@ -1555,7 +1567,7 @@ running for every settlement either way.
   people keep a human pace at any game speed. It is never saved, and `VillagerCommands.Pick`
   poses the figures by it, as the client draws them.
 - `ForestLayout` picks each tree's species from its biome's shares (`TreeSettings.Pick`, ADR-053).
-  `GroundCoverLayout` lays out the ground cover: at most one thing in each 1.2 m cell, by the
+  `GroundCoverLayout` lays out the ground cover: at most one thing in each 0.8 m cell, by the
   biome's chances (grass and flowers thinned by the land's vegetation, stones, bushes and reeds
   taking their shares first so they stay put), never in water, on bare rock, on a road, by a house,
   on a field or on a village's square (`BareGround`). `ChunkStreamer` looks only at the chunks

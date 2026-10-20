@@ -88,6 +88,7 @@ silently:
 | [ADR-070](ADR-070-gods-answer-creatures.md) | Gods answer Creatures in their lands, a steady hand, and fights you can watch | Accepted |
 | [ADR-071](ADR-071-an-orchestra-made-in-code.md) | An orchestra made in code, and a piece for every mood | Accepted (amends ADR-021) |
 | [ADR-072](ADR-072-gods-and-creatures-as-agents.md) | Gods and Creatures as agents, woken by what happens | Accepted |
+| [ADR-073](ADR-073-natural-trees-roads-and-land.md) | Natural trees, roads and land, grown in code | Accepted (amends ADR-053 and ADR-033) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

@@ -332,7 +332,7 @@ public static class BridgeLayout
         ArgumentNullException.ThrowIfNull(road);
         ArgumentNullException.ThrowIfNull(terrain);
         var ribbon = RoadLayout.Ribbon(road, terrain);
-        var centre = ribbon.Select(edge => (edge.Left + edge.Right) / 2f).ToList();
+        var centre = ribbon.Select(section => section.Centre).ToList();
         bool Wet(Vector3 p) => terrain.IsUnderFreshWater(p.X, p.Z) || terrain.SampleHeight(p.X, p.Z) < 0.2f;
         var spans = new List<(Vector3, Vector3)>();
         for (var i = 1; i < centre.Count; i++)
@@ -354,7 +354,11 @@ public static class BridgeLayout
             }
 
             var (start, finish) = (centre[i - 1], centre[end]);
-            var deck = MathF.Max(MathF.Max(start.Y, finish.Y), terrain.SampleHeight((start.X + finish.X) / 2f, (start.Z + finish.Z) / 2f)) + 0.6f;
+            // The deck lies level with the banks' tops a few metres back from the water, not with their slopes.
+            var along = Vector2.Normalize(new Vector2(finish.X - start.X, finish.Z - start.Z));
+            var before = terrain.SampleHeight(start.X - (along.X * 3f), start.Z - (along.Y * 3f));
+            var beyond = terrain.SampleHeight(finish.X + (along.X * 3f), finish.Z + (along.Y * 3f));
+            var deck = MathF.Max(MathF.Max(MathF.Max(start.Y, finish.Y), MathF.Max(before, beyond)), terrain.SampleHeight((start.X + finish.X) / 2f, (start.Z + finish.Z) / 2f)) + 0.6f;
             spans.Add((start with { Y = deck }, finish with { Y = deck }));
             i = end;
         }
@@ -362,18 +366,34 @@ public static class BridgeLayout
         return spans;
     }
 
-    /// <summary>A bridge one metre long along +Z, centred at the origin, its deck's top at 0: plank deck, rails and posts, to be stretched along a span.</summary>
+    /// <summary>
+    /// A bridge of a length along +Z, centred at the origin, its deck's top at 0 (ADR-073): a planked deck
+    /// on two beams, a rail and a lower rail on posts every two metres either side, and piles every
+    /// four metres reaching down into the water. Built to its length, so its posts keep their size.
+    /// </summary>
+    /// <param name="length">The span, in metres.</param>
     /// <returns>The triangles, tagged as timber for the building shader.</returns>
-    public static TaggedMesh Mesh()
+    public static TaggedMesh Mesh(float length)
     {
         var b = new MeshBuilder(detailed: true);
-        var trim = (int)BuildingSlot.Trim;
-        b.Box(new Vector3(0f, -0.12f, 0f), new Vector3(RoadLayout.Width + 0.4f, 0.24f, 1f), 0, (int)BuildingSlot.Wall);
+        var (trim, wall) = ((int)BuildingSlot.Trim, (int)BuildingSlot.Wall);
+        var half = MathF.Max(1f, length) / 2f;
+        var edge = (RoadLayout.Width / 2f) + 0.15f;
+        b.Box(new Vector3(0f, -0.1f, 0f), new Vector3(RoadLayout.Width + 0.4f, 0.2f, half * 2f), 0, wall);
         foreach (var side in new[] { 1f, -1f })
         {
-            var x = side * ((RoadLayout.Width / 2f) + 0.12f);
-            b.Box(new Vector3(x, 0.85f, 0f), new Vector3(0.12f, 0.1f, 1f), 0, trim);
-            b.Box(new Vector3(x, 0.4f, 0f), new Vector3(0.08f, 0.08f, 1f), 0, trim);
+            b.Box(new Vector3(side * (edge - 0.3f), -0.32f, 0f), new Vector3(0.22f, 0.26f, half * 2f), 0, trim);
+            b.Box(new Vector3(side * edge, 0.92f, 0f), new Vector3(0.12f, 0.1f, half * 2f), 0, trim);
+            b.Box(new Vector3(side * edge, 0.45f, 0f), new Vector3(0.07f, 0.07f, half * 2f), 0, trim);
+            for (var z = -half; z <= half + 0.01f; z += 2f)
+            {
+                b.Box(new Vector3(side * edge, 0.47f, z), new Vector3(0.13f, 0.95f, 0.13f), 0, trim);
+            }
+
+            for (var z = -half + 1f; z < half; z += 4f)
+            {
+                b.Box(new Vector3(side * (edge - 0.3f), -2.2f, z), new Vector3(0.22f, 3.8f, 0.22f), 0, trim);
+            }
         }
 
         return b.Finish();

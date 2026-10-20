@@ -25,6 +25,9 @@ public enum GroundCoverKind
 
     /// <summary>Reeds with seed heads, in swamps.</summary>
     Reeds,
+
+    /// <summary>A fern, on forest floors (ADR-073).</summary>
+    Fern,
 }
 
 /// <summary>One thing on the ground.</summary>
@@ -33,7 +36,8 @@ public enum GroundCoverKind
 /// <param name="Scale">Its size, around 1.</param>
 /// <param name="Yaw">Its turn about the vertical.</param>
 /// <param name="Tint">Its colour: of grass, bush, petals, stone or reeds.</param>
-public readonly record struct GroundCoverPlacement(GroundCoverKind Kind, Vector3 Position, float Scale, float Yaw, RgbColor Tint);
+/// <param name="Variant">Which of its kind's grown variants it is (ADR-073).</param>
+public readonly record struct GroundCoverPlacement(GroundCoverKind Kind, Vector3 Position, float Scale, float Yaw, RgbColor Tint, int Variant = 0);
 
 /// <summary>The ground cover (spec §61, ADR-053), from <c>settlement_view.json</c>. Presentation only.</summary>
 public sealed record GroundCoverSettings
@@ -46,6 +50,9 @@ public sealed record GroundCoverSettings
 
     /// <summary>How near the camera it is drawn, in metres.</summary>
     public required float Radius { get; init; }
+
+    /// <summary>How near the camera grass is drawn, in metres (ADR-073): its tufts are many and small, and the ground's own texture shows it beyond.</summary>
+    public required float GrassRadius { get; init; }
 
     /// <summary>For each biome, the chance a cell holds each kind, at full vegetation for grass and flowers.</summary>
     public required IReadOnlyDictionary<Biome, IReadOnlyDictionary<GroundCoverKind, float>> Biomes { get; init; }
@@ -72,10 +79,10 @@ public sealed record GroundCoverSettings
     /// <exception cref="ArgumentException">A value is invalid.</exception>
     public void Validate()
     {
-        if (!(CellMetres >= 0.5f) || !(ChunkMetres >= CellMetres) || !(Radius > 0f) || Grass.Count == 0 || Petals.Count == 0
+        if (!(CellMetres >= 0.5f) || !(ChunkMetres >= CellMetres) || !(Radius > 0f) || !(GrassRadius > 0f && GrassRadius <= Radius) || Grass.Count == 0 || Petals.Count == 0
             || Biomes.Values.Any(chances => chances.Values.Any(chance => !(chance is >= 0f and <= 1f))) || Biomes.Values.Any(chances => chances.Values.Sum() > 1f))
         {
-            throw new ArgumentException("GroundCover needs cells of at least 0.5 m, chunks no smaller than a cell, a positive radius, grass and petal colours, and chances in 0..1 adding up to at most 1 for each biome.");
+            throw new ArgumentException("GroundCover needs cells of at least 0.5 m, chunks no smaller than a cell, a positive radius, a grass radius above 0 and within it, grass and petal colours, and chances in 0..1 adding up to at most 1 for each biome.");
         }
     }
 }
@@ -135,7 +142,8 @@ public static class GroundCoverLayout
                     continue;
                 }
 
-                into.Add(new GroundCoverPlacement(chosen, new Vector3(x, height, z), 0.75f + (0.5f * U(3)), MathF.Tau * U(4), Tint(chosen, region, settings, U(5))));
+                var variants = Nature.GroundPlants.Variants(chosen);
+                into.Add(new GroundCoverPlacement(chosen, new Vector3(x, height, z), 0.75f + (0.5f * U(3)), MathF.Tau * U(4), Tint(chosen, region, settings, U(5)), Math.Min(variants - 1, (int)(U(6) * variants))));
             }
         }
     }
@@ -193,6 +201,7 @@ public static class GroundCoverLayout
             GroundCoverKind.Bush => RgbColor.Lerp(settings.Bush, white, snow * 0.6f),
             GroundCoverKind.Rock => Shade(RgbColor.Lerp(settings.Stone, white, snow * 0.8f), 0.85f + (0.3f * unit)),
             GroundCoverKind.Reeds => settings.Reeds,
+            GroundCoverKind.Fern => Shade(RgbColor.Lerp(settings.Bush, white, snow * 0.6f), 1.15f + (0.2f * unit)),
         };
     }
 
@@ -207,66 +216,5 @@ public static class GroundCoverLayout
         var dx = (terrain.SampleHeight(x + step, z) - terrain.SampleHeight(x - step, z)) / (2f * step);
         var dz = (terrain.SampleHeight(x, z + step) - terrain.SampleHeight(x, z - step)) / (2f * step);
         return MathF.Sqrt((dx * dx) + (dz * dz));
-    }
-}
-
-/// <summary>The ground cover as meshes built in code (ADR-053), tagged for the tree shader: stems in the trunk's slot, leaves, petals and stone in the leaves'. Pure.</summary>
-public static class GroundCoverMesh
-{
-    /// <summary>A thing on the ground.</summary>
-    /// <param name="kind">What.</param>
-    /// <returns>The triangles: standing on the ground at the origin.</returns>
-    public static TaggedMesh Build(GroundCoverKind kind)
-    {
-        var b = new MeshBuilder(detailed: false);
-        var (stem, leaf) = ((int)TreeSlot.Trunk, (int)TreeSlot.Leaves);
-        switch (kind)
-        {
-            case GroundCoverKind.Grass:
-                for (var blade = 0; blade < 9; blade++)
-                {
-                    var angle = MathF.Tau * (blade + (0.37f * (blade % 3))) / 9f;
-                    var (dx, dz) = (MathF.Cos(angle), MathF.Sin(angle));
-                    var height = 0.4f + (0.3f * ((blade * 3) % 5) / 4f);
-                    var foot = 0.06f + (0.08f * (blade % 2));
-                    b.Tube(new Vector3(dx * foot, -0.05f, dz * foot), new Vector3(dx * (foot + 0.24f), height, dz * (foot + 0.24f)), 0.04f, 0.004f, 0.25f, 3, 0, leaf);
-                }
-
-                break;
-            case GroundCoverKind.Flowers:
-                foreach (var (dx, dz, height) in new[] { (0.08f, 0.02f, 0.42f), (-0.07f, 0.06f, 0.36f), (0.01f, -0.08f, 0.48f) })
-                {
-                    b.Tube(new Vector3(dx * 0.3f, -0.05f, dz * 0.3f), new Vector3(dx, height, dz), 0.012f, 0.01f, 1f, 3, 0, stem);
-                    b.Ball(new Vector3(dx, height + 0.03f, dz), new Vector3(0.07f, 0.04f, 0.07f), 0, leaf);
-                }
-
-                break;
-            case GroundCoverKind.Bush:
-                foreach (var (centre, radius) in new[] { (new Vector3(0f, 0.35f, 0f), 0.5f), (new Vector3(0.35f, 0.25f, 0.15f), 0.36f), (new Vector3(-0.3f, 0.22f, -0.2f), 0.34f) })
-                {
-                    b.Ball(centre, new Vector3(radius, radius * 0.8f, radius), 0, leaf);
-                }
-
-                break;
-            case GroundCoverKind.Rock:
-                b.Ball(new Vector3(0f, 0.05f, 0f), new Vector3(0.45f, 0.3f, 0.35f), 0, leaf);
-                break;
-            case GroundCoverKind.Reeds:
-                for (var reed = 0; reed < 6; reed++)
-                {
-                    var angle = MathF.Tau * reed / 6f;
-                    var (dx, dz) = (MathF.Cos(angle) * 0.12f, MathF.Sin(angle) * 0.12f);
-                    var height = 1.1f + (0.3f * (reed % 3) / 2f);
-                    b.Tube(new Vector3(dx, -0.05f, dz), new Vector3(dx * 1.6f, height, dz * 1.6f), 0.02f, 0.01f, 1f, 3, 0, leaf);
-                    if (reed % 2 == 0)
-                    {
-                        b.Tube(new Vector3(dx * 1.6f, height - 0.18f, dz * 1.6f), new Vector3(dx * 1.6f, height, dz * 1.6f), 0.035f, 0.03f, 1f, 4, 0, stem, capped: true);
-                    }
-                }
-
-                break;
-        }
-
-        return b.Finish();
     }
 }

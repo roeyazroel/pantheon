@@ -39,7 +39,8 @@ public enum TreeKind
 /// <param name="Yaw">Its turn about the vertical, in radians.</param>
 /// <param name="Kind">Its shape.</param>
 /// <param name="Shade">How light its leaves are, around 1.</param>
-public readonly record struct TreePlacement(Vector3 Position, float Scale, float Yaw, TreeKind Kind, float Shade);
+/// <param name="Variant">Which of its species' grown variants it is (ADR-073).</param>
+public readonly record struct TreePlacement(Vector3 Position, float Scale, float Yaw, TreeKind Kind, float Shade, int Variant = 0);
 
 /// <summary>Ground kept clear of trees: a village's houses and fields (ADR-033).</summary>
 /// <param name="Center">Its centre.</param>
@@ -55,7 +56,7 @@ public readonly record struct Clearing(Vector2 Center, float Radius);
 public static class ForestLayout
 {
     /// <summary>Ground each tree of a whole forest takes, in square metres.</summary>
-    public const float SquareMetresPerTree = 120f;
+    public const float SquareMetresPerTree = 60f;
 
     /// <summary>How far trees keep from a road's middle, in metres.</summary>
     public const float RoadClearance = 5f;
@@ -133,7 +134,8 @@ public static class ForestLayout
                 0.8f + (0.55f * PresentationHash.Unit(seed, key, (ulong)slot, 4)),
                 MathF.Tau * PresentationHash.Unit(seed, key, (ulong)slot, 5),
                 kind,
-                0.85f + (0.25f * PresentationHash.Unit(seed, key, (ulong)slot, 6))));
+                0.85f + (0.25f * PresentationHash.Unit(seed, key, (ulong)slot, 6)),
+                Math.Min(Nature.TreeGrowth.Variants - 1, (int)(PresentationHash.Unit(seed, key, (ulong)slot, 7) * Nature.TreeGrowth.Variants))));
         }
     }
 

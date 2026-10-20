@@ -30,6 +30,9 @@ public sealed record TreeSettings
     /// <summary>How much more it sways in the strongest wind.</summary>
     public required float StormSway { get; init; }
 
+    /// <summary>How near the camera trees are grown in full detail, in metres; beyond, their lighter forms stand (ADR-073).</summary>
+    public required float DetailDistance { get; init; }
+
     /// <summary>The species a tree on a biome is, by a unit value.</summary>
     /// <param name="biome">The biome.</param>
     /// <param name="unit">A value in 0..1.</param>
@@ -59,9 +62,9 @@ public sealed record TreeSettings
             throw new ArgumentException("Trees.Species needs Grassland, and every biome listed needs species with shares of at least 0 that add up to more than 0.");
         }
 
-        if (Enum.GetValues<TreeKind>().Any(kind => !Colors.ContainsKey(kind)) || !(Sway >= 0f) || !(StormSway >= 0f))
+        if (Enum.GetValues<TreeKind>().Any(kind => !Colors.ContainsKey(kind)) || !(Sway >= 0f) || !(StormSway >= 0f) || !(DetailDistance is >= 50f and <= 2000f))
         {
-            throw new ArgumentException("Trees.Colors needs every species, and Sway and StormSway must not be negative.");
+            throw new ArgumentException("Trees.Colors needs every species, Sway and StormSway must not be negative, and DetailDistance must be from 50 to 2000 metres.");
         }
     }
 }

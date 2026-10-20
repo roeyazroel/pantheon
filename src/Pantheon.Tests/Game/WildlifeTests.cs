@@ -80,7 +80,7 @@ public sealed class WildlifeTests
         var span = Assert.Single(BridgeLayout.Spans(road, terrain));
 
         Assert.InRange(span.From.X, 92f, 101f);
-        Assert.InRange(span.To.X, 123f, 132f);
+        Assert.InRange(span.To.X, 122f, 132f);
         Assert.True(span.From.Y >= 5.5f && span.From.Y == span.To.Y);
         Assert.Empty(BridgeLayout.Spans(road, new TerrainField(side, 2f, Enumerable.Repeat(5f, count).ToArray(), new float[count], new float[count], Enumerable.Repeat(Biome.Grassland, count).ToArray())));
         Assert.True(LaunchOptions.Parse(["--wildlife=on"]).FocusWildlife);

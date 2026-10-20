@@ -4,24 +4,29 @@ using Godot;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
 using Pantheon.Game.Presentation;
+using Pantheon.Game.Presentation.Nature;
 using Pantheon.Simulation.Terrain;
 
 namespace Pantheon.Client.Presentation.Land;
 
 /// <summary>
 /// Draws the forests (spec §93, ADR-033): the trees <see cref="ForestLayout"/> places, in square
-/// chunks of the island, one MultiMesh per chunk and tree shape. The chunks stream (spec §84,
-/// ADR-050): only those near the camera are planted, nearest first and a few a frame, and those
-/// left far behind are cleared. Every second it looks for regions whose timber, snow, villages or
-/// roads have changed and redraws their planted chunks, a few a frame.
+/// chunks of the island, grown by <see cref="TreeGrowth"/> (ADR-073): one MultiMesh per chunk,
+/// species and variant for the trees near the camera, and one per chunk and species of their lighter
+/// forms beyond <see cref="TreeSettings.DetailDistance"/>. The chunks stream (spec §84, ADR-050):
+/// only those near the camera are planted, nearest first and a few a frame, and those left far
+/// behind are cleared. Every second it looks for regions whose timber, snow, villages or roads have
+/// changed and redraws their planted chunks, a few a frame.
 /// </summary>
 public sealed class ForestPresenter
 {
-    private const string ShaderPath = "res://Shaders/tree.gdshader";
     private const float ChunkMetres = 256f;
     private const float RefreshSeconds = 1f;
     private const float HideDistance = 1600f;
     private const float FadeMargin = 300f;
+
+    // Near and far trees cross-fade over this many metres about the detail distance.
+    private const float DetailMargin = 60f;
 
     private static readonly Color Snowy = new(0.9f, 0.92f, 0.95f);
 
@@ -31,12 +36,12 @@ public sealed class ForestPresenter
     private readonly ShaderMaterial _material;
     private readonly StreamingSettings _streaming;
     private readonly TreeSettings _species;
-    private readonly Dictionary<TreeKind, ArrayMesh> _meshes = [];
+    private readonly Dictionary<(TreeKind Kind, int Variant, PlantDetail Detail), ArrayMesh> _meshes = [];
     private readonly List<TreePlacement> _trees = [];
     private readonly HashSet<int> _dirty = [];
     private readonly Dictionary<int, int> _housesShown = [];
     private readonly HashSet<int> _roadsShown = [];
-    private Dictionary<TreeKind, MultiMeshInstance3D>?[] _chunks = [];
+    private Dictionary<(TreeKind Kind, int Variant, PlantDetail Detail), MultiMeshInstance3D>?[] _chunks = [];
     private ChunkStreamer? _streamer;
     private bool _firstStream;
     private int[] _shown = [];
@@ -58,14 +63,20 @@ public sealed class ForestPresenter
         _species = species;
         foreach (var kind in Enum.GetValues<TreeKind>())
         {
-            _meshes[kind] = Meshes.ToArrayMesh(TreeMesh.Build(kind, detailed: true));
+            for (var variant = 0; variant < TreeGrowth.Variants; variant++)
+            {
+                _meshes[(kind, variant, PlantDetail.Near)] = Meshes.ToArrayMesh(TreeGrowth.Grow(kind, variant, PlantDetail.Near));
+            }
+
+            // In the distance one variant of each species is enough.
+            _meshes[(kind, 0, PlantDetail.Far)] = Meshes.ToArrayMesh(TreeGrowth.Grow(kind, 0, PlantDetail.Far));
         }
 
         _parent = parent;
         _rules = rules;
         _layout = layout;
         _streaming = streaming;
-        _material = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
+        _material = PlantTextures.Material();
     }
 
     /// <summary>The wind's sway at the camera, on the ground, in metres: for the ground cover too.</summary>
@@ -84,7 +95,7 @@ public sealed class ForestPresenter
         var grid = world.Regions;
         _regionsPerChunk = Math.Max(1, (int)MathF.Round(ChunkMetres / grid.RegionSize));
         _chunksPerSide = (grid.Columns + _regionsPerChunk - 1) / _regionsPerChunk;
-        _chunks = new Dictionary<TreeKind, MultiMeshInstance3D>?[_chunksPerSide * _chunksPerSide];
+        _chunks = new Dictionary<(TreeKind, int, PlantDetail), MultiMeshInstance3D>?[_chunksPerSide * _chunksPerSide];
         _streamer = new ChunkStreamer(_chunksPerSide, _regionsPerChunk * grid.RegionSize, _streaming.ForestLoadRadius, _streaming.ForestUnloadRadius);
         _firstStream = true;
         _shown = new int[grid.Cells.Count];
@@ -266,44 +277,58 @@ public sealed class ForestPresenter
             return;
         }
 
+        var size = _regionsPerChunk * grid.RegionSize;
+        var (midX, midZ) = ((chunkColumn + 0.5f) * size, (chunkRow + 0.5f) * size);
+        var centre = new Vector3(midX, MathF.Max(0f, _terrain!.SampleHeight(midX, midZ)), midZ);
         foreach (var kind in Enum.GetValues<TreeKind>())
         {
-            var count = 0;
-            foreach (var tree in _trees)
+            for (var variant = 0; variant < TreeGrowth.Variants; variant++)
             {
-                count += tree.Kind == kind ? 1 : 0;
+                Show(nodes, (kind, variant, PlantDetail.Near), chunk, centre, snow, tree => tree.Kind == kind && tree.Variant == variant);
             }
 
-            if (count == 0 && !nodes.ContainsKey(kind))
-            {
-                continue;
-            }
-
-            if (!nodes.TryGetValue(kind, out var node))
-            {
-                node = Instance(kind, $"{kind}_{chunk}");
-                nodes[kind] = node;
-            }
-
-            Fill(node.Multimesh, kind, count, _species.Colors[kind].Leaves.ToGodot(), snow);
+            Show(nodes, (kind, 0, PlantDetail.Far), chunk, centre, snow, tree => tree.Kind == kind);
         }
     }
 
-    /// <summary>Sets a MultiMesh to the chunk's trees of one species.</summary>
-    private void Fill(MultiMesh mesh, TreeKind kind, int count, Color leaves, List<float> snow)
+    /// <summary>Fills one of a chunk's nodes with the trees it shows, making it when there are some.</summary>
+    private void Show(Dictionary<(TreeKind, int, PlantDetail), MultiMeshInstance3D> nodes, (TreeKind Kind, int Variant, PlantDetail Detail) key, int chunk, Vector3 centre, List<float> snow, Func<TreePlacement, bool> shows)
+    {
+        var count = 0;
+        foreach (var tree in _trees)
+        {
+            count += shows(tree) ? 1 : 0;
+        }
+
+        if (count == 0 && !nodes.ContainsKey(key))
+        {
+            return;
+        }
+
+        if (!nodes.TryGetValue(key, out var node))
+        {
+            node = Instance(key, $"{key.Kind}_{key.Variant}_{key.Detail}_{chunk}", centre);
+            nodes[key] = node;
+        }
+
+        Fill(node.Multimesh, shows, count, _species.Colors[key.Kind].Leaves.ToGodot(), snow, centre);
+    }
+
+    /// <summary>Sets a MultiMesh to the chunk's trees it shows, about the chunk's middle.</summary>
+    private void Fill(MultiMesh mesh, Func<TreePlacement, bool> shows, int count, Color leaves, List<float> snow, Vector3 centre)
     {
         mesh.InstanceCount = count;
         var index = 0;
         for (var i = 0; i < _trees.Count; i++)
         {
             var tree = _trees[i];
-            if (tree.Kind != kind)
+            if (!shows(tree))
             {
                 continue;
             }
 
             var basis = new Basis(Vector3.Up, tree.Yaw).Scaled(Vector3.One * tree.Scale);
-            mesh.SetInstanceTransform(index, new Transform3D(basis, new Vector3(tree.Position.X, tree.Position.Y, tree.Position.Z)));
+            mesh.SetInstanceTransform(index, new Transform3D(basis, new Vector3(tree.Position.X, tree.Position.Y, tree.Position.Z) - centre));
             // The shader takes colours as linear.
             var tint = (leaves * tree.Shade).Lerp(Snowy, snow[i] * 0.75f).SrgbToLinear();
             mesh.SetInstanceCustomData(index, new Color(tint.R, tint.G, tint.B, (tree.Yaw / Mathf.Tau) % 1f));
@@ -311,21 +336,36 @@ public sealed class ForestPresenter
         }
     }
 
-    /// <summary>A chunk's node for one species, its trunk in the species' colour.</summary>
-    private MultiMeshInstance3D Instance(TreeKind kind, string name)
+    /// <summary>
+    /// A chunk's node for one species, variant and detail, at the chunk's middle so its distance from the
+    /// camera is the chunk's: near trees fade out past the detail distance as the far ones fade in.
+    /// </summary>
+    private MultiMeshInstance3D Instance((TreeKind Kind, int Variant, PlantDetail Detail) key, string name, Vector3 centre)
     {
+        var near = key.Detail == PlantDetail.Near;
         var instance = new MultiMeshInstance3D
         {
             Name = name,
-            Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseCustomData = true, Mesh = _meshes[kind] },
+            Position = centre,
+            Multimesh = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseCustomData = true, Mesh = _meshes[key] },
             MaterialOverride = _material,
-            VisibilityRangeEnd = HideDistance,
-            VisibilityRangeEndMargin = FadeMargin,
+            // Far trees' shadows are a pixel or two; the shadow maps are spared them.
+            CastShadow = near ? GeometryInstance3D.ShadowCastingSetting.On : GeometryInstance3D.ShadowCastingSetting.Off,
+            VisibilityRangeBegin = near ? 0f : _species.DetailDistance,
+            VisibilityRangeBeginMargin = near ? 0f : DetailMargin,
+            VisibilityRangeEnd = near ? _species.DetailDistance : HideDistance,
+            VisibilityRangeEndMargin = near ? DetailMargin : FadeMargin,
             VisibilityRangeFadeMode = GeometryInstance3D.VisibilityRangeFadeModeEnum.Self,
         };
         _parent.AddChild(instance);
-        var trunk = _species.Colors[kind].Trunk.ToGodot().SrgbToLinear();
+        var trunk = _species.Colors[key.Kind].Trunk.ToGodot().SrgbToLinear();
         instance.SetInstanceShaderParameter("trunk_color", new Vector3(trunk.R, trunk.G, trunk.B));
+        instance.SetInstanceShaderParameter("bark_style", key.Kind switch
+        {
+            TreeKind.Birch => 1f,
+            TreeKind.Palm => 2f,
+            TreeKind.Pine or TreeKind.Fir or TreeKind.Oak or TreeKind.Willow or TreeKind.Snag => 0f,
+        });
         return instance;
     }
 
