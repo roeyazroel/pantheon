@@ -92,6 +92,14 @@ public sealed class DiplomacyLedger : IActRecorder
                 relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 2f));
                 relation.Rivalry = SimMath.Clamp01(relation.Rivalry + _rules.HarmRivalry);
                 break;
+            case DiplomaticAct.Trespassed:
+                relation.Trust = SimMath.Clamp01(relation.Trust - (_rules.HarmTrustLoss / 4f));
+                relation.Rivalry = SimMath.Clamp01(relation.Rivalry + (_rules.HarmRivalry / 2f));
+                relation.Suspicion = SimMath.Clamp01(relation.Suspicion + (_rules.HarmRivalry / 2f));
+                break;
+            case DiplomaticAct.Visited:
+                relation.Trust = SimMath.Clamp01(relation.Trust + (_rules.HelpGratitude / 2f));
+                break;
             case DiplomaticAct.CovertAct:
             case DiplomaticAct.PlottedAgainst:
                 relation.Trust = SimMath.Clamp01(relation.Trust - _rules.HarmTrustLoss);

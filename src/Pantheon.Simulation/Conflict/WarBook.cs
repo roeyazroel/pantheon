@@ -81,7 +81,7 @@ public static class WarBook
             DiplomaticAct.Helped or DiplomaticAct.Courted or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.Allied or DiplomaticAct.MadePeace
                 or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.Rescued or DiplomaticAct.BrokeTreaty or DiplomaticAct.BrokePromise
                 or DiplomaticAct.VotedAgainst or DiplomaticAct.DefiedCouncil or DiplomaticAct.KeptWord or DiplomaticAct.SignedTreaty or DiplomaticAct.PlottedAgainst
-                or DiplomaticAct.CovertAct or DiplomaticAct.Dictated => 0f,
+                or DiplomaticAct.CovertAct or DiplomaticAct.Dictated or DiplomaticAct.Trespassed or DiplomaticAct.Visited => 0f,
         };
         war.Add(actorGodId, points);
     }

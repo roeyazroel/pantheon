@@ -87,6 +87,13 @@ public sealed class CreatureMeetings
         CreatureTemperament.Envy(_rules, world, b, a);
         var answerA = _brain.Respond(world, a, b, random);
         var answerB = _brain.Respond(world, b, a, random);
+        if (CreatureCombat.Recovering(_rules, a, tick) || CreatureCombat.Recovering(_rules, b, tick))
+        {
+            // A Creature just out of a fight is let be a while: no new fight starts (ADR-070).
+            answerA = answerA == CreatureAction.Fight ? CreatureAction.Ignore : answerA;
+            answerB = answerB == CreatureAction.Fight ? CreatureAction.Ignore : answerB;
+        }
+
         if (Politics.TreatyModel.SparesCreatures(world, a.GodId, b.GodId))
         {
             // Their gods bound them never to fight (ADR-025).

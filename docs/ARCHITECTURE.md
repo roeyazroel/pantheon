@@ -1904,6 +1904,32 @@ ADR-066 records the decisions, and the plan is
 - **The client.** `TalkController` (created by `GameFlow`) opens `TalkPanel` from Speak on a
   diplomacy card, pauses the world while it is open, and lets only the host talk.
 
+## Gods answering Creatures, the hand and fights
+
+ADR-070 records the decisions, and the plan is
+[.docs/milestone-15-part-49-gods-answer-creatures.md](../.docs/milestone-15-part-49-gods-answer-creatures.md).
+
+- **The watch** (`Simulation/Gods/CreatureWatch`), run by `GodAiSystem` after the AI gods' own turns,
+  every `WatchRules.IntervalTicks`:
+  - every god looks for other gods' Creatures near the villages it leads;
+  - `Hostility` reads its standing with the visitor's god, its view of it and its aggression, and
+    `AnswerFor` turns that into Welcome, Watch or Repel;
+  - the god remembers a `Trespassed` or `Visited` act once in the cooldown, through the ledger, and a
+    `CreatureWatched` event goes out;
+  - it sends its Creature after the most pressing visitor, through the Creature authority (`Fight`
+    on a foe it is a match for, else `GoTo`);
+  - a player's god is only told (`Unanswered`);
+  - `GodAi` does not call a hunting Creature off for an errand.
+- **Fights:** `CreatureCombat.Recovering` (a fight remembered within `RespiteSeconds`) turns a
+  meeting's fight into walking on in `CreatureMeetings`. `CreatureCommands.SlowForFight` slows the
+  host to ×1 when the player's Creature starts one.
+- **The hand:**
+  - `HandAuthority` lets a god set its own Creature down or throw it without influence;
+  - `HandCreatures` lifts it within half the reach before villagers;
+  - the client keeps a held Creature on the hand's grip whatever the pointer does;
+  - `CreaturePresenter.Pointed` tests the pointer's ray against a Creature's body, so the hand's
+    target is the Creature pointed at.
+
 ## Feet, dialogs and territory
 
 ADR-069 records the decisions, and the plan is

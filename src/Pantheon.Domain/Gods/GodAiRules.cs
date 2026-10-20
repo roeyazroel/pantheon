@@ -33,6 +33,9 @@ public sealed record GodAiRules
     /// <summary>How the gods make their major plans (ADR-036); none when absent.</summary>
     public PlanningRules Planning { get; init; } = PlanningRules.None;
 
+    /// <summary>How gods keep watch over the villages they lead (ADR-070); <see cref="WatchRules.None"/> when the file has none.</summary>
+    public WatchRules Watch { get; init; } = WatchRules.None;
+
     /// <summary>
     /// How far a god's temper (ADR-065) moves a weight of its personality's profile: a leaning of 1
     /// adds this much, -1 takes it away (0..0.5; none when absent).

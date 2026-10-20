@@ -94,6 +94,11 @@ internal sealed class NatureDebug
             _setStatus(status);
         }
 
+        if (options.Visit is { } visited)
+        {
+            _setStatus(Pantheon.Game.Creatures.CreatureCommands.Visit(_session, visited));
+        }
+
         if (options.Refugees is { } policy)
         {
             _setStatus(MigrationCommands.SetPolicy(_session, policy));

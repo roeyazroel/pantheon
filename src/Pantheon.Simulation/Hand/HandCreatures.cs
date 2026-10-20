@@ -25,7 +25,11 @@ internal sealed class HandCreatures(HandRules rules)
         Lifted,
     }
 
-    /// <summary>Lifts the god's Creature when it stands within reach of the point, and nearer than anything else the hand could lift.</summary>
+    /// <summary>
+    /// Lifts the god's Creature when it stands within reach of the point and nearer than anything else
+    /// the hand could lift, or within half the hand's reach whatever else is near (ADR-070): a Creature
+    /// working in a village is lifted, not the village's people.
+    /// </summary>
     public Lifting Lift(WorldState world, GodState god, GroundPosition target, float reach)
     {
         if (world.Creatures.Find(c => c.GodId == god.Id) is not { } creature || creature.Activity.Phase == CreaturePhase.Banished)
@@ -34,7 +38,7 @@ internal sealed class HandCreatures(HandRules rules)
         }
 
         var (dx, dz) = (creature.Position.X - target.X, creature.Position.Z - target.Z);
-        var within = System.Math.Min(reach, rules.Reach);
+        var within = System.Math.Max(System.Math.Min(reach, rules.Reach), rules.Reach * 0.5f);
         if ((dx * dx) + (dz * dz) > within * within)
         {
             return Lifting.NotNear;

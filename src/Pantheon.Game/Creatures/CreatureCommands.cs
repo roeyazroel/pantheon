@@ -62,6 +62,59 @@ public static class CreatureCommands
         return sent.Accepted ? $"{mine.Name} sets out to meet {theirs.Name}, the Creature of {god}" : sent.Text;
     }
 
+    /// <summary>
+    /// Slows the world to ×1 when the player's Creature starts a fight while it runs faster (ADR-070), so
+    /// the player sees the fight; the host's or a lone player's choice only.
+    /// </summary>
+    /// <param name="session">Game session.</param>
+    /// <param name="events">A frame's events.</param>
+    /// <returns>A status line when it slowed the world; <c>null</c> otherwise.</returns>
+    public static string? SlowForFight(GameSession session, IReadOnlyList<Domain.Events.WorldEvent> events)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(events);
+        if (session.IsReplica || session.Scheduler.TimeScale <= 1.0 || session.LocalCreature is not { } mine)
+        {
+            return null;
+        }
+
+        foreach (var worldEvent in events)
+        {
+            if (worldEvent is Domain.Events.CreaturesMet { Outcome: Domain.Events.MeetingOutcome.Fought } met && (met.CreatureId == mine.Id || met.OtherCreatureId == mine.Id))
+            {
+                SessionCommands.SetSpeedPreset(session, 0);
+                return $"{mine.Name} is fighting: time slows to ×1 so you can watch";
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets the player's Creature down beside a village, as the hand would, so the village's god answers it (<c>--visit</c>, ADR-070). Host only.</summary>
+    /// <param name="session">Game session.</param>
+    /// <param name="village">The village, by its number from 1.</param>
+    /// <returns>A status line.</returns>
+    public static string Visit(GameSession session, int village)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        if (SessionCommands.HostOnly(session) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var world = session.World;
+        if (session.LocalCreature is not { Activity.Phase: not CreaturePhase.Banished } mine || village < 1 || village > world.Settlements.Count)
+        {
+            return "Your Creature cannot visit there";
+        }
+
+        var place = world.Settlements[village - 1];
+        mine.Position = CreatureFounder.Beside(world.Regions, place.Position) ?? place.Position;
+        (mine.Activity.Phase, mine.Activity.TicksLeft) = (CreaturePhase.Deciding, 0);
+        mine.Activity.Path.Clear();
+        return $"{mine.Name} visits {place.Name}";
+    }
+
     /// <summary>Gives the player's Creature the traits named, strongly (<c>--temperament</c>, ADR-037). Host only.</summary>
     /// <param name="session">Game session.</param>
     /// <param name="words">Words from <see cref="TemperamentText.Words"/>.</param>

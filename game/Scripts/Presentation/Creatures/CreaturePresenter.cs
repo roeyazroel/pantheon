@@ -75,6 +75,33 @@ public sealed class CreaturePresenter
     public (Vector3 Position, float HeadHeight)? Find(int creatureId) =>
         _views.TryGetValue(creatureId, out var view) ? (view.ShownPosition, view.HeadHeight) : null;
 
+    /// <summary>
+    /// Where a Creature stands when a ray passes through its body (ADR-070): a standing capsule from its
+    /// feet to its head, as wide as two fifths of its height. So pointing at a tall Creature finds it,
+    /// not the ground behind it.
+    /// </summary>
+    /// <param name="creatureId">The Creature.</param>
+    /// <param name="from">The ray's start.</param>
+    /// <param name="direction">The ray's direction, of unit length.</param>
+    /// <returns>Its feet, or <c>null</c> when the ray misses it.</returns>
+    public Vector3? Pointed(int creatureId, Vector3 from, Vector3 direction)
+    {
+        if (!_views.TryGetValue(creatureId, out var view))
+        {
+            return null;
+        }
+
+        var feet = view.ShownPosition;
+        var height = view.HeadHeight;
+        var offset = from - feet;
+        var across = 1f - (direction.Y * direction.Y);
+        var along = direction.Dot(offset);
+        var up = across > 1e-6f ? Mathf.Clamp(((offset.Y) - (direction.Y * along)) / across, 0f, height) : Mathf.Clamp(offset.Y, 0f, height);
+        var t = Mathf.Max(0f, (direction.Y * up) - along);
+        var miss = (from + (direction * t)).DistanceTo(feet + new Vector3(0f, up, 0f));
+        return miss <= height * 0.2f ? feet : null;
+    }
+
     /// <summary>Flashes a Creature's colour, and its face shows the god's word a while.</summary>
     /// <param name="creatureId">The Creature.</param>
     /// <param name="color">Flash colour.</param>

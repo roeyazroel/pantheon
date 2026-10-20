@@ -21,6 +21,7 @@ internal sealed partial class DivineHand : Node3D
     private float _gestureLift;
     private Vector3 _cursor;
     private bool _hasCursor;
+    private bool _holding;
     private float _cameraDistance = 300f;
     private float _gestureSize;
     private Node3D _held = null!;
@@ -101,6 +102,8 @@ internal sealed partial class DivineHand : Node3D
     /// <param name="kind">What it holds, or <c>null</c>.</param>
     public void Hold(HeldKind? kind)
     {
+        // A hand that holds something stays in sight where it was, even when the pointer leaves the land (ADR-070).
+        _holding = kind is not null;
         foreach (var child in _held.GetChildren())
         {
             if (child is Node3D thing)
@@ -184,7 +187,7 @@ internal sealed partial class DivineHand : Node3D
         }
         else
         {
-            Visible = _hasCursor;
+            Visible = _hasCursor || _holding;
             Position = _cursor + new Vector3(0f, Mathf.Max((HoverHeight * _cameraDistance) + size, HoldLift), 0f);
             Rotation = Vector3.Zero;
         }

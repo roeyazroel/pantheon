@@ -17,6 +17,14 @@
   // or Intimidate, -1 takes it away. Gods made before tempers, and players' gods, lean nowhere.
   "TemperReach": 0.15,
 
+  // How gods keep watch over the villages they lead (ADR-070). Every IntervalTicks a god looks for another
+  // god's Creature within Radius metres of one, and answers by its hostility to that god (its standing
+  // with it, its view of it and its appetite for war, 0..1): up to WelcomeHostility it welcomes the
+  // visitor, its Creature coming to greet it; from RepelHostility it drives it out, setting its Creature
+  // on it when at least RepelConfidence sure of it; between, it watches, its Creature following the
+  // visitor. It remembers a visit, and tells of it, once in CooldownSeconds.
+  "Watch": { "Radius": 220.0, "IntervalTicks": 10, "CooldownSeconds": 60.0, "RepelHostility": 0.75, "WelcomeHostility": 0.25, "RepelConfidence": 0.4 },
+
   // Protect: help own followers in need. Convert: win others with kind miracles. Intimidate: frighten,
   // rivals' followers first. Bless: bless the land. Opportunism: extra appeal of targets in hardship or
   // doubt. Thrift: utility falls by Thrift x cost / power. SendCreature: send the Creature to court a

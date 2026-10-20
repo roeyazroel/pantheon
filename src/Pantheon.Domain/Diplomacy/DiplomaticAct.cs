@@ -77,4 +77,10 @@ public enum DiplomaticAct
 
     /// <summary>It dictated peace to the remembering god.</summary>
     Dictated,
+
+    /// <summary>Its Creature came into the remembering god's lands uninvited (ADR-070).</summary>
+    Trespassed,
+
+    /// <summary>Its Creature came to the remembering god's lands as a welcome friend (ADR-070).</summary>
+    Visited,
 }

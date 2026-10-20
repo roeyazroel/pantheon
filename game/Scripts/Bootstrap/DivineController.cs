@@ -311,8 +311,10 @@ internal sealed class DivineController
     public Vector3? HeldCreatureAt(NVector3? cursor)
     {
         // A held Creature hangs by its scruff from the hand's grip (ADR-061), so the hand rises high
-        // enough that its feet clear the ground; it swings as the hand moves (ADR-057).
-        if (_session.LocalGod?.Held?.Kind != Pantheon.Domain.Hand.HeldKind.Creature || cursor is null || _session.LocalCreature is not { } creature)
+        // enough that its feet clear the ground; it swings as the hand moves (ADR-057). It stays in the
+        // hand where the pointer last touched the land when the pointer leaves it (ADR-070).
+        _ = cursor;
+        if (_session.LocalGod?.Held?.Kind != Pantheon.Domain.Hand.HeldKind.Creature || _session.LocalCreature is not { } creature)
         {
             _hand.HoldLift = 0f;
             return null;

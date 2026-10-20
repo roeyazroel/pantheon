@@ -116,7 +116,8 @@ public sealed class SimulationEngine
             societyRules is null ? null : new Society.PriorityAdvisor(societyRules, settlementRules, divineRules, Authorities.Society!, godAiRules.Planning),
             new TreatyAdvisor(diplomacyRules, Authorities.Diplomacy, ai.ProfileOf),
             new CouncilAdvisor(diplomacyRules.Politics, Authorities.Council!),
-            new CovertAdvisor(diplomacyRules, Authorities.Conflict!));
+            new CovertAdvisor(diplomacyRules, Authorities.Conflict!),
+            new CreatureWatch(godAiRules.Watch, creatureRules, Authorities.Creatures, ledger, ai.ProfileOf));
         Migration = new MigrationSystem(migrationRules, settlementRules, divineRules, ledger, weatherRules);
         HolySites = holySiteRules is null ? null : new HolySites.HolySiteSystem(holySiteRules, divineRules, creatureRules, ledger);
         var systems = new List<ISimulationSystem>

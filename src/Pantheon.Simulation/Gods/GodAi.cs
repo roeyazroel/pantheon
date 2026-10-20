@@ -205,7 +205,7 @@ public sealed class GodAi
                 }
 
                 break;
-            case AiActionKind.SendCreature when _creatures is not null && god.CreatureId is { } creature:
+            case AiActionKind.SendCreature when _creatures is not null && god.CreatureId is { } creature && !OnAHunt(world, creature):
                 _creatures.Execute(world, new CreatureCommand(god.Id, creature, CreatureCommandKind.GoTo, candidate.Target), god.Id, events);
                 break;
             case AiActionKind.SetCreatureOn when _creatures is not null && god.CreatureId is { } hunter:
@@ -445,6 +445,10 @@ public sealed class GodAi
             }
         }
     }
+
+    /// <summary>Whether the god's Creature hunts a rival it was set on, which the god does not call it off for an errand (ADR-070).</summary>
+    private static bool OnAHunt(WorldState world, int creatureId) =>
+        world.Creatures.Find(c => c.Id == creatureId) is { Activity.TargetCreatureId: { } rival } hunter && CreatureBrain.IsHunting(hunter, rival);
 
     /// <summary>Whether the Creature can be sent away without neglecting itself: healthy, fed and rested.</summary>
     private bool IsFitToSend(CreatureState creature) =>

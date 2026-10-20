@@ -139,6 +139,9 @@ public sealed record CreatureCombatRules
     /// <summary>Distance in metres within which settlements see a fight.</summary>
     public required float WitnessRadius { get; init; }
 
+    /// <summary>Seconds after a fight during which a Creature is not drawn into another (ADR-070): a winner gets its breath back. 0 for none.</summary>
+    public float RespiteSeconds { get; init; }
+
     /// <summary>How the winner's followers who see a fight change their belief in its god.</summary>
     public required BeliefImpulse VictoryWitness { get; init; }
 

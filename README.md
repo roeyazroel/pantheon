@@ -399,7 +399,7 @@ the council panel offers Summon now (J), and an unmet god's card offers Bring it
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
 | Set your Creature on the rival Creature nearest the cursor, to hunt it down and fight it | Shift+V (or Fight on its card, then click near the rival) |
 | Set your Creature to work at the village under the cursor (farming, fetching wood or building, as it needs most), or to fetch wood from the wood under the cursor | B (or Work on its card, then click a village or a wood) |
-| Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
+| Your hand picks up what is at the cursor (your Creature when you point at its body, and before a village's people), or sets it down there; with Shift it throws it. Your own Creature may be set down anywhere on land, and stays in the hand as the pointer crosses a panel (ADR-070) | R / Shift+R |
 | Your hand takes an offering from a village that follows you (R gives it) | Ctrl+R |
 | Show or hide the diplomacy panel | P |
 | Talk with a god (ADR-066) | Speak on its card in the diplomacy panel; Esc ends the talk |
@@ -1346,8 +1346,21 @@ Every god's Creature roams the same island, and they remember each other.
   - Otherwise the loser falls flat on its back, then is banished for a minute, scarred (the scars show on its flanks), less
     loyal and set back towards its next level, and its god holds the defeat against the winner's.
   - People of the winner's god who saw it believe more; the loser's doubt.
-  - A fight that lasts 40 seconds is a draw.
+  - A fight that lasts 40 seconds is a draw. Between equals a fight lasts about half a minute, and
+    when yours starts a fight while the world runs faster, it slows to ×1 so you can watch (ADR-070).
+  - For 45 seconds after a fight a Creature is drawn into no other: a wounded winner gets its breath
+    back instead of falling to the next Creature that passes.
   - Punishing your Creature (X) calls it out of a fight.
+- **The gods keep watch** (ADR-070). When your Creature comes within about 220 m of a village a
+  rival leads, its god answers at once, by how it stands with you, its view of you and its temper:
+  - **a friend welcomes it:** its Creature comes to greet yours, and it remembers a friend's visit;
+  - **a stranger is wary:** its Creature comes to follow yours, and it holds the trespass against you;
+  - **a foe drives it out:** an aggressive or embittered god sets its Creature on yours, if it is a
+    match for it; if not, it guards the village.
+
+  An alert tells you each god's decision, and the diplomacy panel shows the trespass or the visit
+  among what it remembers of you. Trespass after trespass embitters a god. When another god's
+  Creature comes into one of your villages, you are told, and the choice is yours.
 - **Teach it.** Reward or punish a fight or a game like any deed: Bramble learns whom to fight and
   whom to befriend. AI gods teach theirs to fight enemies and befriend allies, and at war send
   their Creature against yours when it threatens their people.
@@ -1722,6 +1735,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--talk=<god>` | Talk with a rival god (by its number, 2 or more) at the start (ADR-066). |
 | `--talk-say=<words>` | Say this to that god's model at the start (ADR-066). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
+| `--visit=<n>` | Set your Creature down beside village `n` (1 is your home) at the start, so its god's watch answers it (ADR-070). |
 | `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.

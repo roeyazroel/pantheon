@@ -144,6 +144,7 @@ public static class CreatureRulesValidator
         errors.RequireNonNegative(combat.WinnerExperience, "Combat.WinnerExperience");
         errors.RequireNonNegative(combat.WitnessRadius, "Combat.WitnessRadius");
         errors.RequireNonNegative(combat.SpareThreshold, "Combat.SpareThreshold");
+        errors.RequireNonNegative(combat.RespiteSeconds, "Combat.RespiteSeconds");
         foreach (var (value, name) in new[]
         {
             (combat.Jitter, nameof(combat.Jitter)),

@@ -182,8 +182,10 @@
   // health per second; power is strength x (1 + SkillPower x combat skill). At YieldHealth a
   // Creature is beaten: a winner whose mercy reaches SpareThreshold lets it go, otherwise it is
   // banished with a scar and loses loyalty and a share of its progress towards the next level.
+  // For RespiteSeconds after a fight a Creature is not drawn into another (ADR-070), so a winner is not
+  // set upon while it is still wounded; at 0.025 a fight between equals lasts about half a minute.
   "Combat": {
-    "DamagePerSecond": 0.05,
+    "DamagePerSecond": 0.025,
     "Jitter": 0.5,
     "SkillPower": 1.0,
     "YieldHealth": 0.25,
@@ -196,6 +198,7 @@
     "FightLearningRate": 0.03,
     "SpareThreshold": 0.5,
     "WitnessRadius": 300.0,
+    "RespiteSeconds": 45.0,
     "VictoryWitness": { "Faith": 0.06, "Love": 0.0, "Fear": 0.08, "Doubt": -0.04 },
     "DefeatWitness": { "Faith": -0.04, "Love": 0.0, "Fear": 0.0, "Doubt": 0.08 }
   },

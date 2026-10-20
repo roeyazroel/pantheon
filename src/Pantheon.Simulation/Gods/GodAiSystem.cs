@@ -16,6 +16,7 @@ public sealed class GodAiSystem : ISimulationSystem
     private readonly TreatyAdvisor? _treaties;
     private readonly CouncilAdvisor? _council;
     private readonly CovertAdvisor? _covert;
+    private readonly CreatureWatch? _watch;
 
     /// <summary>Creates the system.</summary>
     /// <param name="ai">The god AI.</param>
@@ -25,8 +26,10 @@ public sealed class GodAiSystem : ISimulationSystem
     /// <param name="treaties">Proposes and breaks AI gods' treaties and calls in their favours (ADR-025); <c>null</c> for none.</param>
     /// <param name="council">AI gods' votes and motions in the Divine Council (ADR-025); <c>null</c> for none.</param>
     /// <param name="covert">AI gods' proxy acts and holy war stances (ADR-026); <c>null</c> for none.</param>
-    public GodAiSystem(GodAi ai, int intervalTicks, RefugeeAdvisor? refugees = null, Society.PriorityAdvisor? priorities = null, TreatyAdvisor? treaties = null, CouncilAdvisor? council = null, CovertAdvisor? covert = null)
+    /// <param name="watch">Gods keeping watch over their villages for other gods' Creatures (ADR-070); <c>null</c> for none.</param>
+    public GodAiSystem(GodAi ai, int intervalTicks, RefugeeAdvisor? refugees = null, Society.PriorityAdvisor? priorities = null, TreatyAdvisor? treaties = null, CouncilAdvisor? council = null, CovertAdvisor? covert = null, CreatureWatch? watch = null)
     {
+        _watch = watch;
         _covert = covert;
         _treaties = treaties;
         _council = council;
@@ -71,6 +74,9 @@ public sealed class GodAiSystem : ISimulationSystem
                 }
             }
         }
+
+        // The watch looks last, so a visitor in a god's lands comes before the errands it just planned (ADR-070).
+        _watch?.Update(context.World, context.Events);
     }
 
     /// <summary>

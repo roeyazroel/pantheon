@@ -136,6 +136,7 @@ public partial class GameRoot : Node3D
         audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
         _divine.EventsHandled += audio.Hear;
         _divine.EventsHandled += _presenter.React;
+        _divine.EventsHandled += events => SetStatusIf(Pantheon.Game.Creatures.CreatureCommands.SlowForFight(_session, events));
         SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true, GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);
@@ -284,7 +285,7 @@ public partial class GameRoot : Node3D
             }
         }),
         (InputActions.CreatureWork, () => _divine.WorkAt(_camera.CommandGroundPoint)),
-        (InputActions.HandGrab, () => _divine.UseHand(_camera.CommandGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
+        (InputActions.HandGrab, () => _divine.UseHand(PointedCreature() ?? _camera.CommandGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
@@ -437,6 +438,19 @@ public partial class GameRoot : Node3D
         _camera.Follow(() => _creatures.Find(id)?.Position, height * CreatureAimShare);
     }
 
+    /// <summary>Where the player's Creature stands when the pointer is on its body and the hand is empty, so the hand lifts it rather than what lies behind it (ADR-070).</summary>
+    private NVector3? PointedCreature()
+    {
+        if (_session.LocalCreature is not { } creature || _session.LocalGod?.Held is not null || GetViewport().GuiGetHoveredControl() is not null)
+        {
+            return null;
+        }
+
+        var mouse = GetViewport().GetMousePosition();
+        var view = _camera.ViewCamera;
+        return _creatures.Pointed(creature.Id, view.ProjectRayOrigin(mouse), view.ProjectRayNormal(mouse)) is { } feet ? new NVector3(feet.X, feet.Y, feet.Z) : null;
+    }
+
     /// <summary>Glides to the next settlement in turn, starting with the player's home.</summary>
     private void FocusNextSettlement()
     {
@@ -460,6 +474,15 @@ public partial class GameRoot : Node3D
     private string DescribeWorld() =>
         $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}"
         + string.Concat(_network.Lines(_session).Select(line => "\n" + line)) + "\n" + _debug.Report();
+
+    /// <summary>Shows a status line, when there is one.</summary>
+    private void SetStatusIf(string? message)
+    {
+        if (message is not null)
+        {
+            SetStatus(message);
+        }
+    }
 
     /// <summary>Remembers a status line for the overlay and echoes it to the log.</summary>
     private void SetStatus(string message)

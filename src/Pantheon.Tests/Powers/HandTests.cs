@@ -192,6 +192,29 @@ public sealed class HandTests
         Assert.NotNull(world.Gods[0].Held);
     }
 
+    [Fact]
+    public void TheGodsCreature_IsSetDownBeyondItsInfluence_AndLiftedBeforeAVillagesPeople()
+    {
+        var (world, creature) = CreatureWorlds.Create(300f);
+        var village = world.Settlements[0];
+        var beyond = new GroundPosition(1000f, 1000f);
+        Assert.Equal(HandRejection.NoInfluence, Use(world, HandAction.PickUp, beyond, []));
+
+        // Its own Creature goes wherever its god sets it down, as it may walk anywhere (ADR-070).
+        Use(world, HandAction.PickUp, creature.Position, []);
+        Assert.Equal(HandRejection.None, Use(world, HandAction.SetDown, beyond, []));
+        Assert.Equal(beyond, creature.Position);
+        Use(world, HandAction.PickUp, creature.Position, []);
+        Assert.Equal(HandRejection.None, Use(world, HandAction.Throw, new GroundPosition(beyond.X - 40f, beyond.Z), []));
+
+        // Within half the hand's reach, the Creature is lifted even when the village lies nearer the hand.
+        creature.Position = new GroundPosition(village.Position.X + (Rules.Reach * 0.4f), village.Position.Z);
+        var people = village.Population;
+        Assert.Equal(HandRejection.None, Use(world, HandAction.PickUp, new GroundPosition(village.Position.X + 2f, village.Position.Z), []));
+        Assert.Equal(HeldKind.Creature, world.Gods[0].Held!.Kind);
+        Assert.Equal(people, village.Population);
+    }
+
     /// <summary>The god of the divine worlds uses its hand.</summary>
     private static HandRejection Use(WorldState world, HandAction action, GroundPosition target, List<WorldEvent> events) =>
         Hand.Execute(world, new HandCommand(DivineWorlds.GodId, action, target), events);

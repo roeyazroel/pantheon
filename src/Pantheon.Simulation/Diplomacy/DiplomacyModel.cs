@@ -38,6 +38,8 @@ public static class DiplomacyModel
         DiplomaticAct.HolyWar => 0.5f,
         DiplomaticAct.CovertAct => 0.6f,
         DiplomaticAct.Dictated => 0.7f,
+        DiplomaticAct.Trespassed => 0.25f,
+        DiplomaticAct.Visited => 0.2f,
     };
 
     /// <summary>Whether an act is hostile.</summary>
@@ -47,8 +49,9 @@ public static class DiplomacyModel
     {
         DiplomaticAct.Courted or DiplomaticAct.Harmed or DiplomaticAct.Converted or DiplomaticAct.CreatureAttacked or DiplomaticAct.Betrayed or DiplomaticAct.DeclaredWar or DiplomaticAct.WrongedAlly or DiplomaticAct.TurnedAway or DiplomaticAct.CreatureDefeated or DiplomaticAct.TookHolySite
             or DiplomaticAct.BrokeTreaty or DiplomaticAct.BrokePromise or DiplomaticAct.VotedAgainst or DiplomaticAct.DefiedCouncil or DiplomaticAct.PlottedAgainst
-            or DiplomaticAct.HolyWar or DiplomaticAct.CovertAct or DiplomaticAct.Dictated => true,
-        DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace or DiplomaticAct.Sheltered or DiplomaticAct.Rescued or DiplomaticAct.KeptWord or DiplomaticAct.SignedTreaty => false,
+            or DiplomaticAct.HolyWar or DiplomaticAct.CovertAct or DiplomaticAct.Dictated or DiplomaticAct.Trespassed => true,
+        DiplomaticAct.Helped or DiplomaticAct.Allied or DiplomaticAct.MadePeace or DiplomaticAct.Sheltered or DiplomaticAct.Rescued or DiplomaticAct.KeptWord or DiplomaticAct.SignedTreaty
+            or DiplomaticAct.Visited => false,
     };
 
     /// <summary>A new relation with the starting values.</summary>
@@ -171,7 +174,7 @@ public static class DiplomacyModel
                 grudge += memory.Weight * memory.Act switch
                 {
                     DiplomaticAct.Betrayed => 2f,
-                    DiplomaticAct.Courted => 0.3f,
+                    DiplomaticAct.Courted or DiplomaticAct.Trespassed => 0.3f,
                     _ => 1f,
                 };
             }

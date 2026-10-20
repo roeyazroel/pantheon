@@ -92,6 +92,12 @@ public sealed class HandAuthority
             return lifting ? HandRejection.HandFull : HandRejection.HandEmpty;
         }
 
+        // A god may set its own Creature down anywhere on land, as the Creature may walk anywhere (ADR-070).
+        if (command.Action is HandAction.SetDown or HandAction.Throw && god.Held!.Kind == HeldKind.Creature)
+        {
+            return HandRejection.None;
+        }
+
         return InfluenceField.Build(_divine, world, god.Id).At(command.Target) < _rules.MinInfluence ? HandRejection.NoInfluence : HandRejection.None;
     }
 

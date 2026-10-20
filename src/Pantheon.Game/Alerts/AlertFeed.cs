@@ -183,7 +183,7 @@ public sealed class AlertFeed
                 return RoadAlerts.Describe(worldEvent, world, localGodId);
             case GreatEventBegan or GreatEventEnded or PlagueStruck or BeastSlain:
                 return GreatEventAlerts.Describe(worldEvent, world, localGodId);
-            case GodsMet:
+            case GodsMet or CreatureWatched:
                 return GodAlerts.Describe(worldEvent, world, localGodId);
             case VillagerFled or VillagerTurned or VillagerDied:
                 return VillagerAlerts.Describe(worldEvent, world, localGodId);

@@ -85,6 +85,22 @@ public sealed class CreatureCombat
         return activity.Phase == CreaturePhase.Performing && activity.Action == CreatureAction.Fight && activity.TargetCreatureId is not null;
     }
 
+    /// <summary>
+    /// Whether a Creature is getting its breath back after a fight (ADR-070): for <c>RespiteSeconds</c>
+    /// after a fight it fought or saw off, it is not drawn into another.
+    /// </summary>
+    /// <param name="rules">Creature rules.</param>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="tick">The tick now.</param>
+    /// <returns><c>true</c> while it recovers.</returns>
+    public static bool Recovering(CreatureRules rules, CreatureState creature, long tick)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(creature);
+        var respite = (long)(rules.Combat.RespiteSeconds / SimulationTime.SecondsPerTick);
+        return respite > 0 && creature.Memories.Exists(m => m.Action == CreatureAction.Fight && tick - m.Tick < respite && m.Tick <= tick);
+    }
+
     /// <summary>One tick of blows, then the end of the fight if one is beaten or time is up.</summary>
     private void Exchange(WorldState world, CreatureState a, CreatureState b, SimulationRandom random, List<WorldEvent> events)
     {

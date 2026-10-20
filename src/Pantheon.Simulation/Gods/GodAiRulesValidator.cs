@@ -74,6 +74,13 @@ public static class GodAiRulesValidator
         }
 
         ValidatePlanning(rules.Planning, errors);
+        var watch = rules.Watch;
+        if (watch.Radius < 0f || watch.IntervalTicks < 1 || watch.CooldownSeconds < 0f || !(watch.RepelConfidence is >= 0f and <= 1f)
+            || !(watch.WelcomeHostility is >= 0f and <= 1f) || !(watch.RepelHostility is >= 0f and <= 1f) || watch.WelcomeHostility >= watch.RepelHostility)
+        {
+            errors.Add("Watch needs a radius of at least 0, an interval of at least 1, a cooldown of at least 0, a confidence from 0 to 1, and a welcome hostility below the repel hostility, both from 0 to 1.");
+        }
+
         errors.ThrowIfAny("god AI rules", nameof(rules));
     }
 
