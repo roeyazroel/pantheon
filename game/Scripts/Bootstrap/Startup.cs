@@ -158,6 +158,21 @@ internal static class Startup
         }
     }
 
+    /// <summary>The orchestra's music (ADR-071), or <c>null</c> when it cannot be read: the game then plays without music.</summary>
+    /// <returns>The music, or <c>null</c>.</returns>
+    public static Pantheon.Game.Audio.Orchestra.MusicContent? TryLoadMusic()
+    {
+        try
+        {
+            return GodotContentLoader.LoadMusicContent();
+        }
+        catch (Exception exception) when (exception is ContentFormatException or IOException)
+        {
+            GD.PushError($"The music could not be loaded: {exception.Message}");
+            return null;
+        }
+    }
+
     /// <summary>Logs problems found in the command-line options.</summary>
     /// <param name="options">The options.</param>
     public static void ReportLaunchWarnings(LaunchOptions options)

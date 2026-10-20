@@ -1465,7 +1465,18 @@ colour shows whose it is, and its nature tints it warm or dark.
 
 Every sound is made by the game itself:
 
-- the music, which grows tense in war and triumphant when you dominate;
+- the music: an orchestra synthesized by the game (strings, horns, brass, choir, flute, oboe, harp,
+  celesta, timpani, taiko and cymbals, in a hall) playing an original piece for every mood
+  (ADR-071). "The Pantheon" plays on the title screen. The other pieces follow the world:
+  - "The Quiet Fields" in peace;
+  - "Shadows Over the Altar" when your god is cruel;
+  - "Gathering Storm" when a rival nears victory or a foe's Creature is in your lands;
+  - "The Gods Make War" in war or while your Creature fights;
+  - "Wrath of the Earth" in an earthquake, an eruption, a tornado or the beast's waking;
+  - "Ascendant" when you dominate.
+
+  A more urgent mood comes in at once. The score is `game/Data/music.json`, and the pieces are made
+  in the background in a few seconds at start;
 - bells for kind miracles and a crack for lightning;
 - thunder and roars heard from across the island, where they happen;
 - the earthquake's rumble, fire, and the wind and rain where you look.
@@ -1735,6 +1746,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--talk=<god>` | Talk with a rival god (by its number, 2 or more) at the start (ADR-066). |
 | `--talk-say=<words>` | Say this to that god's model at the start (ADR-066). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
+| `--music=theme\|calm\|dark\|tension\|war\|disaster\|triumph` | Hold the music in a mood for the run (ADR-071). |
+| `--music-export=<folder>` | Write every piece of music as a WAV file once made, then quit, to listen outside the game (ADR-071). |
 | `--visit=<n>` | Set your Creature down beside village `n` (1 is your home) at the start, so its god's watch answers it (ADR-070). |
 | `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
 

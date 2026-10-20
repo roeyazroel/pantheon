@@ -40,20 +40,6 @@ public sealed class AudioTests
     }
 
     [Fact]
-    public void EachMoodsMusic_IsAStereoLoopOfFourChords_AndTheMoodsDiffer()
-    {
-        var calm = MusicComposer.Render(MusicMood.Calm);
-        var tension = MusicComposer.Render(MusicMood.Tension);
-        var triumph = MusicComposer.Render(MusicMood.Triumph);
-
-        Assert.Equal((int)(MusicComposer.LoopSeconds * SoundBank.SampleRate) * 2, calm.Length);
-        Assert.All(new[] { calm, tension, triumph }, music => Assert.InRange(music.Max(Math.Abs), 0.5f, 1f));
-        Assert.NotEqual(calm, tension);
-        Assert.NotEqual(calm, triumph);
-        Assert.Equal(calm, MusicComposer.Render(MusicMood.Calm));
-    }
-
-    [Fact]
     public void Miracles_Disasters_AndCreatures_AreHeardWhereTheyHappen_AndTheTricksterIsNotHeardAtAll()
     {
         var world = DivineWorlds.Create(100f, 300f);
@@ -76,17 +62,24 @@ public sealed class AudioTests
     }
 
     [Fact]
-    public void TheMusic_GrowsTenseInWarAndTriumphantInDominion()
+    public void TheMusic_FollowsMoralityTensionWarDisasterAndDominion()
     {
         var world = DivineWorlds.Create(100f, 300f);
         world.Gods.Add(DivineWorlds.God(2, "Rivalis", GodController.Ai, GodPersonality.Tyrant, 0f));
 
         var calm = AudioDirector.Mood(world, 1);
+        world.Gods[0].Traits.Add(Pantheon.Domain.Culture.GodTrait.Cruel);
+        var dark = AudioDirector.Mood(world, 1);
+        world.Gods[1].DominantSinceTick = 0;
+        var tension = AudioDirector.Mood(world, 1);
         PantheonWorlds.SetStatus(world, 1, 2, DiplomaticStatus.War);
-        var war = AudioDirector.Mood(world, 1);
+        var war = AudioDirector.Explain(world, 1);
+        world.Disasters.Earthquakes.Add(new Pantheon.Domain.Disasters.Earthquake { Id = 1, X = 300f, Z = 512f, Magnitude = 6f, Intensity = 1f, Radius = 200f, EndsAtTick = 50, CausedByGodId = null });
+        var disaster = AudioDirector.Mood(world, 1);
         world.Gods[0].DominantSinceTick = 0;
 
-        Assert.Equal((MusicMood.Calm, MusicMood.Tension, MusicMood.Triumph), (calm, war, AudioDirector.Mood(world, 1)));
+        Assert.Equal((MusicMood.Calm, MusicMood.Dark, MusicMood.Tension, MusicMood.War, MusicMood.Disaster, MusicMood.Triumph), (calm, dark, tension, war.Mood, disaster, AudioDirector.Mood(world, 1)));
+        Assert.Equal("at war with Rivalis", war.Why);
     }
 
     [Fact]

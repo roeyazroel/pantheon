@@ -51,22 +51,91 @@ public static class AudioDirector
         return cues;
     }
 
-    /// <summary>The music's mood: Triumph while the player's god dominates or has won, Tension in war, near a rival's victory or while the ground shakes, Calm otherwise.</summary>
+    /// <summary>The music's mood (spec §60, ADR-071), the first that holds of these:</summary>
+    /// <remarks>
+    /// Triumph while the player's god dominates or has won (Divine Power); Disaster while the land rises
+    /// (an earthquake, an erupting volcano, a tornado, the beast awake); War while the player's god is at
+    /// war or its Creature fights (warfare, Creature state); Tension while a rival nears victory or a
+    /// foe's Creature is in the player's lands (political tension); Dark while the player's god is cruel
+    /// (morality); Calm otherwise. The title screen plays the Theme.
+    /// </remarks>
     /// <param name="world">The world.</param>
     /// <param name="localGodId">The player's god.</param>
     /// <returns>The mood.</returns>
-    public static MusicMood Mood(WorldState world, int? localGodId)
+    public static MusicMood Mood(WorldState world, int? localGodId) => Explain(world, localGodId).Mood;
+
+    /// <summary>The music's mood and why, for the debug panel.</summary>
+    /// <param name="world">The world.</param>
+    /// <param name="localGodId">The player's god.</param>
+    /// <returns>The mood and its reason.</returns>
+    public static (MusicMood Mood, string Why) Explain(WorldState world, int? localGodId)
     {
         ArgumentNullException.ThrowIfNull(world);
         var me = localGodId is { } id ? world.Gods.Find(g => g.Id == id) : null;
         if (me is not null && (me.DominantSinceTick is not null || world.WinnerGodIds.Contains(me.Id)))
         {
-            return MusicMood.Triumph;
+            return (MusicMood.Triumph, "you dominate");
         }
 
-        var war = me is not null && world.Gods.Exists(g => DiplomacyModel.AreAtWar(world, me.Id, g.Id));
-        var rivalAhead = world.Gods.Exists(g => g.Id != localGodId && g.DominantSinceTick is not null);
-        return war || rivalAhead || world.Disasters.Earthquakes.Count > 0 ? MusicMood.Tension : MusicMood.Calm;
+        if (Upheaval(world) is { } upheaval)
+        {
+            return (MusicMood.Disaster, upheaval);
+        }
+
+        if (me is not null && world.Gods.Find(g => DiplomacyModel.AreAtWar(world, me.Id, g.Id)) is { } enemy)
+        {
+            return (MusicMood.War, "at war with " + enemy.Name);
+        }
+
+        var mine = me?.CreatureId is { } creatureId ? world.Creatures.Find(c => c.Id == creatureId) : null;
+        if (mine is not null && Simulation.Creatures.CreatureCombat.IsFighting(mine))
+        {
+            return (MusicMood.War, mine.Name + " fights");
+        }
+
+        if (world.Gods.Find(g => g.Id != localGodId && g.DominantSinceTick is not null) is { } ahead)
+        {
+            return (MusicMood.Tension, ahead.Name + " nears victory");
+        }
+
+        if (me is not null && Intruder(world, me.Id) is { } intruder)
+        {
+            return (MusicMood.Tension, intruder + " is in your lands");
+        }
+
+        return me is not null && me.Traits.Contains(Domain.Culture.GodTrait.Cruel) ? (MusicMood.Dark, "you are cruel") : (MusicMood.Calm, "peace");
+    }
+
+    /// <summary>The land rising against its people, if it does: an earthquake, an erupting volcano, a tornado or the beast awake.</summary>
+    private static string? Upheaval(WorldState world) =>
+        world.Disasters.Earthquakes.Count > 0 ? "an earthquake"
+        : world.Disasters.Volcano is { Phase: Domain.Disasters.VolcanoPhase.Erupting } ? "the volcano erupts"
+        : world.Disasters.Tornadoes.Count > 0 ? "a tornado"
+        : world.GreatEvents.Beast is { Phase: Domain.GreatEvents.BeastPhase.Awake } beast ? beast.Name + " is awake"
+        : null;
+
+    /// <summary>A Creature of a god not allied with the player's near a village the player leads, if any.</summary>
+    private static string? Intruder(WorldState world, int me)
+    {
+        const float Near = 220f;
+        foreach (var creature in world.Creatures)
+        {
+            if (creature.GodId == me || creature.Activity.Phase == Domain.Creatures.CreaturePhase.Banished || DiplomacyModel.AreAllied(world, me, creature.GodId))
+            {
+                continue;
+            }
+
+            foreach (var village in world.Settlements)
+            {
+                var (dx, dz) = (village.Position.X - creature.Position.X, village.Position.Z - creature.Position.Z);
+                if ((dx * dx) + (dz * dz) <= Near * Near && Simulation.Politics.TreatyModel.Leader(village) == me)
+                {
+                    return creature.Name;
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>How loud the rain and the wind are where the camera looks (0..1 each).</summary>

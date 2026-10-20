@@ -165,7 +165,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--reshape`, `--wildlife`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--talk`, `--talk-say`, `--title-page` (`keys` for the settings' Keys tab), `--bar`, `--tutorial`, `--fight`, `--work`, `--visit`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--talk`, `--talk-say`, `--title-page` (`keys` for the settings' Keys tab), `--bar`, `--tutorial`, `--fight`, `--work`, `--visit`, `--music`, `--music-export`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a

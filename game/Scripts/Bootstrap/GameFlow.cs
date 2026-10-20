@@ -154,6 +154,9 @@ internal sealed partial class GameFlow : Node
         _menu.ShowPantheon(_session.World, _session.LocalGodId, note.Length > 0 ? note : null, () => Begin(guide: true));
     }
 
+    /// <summary>Whether the title screen is open, when the orchestra plays the Theme (ADR-071).</summary>
+    public bool TitleOpen => _menu?.TitleOpen ?? false;
+
     /// <summary>Saves the world to its quicksave slot (F5).</summary>
     public void QuickSave() => _setStatus(_library.Save(_session, SaveKind.Quick, DateTime.UtcNow));
 

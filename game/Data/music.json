@@ -1,0 +1,182 @@
+{
+  // The orchestra's music (spec section 60, ADR-071): an original piece for every mood, played by a
+  // synthesized orchestra in a hall, made when the game starts. Every piece loops: its last bar leads
+  // into its first. All are centred on D, so one mood crosses into another without a jolt.
+  //
+  // Chords: a symbol a bar (Dm, Bb, F/A, Csus4, A7, Gm7, C#dim7, Ebaug), or Dm:2 for a chord of so many
+  // beats; | only reads well. A part plays its Bars (1-8,13-16; every bar when left out) as it is told:
+  // - Pad: holds each chord, voiced near its Octave (4 holds middle C), the voices moving as little as
+  //   they can;
+  // - Bass: holds each chord's root, or its slash bass;
+  // - Ostinato and Arpeggio: a Pattern of chord tones (1, 3, 5, 7 the chord's notes; 8, 10, 12 and 15 an
+  //   octave or two up; -5 an octave down), a note every Step beats, short or left to ring;
+  // - Melody: Notes in scientific pitch (D5 is the D above middle C) with their beats (D5:1.5; -:1 rest);
+  // - Rhythm: a Pattern of steps (x a hit, X an accent, o a soft hit, r a roll, . a rest), a step every
+  //   Step beats; drums are tuned to the chord, other instruments strike the chord short;
+  // - Swell: a cymbal or a drum roll swelling, over Step beats, into the downbeat after each of its bars.
+  // Dynamics [from, to] makes a crescendo or a fade over each run of bars. Volume is the part's level and
+  // Level the piece's against the others.
+  "SampleRate": 32000,
+  "Hall": { "Room": 0.84, "Damping": 0.22, "Wet": 0.3, "PreDelayMs": 24.0 },
+  "Scores": [
+    {
+      "Mood": "Theme",
+      "Name": "The Pantheon",
+      "Tempo": 76,
+      "Bars": 24,
+      "Level": 0.8,
+      "Chords": "Dm Dm Bb A | Dm Bb F C | Dm Gm Bb A | Dm Bb F C | Dm Gm A Dm | Bb Gm Bb A",
+      "Parts": [
+        { "Instrument": "LowStrings", "Play": "Bass", "Octave": 2, "Volume": 0.75 },
+        { "Instrument": "LowStrings", "Play": "Pad", "Octave": 3, "Volume": 0.45, "Bars": "1-4,21-24" },
+        { "Instrument": "Choir", "Play": "Pad", "Octave": 3, "Volume": 0.45, "Bars": "1-4", "Dynamics": [0.4, 1.0] },
+        { "Instrument": "Harp", "Play": "Arpeggio", "Octave": 3, "Step": 0.5, "Pattern": "1 5 8 10 12 10 8 5", "Volume": 0.5, "Bars": "1-12,21-24" },
+        { "Instrument": "Timpani", "Play": "Swell", "Step": 2, "Volume": 0.55, "Bars": "4" },
+        { "Instrument": "Strings", "Play": "Pad", "Octave": 4, "Volume": 0.5, "Bars": "5-24" },
+        { "Instrument": "Horns", "Play": "Melody", "Volume": 0.85, "Bars": "5-12",
+          "Notes": "D4:1.5 E4:0.5 F4:1 A4:1 | Bb4:2 A4:1 G4:1 | F4:1.5 G4:0.5 A4:1 C5:1 | C5:3 A4:1 | D5:1.5 C5:0.5 A4:1 F4:1 | G4:2 Bb4:1 D5:1 | D5:1.5 C5:0.5 Bb4:1 A4:1 | A4:4" },
+        { "Instrument": "Cymbal", "Play": "Swell", "Step": 4, "Volume": 0.7, "Bars": "12" },
+        { "Instrument": "Strings", "Play": "Melody", "Volume": 0.8, "Bars": "13-20",
+          "Notes": "D5:1.5 E5:0.5 F5:1 A5:1 | Bb5:2 A5:1 G5:1 | F5:1.5 G5:0.5 A5:1 C6:1 | C6:3 A5:1 | D6:1.5 C6:0.5 A5:1 F5:1 | G5:2 Bb5:1 D6:1 | A5:1 C#6:1 E6:2 | D6:4" },
+        { "Instrument": "Brass", "Play": "Melody", "Volume": 0.55, "Bars": "13-20",
+          "Notes": "D4:1.5 E4:0.5 F4:1 A4:1 | Bb4:2 A4:1 G4:1 | F4:1.5 G4:0.5 A4:1 C5:1 | C5:3 A4:1 | D5:1.5 C5:0.5 A4:1 F4:1 | G4:2 Bb4:1 D5:1 | A4:1 C#5:1 E5:2 | D5:4" },
+        { "Instrument": "Choir", "Play": "Pad", "Octave": 4, "Volume": 0.55, "Bars": "13-20" },
+        { "Instrument": "Horns", "Play": "Pad", "Octave": 3, "Volume": 0.45, "Bars": "13-20" },
+        { "Instrument": "Timpani", "Play": "Rhythm", "Step": 0.5, "Pattern": "X.......x...x...", "Volume": 0.7, "Bars": "13-20" },
+        { "Instrument": "Taiko", "Play": "Rhythm", "Step": 0.5, "Pattern": "x...............", "Volume": 0.6, "Bars": "13,15,17,19" },
+        { "Instrument": "Horns", "Play": "Melody", "Volume": 0.5, "Bars": "21-24", "Notes": "F4:4 | D4:4 | F4:2 G4:2 | A4:4" },
+        { "Instrument": "Timpani", "Play": "Swell", "Step": 2, "Volume": 0.35, "Bars": "24" }
+      ]
+    },
+    {
+      "Mood": "Calm",
+      "Name": "The Quiet Fields",
+      "Tempo": 72,
+      "Bars": 24,
+      "Level": 0.55,
+      "Chords": "D Bm G A | D F#m G A | Bm G D A | G D/F# Em A | D Bm G A | G D Em7 Asus4:2 A:2",
+      "Parts": [
+        { "Instrument": "LowStrings", "Play": "Bass", "Octave": 2, "Volume": 0.55 },
+        { "Instrument": "Strings", "Play": "Pad", "Octave": 4, "Volume": 0.42 },
+        { "Instrument": "Harp", "Play": "Arpeggio", "Octave": 3, "Step": 0.5, "Pattern": "1 5 8 10 12 10 8 5", "Volume": 0.55 },
+        { "Instrument": "Flute", "Play": "Melody", "Volume": 0.75, "Bars": "5-12",
+          "Notes": "F#5:1.5 E5:0.5 D5:1 A4:1 | C#5:1 D5:0.5 E5:0.5 F#5:2 | G5:1.5 F#5:0.5 E5:1 D5:1 | E5:3 -:1 | F#5:1 D5:1 B4:1 D5:1 | E5:1.5 D5:0.5 B4:2 | A4:1 D5:1 F#5:1 A5:1 | G5:1.5 F#5:0.5 E5:2" },
+        { "Instrument": "Horns", "Play": "Melody", "Volume": 0.6, "Bars": "13-16", "Notes": "D4:2 B3:2 | A3:2 F#3:2 | G3:2 B3:2 | C#4:3 -:1" },
+        { "Instrument": "Flute", "Play": "Melody", "Volume": 0.75, "Bars": "17-24",
+          "Notes": "A5:2 F#5:1 D5:1 | F#5:2 D5:1 B4:1 | D5:1 E5:1 G5:1 B5:1 | A5:3 -:1 | B5:1.5 A5:0.5 G5:1 E5:1 | F#5:2 D5:2 | E5:1 G5:1 D5:1 B4:1 | C#5:2 E5:1 A4:1" },
+        { "Instrument": "Oboe", "Play": "Melody", "Volume": 0.45, "Bars": "13-16", "Notes": "F#5:2 D5:2 | F#5:2 A5:2 | G5:2 E5:2 | E5:4" },
+        { "Instrument": "Celesta", "Play": "Arpeggio", "Octave": 5, "Step": 1, "Pattern": "8 5 10 12", "Volume": 0.3, "Bars": "21-24" }
+      ]
+    },
+    {
+      "Mood": "Dark",
+      "Name": "Shadows Over the Altar",
+      "Tempo": 60,
+      "Bars": 16,
+      "Level": 0.6,
+      "Chords": "Dm Eb Dm Eb | Gm Eb Cm A | Dm Eb Bb A | Gm Eb Dm/A A7",
+      "Parts": [
+        { "Instrument": "LowStrings", "Play": "Bass", "Octave": 2, "Volume": 0.8 },
+        { "Instrument": "LowStrings", "Play": "Pad", "Octave": 3, "Volume": 0.5 },
+        { "Instrument": "Choir", "Play": "Pad", "Octave": 3, "Volume": 0.5, "Dynamics": [0.5, 1.0] },
+        { "Instrument": "Timpani", "Play": "Rhythm", "Step": 0.25, "Pattern": "x.......x.o.....", "Volume": 0.45 },
+        { "Instrument": "Oboe", "Play": "Melody", "Volume": 0.7, "Bars": "5-12",
+          "Notes": "D5:2 Eb5:1 D5:1 | G4:3 Bb4:1 | C5:1.5 Bb4:0.5 G4:1 Eb4:1 | C#5:3 -:1 | A4:2 Bb4:1 A4:1 | G4:2 Eb4:2 | F4:1 G4:1 Bb4:1 D5:1 | C#5:2 E5:1 C#5:1" },
+        { "Instrument": "Cymbal", "Play": "Swell", "Step": 4, "Volume": 0.45, "Bars": "8" },
+        { "Instrument": "Tremolo", "Play": "Pad", "Octave": 5, "Volume": 0.25, "Bars": "9-16", "Dynamics": [0.3, 1.0] },
+        { "Instrument": "Celesta", "Play": "Arpeggio", "Octave": 5, "Step": 1, "Pattern": "15 12 10 8", "Volume": 0.25, "Bars": "13-16" },
+        { "Instrument": "Horns", "Play": "Pad", "Octave": 3, "Volume": 0.35, "Bars": "13-16" }
+      ]
+    },
+    {
+      "Mood": "Tension",
+      "Name": "Gathering Storm",
+      "Tempo": 104,
+      "Bars": 24,
+      "Level": 0.75,
+      "Chords": "Dm Dm Bb Bb | Gm Gm A A | Dm Dm Bb C | Gm Bb A A | Dm Bb Gm A | Dm Eb A A",
+      "Parts": [
+        { "Instrument": "Spiccato", "Play": "Ostinato", "Octave": 3, "Step": 0.5, "Pattern": "1 1 8 1 5 1 8 5", "Volume": 0.8 },
+        { "Instrument": "LowStrings", "Play": "Bass", "Octave": 2, "Volume": 0.45 },
+        { "Instrument": "Tremolo", "Play": "Pad", "Octave": 4, "Volume": 0.35, "Bars": "5-24", "Dynamics": [0.4, 1.0] },
+        { "Instrument": "Horns", "Play": "Pad", "Octave": 3, "Volume": 0.55, "Bars": "9-16,17-24", "Dynamics": [0.5, 1.1] },
+        { "Instrument": "Timpani", "Play": "Rhythm", "Step": 0.5, "Pattern": "x.......x...x...", "Volume": 0.55, "Bars": "9-24" },
+        { "Instrument": "Cymbal", "Play": "Swell", "Step": 4, "Volume": 0.55, "Bars": "16" },
+        { "Instrument": "Taiko", "Play": "Rhythm", "Step": 0.5, "Pattern": "x...x...x.x.x...", "Volume": 0.6, "Bars": "17-24" },
+        { "Instrument": "Brass", "Play": "Melody", "Volume": 0.6, "Bars": "17-20", "Notes": "D4:3 A3:1 | Bb3:3 D4:1 | G3:2 Bb3:1 D4:1 | E4:3 C#4:1" },
+        { "Instrument": "Brass", "Play": "Rhythm", "Octave": 3, "Step": 0.5, "Pattern": "x.....x.........", "Volume": 0.65, "Bars": "21-24" },
+        { "Instrument": "Timpani", "Play": "Swell", "Step": 2, "Volume": 0.4, "Bars": "24" }
+      ]
+    },
+    {
+      "Mood": "War",
+      "Name": "The Gods Make War",
+      "Tempo": 140,
+      "Bars": 32,
+      "Level": 0.95,
+      "Chords": "Dm Bb F C | Dm Bb F A | Dm Bb F C | Gm Bb C A | Dm Bb F C | Dm Bb Gm A | Bb C Dm Dm | Bb C A A",
+      "Parts": [
+        { "Instrument": "Spiccato", "Play": "Ostinato", "Octave": 3, "Step": 0.5, "Pattern": "1 8 1 8 5 8 1 8", "Volume": 0.75 },
+        { "Instrument": "LowStrings", "Play": "Ostinato", "Octave": 2, "Step": 0.5, "Pattern": "1 1 1 1 1 1 1 1", "Volume": 0.65 },
+        { "Instrument": "Timpani", "Play": "Rhythm", "Step": 0.5, "Pattern": "X...x...x.x.x...", "Volume": 0.75 },
+        { "Instrument": "Taiko", "Play": "Rhythm", "Step": 0.5, "Pattern": "x..x..x.x...x...", "Volume": 0.75, "Bars": "9-32" },
+        { "Instrument": "Timpani", "Play": "Swell", "Step": 2, "Volume": 0.6, "Bars": "8,16,24" },
+        { "Instrument": "Strings", "Play": "Pad", "Octave": 4, "Volume": 0.5, "Bars": "5-32" },
+        { "Instrument": "Brass", "Play": "Melody", "Volume": 0.85, "Bars": "9-16",
+          "Notes": "D4:1.5 D4:0.5 F4:1 A4:1 | Bb4:2 A4:1 F4:1 | C5:1.5 Bb4:0.5 A4:1 F4:1 | G4:3 E4:1 | D4:1 G4:1 Bb4:1 D5:1 | F5:2 D5:2 | E5:1.5 D5:0.5 C5:1 G4:1 | A4:2 C#5:1 E5:1" },
+        { "Instrument": "Horns", "Play": "Pad", "Octave": 3, "Volume": 0.55, "Bars": "9-32" },
+        { "Instrument": "Cymbal", "Play": "Swell", "Step": 4, "Volume": 0.7, "Bars": "8,16,24" },
+        { "Instrument": "Choir", "Play": "Pad", "Octave": 4, "Volume": 0.6, "Bars": "17-32" },
+        { "Instrument": "Brass", "Play": "Melody", "Volume": 0.85, "Bars": "17-24",
+          "Notes": "D5:1.5 D5:0.5 F5:1 A5:1 | Bb5:2 A5:1 F5:1 | C6:1.5 Bb5:0.5 A5:1 F5:1 | G5:3 E5:1 | D5:1.5 D5:0.5 F5:1 A5:1 | Bb5:2 A5:1 F5:1 | G5:1 Bb5:1 D6:2 | C#6:2 A5:2" },
+        { "Instrument": "Strings", "Play": "Melody", "Volume": 0.6, "Bars": "17-24",
+          "Notes": "D5:1.5 D5:0.5 F5:1 A5:1 | Bb5:2 A5:1 F5:1 | C6:1.5 Bb5:0.5 A5:1 F5:1 | G5:3 E5:1 | D5:1.5 D5:0.5 F5:1 A5:1 | Bb5:2 A5:1 F5:1 | G5:1 Bb5:1 D6:2 | C#6:2 A5:2" },
+        { "Instrument": "Brass", "Play": "Rhythm", "Octave": 3, "Step": 0.5, "Pattern": "X.......x.x.....", "Volume": 0.75, "Bars": "25-32" },
+        { "Instrument": "Tremolo", "Play": "Pad", "Octave": 5, "Volume": 0.35, "Bars": "25-32", "Dynamics": [0.6, 1.2] }
+      ]
+    },
+    {
+      "Mood": "Disaster",
+      "Name": "Wrath of the Earth",
+      "Tempo": 66,
+      "Bars": 16,
+      "Level": 0.85,
+      "Chords": "Dm Eb Dm C#dim7 | Gm Eb Bb A7 | Dm Ebaug Gm C#dim7 | Bb Eb Gm/D A",
+      "Parts": [
+        { "Instrument": "LowStrings", "Play": "Bass", "Octave": 1, "Volume": 0.8 },
+        { "Instrument": "Tremolo", "Play": "Pad", "Octave": 3, "Volume": 0.6, "Dynamics": [0.6, 1.1] },
+        { "Instrument": "Tremolo", "Play": "Pad", "Octave": 5, "Volume": 0.3, "Bars": "9-16" },
+        { "Instrument": "Timpani", "Play": "Swell", "Step": 3, "Volume": 0.7, "Bars": "4,8,12,16" },
+        { "Instrument": "Brass", "Play": "Rhythm", "Octave": 2, "Step": 0.5, "Pattern": "X.......x.......", "Volume": 0.8, "Bars": "5-16", "Dynamics": [0.6, 1.2] },
+        { "Instrument": "Taiko", "Play": "Rhythm", "Step": 0.5, "Pattern": "X.......x.......", "Volume": 0.9, "Bars": "9-16" },
+        { "Instrument": "Choir", "Play": "Pad", "Octave": 3, "Volume": 0.55, "Bars": "9-16" },
+        { "Instrument": "Horns", "Play": "Melody", "Volume": 0.6, "Bars": "5-8", "Notes": "D4:2 Eb4:2 | G3:4 | F4:2 D4:2 | C#4:4" },
+        { "Instrument": "Cymbal", "Play": "Swell", "Step": 4, "Volume": 0.7, "Bars": "8,12" }
+      ]
+    },
+    {
+      "Mood": "Triumph",
+      "Name": "Ascendant",
+      "Tempo": 100,
+      "Bars": 24,
+      "Level": 0.9,
+      "Chords": "D A/C# Bm G | D G A A | G A F#m Bm | G A D D | Bb C D D | G A D D",
+      "Parts": [
+        { "Instrument": "LowStrings", "Play": "Bass", "Octave": 2, "Volume": 0.7 },
+        { "Instrument": "Strings", "Play": "Pad", "Octave": 4, "Volume": 0.5 },
+        { "Instrument": "Harp", "Play": "Arpeggio", "Octave": 4, "Step": 0.5, "Pattern": "1 5 8 10 8 5", "Volume": 0.45 },
+        { "Instrument": "Brass", "Play": "Melody", "Volume": 0.85, "Bars": "1-8",
+          "Notes": "A4:0.5 A4:0.5 D5:1 F#5:1 A5:1 | G5:1.5 F#5:0.5 E5:2 | F#5:1 D5:1 B4:1 D5:1 | E5:2 D5:1 B4:1 | A4:0.5 A4:0.5 D5:1 F#5:1 A5:1 | B5:2 A5:1 G5:1 | A5:1.5 G5:0.5 F#5:1 E5:1 | E5:3 -:1" },
+        { "Instrument": "Horns", "Play": "Pad", "Octave": 3, "Volume": 0.5 },
+        { "Instrument": "Timpani", "Play": "Rhythm", "Step": 0.5, "Pattern": "X...x...x...x.x.", "Volume": 0.65 },
+        { "Instrument": "Cymbal", "Play": "Swell", "Step": 2, "Volume": 0.65, "Bars": "8,16" },
+        { "Instrument": "Strings", "Play": "Melody", "Volume": 0.75, "Bars": "9-16",
+          "Notes": "D5:1 G5:1 B5:2 | A5:1.5 G5:0.5 E5:2 | F#5:1 A5:1 C#6:2 | B5:2 F#5:2 | G5:1 B5:1 D6:1 B5:1 | A5:2 C#6:1 E6:1 | D6:4 | A5:2 F#5:2" },
+        { "Instrument": "Choir", "Play": "Pad", "Octave": 4, "Volume": 0.55, "Bars": "9-24" },
+        { "Instrument": "Brass", "Play": "Melody", "Volume": 0.85, "Bars": "17-24",
+          "Notes": "F5:1 Bb5:1 D6:2 | E5:1 G5:1 C6:2 | F#5:1.5 A5:0.5 D6:2 | A5:4 | B5:1.5 A5:0.5 G5:1 B5:1 | C#6:1.5 B5:0.5 A5:1 E5:1 | F#5:1 A5:1 D6:2 | D6:3 -:1" },
+        { "Instrument": "Taiko", "Play": "Rhythm", "Step": 0.5, "Pattern": "x.......x.......", "Volume": 0.6, "Bars": "17-24" }
+      ]
+    }
+  ]
+}

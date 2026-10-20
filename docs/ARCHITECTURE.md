@@ -779,7 +779,7 @@ and a Lumen an Ape. A missing,
   (ADR-021). The HUD shows the god's domains and kept sites, and only the miracles it can cast:
   the signature miracles of its domains follow the ninth, on Shift+1–3.
 - `Settings/GameSettings` is the player's settings file, forgiving where content is strict.
-  `Audio/SoundBank` and `Audio/MusicComposer` synthesize the sounds and music; `Audio/AudioDirector`
+  `Audio/SoundBank` synthesizes the sounds and `Audio/Orchestra` plays the music (ADR-071); `Audio/AudioDirector`
   decides what the world sounds like. See [Sound and settings](#sound-and-settings).
 - `Population/*`: Tier 2 representative citizens, derived from `WorldState` and never saved:
   `TierSelector`, `RepresentativeRoster`, `CitizenRoutine` and `SettlementCrowd` (see
@@ -1387,9 +1387,10 @@ flowchart LR
 ```mermaid
 flowchart LR
     events[Events of a frame] --> director[AudioDirector.Cues]
-    world[World] --> mood[AudioDirector.Mood]
+    world[World] --> mood[AudioDirector.Explain: Triumph, Disaster, War, Tension, Dark, Calm; Theme on the title]
     weather[Weather at the camera's focus] --> ambience[AudioDirector.Ambience]
-    bank[SoundBank and MusicComposer on a worker thread] --> streams[AudioStreamWav]
+    bank[SoundBank on a worker thread] --> streams[AudioStreamWav]
+    orchestra[Orchestra on worker threads: music.json's scores, the Theme first] --> streams
     director --> players[Positional and news players]
     mood --> music[Two music players crossfading]
     ambience --> loops[Rain and wind loops]
@@ -1399,7 +1400,14 @@ flowchart LR
 - Sounds of events play where they happen (`AudioStreamPlayer3D`, heard from far off at a
   low volume); the player's news plays everywhere. The same kind of sound starts at most every
   0.4 s.
-- The music holds a mood at least 20 s and crossfades over 3 s.
+- **The music** (ADR-071):
+  - `Orchestra/Arranger` turns a `MoodScore` (chords, parts playing pads, basses, ostinatos,
+    arpeggios, melodies, rhythms and swells) into notes;
+  - `Voices` and `Struck` play them as synthesized instruments into dry and hall buses;
+  - `Dsp.Hall` (Freeverb) and `Mastering` finish a seamless loop.
+
+  A more urgent mood comes in at once over 1.5 s. A calmer one waits until the last has held 20 s,
+  then crossfades over 3 s.
 - Settings apply at once from the menus' settings page; citizens, vegetation and terrain quality
   apply when the game next starts (ADR-056), since the presenters are built with them.
 

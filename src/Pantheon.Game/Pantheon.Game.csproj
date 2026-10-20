@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <!-- Optimised in every configuration (ADR-071): the orchestra plays its music at start, which a debug
+         build, as the game runs from its project, would take four times as long over. -->
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>

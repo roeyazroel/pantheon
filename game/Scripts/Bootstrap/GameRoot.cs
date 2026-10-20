@@ -133,7 +133,7 @@ public partial class GameRoot : Node3D
         _flow = flow;
         var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };
         AddChild(audio);
-        audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
+        audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings, options, () => flow.TitleOpen);
         _divine.EventsHandled += audio.Hear;
         _divine.EventsHandled += _presenter.React;
         _divine.EventsHandled += events => SetStatusIf(Pantheon.Game.Creatures.CreatureCommands.SlowForFight(_session, events));

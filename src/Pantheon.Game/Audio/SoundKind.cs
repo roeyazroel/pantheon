@@ -43,12 +43,24 @@ public enum SoundKind
 /// <summary>The music's mood (spec §60's dynamic music).</summary>
 public enum MusicMood
 {
-    /// <summary>Peace: a slow, open major pad.</summary>
+    /// <summary>The title screen: the game's main theme (ADR-071).</summary>
+    Theme,
+
+    /// <summary>Peace: a pastoral piece for strings, harp and flute.</summary>
     Calm,
 
-    /// <summary>War, a rival near victory, or the ground shaking: a dark pulsing minor pad.</summary>
+    /// <summary>Peace under a cruel god: low strings, a low choir and a mournful oboe.</summary>
+    Dark,
+
+    /// <summary>A rival near victory, or a foe's Creature in the player's lands: an ostinato under swelling horns.</summary>
     Tension,
 
-    /// <summary>The player's god dominates or has won: a bright arpeggio.</summary>
+    /// <summary>War, or the player's Creature fighting: drums, driving strings, brass and choir.</summary>
+    War,
+
+    /// <summary>The land itself rising against the people: an earthquake, an eruption, a tornado, the beast.</summary>
+    Disaster,
+
+    /// <summary>The player's god dominates or has won: a fanfare for full orchestra.</summary>
     Triumph,
 }

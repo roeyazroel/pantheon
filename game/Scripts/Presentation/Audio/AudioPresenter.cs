@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
@@ -13,8 +14,10 @@ namespace Pantheon.Client.Presentation.Audio;
 /// <summary>
 /// Plays the game's sound (spec §60, ADR-021): the sounds of events where they happen (thunder and
 /// roars carry across the island), the player's news, the wind and the rain where the camera looks,
-/// and music whose mood follows the game. The sounds are synthesized by <see cref="SoundBank"/> and
-/// <see cref="MusicComposer"/> on a worker thread at start; until they are ready the game is silent.
+/// and the orchestra's music, whose mood follows the game (ADR-071): the Theme on the title screen. The
+/// sounds are synthesized by <see cref="SoundBank"/> on a worker thread at start, and the music's pieces
+/// by <see cref="Pantheon.Game.Audio.Orchestra.Orchestra"/> on worker threads, the Theme first; each
+/// plays once it is ready.
 /// </summary>
 internal sealed partial class AudioPresenter : Node
 {
@@ -24,15 +27,18 @@ internal sealed partial class AudioPresenter : Node
     private const int WorldVoices = 10;
     private const int NewsVoices = 3;
 
-    // The music changes mood at most this often, and fades over this long (real seconds).
+    // The music stays in a mood at least this long before it calms, and fades over this long (real
+    // seconds); a more urgent mood (war, disaster, triumph) comes in at once and quicker.
     private const double MoodSeconds = 20.0;
     private const float FadeSeconds = 3f;
+    private const float UrgentFadeSeconds = 1.5f;
 
     // A sound of one kind starts at most this often (real seconds), so spreading fires do not roar.
     private const double KindGapSeconds = 0.4;
 
     private readonly Dictionary<SoundKind, AudioStreamWav> _sounds = [];
     private readonly Dictionary<MusicMood, AudioStreamWav> _music = [];
+    private readonly ConcurrentDictionary<MusicMood, byte[]> _pieces = new();
     private readonly Dictionary<SoundKind, double> _lastPlayed = [];
     private readonly List<AudioStreamPlayer3D> _world = [];
     private readonly List<AudioStreamPlayer> _news = [];
@@ -40,7 +46,13 @@ internal sealed partial class AudioPresenter : Node
     private AudioStreamPlayer _musicNext = null!;
     private AudioStreamPlayer _rain = null!;
     private AudioStreamPlayer _wind = null!;
-    private Task<(Dictionary<SoundKind, float[]> Sounds, Dictionary<MusicMood, float[]> Music, double Milliseconds)>? _making;
+    private Task<(Dictionary<SoundKind, float[]> Sounds, double Milliseconds)>? _making;
+    private Task? _composing;
+    private Pantheon.Game.Audio.Orchestra.MusicContent? _score;
+    private Func<bool> _title = static () => false;
+    private MusicMood? _forced;
+    private string? _export;
+    private float _fadeSeconds = FadeSeconds;
     private GameSession _session = null!;
     private Func<GroundPosition> _focus = null!;
     private Func<GroundPosition, float> _height = null!;
@@ -54,9 +66,12 @@ internal sealed partial class AudioPresenter : Node
     /// <param name="focus">Where the camera looks.</param>
     /// <param name="height">The ground's height at a point, to place sounds on it.</param>
     /// <param name="settings">The player's settings, for the loudness of each part.</param>
-    public void Setup(GameSession session, Func<GroundPosition> focus, Func<GroundPosition, float> height, GameSettings settings)
+    /// <param name="options">Launch options: a mood forced (<c>--music</c>) or the music written out (<c>--music-export</c>).</param>
+    /// <param name="title">Whether the title screen is open, when the Theme plays.</param>
+    public void Setup(GameSession session, Func<GroundPosition> focus, Func<GroundPosition, float> height, GameSettings settings, Pantheon.Game.Launch.LaunchOptions options, Func<bool> title)
     {
-        (_session, _focus, _height) = (session, focus, height);
+        ArgumentNullException.ThrowIfNull(options);
+        (_session, _focus, _height, _title, _forced, _export) = (session, focus, height, title, options.Music, options.MusicExport);
         EnsureBuses();
         ApplyVolumes(settings);
         for (var i = 0; i < WorldVoices; i++)
@@ -76,6 +91,11 @@ internal sealed partial class AudioPresenter : Node
         (_musicNow, _musicNext) = (Player(MusicBus), Player(MusicBus));
         (_rain, _wind) = (Player(AmbienceBus), Player(AmbienceBus));
         _making = Task.Run(Make);
+        _score = Bootstrap.Startup.TryLoadMusic();
+        if (_score is { } score)
+        {
+            _composing = Task.Run(() => Compose(score));
+        }
     }
 
     /// <summary>Sets each bus's loudness from the settings.</summary>
@@ -121,7 +141,15 @@ internal sealed partial class AudioPresenter : Node
             _making = null;
         }
 
-        if (_session is null || _sounds.Count == 0)
+        TakePieces();
+
+        if (_session is null)
+        {
+            return;
+        }
+
+        UpdateMusic((float)delta);
+        if (_sounds.Count == 0)
         {
             return;
         }
@@ -129,11 +157,10 @@ internal sealed partial class AudioPresenter : Node
         var (rain, wind) = AudioDirector.Ambience(_session.Content.Weather, _session.World, _focus());
         Ease(_rain, rain, delta);
         Ease(_wind, wind, delta);
-        UpdateMusic((float)delta);
     }
 
-    /// <summary>Makes every sound and the music, off the main thread.</summary>
-    private static (Dictionary<SoundKind, float[]>, Dictionary<MusicMood, float[]>, double) Make()
+    /// <summary>Makes every sound, off the main thread.</summary>
+    private static (Dictionary<SoundKind, float[]>, double) Make()
     {
         var watch = System.Diagnostics.Stopwatch.StartNew();
         var sounds = new Dictionary<SoundKind, float[]>();
@@ -142,27 +169,74 @@ internal sealed partial class AudioPresenter : Node
             sounds[kind] = SoundBank.Render(kind);
         }
 
-        var music = new Dictionary<MusicMood, float[]>();
-        foreach (var mood in Enum.GetValues<MusicMood>())
+        return (sounds, watch.Elapsed.TotalMilliseconds);
+    }
+
+    /// <summary>Plays every mood's piece on worker threads, the Theme first, keeping each as it is done; and writes them out when asked.</summary>
+    private void Compose(Pantheon.Game.Audio.Orchestra.MusicContent score)
+    {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var played = new ConcurrentDictionary<MusicMood, float[]>();
+        var order = new List<MusicMood> { MusicMood.Theme, _forced ?? MusicMood.Calm };
+        order.AddRange(Array.FindAll(Enum.GetValues<MusicMood>(), m => !order.Contains(m)));
+        Parallel.ForEach(order, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, System.Environment.ProcessorCount - 2) }, mood =>
         {
-            music[mood] = MusicComposer.Render(mood);
+            var samples = Pantheon.Game.Audio.Orchestra.Orchestra.Render(score.Score(mood), score);
+            played[mood] = samples;
+            _pieces[mood] = WavFile.Pcm16(samples);
+        });
+        GD.Print(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Music ready: {played.Count} pieces for the orchestra made in {watch.Elapsed.TotalMilliseconds:0} ms"));
+        if (_export is { } folder)
+        {
+            System.IO.Directory.CreateDirectory(folder);
+            foreach (var (mood, samples) in played)
+            {
+                var path = System.IO.Path.Combine(folder, $"{(int)mood + 1}-{mood}.wav");
+                System.IO.File.WriteAllBytes(path, WavFile.Write(samples, score.SampleRate, 2));
+                GD.Print($"Music written: {path} ({score.Score(mood).Name})");
+            }
+        }
+    }
+
+    /// <summary>Turns the pieces made so far into streams, on the main thread; quits once the music is written out, when asked.</summary>
+    private void TakePieces()
+    {
+        if (_score is not { } score)
+        {
+            return;
         }
 
-        return (sounds, music, watch.Elapsed.TotalMilliseconds);
+        foreach (var (mood, data) in _pieces)
+        {
+            if (!_music.ContainsKey(mood))
+            {
+                _music[mood] = new AudioStreamWav
+                {
+                    Format = AudioStreamWav.FormatEnum.Format16Bits,
+                    MixRate = score.SampleRate,
+                    Stereo = true,
+                    Data = data,
+                    LoopMode = AudioStreamWav.LoopModeEnum.Forward,
+                    LoopBegin = 0,
+                    LoopEnd = data.Length / 4,
+                };
+            }
+        }
+
+        if (_export is not null && _composing is { IsCompleted: true })
+        {
+            _export = null;
+            GetTree().Quit();
+        }
     }
 
     /// <summary>Turns the made samples into streams and starts the loops.</summary>
-    private void Take((Dictionary<SoundKind, float[]> Sounds, Dictionary<MusicMood, float[]> Music, double Milliseconds) made)
+    private void Take((Dictionary<SoundKind, float[]> Sounds, double Milliseconds) made)
     {
-        GD.Print(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Audio ready: {made.Sounds.Count} sounds and {made.Music.Count} moods of music made in {made.Milliseconds:0} ms"));
+        GD.Print(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"Audio ready: {made.Sounds.Count} sounds made in {made.Milliseconds:0} ms"));
         foreach (var (kind, samples) in made.Sounds)
         {
             _sounds[kind] = Stream(samples, stereo: false, loop: SoundBank.Loops(kind));
-        }
-
-        foreach (var (mood, samples) in made.Music)
-        {
-            _music[mood] = Stream(samples, stereo: true, loop: true);
         }
 
         foreach (var (player, kind) in new[] { (_rain, SoundKind.Rain), (_wind, SoundKind.Wind) })
@@ -193,16 +267,22 @@ internal sealed partial class AudioPresenter : Node
         news.Play();
     }
 
-    /// <summary>Fades the music towards the game's mood, holding a mood for a while so it does not flicker.</summary>
+    /// <summary>
+    /// Fades the music towards the game's mood: the Theme on the title screen; a more urgent mood at once
+    /// and quickly; a calmer one only after the last has held a while, so the music does not flicker.
+    /// </summary>
     private void UpdateMusic(float delta)
     {
-        var wanted = AudioDirector.Mood(_session.World, _session.LocalGodId);
-        if (wanted != _mood && _clock - _moodSince >= MoodSeconds && _music.TryGetValue(wanted, out var stream))
+        var (wanted, why) = _forced is { } forced ? (forced, "chosen at launch") : _title() ? (MusicMood.Theme, "the title screen") : AudioDirector.Explain(_session.World, _session.LocalGodId);
+        var urgent = _mood is not { } now || Urgency(wanted) > Urgency(now) || now == MusicMood.Theme || wanted == MusicMood.Theme;
+        if (wanted != _mood && (urgent || _clock - _moodSince >= MoodSeconds) && _music.TryGetValue(wanted, out var stream))
         {
             (_musicNow, _musicNext) = (_musicNext, _musicNow);
             _musicNow.Stream = stream;
             _musicNow.VolumeDb = -60f;
             _musicNow.Play();
+            GD.Print($"Music: {wanted} ({why})");
+            _fadeSeconds = urgent && _mood is not null ? UrgentFadeSeconds : FadeSeconds;
             _mood = wanted;
             _moodSince = _clock;
             _fade = 0f;
@@ -210,7 +290,7 @@ internal sealed partial class AudioPresenter : Node
 
         if (_fade < 1f)
         {
-            _fade = Math.Min(1f, _fade + (delta / FadeSeconds));
+            _fade = Math.Min(1f, _fade + (delta / _fadeSeconds));
             _musicNow.VolumeDb = Mathf.LinearToDb(Math.Max(0.001f, _fade));
             _musicNext.VolumeDb = Mathf.LinearToDb(Math.Max(0.001f, 1f - _fade));
             if (_fade >= 1f)
@@ -219,6 +299,15 @@ internal sealed partial class AudioPresenter : Node
             }
         }
     }
+
+    /// <summary>How urgent a mood is: a disaster before war and triumph, before tension, before peace.</summary>
+    private static int Urgency(MusicMood mood) => mood switch
+    {
+        MusicMood.Theme or MusicMood.Calm or MusicMood.Dark => 0,
+        MusicMood.Tension => 1,
+        MusicMood.War or MusicMood.Triumph => 2,
+        MusicMood.Disaster => 3,
+    };
 
     /// <summary>Moves a loop's loudness smoothly towards a level (0..1).</summary>
     private static void Ease(AudioStreamPlayer player, float level, double delta)

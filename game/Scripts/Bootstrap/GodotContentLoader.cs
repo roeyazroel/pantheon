@@ -30,6 +30,10 @@ public static class GodotContentLoader
     /// <exception cref="IOException">The file cannot be read.</exception>
     public static Pantheon.Game.Minds.MindContent LoadMindContent() => Pantheon.Game.Minds.MindContent.Parse(ReadText(Pantheon.Game.Minds.MindContent.FileName));
 
+    /// <summary>Loads the orchestra's music (ADR-071).</summary>
+    /// <returns>The validated music.</returns>
+    public static Pantheon.Game.Audio.Orchestra.MusicContent LoadMusicContent() => Pantheon.Game.Audio.Orchestra.MusicContent.Parse(ReadText(Pantheon.Game.Audio.Orchestra.MusicContent.FileName));
+
     /// <summary>Reads a whole content file as text.</summary>
     private static string ReadText(string fileName)
     {
