@@ -66,13 +66,15 @@ internal sealed partial class CreaturePanel : PanelContainer
 
         _judge = UiTheme.Label(column, UiTheme.CaptionSize, UiTheme.Good);
         _judge.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        var buttons = new HBoxContainer();
-        buttons.AddThemeConstantOverride("separation", 6);
+        var buttons = new HFlowContainer();
+        buttons.AddThemeConstantOverride("h_separation", 6);
+        buttons.AddThemeConstantOverride("v_separation", 6);
         column.AddChild(buttons);
         _reward = Command(buttons, "Reward", "Z", "Reward it for what it is doing, or just did: it will do it more", () => Judged?.Invoke(CreatureCommandKind.Reward));
         _punish = Command(buttons, "Punish", "X", "Punish it for what it is doing, or just did: it will do it less", () => Judged?.Invoke(CreatureCommandKind.Punish));
         Command(buttons, "Follow", "C", "Look at it and follow it; move the view to let go", () => LookClicked?.Invoke());
         Command(buttons, "Send", "V", "Click the ground where it should go", () => SendClicked?.Invoke());
+        Command(buttons, "Fight", "\u21e7V", "Click near a rival Creature: yours hunts it down and fights it", () => FightClicked?.Invoke());
 
         _more = new Button { Text = "More ▾", Flat = true, FocusMode = FocusModeEnum.None, Alignment = HorizontalAlignment.Left };
         _more.AddThemeFontSizeOverride("font_size", UiTheme.CaptionSize);
@@ -94,6 +96,9 @@ internal sealed partial class CreaturePanel : PanelContainer
 
     /// <summary>The player clicked Send.</summary>
     public event Action? SendClicked;
+
+    /// <summary>The player clicked Fight.</summary>
+    public event Action? FightClicked;
 
     /// <summary>Shows a card; labels change only where their text did.</summary>
     /// <param name="card">The card.</param>

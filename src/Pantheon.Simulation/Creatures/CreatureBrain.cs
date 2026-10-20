@@ -270,6 +270,61 @@ public sealed class CreatureBrain
         return true;
     }
 
+    /// <summary>
+    /// Sets the Creature at its god's command on a rival (ADR-062): it walks towards the rival for at
+    /// most <c>HuntSeconds</c>, and the meetings make it fall on the rival when they are close.
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature, which is changed.</param>
+    /// <param name="rival">The rival it hunts.</param>
+    /// <returns><c>false</c> when there is no way to the rival over land.</returns>
+    public bool Hunt(WorldState world, CreatureState creature, CreatureState rival)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(rival);
+        if (RegionPathfinder.FindPath(world.Regions, creature.Position, rival.Position) is not { } path)
+        {
+            return false;
+        }
+
+        Start(creature, CreatureSituation.Commanded, CreatureAction.Fight, null, rival.Position, path, rival.Id);
+        creature.Activity.Phase = CreaturePhase.Travelling;
+        creature.Activity.TicksLeft = Math.Max(1, (int)MathF.Round(_rules.Bonds.HuntSeconds * SimulationTime.TicksPerSecond));
+        return true;
+    }
+
+    /// <summary>Whether the Creature hunts another at its god's command (ADR-062), so it falls on it whenever they meet.</summary>
+    /// <param name="creature">The Creature.</param>
+    /// <param name="otherId">The other.</param>
+    /// <returns><c>true</c> while it hunts the other.</returns>
+    public static bool IsHunting(CreatureState creature, int otherId)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        return IsSeeking(creature, otherId) && creature.Activity.Action == CreatureAction.Fight && creature.Activity.Situation == CreatureSituation.Commanded;
+    }
+
+    /// <summary>Re-plans a hunt's way to where its rival is now; <c>false</c> when there is none.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The hunting Creature, which is changed.</param>
+    /// <param name="rival">The rival.</param>
+    /// <returns>Whether a way was found.</returns>
+    public static bool Chase(WorldState world, CreatureState creature, CreatureState rival)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(rival);
+        if (RegionPathfinder.FindPath(world.Regions, creature.Position, rival.Position) is not { } path)
+        {
+            return false;
+        }
+
+        creature.Activity.Target = rival.Position;
+        creature.Activity.Path.Clear();
+        creature.Activity.Path.AddRange(path);
+        return true;
+    }
+
     /// <summary>Sends the Creature by its own choice to defend a village of its god (ADR-037): it walks to the threat, for the village.</summary>
     /// <param name="world">World state.</param>
     /// <param name="creature">The Creature, which is changed.</param>

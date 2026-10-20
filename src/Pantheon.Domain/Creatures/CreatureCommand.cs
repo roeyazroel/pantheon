@@ -13,11 +13,14 @@ public enum CreatureCommandKind
 
     /// <summary>Go to a place and wait there.</summary>
     GoTo,
+
+    /// <summary>Hunt down the rival Creature nearest a place and fight it (ADR-062).</summary>
+    Fight,
 }
 
 /// <summary>A god's intent towards its Creature, checked by the authority like a miracle (spec §73).</summary>
 /// <param name="GodId">The god.</param>
 /// <param name="CreatureId">The Creature.</param>
-/// <param name="Kind">Reward, punish or go to.</param>
-/// <param name="Target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>.</param>
+/// <param name="Kind">Reward, punish, go to or fight.</param>
+/// <param name="Target">Where to go, for <see cref="CreatureCommandKind.GoTo"/>; near whom to fight, for <see cref="CreatureCommandKind.Fight"/>.</param>
 public sealed record CreatureCommand(int GodId, int CreatureId, CreatureCommandKind Kind, GroundPosition Target = default);

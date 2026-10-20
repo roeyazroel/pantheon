@@ -45,7 +45,7 @@ public sealed class CreatureSystem : ISimulationSystem
         _rules = rules;
         _brain = new CreatureBrain(rules, divine, settlementRules, diplomacy);
         _deeds = new CreatureDeeds(rules, divine, settlementRules, ledger);
-        _meetings = new CreatureMeetings(rules, _brain);
+        _meetings = new CreatureMeetings(rules, _brain, ledger);
         _combat = new CreatureCombat(rules, ledger, domains);
         _tree = new CreatureTree(rules, divine, settlementRules, _brain, _deeds);
     }

@@ -58,6 +58,7 @@ internal sealed class DivineController
         _hud.MiracleClicked += Select;
         _hud.CreatureJudged += JudgeCreature;
         _hud.CreatureSendClicked += BeginSend;
+        _hud.CreatureFightClicked += BeginFight;
     }
 
     /// <summary>Whether the next click on the ground sends the Creature there.</summary>
@@ -86,6 +87,7 @@ internal sealed class DivineController
     {
         SelectedMiracle = miracleId;
         SendMode = false;
+        FightMode = false;
         if (miracleId is null)
         {
             _presenter.HideTarget();
@@ -105,6 +107,12 @@ internal sealed class DivineController
         if (SendMode)
         {
             SendCreature(cursor);
+            return true;
+        }
+
+        if (FightMode)
+        {
+            FightAt(cursor);
             return true;
         }
 
@@ -154,6 +162,49 @@ internal sealed class DivineController
         SendMode = _session.LocalCreature is not null;
         _presenter.HideTarget();
         _setStatus(SendMode ? "Click where your Creature should go (Esc cancels)" : "You have no Creature");
+    }
+
+    /// <summary>Whether the next click on the ground sets the Creature on the rival nearest it (ADR-062).</summary>
+    public bool FightMode { get; private set; }
+
+    /// <summary>The next click near a rival Creature sets the player's on it (ADR-062).</summary>
+    public void BeginFight()
+    {
+        SelectedMiracle = null;
+        SendMode = false;
+        FightMode = _session.LocalCreature is not null;
+        _setStatus(FightMode ? "Click near a rival Creature to set yours on it (Esc cancels)" : "You have no Creature");
+    }
+
+    /// <summary>Sets the Creature on the rival nearest a ground point, to hunt it down and fight it (ADR-062).</summary>
+    /// <param name="cursor">Ground point under the cursor.</param>
+    public void FightAt(NVector3? cursor)
+    {
+        FightMode = false;
+        if (cursor is not { } point)
+        {
+            return;
+        }
+
+        _setStatus(SessionCommands.CommandCreature(_session, CreatureCommandKind.Fight, new GroundPosition(point.X, point.Z)));
+        _hand.Press(point.ToGodot());
+    }
+
+    /// <summary>Sets the Creature on the rival nearest it (<c>--fight</c>, for captures).</summary>
+    public void FightNearest()
+    {
+        if (_session.LocalCreature is not { } mine)
+        {
+            return;
+        }
+
+        var rival = System.Linq.Enumerable.MinBy(
+            _session.World.Creatures.FindAll(c => c.GodId != mine.GodId && c.Activity.Phase != Pantheon.Domain.Creatures.CreaturePhase.Banished),
+            c => ((c.Position.X - mine.Position.X) * (c.Position.X - mine.Position.X)) + ((c.Position.Z - mine.Position.Z) * (c.Position.Z - mine.Position.Z)));
+        if (rival is not null)
+        {
+            FightAt(new NVector3(rival.Position.X, 0f, rival.Position.Z));
+        }
     }
 
     /// <summary>Sends the Creature to a ground point.</summary>
@@ -250,6 +301,14 @@ internal sealed class DivineController
         if (SelectedMiracle is not null && cursor is { } ground)
         {
             _presenter.ShowTarget(ground, hud.TargetRadius, hud.TargetValid);
+        }
+        else if (FightMode && cursor is { } aim)
+        {
+            // The ring shows how near a rival must be to the click; it is valid when one is (ADR-062).
+            var reach = _session.Content.Creatures.Bonds.HuntReach;
+            var rival = _session.World.Creatures.Exists(c => c.GodId != _session.LocalGodId && c.Activity.Phase != Pantheon.Domain.Creatures.CreaturePhase.Banished
+                && ((c.Position.X - aim.X) * (c.Position.X - aim.X)) + ((c.Position.Z - aim.Z) * (c.Position.Z - aim.Z)) <= reach * reach);
+            _presenter.ShowTarget(aim, reach, rival);
         }
         else
         {

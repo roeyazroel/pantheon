@@ -54,6 +54,9 @@ public partial class Hud : CanvasLayer
     /// <summary>The player clicked Send on the Creature card: the next click on the ground sends it there.</summary>
     public event Action? CreatureSendClicked;
 
+    /// <summary>The player clicked Fight on the Creature card: the next click near a rival sets it on that rival (ADR-062).</summary>
+    public event Action? CreatureFightClicked;
+
     /// <summary>The player clicked pause.</summary>
     public event Action? PauseClicked;
 
@@ -87,6 +90,7 @@ public partial class Hud : CanvasLayer
         _creature.Judged += kind => CreatureJudged?.Invoke(kind);
         _creature.LookClicked += () => CreatureLookClicked?.Invoke();
         _creature.SendClicked += () => CreatureSendClicked?.Invoke();
+        _creature.FightClicked += () => CreatureFightClicked?.Invoke();
     }
 
     /// <summary>Shows a new HUD model; controls change only where the text or state changed.</summary>

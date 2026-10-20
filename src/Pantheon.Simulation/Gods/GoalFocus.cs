@@ -229,7 +229,7 @@ public static class GoalFocus
     /// <summary>Whether an action at a village serves a goal.</summary>
     private static bool Serves(GodGoal goal, int godId, SettlementState settlement, AiActionKind action, bool kind) => goal.Kind switch
     {
-        GodGoalKind.ProtectHome => goal.SettlementId == settlement.Id && (action == AiActionKind.SendCreature || kind),
+        GodGoalKind.ProtectHome => goal.SettlementId == settlement.Id && (action is AiActionKind.SendCreature or AiActionKind.SetCreatureOn || kind),
         GodGoalKind.Convert => goal.SettlementId == settlement.Id,
         GodGoalKind.Weaken => action == AiActionKind.CastMiracle && goal.GodId is { } enemy && TreatyModel.Leader(settlement) == enemy,
         GodGoalKind.Prepare or GodGoalKind.Recover => action == AiActionKind.CastMiracle && kind && TreatyModel.Leader(settlement) == godId,

@@ -199,7 +199,11 @@ public sealed class GodAi
             case AiActionKind.SendCreature when _creatures is not null && god.CreatureId is { } creature:
                 _creatures.Execute(world, new CreatureCommand(god.Id, creature, CreatureCommandKind.GoTo, candidate.Target), god.Id, events);
                 break;
+            case AiActionKind.SetCreatureOn when _creatures is not null && god.CreatureId is { } hunter:
+                _creatures.Execute(world, new CreatureCommand(god.Id, hunter, CreatureCommandKind.Fight, candidate.Target), god.Id, events);
+                break;
             case AiActionKind.SendCreature:
+            case AiActionKind.SetCreatureOn:
             case AiActionKind.Wait:
                 break;
         }
@@ -428,7 +432,7 @@ public sealed class GodAi
             var value = profile.SendCreature * ((profile.Protect * threat) + (0.5f * profile.Aggression)) * confidence;
             if (value > 0f)
             {
-                candidates.Add(new AiCandidate(AiActionKind.SendCreature, null, null, enemy.Position, value, 0f, value, MiracleValuer.Format("confront {0} {1:0.00}", enemy.Name, value)));
+                candidates.Add(new AiCandidate(AiActionKind.SetCreatureOn, null, null, enemy.Position, value, 0f, value, MiracleValuer.Format("confront {0} {1:0.00}", enemy.Name, value)));
             }
         }
     }

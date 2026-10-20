@@ -12,6 +12,12 @@ public sealed record CreatureBondRules
     /// <summary>Distance in metres at which two Creatures meet.</summary>
     public required float MeetRadius { get; init; }
 
+    /// <summary>How far from where its god points a rival Creature may be for a commanded fight to find it, in metres (ADR-062).</summary>
+    public float HuntReach { get; init; } = 80f;
+
+    /// <summary>How long a Creature hunts a rival its god set it on before it gives up, in simulated seconds (ADR-062).</summary>
+    public float HuntSeconds { get; init; } = 90f;
+
     /// <summary>Seconds before the same two Creatures meet again.</summary>
     public required float MeetCooldownSeconds { get; init; }
 

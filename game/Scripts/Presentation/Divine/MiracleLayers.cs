@@ -138,6 +138,25 @@ internal static class MiracleLayers
     /// Particles of soft quads, run on the GPU: a busy world casts many miracles at once, and CPU
     /// particles cost the main thread about a millisecond a frame at sixteen times speed.
     /// </summary>
+    /// <summary>A blow landing (ADR-062): sparks and a puff of dust, fired once each time it is restarted.</summary>
+    /// <returns>The sparks, with the dust as their child; neither emits until restarted.</returns>
+    public static GpuParticles3D Impact()
+    {
+        var sparks = Particles(
+            "Impact", new Color(1f, 0.86f, 0.55f), 70, 0.6, new Vector2(0.55f, 0.55f), BaseMaterial3D.BillboardModeEnum.Particles,
+            Vector3.Zero, new Vector3(0.4f, 0.4f, 0.4f), Vector3.Up, 100f, (9f, 20f), new Vector3(0f, -22f, 0f), (0.6f, 1.3f), explosive: true);
+        var dust = Particles(
+            "ImpactDust", new Color(0.72f, 0.64f, 0.52f, 0.55f), 24, 1.3, new Vector2(4.5f, 4.5f), BaseMaterial3D.BillboardModeEnum.Particles,
+            Vector3.Zero, new Vector3(0.6f, 0.6f, 0.6f), Vector3.Up, 80f, (2f, 6f), new Vector3(0f, -1f, 0f), (0.8f, 1.7f), blend: false, explosive: true);
+        foreach (var burst in new[] { sparks, dust })
+        {
+            (burst.OneShot, burst.Emitting, burst.Explosiveness) = (true, false, 1f);
+        }
+
+        sparks.AddChild(dust);
+        return sparks;
+    }
+
     private static GpuParticles3D Particles(
         string name, Color color, int amount, double lifetime, Vector2 size, BaseMaterial3D.BillboardModeEnum billboard, Vector3 at, Vector3 box, Vector3 direction, float spread,
         (float Min, float Max) speed, Vector3 gravity, (float Min, float Max) scale, bool blend = true, float tangential = 0f, float radial = 0f, bool explosive = false, Color? endColor = null)

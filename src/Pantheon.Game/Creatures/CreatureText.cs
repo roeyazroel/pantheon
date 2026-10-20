@@ -130,6 +130,7 @@ public static class CreatureText
             CreatureCommandKind.Reward => Format("You reward {0} for {1}: it likes that more now ({2:0.00})", name, Doing(result.JudgedAction ?? CreatureAction.Wander, null), result.Preference ?? 0f),
             CreatureCommandKind.Punish => Format("You punish {0} for {1}: it likes that less now ({2:0.00})", name, Doing(result.JudgedAction ?? CreatureAction.Wander, null), result.Preference ?? 0f),
             CreatureCommandKind.GoTo => Format("{0} heads where you pointed", name),
+            CreatureCommandKind.Fight => Format("{0} goes after its rival, to fight", name),
         },
         CreatureCommandRejection.UnknownGod or CreatureCommandRejection.UnknownCreature => "You have no Creature",
         CreatureCommandRejection.NotAuthorized => "That Creature does not answer to you",
@@ -137,6 +138,8 @@ public static class CreatureText
         CreatureCommandRejection.NothingToJudge => Format("{0} has done nothing lately to reward or punish", name),
         CreatureCommandRejection.OutsideWorld => "There is nowhere to go there",
         CreatureCommandRejection.Unreachable => Format("{0} cannot walk there", name),
+        CreatureCommandRejection.NoRivalThere => "There is no rival Creature there to fight: click near one",
+        CreatureCommandRejection.Sworn => "A treaty forbids your Creatures to fight each other",
     };
 
     /// <summary>"verb place", or the verb with "a settlement" when the place is unknown.</summary>

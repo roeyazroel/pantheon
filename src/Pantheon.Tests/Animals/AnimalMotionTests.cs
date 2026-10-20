@@ -75,6 +75,19 @@ public sealed class AnimalMotionTests
     }
 
     [Fact]
+    public void ADefeatedCreature_FallsFlat_AndEachPunchCountsOneBlow()
+    {
+        var b = AnimalPlans.For("Lion").Body;
+
+        Assert.True(AnimalMotion.Fallen(b, 0.5f).HipHeight < b.HipHeight * 0.4f, "it lies on the ground");
+        Assert.True(AnimalMotion.Fallen(b, 0.5f).Lean < -1f, "on its back");
+
+        // A blow is counted as each punch is at its height.
+        var landed = Enumerable.Range(0, 1000).Select(i => (int)MathF.Floor(AnimalMotion.Blows(i / 100f, 0.3f))).Distinct().Count() - 1;
+        Assert.InRange(landed, 31, 33);
+    }
+
+    [Fact]
     public void Poses_BlendSmoothly()
     {
         var b = AnimalPlans.For("Cow").Body;

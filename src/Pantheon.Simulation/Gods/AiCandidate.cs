@@ -13,6 +13,9 @@ public enum AiActionKind
 
     /// <summary>Send its Creature to a settlement, or against an enemy's Creature (ADR-017).</summary>
     SendCreature,
+
+    /// <summary>Set its Creature on an enemy's, to hunt it down and fight it (ADR-062).</summary>
+    SetCreatureOn,
 }
 
 /// <summary>

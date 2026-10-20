@@ -122,7 +122,7 @@ public partial class GameRoot : Node3D
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
         hud.CreatureLookClicked += FocusCreature;
         _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
-        _camera.LeftGrabAllowed = () => _divine.SelectedMiracle is null && !_divine.SendMode;
+        _camera.LeftGrabAllowed = () => _divine.SelectedMiracle is null && !_divine.SendMode && !_divine.FightMode;
         _diplomacy = new DiplomacyPanel { Name = "Diplomacy" };
         AddChild(_diplomacy);
         _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
@@ -277,7 +277,18 @@ public partial class GameRoot : Node3D
         (InputActions.ToggleDiplomacy, () => _diplomacy.PanelVisible = !_diplomacy.PanelVisible),
         (InputActions.CreatureReward, () => _divine.JudgeCreature(CreatureCommandKind.Reward)),
         (InputActions.CreaturePunish, () => _divine.JudgeCreature(CreatureCommandKind.Punish)),
-        (InputActions.CreatureSend, () => _divine.SendCreature(_camera.CursorGroundPoint)),
+        (InputActions.CreatureSend, () =>
+        {
+            // V sends the Creature to the cursor; Shift+V sets it on the rival nearest the cursor (ADR-062).
+            if (Input.IsKeyPressed(Key.Shift))
+            {
+                _divine.FightAt(_camera.CursorGroundPoint);
+            }
+            else
+            {
+                _divine.SendCreature(_camera.CursorGroundPoint);
+            }
+        }),
         (InputActions.HandGrab, () => _divine.UseHand(_camera.CursorGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
@@ -399,6 +410,10 @@ public partial class GameRoot : Node3D
 
         var settlements = _session.World.Settlements;
         _nature.ApplyStartOptions(options, settlements.Count > 0 ? settlements[Math.Max(0, _focusIndex)].Position : null);
+        if (options.Fight)
+        {
+            _divine.FightNearest();
+        }
     }
 
     /// <summary>Shows the diplomacy panel once it is ready, when the launch options ask for it.</summary>

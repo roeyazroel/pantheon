@@ -37,8 +37,12 @@ internal sealed class CreatureView
     // How long the face shows the god's word after a reward or punishment, in seconds.
     private const float JudgedSeconds = 4f;
 
+    // How long a defeated Creature lies fallen before it is banished from sight, in seconds.
+    private const float FallSeconds = 2.5f;
+
     private readonly Node3D _root;
     private readonly Node3D _slope;
+    private readonly FightEffects _fight;
     private readonly DeclutteredLabel _label;
     private readonly Color _godColor;
     private readonly float _glow;
@@ -60,6 +64,7 @@ internal sealed class CreatureView
     private float _scale = 1f;
     private CreatureFeedback _judged;
     private float _judgedSeconds;
+    private float _fallen = float.MaxValue;
 
     /// <summary>Creates the Creature's nodes under a parent; its body appears once its species' meshes are made.</summary>
     /// <param name="parent">Node that holds the Creatures.</param>
@@ -97,6 +102,7 @@ internal sealed class CreatureView
             VisibilityRangeFadeMode = GeometryInstance3D.VisibilityRangeFadeModeEnum.Self,
         };
         _root.AddChild(_label);
+        _fight = new FightEffects(_root, parent);
     }
 
     /// <summary>Where the Creature is drawn, for the camera and the hand.</summary>
@@ -126,11 +132,29 @@ internal sealed class CreatureView
     /// <param name="heldAt">Where its god's hand holds it, if it does (ADR-030).</param>
     public void Sync(CreatureState creature, WorldState world, TerrainField terrain, (float Delta, bool Running, float Alpha) frame, Vector3? heldAt = null)
     {
+        // A defeated Creature falls and lies a moment before it is banished from sight (ADR-062).
         var banished = creature.Activity.Phase == CreaturePhase.Banished;
-        _root.Visible = !banished;
+        if (banished && _placed && _fallen == float.MaxValue)
+        {
+            _fallen = 0f;
+            _fight.Fall(_shown);
+        }
+
+        _fallen = banished ? _fallen + frame.Delta : float.MaxValue;
+        _root.Visible = !banished || _fallen < FallSeconds;
         if (banished)
         {
-            _placed = false;
+            if (_fallen < FallSeconds && _body is { } fallen)
+            {
+                _pose = _pose is null ? AnimalMotion.Fallen(fallen.Plan.Body, _fallen) : BodyPose.Lerp(_pose, AnimalMotion.Fallen(fallen.Plan.Body, _fallen), 1f - Mathf.Exp(-8f * frame.Delta));
+                fallen.Apply(_pose);
+                _label.SetTexts($"{creature.Name}\nDefeated", creature.Name);
+            }
+            else
+            {
+                _placed = false;
+            }
+
             return;
         }
 
@@ -161,17 +185,23 @@ internal sealed class CreatureView
             body.Express(Pantheon.Game.Presentation.CreatureExpression.FaceOf(creature, world.Tick, _judgedSeconds > 0f ? _judged : null), _clock);
             UpdateFlash(body, delta);
             body.ShowScars(creature.Scars);
+            _fight.Update(creature, world, _shown, body.StandingHeight, _scale, (_clock, _offset), delta);
         }
 
         var title = _owner.Length > 0 ? $"{creature.Name} ({_owner})" : creature.Name;
         var fighting = creature.Activity.Action == CreatureAction.Fight && creature.Activity.Phase == CreaturePhase.Performing;
         var health = fighting ? $"  {creature.Health:0%}" : string.Empty;
         _label.SetTexts($"{title}\n{CreatureText.DescribeActivity(creature, world)}{health}", title);
-        _label.Position = new Vector3(0f, (_body?.StandingHeight ?? 7f) * (Resting(creature) ? 0.55f : 1.05f), 0f);
+        // While it fights, its health bar sits over its head and the label rises above the bar.
+        _label.Position = new Vector3(0f, (_body?.StandingHeight ?? 7f) * (Resting(creature) ? 0.55f : fighting ? 1.22f : 1.05f), 0f);
     }
 
     /// <summary>Frees the Creature's nodes.</summary>
-    public void Free() => _root.QueueFree();
+    public void Free()
+    {
+        _fight.Free();
+        _root.QueueFree();
+    }
 
     /// <summary>
     /// Draws the Creature between the simulation's last two places: when a tick brings a new one, the

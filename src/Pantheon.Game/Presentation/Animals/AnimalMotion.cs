@@ -275,7 +275,7 @@ public static class AnimalMotion
     public static BodyPose Fight(AnimalProportions b, float clock, float offset)
     {
         ArgumentNullException.ThrowIfNull(b);
-        var t = (clock * 1.6f) + offset;
+        var t = (clock * BoxingRate) + offset;
         var leftBlow = Punch(t);
         var rightBlow = Punch(t + 0.5f);
         var hip = (b.HipHeight * 0.88f) - (0.08f * MathF.Abs(MathF.Sin(t * MathF.Tau)));
@@ -363,6 +363,28 @@ public static class AnimalMotion
         };
     }
 
+    /// <summary>Knocked down by a defeat (ADR-062): flat on its back, limbs sprawled, before it is banished.</summary>
+    /// <param name="b">The proportions.</param>
+    /// <param name="clock">Seconds since it fell, for a last twitch.</param>
+    /// <returns>The pose.</returns>
+    public static BodyPose Fallen(AnimalProportions b, float clock)
+    {
+        ArgumentNullException.ThrowIfNull(b);
+        var twitch = MathF.Max(0f, 1f - clock) * 0.2f * MathF.Sin(clock * 14f);
+        return new BodyPose
+        {
+            HipHeight = b.LegGirth * 0.9f,
+            Lean = -1.45f,
+            LeftLeg = new LimbAngles(1.15f + twitch, -0.7f, 0.3f),
+            RightLeg = new LimbAngles(0.9f, -0.5f, 0.3f),
+            LeftArm = new LimbAngles(-0.3f, 0.4f, 0f),
+            RightArm = new LimbAngles(-0.2f - twitch, 0.3f, 0f),
+            ArmsOut = (1.3f, 1.3f),
+            HeadPitch = -0.35f,
+            Tail = (-0.6f, 0f),
+        };
+    }
+
     /// <summary>One leg reaching its foot: planted, or at a point of its stride.</summary>
     private static LimbAngles Leg(AnimalProportions b, float phase, float pace, float hip, float ground, bool planted = false)
     {
@@ -372,6 +394,18 @@ public static class AnimalMotion
         var toe = lift > 0f ? 0.25f * MathF.Sin(MathF.PI * Math.Clamp(lift / ((b.Thigh + b.Shin) * 0.25f), 0f, 1f)) : 0f;
         return new LimbAngles(upper, lower, -(upper + lower) + toe);
     }
+
+    /// <summary>How many boxing cycles a second a fighter goes through: each throws a left and a right.</summary>
+    public const float BoxingRate = 1.6f;
+
+    /// <summary>
+    /// How many blows a fighter has landed by a time (ADR-062): it grows by one at the height of each
+    /// punch <see cref="Fight"/> throws, so the client can show each landing.
+    /// </summary>
+    /// <param name="clock">Seconds of the Creature's clock.</param>
+    /// <param name="offset">Its fight's offset.</param>
+    /// <returns>Blows landed, as a running count.</returns>
+    public static float Blows(float clock, float offset) => (((clock * BoxingRate) + offset) - 0.125f) * 2f;
 
     /// <summary>A blow's reach over time: a quick jab out and back, then a rest.</summary>
     private static float Punch(float t)

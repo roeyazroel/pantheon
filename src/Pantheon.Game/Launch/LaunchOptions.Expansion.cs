@@ -10,6 +10,9 @@ public sealed partial record LaunchOptions
     /// <summary>A priority the player's god asks of the focused settlement at the start (ADR-023).</summary>
     public Domain.Society.SettlementPriority? Priority { get; init; }
 
+    /// <summary>Whether the player's Creature is set on the rival nearest it at the start (ADR-062), for captures; with <c>--meet</c> the rival is brought beside it.</summary>
+    public bool Fight { get; init; }
+
     /// <summary>A page of the title screen open from the start (ADR-060): new, worlds, together or settings; for captures.</summary>
     public string? TitlePage { get; init; }
 
@@ -102,7 +105,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife", "title-page"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife", "title-page", "fight"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -151,6 +154,8 @@ public sealed partial record LaunchOptions
         var trimmed = value.Trim();
         switch (name)
         {
+            case "fight":
+                return OnOff(value) is { } fight ? options with { Fight = fight } : Warn(options, warnings, $"'--fight' needs on or off, got '{value}'.");
             case "title-page":
                 return value is "new" or "worlds" or "together" or "settings"
                     ? options with { TitlePage = value, Menu = true }

@@ -22,16 +22,19 @@ public sealed class CreatureMeetings
 
     private readonly CreatureRules _rules;
     private readonly CreatureBrain _brain;
+    private readonly IActRecorder? _ledger;
 
     /// <summary>Creates the meetings over validated rules.</summary>
     /// <param name="rules">Creature rules.</param>
     /// <param name="brain">The brain, for each Creature's answer.</param>
-    public CreatureMeetings(CreatureRules rules, CreatureBrain brain)
+    /// <param name="ledger">Where a god's unprovoked attack is remembered by the other (ADR-062), if anywhere.</param>
+    public CreatureMeetings(CreatureRules rules, CreatureBrain brain, IActRecorder? ledger = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(brain);
         _rules = rules;
         _brain = brain;
+        _ledger = ledger;
     }
 
     /// <summary>Lets every pair of free Creatures close enough, and not met lately, meet, in id order.</summary>
@@ -48,9 +51,11 @@ public sealed class CreatureMeetings
             for (var j = i + 1; j < creatures.Count; j++)
             {
                 var (a, b) = (creatures[i], creatures[j]);
+                // A Creature its god set on another falls on it whenever they meet, however lately they met (ADR-062).
+                var hunt = CreatureBrain.IsHunting(a, b.Id) || CreatureBrain.IsHunting(b, a.Id);
                 if (IsFree(a) && IsFree(b) && !CreatureModel.IsHeld(world, a) && !CreatureModel.IsHeld(world, b) && Distance(a.Position, b.Position) <= bonds.MeetRadius
-                    && CreatureBonds.CanMeet(bonds, CreatureBonds.Find(a, b.Id), world.Tick)
-                    && CreatureBonds.CanMeet(bonds, CreatureBonds.Find(b, a.Id), world.Tick))
+                    && (hunt || (CreatureBonds.CanMeet(bonds, CreatureBonds.Find(a, b.Id), world.Tick)
+                        && CreatureBonds.CanMeet(bonds, CreatureBonds.Find(b, a.Id), world.Tick))))
                 {
                     Meet(world, a, b, random, events);
                 }
@@ -123,6 +128,12 @@ public sealed class CreatureMeetings
             CreatureTemperament.Shift(defender.Personality, CreatureTrait.Courage, -_rules.Temperament.CouragePerFlight);
             StopSeeking(attacker, defender.Id);
             return (MeetingOutcome.Fled, defender.Id, false);
+        }
+
+        if (CreatureBrain.IsHunting(attacker, defender.Id) && !DiplomacyModel.AreAtWar(world, attacker.GodId, defender.GodId))
+        {
+            // Setting one's Creature on another god's outside a war is remembered (ADR-062).
+            _ledger?.Record(world, defender.GodId, attacker.GodId, Domain.Diplomacy.DiplomaticAct.CreatureAttacked, null);
         }
 
         var betrayal = defence != CreatureAction.Fight && CreatureBonds.IsFriend(bonds, CreatureBonds.Find(defender, attacker.Id));

@@ -82,6 +82,13 @@ public sealed class CreatureTree
             return TreeStatus.Failed;
         }
 
+        if (activity.Phase == CreaturePhase.Travelling && Hunt(world, creature) is { } lost)
+        {
+            activity.Path.Clear();
+            events.Add(new CreatureGaveUp { Tick = world.Tick, CreatureId = creature.Id, Action = activity.Action, SettlementId = null, Reason = lost });
+            return TreeStatus.Failed;
+        }
+
         if (activity.Phase == CreaturePhase.Travelling)
         {
             Walk(creature);
@@ -90,7 +97,14 @@ public sealed class CreatureTree
                 return TreeStatus.Running;
             }
 
-            // A Creature that went looking for another is done once there: meeting it is up to the meetings.
+            // A Creature that went looking for another is done once there: meeting it is up to the
+            // meetings. One its god set on a rival keeps after it until they meet (ADR-062): the hunt
+            // finds it a new way next tick.
+            if (activity.TargetCreatureId is { } hunted && CreatureBrain.IsHunting(creature, hunted))
+            {
+                return TreeStatus.Running;
+            }
+
             if (activity.Action is CreatureAction.Fight or CreatureAction.Befriend)
             {
                 return TreeStatus.Succeeded;
@@ -108,6 +122,35 @@ public sealed class CreatureTree
 
         _deeds.Complete(world, creature, events);
         return TreeStatus.Succeeded;
+    }
+
+    /// <summary>
+    /// Keeps a commanded hunt on its rival's trail (ADR-062): about once a second, and whenever the
+    /// way runs out, it re-plans to where the rival is now. It gives up when its time runs out or
+    /// the rival cannot be reached.
+    /// </summary>
+    /// <returns>Why it gave up, or <c>null</c> while it hunts (or does not hunt at all).</returns>
+    private static GiveUpReason? Hunt(WorldState world, CreatureState creature)
+    {
+        var activity = creature.Activity;
+        if (activity.TargetCreatureId is not { } id || !CreatureBrain.IsHunting(creature, id) || world.Creatures.Find(c => c.Id == id) is not { } rival)
+        {
+            return null;
+        }
+
+        if (--activity.TicksLeft <= 0)
+        {
+            return GiveUpReason.OtherGone;
+        }
+
+        var moved = MathF.Abs(rival.Position.X - activity.Target.X) + MathF.Abs(rival.Position.Z - activity.Target.Z);
+        var due = (world.Tick + creature.Id) % SimulationTime.TicksPerSecond == 0 && moved > 10f;
+        if ((due || activity.Path.Count == 0) && !CreatureBrain.Chase(world, creature, rival))
+        {
+            return GiveUpReason.OtherGone;
+        }
+
+        return null;
     }
 
     /// <summary>What the tree is doing, for the debug panel: its interrupt, its guard and where the sequence stands.</summary>

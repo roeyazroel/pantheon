@@ -49,7 +49,7 @@ public sealed class CreatureRivalryAiTests
         PantheonWorlds.SetStatus(world, 1, 2, DiplomaticStatus.War);
         var confront = ai.Evaluate(world, tyrant).Single(c => c.Reason.StartsWith("confront", System.StringComparison.Ordinal));
 
-        Assert.Equal(AiActionKind.SendCreature, confront.Kind);
+        Assert.Equal(AiActionKind.SetCreatureOn, confront.Kind);
         Assert.Equal(mine.Position, confront.Target);
         var profile = PantheonWorlds.Profile(Domain.Gods.GodPersonality.Tyrant);
         Assert.Equal(profile.SendCreature * ((profile.Protect * 0.6f) + (0.5f * profile.Aggression)), confront.Value, 3);

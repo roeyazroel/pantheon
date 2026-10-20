@@ -33,6 +33,12 @@ public enum CreatureCommandRejection
 
     /// <summary>The Creature cannot reach the target over land.</summary>
     Unreachable,
+
+    /// <summary>No rival Creature is near where the god pointed (ADR-062).</summary>
+    NoRivalThere,
+
+    /// <summary>A treaty between the gods forbids their Creatures to fight (ADR-025).</summary>
+    Sworn,
 }
 
 /// <summary>The outcome of a Creature command.</summary>
@@ -112,6 +118,7 @@ public sealed class CreatureAuthority
             CreatureCommandKind.Reward => Judge(world, creature, CreatureFeedback.Rewarded, events),
             CreatureCommandKind.Punish => Judge(world, creature, CreatureFeedback.Punished, events),
             CreatureCommandKind.GoTo => GoTo(world, creature, command.Target),
+            CreatureCommandKind.Fight => Fight(world, creature, command.Target),
         };
     }
 
@@ -188,6 +195,38 @@ public sealed class CreatureAuthority
     }
 
     /// <summary>Sends the Creature to a place.</summary>
+    /// <summary>
+    /// Sets the Creature on the rival nearest a place (ADR-062): it hunts it down, re-planning as it
+    /// moves, and falls on it when they meet, unless a treaty binds their gods.
+    /// </summary>
+    private CreatureCommandResult Fight(WorldState world, CreatureState creature, GroundPosition target)
+    {
+        CreatureState? rival = null;
+        var nearest = _rules.Bonds.HuntReach;
+        foreach (var other in world.Creatures)
+        {
+            var distance = MathF.Sqrt(((other.Position.X - target.X) * (other.Position.X - target.X)) + ((other.Position.Z - target.Z) * (other.Position.Z - target.Z)));
+            if (other.GodId != creature.GodId && other.Activity.Phase != CreaturePhase.Banished && distance <= nearest)
+            {
+                (rival, nearest) = (other, distance);
+            }
+        }
+
+        if (rival is null)
+        {
+            return new CreatureCommandResult(CreatureCommandRejection.NoRivalThere);
+        }
+
+        if (Politics.TreatyModel.SparesCreatures(world, creature.GodId, rival.GodId))
+        {
+            return new CreatureCommandResult(CreatureCommandRejection.Sworn);
+        }
+
+        return _brain.Hunt(world, creature, rival)
+            ? new CreatureCommandResult(CreatureCommandRejection.None)
+            : new CreatureCommandResult(CreatureCommandRejection.Unreachable);
+    }
+
     private CreatureCommandResult GoTo(WorldState world, CreatureState creature, GroundPosition target)
     {
         if (!world.Regions.TryGetRegionIdAt(target.X, target.Z, out _))

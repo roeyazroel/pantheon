@@ -377,6 +377,7 @@ covers:
 | Look at your Creature and follow it (the camera turns to its face; move the view to let go) | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
+| Set your Creature on the rival Creature nearest the cursor, to hunt it down and fight it | Shift+V (or Fight on its card, then click near the rival) |
 | Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
 | Your hand takes an offering from a village that follows you (R gives it) | Ctrl+R |
 | Show or hide the diplomacy panel | P |
@@ -1211,10 +1212,16 @@ Every god's Creature roams the same island, and they remember each other.
   - A friend who attacks is a betrayer.
   - Friends whose gods go to war will not fight each other, and you are told when yours refuses.
   - A Creature that attacks your followers becomes your Creature's rival.
-- **Fights.** Two Creatures fight face to face, their health on their labels, until one gives up.
+- **Setting it on a rival.** Fight on Bramble's card, then a click near another god's Creature (or
+  Shift+V at the cursor), sets Bramble on it (ADR-062): it hunts the rival down for up to a minute
+  and a half, following it as it moves, and falls on it when they meet. A Creature non-aggression
+  treaty forbids it. Outside a war, the other god holds the attack against you. AI gods at war set
+  their Creatures on their enemies' the same way.
+- **Fights.** Two Creatures box face to face until one gives up: each blow lands with sparks and
+  dust, and a health bar over each head shows how it goes.
   Strength (its level) and combat skill (it grows with every fight) decide it.
   - A kind winner may let the loser go.
-  - Otherwise the loser is banished for a minute, scarred (the scars show on its flanks), less
+  - Otherwise the loser falls flat on its back, then is banished for a minute, scarred (the scars show on its flanks), less
     loyal and set back towards its next level, and its god holds the defeat against the winner's.
   - People of the winner's god who saw it believe more; the loser's doubt.
   - A fight that lasts 40 seconds is a draw.
@@ -1576,6 +1583,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
 | `--title-page=new\|worlds\|together\|settings` | Open the title screen on a page (for captures, ADR-060). |
+| `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -1700,7 +1708,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-40-animal-creatures.md](.docs/milestone-15-part-40-animal-creatures.md).
+[.docs/milestone-15-part-41-creature-fights.md](.docs/milestone-15-part-41-creature-fights.md).
 
 ## Contributing
 

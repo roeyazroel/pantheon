@@ -1718,6 +1718,17 @@ has the rules with their shipped values and the measured runs.
   personality in the `MeetsCreature` or `MeetsEnemyCreature` situation (gods at war). The answers
   make a fight, a game, a greeting, a flight or nothing. Creatures in sight are also options in the
   brain's ordinary decisions, to seek or flee.
+- **Fights on command** (ADR-062): `CreatureAuthority` takes `CreatureCommandKind.Fight` at a
+  place and picks the rival nearest it within `HuntReach`, unless a treaty binds the gods;
+  `CreatureBrain.Hunt` sets the Creature after it (`Commanded`, `Travelling`, `HuntSeconds` to
+  run); `CreatureTree` re-plans the way to the rival about once a second and when the way runs out
+  (`CreatureBrain.Chase`), and gives up when time runs out or the rival is gone. A hunter meets its
+  rival whatever their cooldown and falls on it; outside a war the attacked god's ledger records
+  `CreatureAttacked`. The AI gods' confrontations at war use the hunt (`AiActionKind.SetCreatureOn`).
+  The client aims Fight from the Creature card (a ring of the reach at the cursor) or Shift+V, and
+  `FightEffects` shows a fight: a health bar over each fighter (`health_bar.gdshader`), sparks and
+  dust as each blow lands (`AnimalMotion.Blows`, `MiracleLayers.Impact`), and the loser falling
+  (`AnimalMotion.Fallen`) before it is banished from sight.
 - **Combat** (`CreatureCombat`, every tick): blows by strength × combat skill with jitter from a
   stream derived from the seed and the tick. It ends in a banishment (scar, loyalty, experience,
   witnesses' belief, the god's `CreatureDefeated` memory), mercy, a draw or a broken-off fight.

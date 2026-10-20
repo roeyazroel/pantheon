@@ -136,6 +136,10 @@
   // one within FleeRadius.
   "Bonds": {
     "MeetRadius": 40.0,
+    // A fight its god commands (ADR-062): the rival nearest where the god points, within HuntReach
+    // metres, is hunted for at most HuntSeconds; the Creature re-plans its way as the rival moves.
+    "HuntReach": 80.0,
+    "HuntSeconds": 90.0,
     "MeetCooldownSeconds": 120.0,
     "SeekRadius": 400.0,
     "FleeRadius": 150.0,
