@@ -50,6 +50,12 @@ public sealed record GameSettings
     /// <summary>The Claude model asked unless the player chooses another.</summary>
     public const string DefaultClaudeModel = "claude-opus-5-5";
 
+    /// <summary>The GPT model asked unless the player chooses another (ADR-067).</summary>
+    public const string DefaultOpenAIModel = "gpt-6.1-sol";
+
+    /// <summary>The Gemini model asked unless the player chooses another (ADR-067).</summary>
+    public const string DefaultGeminiModel = "gemini-3.8-flash";
+
     /// <summary>Where a local model is served unless the player says otherwise.</summary>
     public const string DefaultLocalUrl = "http://localhost:11434";
 
@@ -125,13 +131,19 @@ public sealed record GameSettings
     public float AmbienceVolume { get; init; } = 0.6f;
 
     /// <summary>
-    /// Who gives the rival gods their minds (ADR-065): the scribes (offline, the default), Claude or a
-    /// local model. The Anthropic key is not kept here but on its own in the profile.
+    /// Who gives the rival gods their minds (ADR-065, ADR-067): the scribes (offline, the default),
+    /// Claude, GPT, Gemini or a local model. The keys are not kept here but on their own in the profile.
     /// </summary>
     public Minds.MindProvider Minds { get; init; } = Pantheon.Game.Minds.MindProvider.Scribes;
 
     /// <summary>The Claude model asked, one of <c>minds.json</c>'s.</summary>
     public string ClaudeModel { get; init; } = DefaultClaudeModel;
+
+    /// <summary>The GPT model asked, one of <c>minds.json</c>'s (ADR-067).</summary>
+    public string OpenAIModel { get; init; } = DefaultOpenAIModel;
+
+    /// <summary>The Gemini model asked, one of <c>minds.json</c>'s (ADR-067).</summary>
+    public string GeminiModel { get; init; } = DefaultGeminiModel;
 
     /// <summary>Where the local model is served.</summary>
     public string LocalUrl { get; init; } = DefaultLocalUrl;
@@ -157,6 +169,8 @@ public sealed record GameSettings
         AmbienceVolume = Range(AmbienceVolume, 0f, 1f, 0.6f),
         Minds = Enum.IsDefined(Minds) ? Minds : Pantheon.Game.Minds.MindProvider.Scribes,
         ClaudeModel = string.IsNullOrWhiteSpace(ClaudeModel) ? DefaultClaudeModel : ClaudeModel.Trim(),
+        OpenAIModel = string.IsNullOrWhiteSpace(OpenAIModel) ? DefaultOpenAIModel : OpenAIModel.Trim(),
+        GeminiModel = string.IsNullOrWhiteSpace(GeminiModel) ? DefaultGeminiModel : GeminiModel.Trim(),
         LocalUrl = Uri.TryCreate(LocalUrl?.Trim(), UriKind.Absolute, out var url) && (url.Scheme == Uri.UriSchemeHttp || url.Scheme == Uri.UriSchemeHttps) ? LocalUrl.Trim() : DefaultLocalUrl,
         LocalModel = string.IsNullOrWhiteSpace(LocalModel) ? DefaultLocalModel : LocalModel.Trim(),
     };

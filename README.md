@@ -676,7 +676,17 @@ Tyrant may be quicker to war than most and another slower to forgive.
   - Choose the model: Claude Opus 5.5 (the default), Sonnet 5.5, Haiku 5.5 or Fable 5.1.
   - The key is kept on this computer only, in your profile, apart from your other settings, and
     is sent only to Anthropic, with the gods' questions. The questions are billed to your
-    Anthropic account: one for each world made.
+    Anthropic account: one for each world made, and one for each thing you say to a god.
+- **GPT, by OpenAI** (ADR-067). Enter your own OpenAI key, from platform.openai.com, or set
+  `OPENAI_API_KEY`. Choose GPT-6.1 Sol (the default), GPT-6 Astra (the most capable) or GPT-6
+  Luna (the quickest and cheapest). Questions are billed to your OpenAI account, and nothing is
+  stored on OpenAI's side.
+- **Gemini, by Google** (ADR-067). Enter your own Gemini API key, from aistudio.google.com, or set
+  `GEMINI_API_KEY` (or `GOOGLE_API_KEY`). Choose Gemini 3.8 Flash (the default), Gemini 4 Argon
+  (the most capable) or Gemini 3.5 Flash-Lite (the quickest and cheapest). Questions are billed to
+  your Google account, or count against its free quota.
+- Each key is kept on this computer only, in your profile, apart from the others and from your
+  settings, and goes only to its own provider.
 - **A model on this computer**, served by [Ollama](https://ollama.com). Install it, pull a model
   (for example `ollama pull llama3.2`), and give its address (`http://localhost:11434`) and the
   model's name. Find lists the models your server has. Nothing leaves your computer.
@@ -698,7 +708,7 @@ gods are everyone's.
 Press Speak on a god's card in the diplomacy panel (P) to talk with it; the world waits while you
 do (ADR-066).
 
-- **With a model** (Claude or one on your computer), type your own words or pick one of three
+- **With a model** (Claude, GPT, Gemini or one on your computer), type your own words or pick one of three
   replies the god's mind suggests. The god answers in its own voice.
 - **Without one,** pick what to ask: "What do you want?", an alliance, peace, or a treaty. The god
   answers in character.
@@ -1426,7 +1436,7 @@ vegetation and terrain quality take effect when the game next starts. Three sett
 camera (ADR-058): panning at the window's edge (off unless you turn it on), whether a trackpad's
 two-finger scroll zooms instead of panning, and the camera's speed. The interface size (0.75–1.5)
 scales every panel on top of the window's own stretch (ADR-059). The Minds tab chooses who writes
-each new world's rival gods: the scribes, Claude or a model on this computer (see
+each new world's rival gods: the scribes, Claude, GPT, Gemini or a model on this computer (see
 [The gods' minds](#the-gods-minds), ADR-065).
 
 The simulation keeps to its budget, 6 ms a frame unless you choose another (2–16 ms). When a big
@@ -1668,7 +1678,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--settings-page=on\|off` | Open the settings page at the start. |
 | `--tutorial=on\|<step>` | Start the tutorial, or at a step from 1 to 15 (for captures, ADR-064). |
 | `--title-page=new\|worlds\|together\|settings\|minds` | Open the title screen on a page; `minds` is the settings' Minds tab (for captures, ADR-060, ADR-065). |
-| `--minds=scribes\|claude\|local` | Who writes the gods of new worlds in this run, over the settings' choice (ADR-065). |
+| `--minds=scribes\|claude\|openai\|gemini\|local` | Who writes the gods of new worlds, and speaks for them, in this run, over the settings' choice (ADR-065, ADR-067). |
 | `--pantheon=on\|off` | Bear the world's gods anew at the start, by the minds chosen, and show their page (ADR-065). |
 | `--mind-check=on\|off` | Ask the chosen model for a greeting at the start and print its answer (ADR-065). |
 | `--talk=<god>` | Talk with a rival god (by its number, 2 or more) at the start (ADR-066). |
@@ -1788,8 +1798,9 @@ src/
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
   Pantheon.Networking/    The multiplayer protocol, its codecs and the transport contract (ADR-003, ADR-018)
-  Pantheon.Oracle/        The language models behind the gods' minds: Claude through Anthropic's SDK, and a
-                          local model through Ollama's API (ADR-065)
+  Pantheon.Oracle/        The language models behind the gods' minds: Claude through Anthropic's SDK, GPT
+                          through OpenAI's Responses API, Gemini through generateContent, and a local
+                          model through Ollama's API (ADR-065, ADR-067)
   Pantheon.Tests/         xUnit tests
 docs/                 The owner's specification (PANTHEON_SPEC.md, the source of truth), the progress
                       summary (PROGRESS_SUMMARY.md), the vision summary (GAME_SPEC.md), architecture
@@ -1802,7 +1813,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-45-talking-to-the-gods.md](.docs/milestone-15-part-45-talking-to-the-gods.md).
+[.docs/milestone-15-part-46-openai-and-gemini.md](.docs/milestone-15-part-46-openai-and-gemini.md).
 
 ## Contributing
 

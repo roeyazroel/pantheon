@@ -19,8 +19,10 @@ internal static class Startup
     // The profile's key for the settings.
     private const string SettingsKey = "settings";
 
-    // The profile's key for the player's Anthropic key (ADR-065), kept apart from the settings so it is never written with them.
+    // The profile's keys for the player's own model keys (ADR-065, ADR-067), kept apart from the settings so they are never written with them.
     private const string AnthropicKeyKey = "anthropic_key";
+    private const string OpenAIKeyKey = "openai_key";
+    private const string GeminiKeyKey = "gemini_key";
 
     private static IProfileStore? _profile;
 
@@ -107,22 +109,37 @@ internal static class Startup
     }
 
     /// <summary>
-    /// The player's own Anthropic key (ADR-065), kept in the profile on this computer only, apart from
-    /// the settings; empty when they gave none. It goes nowhere but to Anthropic, with Claude's questions.
+    /// The player's own keys for Claude, GPT and Gemini (ADR-065, ADR-067), kept in the profile on this
+    /// computer only, apart from the settings; each empty when they gave none. A key goes nowhere but
+    /// to its provider, with the gods' questions.
     /// </summary>
-    public static string AnthropicKey
+    public static Pantheon.Game.Minds.MindKeys Keys => new(Profile.ReadValue(AnthropicKeyKey), Profile.ReadValue(OpenAIKeyKey), Profile.ReadValue(GeminiKeyKey));
+
+    /// <summary>Keeps a provider's key in the profile.</summary>
+    /// <param name="provider">Claude, GPT or Gemini.</param>
+    /// <param name="key">The key; empty to forget it.</param>
+    public static void KeepKey(Pantheon.Game.Minds.MindProvider provider, string key)
     {
-        get => Profile.ReadValue(AnthropicKeyKey) ?? string.Empty;
-        set
+        ArgumentNullException.ThrowIfNull(key);
+        var name = provider switch
         {
-            try
-            {
-                Profile.WriteValue(AnthropicKeyKey, value.Trim());
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
-            {
-                GD.PushWarning($"The Anthropic key could not be kept: {exception.Message}");
-            }
+            Pantheon.Game.Minds.MindProvider.Claude => AnthropicKeyKey,
+            Pantheon.Game.Minds.MindProvider.OpenAI => OpenAIKeyKey,
+            Pantheon.Game.Minds.MindProvider.Gemini => GeminiKeyKey,
+            Pantheon.Game.Minds.MindProvider.Scribes or Pantheon.Game.Minds.MindProvider.Local => null,
+        };
+        if (name is null)
+        {
+            return;
+        }
+
+        try
+        {
+            Profile.WriteValue(name, key.Trim());
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
+        {
+            GD.PushWarning($"The key could not be kept: {exception.Message}");
         }
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -160,30 +161,195 @@ public sealed class OracleTests
     }
 
     [Fact]
-    public void TheSettings_OpenTheChosenModel()
+    public void TheSettings_OpenTheChosenModel_WithItsOwnKey()
     {
         var minds = TestContent.Minds;
+        var keys = new MindKeys("sk-ant-test", "sk-openai-test", "AIza-test");
 
-        Assert.Null(MindFactory.Open(new GameSettings(), "sk-ant-test", minds, out var none));
+        Assert.Null(MindFactory.Open(new GameSettings(), keys, minds, out var none));
         Assert.Null(none);
-        using var claude = (AnthropicLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Claude, ClaudeModel = "claude-haiku-5-5" }, "sk-ant-test", minds, out _)!;
+        using var claude = (AnthropicLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Claude, ClaudeModel = "claude-haiku-5-5" }, keys, minds, out _)!;
         Assert.Equal("Claude Haiku 5.5", claude.Name);
-        using var unknown = (AnthropicLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Claude, ClaudeModel = "claude-nonsense" }, "sk-ant-test", minds, out _)!;
+        using var unknown = (AnthropicLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Claude, ClaudeModel = "claude-nonsense" }, keys, minds, out _)!;
         Assert.Equal(minds.ClaudeModels[0].Name, unknown.Name);
-        using var local = (LocalLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Local, LocalModel = "qwen3:8b" }, null, minds, out _)!;
+        using var gpt = (OpenAILanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.OpenAI, OpenAIModel = "gpt-6-luna" }, keys, minds, out _)!;
+        Assert.Equal("GPT-6 Luna", gpt.Name);
+        using var gemini = (GeminiLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Gemini }, keys, minds, out _)!;
+        Assert.Equal("Gemini 3.8 Flash", gemini.Name);
+        using var local = (LocalLanguageModel)MindFactory.Open(new GameSettings { Minds = MindProvider.Local, LocalModel = "qwen3:8b" }, MindKeys.None, minds, out _)!;
         Assert.Equal("qwen3:8b (on this computer)", local.Name);
     }
 
-    [Fact]
-    public void ClaudeWithoutAKey_IsNotOpened_AndSaysWhy()
+    [Theory]
+    [InlineData(MindProvider.Claude, "needs your Anthropic key")]
+    [InlineData(MindProvider.OpenAI, "needs your OpenAI key")]
+    [InlineData(MindProvider.Gemini, "needs your Gemini API key")]
+    public void AnOnlineModelWithoutItsKey_IsNotOpened_AndSaysWhy(MindProvider provider, string why)
     {
-        if (Environment.GetEnvironmentVariable(MindFactory.KeyVariable) is { Length: > 0 })
+        if (MindFactory.KeyVariables(provider).Any(v => Environment.GetEnvironmentVariable(v) is { Length: > 0 }))
         {
             return;
         }
 
-        Assert.Null(MindFactory.Open(new GameSettings { Minds = MindProvider.Claude }, "  ", TestContent.Minds, out var problem));
-        Assert.Contains("needs your Anthropic key", problem, StringComparison.Ordinal);
+        // Another provider's key is not this one's.
+        var keys = new MindKeys(provider == MindProvider.Claude ? null : "sk-ant-test", provider == MindProvider.OpenAI ? "  " : "sk-openai-test", provider == MindProvider.Gemini ? null : "AIza-test");
+
+        Assert.Null(MindFactory.Open(new GameSettings { Minds = provider }, keys, TestContent.Minds, out var problem));
+        Assert.Contains(why, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Keys_AreEachProvidersOwn()
+    {
+        var keys = MindKeys.None.With(MindProvider.OpenAI, "sk-openai").With(MindProvider.Gemini, "AIza").With(MindProvider.Local, "ignored");
+
+        Assert.Equal(new MindKeys(null, "sk-openai", "AIza"), keys);
+        Assert.Null(keys.For(MindProvider.Claude));
+        Assert.Null(keys.For(MindProvider.Local));
+        Assert.Equal(["GEMINI_API_KEY", "GOOGLE_API_KEY"], MindFactory.KeyVariables(MindProvider.Gemini));
+    }
+
+    /// <summary>GPT's answer of some text, as the Responses API sends it, after a reasoning item.</summary>
+    private static string GptResponse(string text) => new JsonObject
+    {
+        ["id"] = "resp_test",
+        ["object"] = "response",
+        ["status"] = "completed",
+        ["output"] = new JsonArray(
+            new JsonObject { ["type"] = "reasoning", ["summary"] = new JsonArray() },
+            new JsonObject { ["type"] = "message", ["role"] = "assistant", ["content"] = new JsonArray(new JsonObject { ["type"] = "output_text", ["text"] = text }) }),
+        ["usage"] = new JsonObject { ["input_tokens"] = 200, ["output_tokens"] = 40 },
+    }.ToJsonString();
+
+    [Fact]
+    public async Task Gpt_IsAskedThroughTheResponsesApi_ForStrictJsonOfTheSchema()
+    {
+        var server = new StubServer(_ => (HttpStatusCode.OK, GptResponse("{\"greeting\":\"Greetings.\"}")));
+        using var model = new OpenAILanguageModel("sk-openai-test", "gpt-6.1-sol", "GPT-6.1 Sol", Timeout, new HttpClient(server));
+
+        var answer = await model.Ask(Question with { Turns = [new ModelTurn(false, "Hi."), new ModelTurn(true, "{}"), new ModelTurn(false, "Again.")] }, CancellationToken.None);
+
+        Assert.Equal(ModelAnswer.Of("{\"greeting\":\"Greetings.\"}", 200, 40), answer);
+        var request = Assert.Single(server.Requests);
+        Assert.Equal("https://api.openai.com/v1/responses", request.Uri.ToString());
+        Assert.Equal("Bearer sk-openai-test", request.Header("authorization"));
+        var body = JsonNode.Parse(request.Body)!;
+        Assert.Equal("gpt-6.1-sol", body["model"]!.GetValue<string>());
+        Assert.Equal(Question.Instructions, body["instructions"]!.GetValue<string>());
+        Assert.Equal(["user", "assistant", "user"], body["input"]!.AsArray().Select(m => m!["role"]!.GetValue<string>()));
+        Assert.Equal("low", body["reasoning"]!["effort"]!.GetValue<string>());
+        Assert.Equal(Question.MaxTokens, body["max_output_tokens"]!.GetValue<int>());
+        Assert.Equal("json_schema", body["text"]!["format"]!["type"]!.GetValue<string>());
+        Assert.True(body["text"]!["format"]!["strict"]!.GetValue<bool>());
+        Assert.Equal("greeting", body["text"]!["format"]!["schema"]!["required"]![0]!.GetValue<string>());
+        Assert.False(body["store"]!.GetValue<bool>());
+    }
+
+    [Theory]
+    [InlineData("{\"status\":\"incomplete\",\"incomplete_details\":{\"reason\":\"max_output_tokens\"},\"output\":[]}", ModelOutcome.CutShort)]
+    [InlineData("{\"status\":\"incomplete\",\"incomplete_details\":{\"reason\":\"content_filter\"},\"output\":[]}", ModelOutcome.Refused)]
+    [InlineData("{\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"content\":[{\"type\":\"refusal\",\"refusal\":\"No.\"}]}]}", ModelOutcome.Refused)]
+    [InlineData("{\"status\":\"completed\",\"output\":[]}", ModelOutcome.Failed)]
+    [InlineData("not json", ModelOutcome.Failed)]
+    public void GptThatDoesNotAnswer_GivesNoAnswer(string body, ModelOutcome outcome)
+    {
+        Assert.Equal(outcome, OpenAILanguageModel.Read(body).Outcome);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, "{\"error\":{\"message\":\"Incorrect API key\",\"code\":\"invalid_api_key\"}}", "OpenAI did not accept the key")]
+    [InlineData(HttpStatusCode.TooManyRequests, "{\"error\":{\"message\":\"quota\",\"code\":\"insufficient_quota\"}}", "no credit left")]
+    [InlineData(HttpStatusCode.NotFound, "{\"error\":{\"message\":\"no such model\"}}", "does not know the model gpt-6.1-sol")]
+    [InlineData(HttpStatusCode.BadRequest, "{\"error\":{\"message\":\"Invalid schema\"}}", "OpenAI refused the question: Invalid schema")]
+    public async Task GptsErrors_AreToldInWords(HttpStatusCode status, string body, string problem)
+    {
+        var server = new StubServer(_ => (status, body));
+        using var model = new OpenAILanguageModel("sk-openai-test", "gpt-6.1-sol", "GPT-6.1 Sol", Timeout, new HttpClient(server));
+
+        var answer = await model.Ask(Question, CancellationToken.None);
+
+        Assert.Equal(ModelOutcome.Failed, answer.Outcome);
+        Assert.Contains(problem, answer.Problem, StringComparison.Ordinal);
+    }
+
+    /// <summary>Gemini's answer of some text, as generateContent sends it, after a thought.</summary>
+    private static string GeminiResponse(string text, string finish = "STOP") => new JsonObject
+    {
+        ["candidates"] = new JsonArray(new JsonObject
+        {
+            ["content"] = new JsonObject
+            {
+                ["role"] = "model",
+                ["parts"] = new JsonArray(new JsonObject { ["text"] = "Let me think.", ["thought"] = true }, new JsonObject { ["text"] = text }),
+            },
+            ["finishReason"] = finish,
+        }),
+        ["usageMetadata"] = new JsonObject { ["promptTokenCount"] = 150, ["candidatesTokenCount"] = 25, ["thoughtsTokenCount"] = 90 },
+    }.ToJsonString();
+
+    [Fact]
+    public async Task Gemini_IsAskedThroughGenerateContent_ForJsonOfTheSchema()
+    {
+        var server = new StubServer(_ => (HttpStatusCode.OK, GeminiResponse("{\"greeting\":\"Be welcome.\"}")));
+        using var model = new GeminiLanguageModel("AIza-test", "gemini-3.8-flash", "Gemini 3.8 Flash", Timeout, new HttpClient(server));
+
+        var answer = await model.Ask(Question with { Effort = ModelEffort.Medium, Turns = [new ModelTurn(false, "Hi."), new ModelTurn(true, "{}"), new ModelTurn(false, "Again.")] }, CancellationToken.None);
+
+        Assert.Equal(ModelAnswer.Of("{\"greeting\":\"Be welcome.\"}", 150, 25), answer);
+        var request = Assert.Single(server.Requests);
+        Assert.Equal("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", request.Uri.ToString());
+        Assert.Equal("AIza-test", request.Header("x-goog-api-key"));
+        var body = JsonNode.Parse(request.Body)!;
+        Assert.Equal(Question.Instructions, body["systemInstruction"]!["parts"]![0]!["text"]!.GetValue<string>());
+        Assert.Equal(["user", "model", "user"], body["contents"]!.AsArray().Select(c => c!["role"]!.GetValue<string>()));
+        var config = body["generationConfig"]!;
+        Assert.Equal(Question.MaxTokens, config["maxOutputTokens"]!.GetValue<int>());
+        Assert.Equal("APPLICATION_JSON", config["responseFormat"]!["text"]!["mimeType"]!.GetValue<string>());
+        Assert.Equal("greeting", config["responseFormat"]!["text"]!["schema"]!["required"]![0]!.GetValue<string>());
+        Assert.Equal("medium", config["thinkingConfig"]!["thinkingLevel"]!.GetValue<string>());
+    }
+
+    [Theory]
+    [InlineData("MAX_TOKENS", ModelOutcome.CutShort)]
+    [InlineData("SAFETY", ModelOutcome.Refused)]
+    [InlineData("PROHIBITED_CONTENT", ModelOutcome.Refused)]
+    public void GeminiThatStopsShort_GivesNoAnswer(string finish, ModelOutcome outcome)
+    {
+        Assert.Equal(outcome, GeminiLanguageModel.Read(GeminiResponse("{\"gre", finish)).Outcome);
+    }
+
+    [Fact]
+    public void GeminiThatBlocksTheQuestion_OrSaysOnlyThoughts_GivesNoAnswer()
+    {
+        Assert.Equal(ModelOutcome.Refused, GeminiLanguageModel.Read("{\"promptFeedback\":{\"blockReason\":\"SAFETY\"}}").Outcome);
+        Assert.Equal(ModelOutcome.Failed, GeminiLanguageModel.Read("{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Hmm.\",\"thought\":true}]},\"finishReason\":\"STOP\"}]}").Outcome);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadRequest, "{\"error\":{\"code\":400,\"message\":\"API key not valid. Please pass a valid API key.\",\"status\":\"INVALID_ARGUMENT\"}}", "Google did not accept the key")]
+    [InlineData(HttpStatusCode.TooManyRequests, "{\"error\":{\"code\":429,\"status\":\"RESOURCE_EXHAUSTED\"}}", "Google asks to wait")]
+    [InlineData(HttpStatusCode.NotFound, "{\"error\":{\"code\":404,\"status\":\"NOT_FOUND\"}}", "does not know the model gemini-3.8-flash")]
+    [InlineData(HttpStatusCode.BadRequest, "{\"error\":{\"code\":400,\"message\":\"Invalid JSON payload\"}}", "Gemini refused the question: Invalid JSON payload")]
+    public async Task GeminisErrors_AreToldInWords(HttpStatusCode status, string body, string problem)
+    {
+        var server = new StubServer(_ => (status, body));
+        using var model = new GeminiLanguageModel("AIza-test", "gemini-3.8-flash", "Gemini 3.8 Flash", Timeout, new HttpClient(server));
+
+        var answer = await model.Ask(Question, CancellationToken.None);
+
+        Assert.Equal(ModelOutcome.Failed, answer.Outcome);
+        Assert.Contains(problem, answer.Problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task NoOnlineServer_SaysToCheckTheConnection()
+    {
+        var server = new StubServer(_ => throw new HttpRequestException("Connection refused"));
+        using var gpt = new OpenAILanguageModel("sk-openai-test", "gpt-6.1-sol", "GPT-6.1 Sol", Timeout, new HttpClient(server));
+        using var gemini = new GeminiLanguageModel("AIza-test", "gemini-3.8-flash", "Gemini 3.8 Flash", Timeout, new HttpClient(server));
+
+        Assert.Contains("is this computer online?", (await gpt.Ask(Question, CancellationToken.None)).Problem, StringComparison.Ordinal);
+        Assert.Contains("is this computer online?", (await gemini.Ask(Question, CancellationToken.None)).Problem, StringComparison.Ordinal);
     }
 
     [Fact]

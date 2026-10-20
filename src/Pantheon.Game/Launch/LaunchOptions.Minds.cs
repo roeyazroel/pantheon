@@ -34,7 +34,7 @@ public sealed partial record LaunchOptions
             case "minds":
                 return Enum.TryParse<MindProvider>(trimmed, ignoreCase: true, out var minds) && Enum.IsDefined(minds) && !int.TryParse(trimmed, out _)
                     ? options with { Minds = minds }
-                    : Warn(options, warnings, $"'--minds' needs scribes, claude or local, got '{value}'.");
+                    : Warn(options, warnings, $"'--minds' needs scribes, claude, openai, gemini or local, got '{value}'.");
             case "pantheon":
                 return OnOff(value) is { } open ? options with { PantheonPage = open } : Warn(options, warnings, $"'--pantheon' needs on or off, got '{value}'.");
             case "mind-check":

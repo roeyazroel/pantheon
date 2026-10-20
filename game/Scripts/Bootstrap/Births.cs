@@ -57,7 +57,7 @@ internal sealed class Births
             return null;
         }
 
-        return MindFactory.Open(_settings() with { Minds = Provider }, Startup.AnthropicKey, _minds, out problem);
+        return MindFactory.Open(_settings() with { Minds = Provider }, Startup.Keys, _minds, out problem);
     }
 
     /// <summary>The scribes' gods for a world, at once: for worlds made without asking (F2, the tutorial).</summary>
@@ -77,7 +77,7 @@ internal sealed class Births
             return;
         }
 
-        var model = MindFactory.Open(_settings() with { Minds = Provider }, Startup.AnthropicKey, _minds, out var problem);
+        var model = MindFactory.Open(_settings() with { Minds = Provider }, Startup.Keys, _minds, out var problem);
         if (model is null)
         {
             report("Minds: " + (problem ?? "the scribes write the gods; there is no model to ask"));
@@ -111,7 +111,7 @@ internal sealed class Births
             return;
         }
 
-        var model = MindFactory.Open(_settings() with { Minds = Provider }, Startup.AnthropicKey, _minds, out var problem);
+        var model = MindFactory.Open(_settings() with { Minds = Provider }, Startup.Keys, _minds, out var problem);
         if (model is null)
         {
             make(Scribed(seed, options), problem);

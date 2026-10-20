@@ -7,8 +7,9 @@ using Pantheon.Persistence;
 namespace Pantheon.Game.Minds;
 
 /// <summary>
-/// The gods' minds (ADR-065), from <c>game/Data/minds.json</c>: the Claude models offered, the local
-/// model's defaults, how the pantheon is asked for, and the scribes' lore for gods written offline.
+/// The gods' minds (ADR-065, ADR-067), from <c>game/Data/minds.json</c>: the Claude, GPT and Gemini
+/// models offered, the local model's defaults, how the pantheon is asked for, how talk works, and the
+/// scribes' lore for gods written offline.
 /// </summary>
 public sealed record MindContent
 {
@@ -16,7 +17,13 @@ public sealed record MindContent
     public const string FileName = "minds.json";
 
     /// <summary>The Claude models offered, the default first.</summary>
-    public required IReadOnlyList<ClaudeModelChoice> ClaudeModels { get; init; }
+    public required IReadOnlyList<ModelChoice> ClaudeModels { get; init; }
+
+    /// <summary>OpenAI's GPT models offered, the default first (ADR-067).</summary>
+    public required IReadOnlyList<ModelChoice> OpenAIModels { get; init; }
+
+    /// <summary>Google's Gemini models offered, the default first (ADR-067).</summary>
+    public required IReadOnlyList<ModelChoice> GeminiModels { get; init; }
 
     /// <summary>Where a local model is served unless the player says otherwise.</summary>
     public required string LocalUrl { get; init; }
@@ -53,14 +60,30 @@ public sealed record MindContent
     /// <summary>The model chosen, or the default when the choice is not offered.</summary>
     /// <param name="id">The model's id.</param>
     /// <returns>The model.</returns>
-    public ClaudeModelChoice ClaudeModel(string? id) => ClaudeModels.FirstOrDefault(m => string.Equals(m.Id, id, StringComparison.Ordinal)) ?? ClaudeModels[0];
+    public ModelChoice ClaudeModel(string? id) => Choose(ClaudeModels, id);
+
+    /// <summary>The GPT model chosen, or the default when the choice is not offered.</summary>
+    /// <param name="id">The model's id.</param>
+    /// <returns>The model.</returns>
+    public ModelChoice OpenAIModel(string? id) => Choose(OpenAIModels, id);
+
+    /// <summary>The Gemini model chosen, or the default when the choice is not offered.</summary>
+    /// <param name="id">The model's id.</param>
+    /// <returns>The model.</returns>
+    public ModelChoice GeminiModel(string? id) => Choose(GeminiModels, id);
+
+    /// <summary>The model of an id among those offered, else the first.</summary>
+    private static ModelChoice Choose(IReadOnlyList<ModelChoice> models, string? id) => models.FirstOrDefault(m => string.Equals(m.Id, id, StringComparison.Ordinal)) ?? models[0];
 
     /// <summary>Throws when anything is missing or out of range.</summary>
     private void Validate()
     {
-        if (ClaudeModels.Count == 0 || ClaudeModels.Any(m => string.IsNullOrWhiteSpace(m.Id) || string.IsNullOrWhiteSpace(m.Name)) || ClaudeModels.Select(m => m.Id).Distinct(StringComparer.Ordinal).Count() != ClaudeModels.Count)
+        foreach (var (name, models) in new[] { (nameof(ClaudeModels), ClaudeModels), (nameof(OpenAIModels), OpenAIModels), (nameof(GeminiModels), GeminiModels) })
         {
-            throw new ContentFormatException($"{FileName}: ClaudeModels needs at least one model, each with its own id and a name.");
+            if (models.Count == 0 || models.Any(m => string.IsNullOrWhiteSpace(m.Id) || string.IsNullOrWhiteSpace(m.Name)) || models.Select(m => m.Id).Distinct(StringComparer.Ordinal).Count() != models.Count)
+            {
+                throw new ContentFormatException($"{FileName}: {name} needs at least one model, each with its own id and a name.");
+            }
         }
 
         if (!Uri.TryCreate(LocalUrl, UriKind.Absolute, out var url) || (url.Scheme != Uri.UriSchemeHttp && url.Scheme != Uri.UriSchemeHttps) || string.IsNullOrWhiteSpace(LocalModel))
@@ -78,10 +101,10 @@ public sealed record MindContent
     }
 }
 
-/// <summary>A Claude model the settings offer.</summary>
-public sealed record ClaudeModelChoice
+/// <summary>A model the settings offer: Claude, GPT or Gemini.</summary>
+public sealed record ModelChoice
 {
-    /// <summary>The model's id, for example <c>claude-opus-5-5</c>.</summary>
+    /// <summary>The model's id, for example <c>claude-opus-5-5</c>, <c>gpt-6.1-sol</c> or <c>gemini-3.8-flash</c>.</summary>
     public required string Id { get; init; }
 
     /// <summary>Its name, for example "Claude Opus 5.5".</summary>

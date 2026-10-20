@@ -10,9 +10,9 @@ using Pantheon.Oracle;
 namespace Pantheon.Client.UI.Flow;
 
 /// <summary>
-/// The settings' Minds tab (ADR-065): who gives the rival gods their minds (the scribes, Claude or a
-/// model on this computer), the player's own Anthropic key and model, the local model's address and
-/// name, and a test that asks the chosen model for a greeting.
+/// The settings' Minds tab (ADR-065, ADR-067): who gives the rival gods their minds (the scribes,
+/// Claude, GPT, Gemini or a model on this computer), the player's own key and model for each online
+/// provider, the local model's address and name, and a test that asks the chosen model for a greeting.
 /// </summary>
 internal static class MindsSettings
 {
@@ -20,6 +20,8 @@ internal static class MindsSettings
     [
         (MindProvider.Scribes, "The scribes (offline)", "The scribes write each world's gods from its seed: no network, and the same seed always gives the same gods."),
         (MindProvider.Claude, "Claude, by Anthropic", "Claude writes each world's gods: their names, histories and tempers. It needs your own Anthropic key, and its questions are billed to your Anthropic account."),
+        (MindProvider.OpenAI, "GPT, by OpenAI", "GPT writes each world's gods. It needs your own OpenAI key, and its questions are billed to your OpenAI account."),
+        (MindProvider.Gemini, "Gemini, by Google", "Gemini writes each world's gods. It needs your own Gemini API key, and its questions are billed to your Google account (or count against its free quota)."),
         (MindProvider.Local, "A model on this computer", "A model served by Ollama on this computer writes each world's gods. Install Ollama (ollama.com) and pull a model, for example: ollama pull llama3.2. Nothing leaves this computer."),
     ];
 
@@ -34,9 +36,18 @@ internal static class MindsSettings
         tab.AddChild(UiKit.Row("The gods' minds", choice));
         tab.AddChild(about);
 
-        var claude = Claude(menu);
+        var online = new (MindProvider Provider, VBoxContainer Rows)[]
+        {
+            (MindProvider.Claude, Online(menu, MindProvider.Claude, "sk-ant-…", "console.anthropic.com", m => m.ClaudeModels, s => s.ClaudeModel, (s, id) => s with { ClaudeModel = id })),
+            (MindProvider.OpenAI, Online(menu, MindProvider.OpenAI, "sk-…", "platform.openai.com", m => m.OpenAIModels, s => s.OpenAIModel, (s, id) => s with { OpenAIModel = id })),
+            (MindProvider.Gemini, Online(menu, MindProvider.Gemini, "AIza…", "aistudio.google.com", m => m.GeminiModels, s => s.GeminiModel, (s, id) => s with { GeminiModel = id })),
+        };
         var local = Local(menu);
-        tab.AddChild(claude);
+        foreach (var (_, rows) in online)
+        {
+            tab.AddChild(rows);
+        }
+
         tab.AddChild(local);
         var status = UiKit.Text(string.Empty, UiTheme.CaptionSize, UiTheme.Muted);
         var test = UiKit.Button("Test", () => Test(menu, status));
@@ -46,7 +57,11 @@ internal static class MindsSettings
 
         void Show(MindProvider provider)
         {
-            claude.Visible = provider == MindProvider.Claude;
+            foreach (var (shown, rows) in online)
+            {
+                rows.Visible = provider == shown;
+            }
+
             local.Visible = provider == MindProvider.Local;
             test.Visible = provider != MindProvider.Scribes;
             status.Text = string.Empty;
@@ -60,31 +75,42 @@ internal static class MindsSettings
         Show(menu.Settings.Minds);
     }
 
-    /// <summary>Claude's rows: the key and the model.</summary>
-    private static VBoxContainer Claude(MenuScreen menu)
+    /// <summary>An online provider's rows: the player's key and the model.</summary>
+    private static VBoxContainer Online(
+        MenuScreen menu,
+        MindProvider provider,
+        string hint,
+        string site,
+        Func<MindContent, System.Collections.Generic.IReadOnlyList<ModelChoice>> models,
+        Func<GameSettings, string> chosen,
+        Func<GameSettings, string, GameSettings> choose)
     {
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", 8);
-        var fromEnvironment = MindFactory.KeyOf(null) is not null;
-        var key = UiKit.Field(Startup.AnthropicKey, fromEnvironment ? $"using {MindFactory.KeyVariable} from your environment" : "sk-ant-…");
+        var variable = MindFactory.KeyVariables(provider).FirstOrDefault(v => System.Environment.GetEnvironmentVariable(v) is { Length: > 0 });
+        var key = UiKit.Field(Startup.Keys.For(provider) ?? string.Empty, variable is not null ? $"using {variable} from your environment" : hint);
         key.Secret = true;
-        void Keep() => Startup.AnthropicKey = key.Text;
+        void Keep() => Startup.KeepKey(provider, key.Text);
         key.TextSubmitted += _ => Keep();
         key.FocusExited += Keep;
-        column.AddChild(UiKit.Row("Anthropic key", key));
+        column.AddChild(UiKit.Row(Capital(MindFactory.KeyName(provider)), key));
         if (menu.Minds is { } minds)
         {
-            var models = UiKit.Choice(minds.ClaudeModels.Select(m => (m.Name, m.About)).ToList(), out var about);
-            models.Selected = Math.Max(0, minds.ClaudeModels.ToList().FindIndex(m => m.Id == menu.Settings.ClaudeModel));
-            about.Text = minds.ClaudeModels[models.Selected].About;
-            models.ItemSelected += index => menu.ChangeSettings(menu.Settings with { ClaudeModel = minds.ClaudeModels[(int)index].Id });
-            column.AddChild(UiKit.Row("Model", models));
+            var offered = models(minds);
+            var list = UiKit.Choice(offered.Select(m => (m.Name, m.About)).ToList(), out var about);
+            list.Selected = Math.Max(0, offered.ToList().FindIndex(m => m.Id == chosen(menu.Settings)));
+            about.Text = offered[list.Selected].About;
+            list.ItemSelected += index => menu.ChangeSettings(choose(menu.Settings, offered[(int)index].Id));
+            column.AddChild(UiKit.Row("Model", list));
             column.AddChild(about);
         }
 
-        column.AddChild(UiKit.Text("Your key is kept on this computer only, in your profile, apart from your other settings. It goes only to Anthropic, with the gods' questions. Create one at console.anthropic.com.", UiTheme.CaptionSize, UiTheme.Muted));
+        column.AddChild(UiKit.Text($"Your key is kept on this computer only, in your profile, apart from your other settings. It goes only to its provider, with the gods' questions. Create one at {site}.", UiTheme.CaptionSize, UiTheme.Muted));
         return column;
     }
+
+    /// <summary>A label with its first letter in capitals.</summary>
+    private static string Capital(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 
     /// <summary>The local model's rows: its address and its name, with the models the server has.</summary>
     private static VBoxContainer Local(MenuScreen menu)
@@ -158,7 +184,7 @@ internal static class MindsSettings
             return;
         }
 
-        var model = MindFactory.Open(menu.Settings, Startup.AnthropicKey, minds, out var problem);
+        var model = MindFactory.Open(menu.Settings, Startup.Keys, minds, out var problem);
         if (model is null)
         {
             status.Text = problem ?? "The scribes need no test.";

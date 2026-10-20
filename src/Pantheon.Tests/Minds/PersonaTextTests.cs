@@ -65,6 +65,10 @@ public sealed class PersonaTextTests
         var minds = TestContent.Minds;
 
         Assert.Equal(GameSettings.DefaultClaudeModel, minds.ClaudeModels[0].Id);
+        Assert.Equal(GameSettings.DefaultOpenAIModel, minds.OpenAIModels[0].Id);
+        Assert.Equal(GameSettings.DefaultGeminiModel, minds.GeminiModels[0].Id);
+        Assert.Equal(minds.GeminiModels[0], minds.GeminiModel("gemini-nonsense"));
+        Assert.Equal("GPT-6 Astra", minds.OpenAIModel("gpt-6-astra").Name);
         Assert.Equal(GameSettings.DefaultLocalModel, minds.LocalModel);
         Assert.Equal(GameSettings.DefaultLocalUrl, minds.LocalUrl);
         Assert.Equal(minds.ClaudeModels[0], minds.ClaudeModel("no-such-model"));
@@ -76,6 +80,8 @@ public sealed class PersonaTextTests
     [InlineData("\"LocalUrl\": \"http://localhost:11434\"", "\"LocalUrl\": \"ftp://nowhere\"")]
     [InlineData("\"Personality\": \"Warlord\"", "\"Personality\": \"Guardian\"")]
     [InlineData("\"BirthEffort\": \"Medium\"", "\"BirthEffort\": \"Frantic\"")]
+    [InlineData("{ \"Id\": \"gpt-6-astra\"", "{ \"Id\": \"gpt-6.1-sol\"")]
+    [InlineData("\"Id\": \"gemini-4-argon\", \"Name\": \"Gemini 4 Argon\"", "\"Id\": \"gemini-4-argon\", \"Name\": \"\"")]
     public void BrokenMinds_AreRefused(string shipped, string broken)
     {
         var text = System.IO.File.ReadAllText(System.IO.Path.Combine(TestContent.DataDirectory, MindContent.FileName));
@@ -87,18 +93,22 @@ public sealed class PersonaTextTests
     [Fact]
     public void TheMindsSettings_RoundTrip_AndComeBackIntoRange()
     {
-        var chosen = new GameSettings { Minds = MindProvider.Local, ClaudeModel = "claude-haiku-5-5", LocalUrl = "http://192.168.1.4:11434", LocalModel = "qwen3:8b" };
+        var chosen = new GameSettings { Minds = MindProvider.Local, ClaudeModel = "claude-haiku-5-5", OpenAIModel = "gpt-6-luna", GeminiModel = "gemini-4-argon", LocalUrl = "http://192.168.1.4:11434", LocalModel = "qwen3:8b" };
 
         Assert.Equal(chosen, GameSettings.Parse(chosen.Serialize()));
         Assert.Contains("\"Minds\": \"Local\"", chosen.Serialize(), StringComparison.Ordinal);
         var broken = GameSettings.Parse("{\"Minds\": \"Oracle\", \"LocalUrl\": \"not a url\", \"LocalModel\": \" \"}");
         Assert.Equal(new GameSettings(), broken);
         Assert.Equal(MindProvider.Claude, GameSettings.Parse("{\"minds\": \"claude\"}").Minds);
+        Assert.Equal(MindProvider.Gemini, GameSettings.Parse("{\"Minds\": \"Gemini\"}").Minds);
+        Assert.Equal(GameSettings.DefaultOpenAIModel, GameSettings.Parse("{\"OpenAIModel\": \" \"}").OpenAIModel);
     }
 
     [Fact]
     public void TheLaunchOptions_ChooseTheMindsAndOpenThePantheon()
     {
+        Assert.Equal(MindProvider.OpenAI, LaunchOptions.Parse(["--minds=openai"]).Minds);
+        Assert.Equal(MindProvider.Gemini, LaunchOptions.Parse(["--minds=gemini"]).Minds);
         var options = LaunchOptions.Parse(["--minds=claude", "--pantheon=on"]);
         var wrong = LaunchOptions.Parse(["--minds=oracle"]);
 
@@ -106,7 +116,7 @@ public sealed class PersonaTextTests
         Assert.True(options.PantheonPage);
         Assert.Empty(options.Warnings);
         Assert.Null(wrong.Minds);
-        Assert.Contains(wrong.Warnings, w => w.Contains("'--minds' needs scribes, claude or local", StringComparison.Ordinal));
+        Assert.Contains(wrong.Warnings, w => w.Contains("'--minds' needs scribes, claude, openai, gemini or local", StringComparison.Ordinal));
     }
 
     [Fact]

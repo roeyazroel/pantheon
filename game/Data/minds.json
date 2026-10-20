@@ -11,6 +11,22 @@
     { "Id": "claude-fable-5-1", "Name": "Claude Fable 5.1", "About": "The most capable, and the slowest and dearest." }
   ],
 
+  // OpenAI's GPT models (ADR-067), the default first: asked through the Responses API with the
+  // player's own OpenAI key.
+  "OpenAIModels": [
+    { "Id": "gpt-6.1-sol", "Name": "GPT-6.1 Sol", "About": "The default: close to the best, at a lower cost." },
+    { "Id": "gpt-6-astra", "Name": "GPT-6 Astra", "About": "OpenAI's most capable, and the dearest." },
+    { "Id": "gpt-6-luna", "Name": "GPT-6 Luna", "About": "The quickest and cheapest." }
+  ],
+
+  // Google's Gemini models (ADR-067), the default first: asked through generateContent with the
+  // player's own Gemini API key.
+  "GeminiModels": [
+    { "Id": "gemini-3.8-flash", "Name": "Gemini 3.8 Flash", "About": "The default: quick and capable." },
+    { "Id": "gemini-4-argon", "Name": "Gemini 4 Argon", "About": "Google's most capable, and the slowest." },
+    { "Id": "gemini-3.5-flash-lite", "Name": "Gemini 3.5 Flash-Lite", "About": "The quickest and cheapest." }
+  ],
+
   // Where a local model is served (Ollama's address) and which model, unless the player says otherwise.
   "LocalUrl": "http://localhost:11434",
   "LocalModel": "llama3.2",

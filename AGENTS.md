@@ -63,8 +63,8 @@ rule is followed by the conventions that meet it in this repository.
 ### No infrastructure without need; no cloud dependency
 
 - The game runs fully offline: no backend, accounts, telemetry or downloads at runtime.
-- The one exception is the owner's choice of ADR-065: the player may give the rival gods' minds to
-  Claude, with their own Anthropic key, or to a model on their own computer. It is off by default,
+- The one exception is the owner's choice of ADR-065 and ADR-067: the player may give the rival
+  gods' minds to Claude, GPT or Gemini, with their own key, or to a model on their own computer. It is off by default,
   and every failure falls back to the offline scribes. Keep it that way:
   - a model's answer is an input to the world, taken in between ticks and kept in it;
   - nothing in play waits on a network;
@@ -141,7 +141,7 @@ rule is followed by the conventions that meet it in this repository.
   the forest standing and the roads, with the selected village's stores, land and roads, and the
   great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the
   selected village's plague),
-  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the settings' Minds tab (who writes the gods, the Anthropic key, the models, and Test), the talk panel (Speak on a god's card: the conversation, the god's acts and why it would not), the P
+  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the settings' Minds tab (who writes the gods, each provider's key and models, and Test), the talk panel (Speak on a god's card: the conversation, the god's acts and why it would not), the P
   diplomacy panel (whether you have met each god, status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
@@ -173,7 +173,7 @@ rule is followed by the conventions that meet it in this repository.
 | World generation and tick systems | `src/Pantheon.Simulation`, registered in `SimulationEngine` |
 | Saves, content parsing and the player's profile | `src/Pantheon.Persistence` |
 | Multiplayer protocol, codecs and transport contract | `src/Pantheon.Networking` (the host and player logic in `src/Pantheon.Game/Multiplayer`, ENet in `game/Scripts/Network`) |
-| The gods' minds: the language-model contract, prompts and the scribes, and the adapters | `src/Pantheon.Game/Minds`; Claude and Ollama in `src/Pantheon.Oracle` |
+| The gods' minds: the language-model contract, prompts and the scribes, and the adapters | `src/Pantheon.Game/Minds`; Claude, GPT, Gemini and Ollama in `src/Pantheon.Oracle` |
 | Session, commands, scheduler, camera maths, debug readouts, presentation data, Tier 2 citizens | `src/Pantheon.Game` |
 | Nodes, input, UI | `game/Scripts`, with scenes in `game/Scenes` and actions in `game/project.godot` |
 | Content | `game/Data/*.json` |

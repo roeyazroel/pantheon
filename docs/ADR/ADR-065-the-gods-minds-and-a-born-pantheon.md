@@ -1,6 +1,6 @@
 # ADR-065: The gods' minds — optional language models and a pantheon born for each world
 
-- Status: Accepted
+- Status: Accepted; amended by ADR-067
 - Date: 2026-10-20
 - Builds on: [ADR-011](ADR-011-rival-gods-utility-ai-and-victory.md) (the rival gods' utility AI),
   [ADR-036](ADR-036-known-gods-and-the-gods-long-term-plans.md) (the gods' plans),

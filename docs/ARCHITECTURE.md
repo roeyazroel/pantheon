@@ -66,9 +66,10 @@ src/
                               Tier 2 representative citizens (Population), Multiplayer (host and player)
   Pantheon.Networking/        Host-authoritative protocol (ADR-003, ADR-018): messages, codecs, transport
                               contract, in-memory loopback
-  Pantheon.Oracle/            The language models behind the gods' minds (ADR-065): Claude through
-                              Anthropic's SDK, a local model through Ollama's API, and the factory
-                              that opens the one the settings choose
+  Pantheon.Oracle/            The language models behind the gods' minds (ADR-065, ADR-067): Claude
+                              through Anthropic's SDK, GPT through OpenAI's Responses API, Gemini
+                              through generateContent, a local model through Ollama's API, and the
+                              factory that opens the one the settings choose
   Pantheon.Tests/             xUnit tests (headless)
 tools/                        Maintenance scripts (vendor-terrain3d.sh)
 docs/                         PANTHEON_SPEC.md (the owner's specification), PROGRESS_SUMMARY.md,
@@ -95,7 +96,7 @@ graph TD
     Persist["Pantheon.Persistence"]
     Domain["Pantheon.Domain"]
     Net["Pantheon.Networking"]
-    Oracle["Pantheon.Oracle<br/>(Anthropic SDK, Ollama HTTP)"]
+    Oracle["Pantheon.Oracle<br/>(Anthropic SDK, OpenAI, Gemini and Ollama over HTTP)"]
     Tests["Pantheon.Tests"]
     T3D["Terrain3D GDExtension (optional at runtime)"]
 
@@ -1817,7 +1818,7 @@ ADR-065 records the decisions, and the plan is
 flowchart LR
     menu[New world / host] --> births[Births: client]
     births -->|Scribes, or no key| scribe[PersonaScribe: seed + minds.json lore]
-    births -->|Claude / Local| model[ILanguageModel: AnthropicLanguageModel / LocalLanguageModel]
+    births -->|Claude / OpenAI / Gemini / Local| model[ILanguageModel: Anthropic, OpenAI, Gemini or Local]
     model -->|"PantheonPrompt: JSON of the schema"| read[PantheonPrompt.Read: strict, per god]
     scribe --> born[BornPantheon: a god per slot]
     read -->|"bad gods: the scribes'"| born
@@ -1832,10 +1833,19 @@ flowchart LR
   The adapters, in `Pantheon.Oracle`, never throw for a model's or the network's failure:
   - `AnthropicLanguageModel` uses the beta Messages API with structured output at the question's
     effort, cached instructions and the server-side fallback;
+  - `OpenAILanguageModel` (ADR-067) uses the Responses API, with strict `json_schema` output, the
+    question's reasoning effort and `store: false`;
+  - `GeminiLanguageModel` (ADR-067) uses `generateContent`, with a JSON `responseFormat`, the
+    question's thinking level, and the thought parts left out;
   - `LocalLanguageModel` uses Ollama's `/api/chat` with `format` set to the schema.
-- **The choice.** `GameSettings.Minds` (Scribes, Claude or Local), `ClaudeModel`, `LocalUrl` and
-  `LocalModel`. The Anthropic key is kept apart in the profile (`anthropic_key`); without it,
-  `ANTHROPIC_API_KEY` is used. `MindFactory.Open` makes the model, or none.
+
+  The three web adapters without an SDK share `JsonHttp`.
+- **The choice.** `GameSettings.Minds` (Scribes, Claude, OpenAI, Gemini or Local), `ClaudeModel`,
+  `OpenAIModel`, `GeminiModel`, `LocalUrl` and `LocalModel`.
+- **The keys.** Each provider's key is kept apart in the profile (`anthropic_key`, `openai_key`,
+  `gemini_key`), read as `MindKeys`. Without one, the environment's is used: `ANTHROPIC_API_KEY`,
+  `OPENAI_API_KEY`, or `GEMINI_API_KEY` then `GOOGLE_API_KEY`.
+- **Opening.** `MindFactory.Open` makes the chosen model with its own key, or none and says why.
 - **The birth.** A new world from the menu, or a hosted one, is born first:
   - by the scribes at once;
   - or by the model, asked off the main thread while the title screen shows the gods waking.
