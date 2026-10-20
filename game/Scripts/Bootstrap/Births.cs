@@ -46,6 +46,20 @@ internal sealed class Births
     /// <summary>Who gives the gods minds now: the run's choice, else the settings'.</summary>
     public MindProvider Provider => _override ?? _settings().Minds;
 
+    /// <summary>The model the gods' minds come from now, for talking to them (ADR-066); none for the scribes.</summary>
+    /// <param name="problem">Why there is none when one was chosen.</param>
+    /// <returns>The model, which the caller disposes, or <c>null</c>.</returns>
+    public ILanguageModel? OpenModel(out string? problem)
+    {
+        if (_minds is null)
+        {
+            problem = null;
+            return null;
+        }
+
+        return MindFactory.Open(_settings() with { Minds = Provider }, Startup.AnthropicKey, _minds, out problem);
+    }
+
     /// <summary>The scribes' gods for a world, at once: for worlds made without asking (F2, the tutorial).</summary>
     /// <param name="seed">The world's seed.</param>
     /// <param name="options">How it is made.</param>

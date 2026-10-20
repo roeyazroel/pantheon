@@ -385,6 +385,7 @@ covers:
 | Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
 | Your hand takes an offering from a village that follows you (R gives it) | Ctrl+R |
 | Show or hide the diplomacy panel | P |
+| Talk with a god (ADR-066) | Speak on its card in the diplomacy panel; Esc ends the talk |
 | Show or hide the Divine Council: the vote in session, decrees, and motions to table | U |
 | Toggle region boundaries | Shift+B |
 | Toggle the debug overlay | F1 |
@@ -691,6 +692,29 @@ badly leaves that god (or all of them) to the scribes, and you are told why.
 
 **Saves and shared worlds.** A world keeps its gods in its saves. In a shared world the host's
 gods are everyone's.
+
+### Talking to the gods
+
+Press Speak on a god's card in the diplomacy panel (P) to talk with it; the world waits while you
+do (ADR-066).
+
+- **With a model** (Claude or one on your computer), type your own words or pick one of three
+  replies the god's mind suggests. The god answers in its own voice.
+- **Without one,** pick what to ask: "What do you want?", an alliance, peace, or a treaty. The god
+  answers in character.
+
+Talk changes the world:
+
+- **What a god may agree to:** an alliance, peace or a treaty you ask for, or the proposal you
+  made it.
+- **What it may do itself:** offer you an alliance or peace (Accept or Decline in the panel),
+  declare war, or break your alliance.
+
+A god does only what its own judgement allows: its trust, fear, grudges, rivalry and
+ambitions, as the diplomacy panel describes them. Your words can win or lose it a little goodwill,
+which fades with time. That is enough to tip a god that is nearly ready to agree, or nearly ready
+to strike, but no flattery or trick makes a god that distrusts you an ally. Only the host, or a
+player alone, can talk to the gods.
 
 ## Diplomacy
 
@@ -1647,6 +1671,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--minds=scribes\|claude\|local` | Who writes the gods of new worlds in this run, over the settings' choice (ADR-065). |
 | `--pantheon=on\|off` | Bear the world's gods anew at the start, by the minds chosen, and show their page (ADR-065). |
 | `--mind-check=on\|off` | Ask the chosen model for a greeting at the start and print its answer (ADR-065). |
+| `--talk=<god>` | Talk with a rival god (by its number, 2 or more) at the start (ADR-066). |
+| `--talk-say=<words>` | Say this to that god's model at the start (ADR-066). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
 | `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
 
@@ -1776,7 +1802,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-44-the-gods-minds.md](.docs/milestone-15-part-44-the-gods-minds.md).
+[.docs/milestone-15-part-45-talking-to-the-gods.md](.docs/milestone-15-part-45-talking-to-the-gods.md).
 
 ## Contributing
 

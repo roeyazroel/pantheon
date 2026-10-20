@@ -141,7 +141,7 @@ rule is followed by the conventions that meet it in this repository.
   the forest standing and the roads, with the selected village's stores, land and roads, and the
   great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the
   selected village's plague),
-  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the settings' Minds tab (who writes the gods, the Anthropic key, the models, and Test), the P
+  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the settings' Minds tab (who writes the gods, the Anthropic key, the models, and Test), the talk panel (Speak on a god's card: the conversation, the god's acts and why it would not), the P
   diplomacy panel (whether you have met each god, status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
@@ -159,7 +159,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--reshape`, `--wildlife`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--title-page`, `--tutorial`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--talk`, `--talk-say`, `--title-page`, `--tutorial`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a

@@ -924,6 +924,8 @@ and a Lumen an Ape. A missing,
   `GuidePanel` and `UiKit`. `Bootstrap/Startup.Profile` opens the profile once a run and keeps
   the settings in it, and the Anthropic key apart from them. `Bootstrap/Births` bears a new
   world's gods (ADR-065): by the scribes, or by the chosen model off the main thread.
+  `Bootstrap/TalkController` and `UI/TalkPanel` hold the player's conversations with the gods
+  (ADR-066).
 - `Network/EnetTransport` puts Godot's `ENetMultiplayerPeer` behind `INetworkTransport` (reliable and
   unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
   (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
@@ -1848,6 +1850,35 @@ flowchart LR
   made, and is kept in the world.
   - A scribes' world is reproduced by its seed; a model's world by its save.
   - Players of a shared world receive the host's gods with the world.
+
+## Talking to the gods
+
+ADR-066 records the decisions, and the plan is
+[.docs/milestone-15-part-45-talking-to-the-gods.md](../.docs/milestone-15-part-45-talking-to-the-gods.md).
+
+- **Acts** (`TalkActs.For`): every act the authority allows between the god and the player, with
+  the god's own utility from `GodAi.EvaluateDiplomacy` and `TreatyAdvisor.AnswerUtility`:
+  - agree to an alliance, peace or a treaty the player asks for;
+  - accept or decline the player's proposal;
+  - offer an alliance or peace;
+  - declare war, or break an alliance.
+
+  `TalkActs.Do` runs each act through `PoliticsCommands.DiplomacyAs`: an agreement is the player's
+  proposal and the god's Accept; the rest are the god's own commands.
+- **Goodwill** (`GodTalk`): -1 to 1, moved by each reply's regard and halving with the world's
+  time. It leans an act by at most `TalkRules.PersuasionReach`: towards the player for friendly
+  acts, against for hostile ones. Each act is willing, reluctant or unwilling; unwilling acts are
+  never offered to the model.
+- **The conversation** (`Talks`):
+  - `Ask` adds the player's words and builds the question (`TalkPrompt`: cached instructions, then
+    a turn with the situation, the acts by id and the words);
+  - the client asks the model off the main thread;
+  - `Answer`, on the main thread between ticks, moves the goodwill, judges the chosen act again, and
+    does it only if the god is now willing.
+
+  Without a model, `Choose` takes a suggestion as the asking of one act, and `TalkScribe` answers.
+- **The client.** `TalkController` (created by `GameFlow`) opens `TalkPanel` from Speak on a
+  diplomacy card, pauses the world while it is open, and lets only the host talk.
 
 ## Diplomacy
 

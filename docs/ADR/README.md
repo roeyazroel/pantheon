@@ -81,6 +81,7 @@ silently:
 | [ADR-063](ADR-063-creatures-farm-and-fetch-wood.md) | Creatures farm the fields and fetch wood for the villages | Accepted |
 | [ADR-064](ADR-064-interactive-tutorial.md) | An interactive tutorial | Accepted |
 | [ADR-065](ADR-065-the-gods-minds-and-a-born-pantheon.md) | The gods' minds: optional language models and a pantheon born for each world | Accepted |
+| [ADR-066](ADR-066-talking-to-the-gods.md) | Talking to the gods | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

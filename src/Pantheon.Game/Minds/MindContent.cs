@@ -36,6 +36,9 @@ public sealed record MindContent
     /// <summary>The scribes' lore.</summary>
     public required PersonaLore Lore { get; init; }
 
+    /// <summary>How talking to a god works (ADR-066).</summary>
+    public required TalkRules Talk { get; init; }
+
     /// <summary>Parses and validates the file.</summary>
     /// <param name="json">Its text.</param>
     /// <returns>The validated content.</returns>
@@ -71,6 +74,7 @@ public sealed record MindContent
         }
 
         Lore.Validate();
+        Talk.Validate();
     }
 }
 
@@ -160,4 +164,39 @@ public sealed record PersonalityLore
 
     /// <summary>A deed such a god is known for: a sentence.</summary>
     public required IReadOnlyList<string> Deeds { get; init; }
+}
+
+/// <summary>
+/// How talking to a god works (ADR-066): how far the player's words may move it, how fast that fades,
+/// and how its model is asked.
+/// </summary>
+public sealed record TalkRules
+{
+    /// <summary>How far the goodwill of a conversation moves the god's judgement of a deal or a hostile act, at its fullest (0..0.5).</summary>
+    public required float PersuasionReach { get; init; }
+
+    /// <summary>How far one reply's regard of 3 (the most) moves the conversation's goodwill, from -1 to 1 (0..1).</summary>
+    public required float RegardStep { get; init; }
+
+    /// <summary>Seconds of the world's time in which a conversation's goodwill halves.</summary>
+    public required float GoodwillHalfLifeSeconds { get; init; }
+
+    /// <summary>How hard the model thinks before it answers.</summary>
+    public required ModelEffort Effort { get; init; }
+
+    /// <summary>The longest answer, in tokens.</summary>
+    public required int MaxTokens { get; init; }
+
+    /// <summary>How many turns of the conversation the model is given, the newest; older ones are forgotten.</summary>
+    public required int TurnsKept { get; init; }
+
+    /// <summary>Throws when a rule is out of range.</summary>
+    internal void Validate()
+    {
+        if (!(PersuasionReach is >= 0f and <= 0.5f) || !(RegardStep is > 0f and <= 1f) || !(GoodwillHalfLifeSeconds > 0f)
+            || !Enum.IsDefined(Effort) || MaxTokens is < 500 or > 32000 || TurnsKept is < 2 or > 100)
+        {
+            throw new ContentFormatException($"{MindContent.FileName}: Talk needs PersuasionReach from 0 to 0.5, RegardStep above 0 up to 1, a positive GoodwillHalfLifeSeconds, an Effort, MaxTokens from 500 to 32000 and TurnsKept from 2 to 100.");
+        }
+    }
 }

@@ -21,6 +21,20 @@
   "BirthMaxTokens": 16000,
   "TimeoutSeconds": 180.0,
 
+  // Talking to a god (ADR-066). The player's words move a conversation's goodwill, from -1 to 1: a
+  // reply's regard of 3 (most persuaded) moves it by RegardStep, -3 the other way, and it halves every
+  // GoodwillHalfLifeSeconds of the world's time. At its fullest it moves the god's judgement of a deal
+  // or of war by PersuasionReach: a god agrees only to what it would almost agree to anyway. The model
+  // is asked at Effort, with at most MaxTokens, and given the newest TurnsKept turns.
+  "Talk": {
+    "PersuasionReach": 0.15,
+    "RegardStep": 0.5,
+    "GoodwillHalfLifeSeconds": 240.0,
+    "Effort": "Low",
+    "MaxTokens": 4000,
+    "TurnsKept": 24
+  },
+
   // The scribes' lore: gods written from the seed. {name}, {creature} and {animal} become the god's
   // name, its Creature's name and its Creature's animal.
   "Lore": {

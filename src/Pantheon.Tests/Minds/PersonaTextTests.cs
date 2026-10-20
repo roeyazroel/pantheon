@@ -108,4 +108,17 @@ public sealed class PersonaTextTests
         Assert.Null(wrong.Minds);
         Assert.Contains(wrong.Warnings, w => w.Contains("'--minds' needs scribes, claude or local", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void TheLaunchOptions_SpeakWithAGod()
+    {
+        var options = LaunchOptions.Parse(["--talk=3", "--talk-say=  Let us be allies.  "]);
+        var player = LaunchOptions.Parse(["--talk=1"]);
+
+        Assert.Equal(3, options.Talk);
+        Assert.Equal("Let us be allies.", options.TalkSay);
+        Assert.Empty(options.Warnings);
+        Assert.Null(player.Talk);
+        Assert.Contains(player.Warnings, w => w.Contains("'--talk' needs a rival god's number", StringComparison.Ordinal));
+    }
 }

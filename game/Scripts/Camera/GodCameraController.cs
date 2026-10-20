@@ -312,6 +312,12 @@ public partial class GodCameraController : Node3D
     /// <summary>WASD/arrow pan, Q/E rotation and keyboard zoom, scaled by frame time.</summary>
     private void ApplyKeys(float deltaSeconds)
     {
+        // Letters typed into a text field (a world's name, a god's words) move nothing.
+        if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
+        {
+            return;
+        }
+
         var pan = Input.GetVector(InputActions.CameraPanLeft, InputActions.CameraPanRight, InputActions.CameraPanBack, InputActions.CameraPanForward);
         if (pan != Vector2.Zero)
         {

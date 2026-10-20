@@ -81,6 +81,9 @@ internal sealed partial class GameFlow : Node
         _menu.Settings = settings;
         _menu.Minds = choices.Minds;
         _births = new Births(session.Content, choices.Minds, _menu, () => _menu.Settings, options.Minds);
+        var talk = new TalkController { Name = "Talk" };
+        AddChild(talk);
+        talk.Setup(session, _births, ui.Diplomacy, setStatus, options);
         _menu.SettingsChanged += changed =>
         {
             SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);

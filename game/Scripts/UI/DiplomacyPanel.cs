@@ -51,6 +51,9 @@ public partial class DiplomacyPanel : CanvasLayer
     /// <summary>The player chose a refugee policy.</summary>
     public event Action<RefugeePolicy>? PolicyClicked;
 
+    /// <summary>The player asked to speak with a god (ADR-066).</summary>
+    public event Action<int>? SpeakClicked;
+
     /// <summary>Whether the panel is shown.</summary>
     public bool PanelVisible
     {
@@ -212,6 +215,10 @@ public partial class DiplomacyPanel : CanvasLayer
 
         var buttons = new HBoxContainer();
         buttons.AddThemeConstantOverride("separation", 8);
+        var speak = new Button { Text = "Speak", FocusMode = Control.FocusModeEnum.None, TooltipText = "Speak with this god: ask, bargain or threaten" };
+        var speaker = entry.GodId;
+        speak.Pressed += () => SpeakClicked?.Invoke(speaker);
+        buttons.AddChild(speak);
         foreach (var move in entry.Available)
         {
             var button = new Button { Text = DiplomacyText.Command(move), FocusMode = Control.FocusModeEnum.None };
