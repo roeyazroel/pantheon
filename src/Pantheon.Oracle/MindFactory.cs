@@ -79,6 +79,27 @@ public static class MindFactory
         return null;
     }
 
+    /// <summary>
+    /// A warning when a key plainly is not the provider's API key, such as a Claude.ai or Claude Code
+    /// sign-in given for an Anthropic key. Only the beginnings the providers have long used are checked,
+    /// so a key is never refused for its shape: the provider decides.
+    /// </summary>
+    /// <param name="provider">The provider.</param>
+    /// <param name="key">The key the player gave.</param>
+    /// <returns>The warning, for the player; <c>null</c> when the key looks right, is empty, or its provider's keys are not checked.</returns>
+    public static string? KeyAdvice(MindProvider provider, string? key)
+    {
+        var (name, begins, signIn, where) = provider switch
+        {
+            MindProvider.Claude => ("Anthropic", "sk-ant-api", "A Claude.ai or Claude Code sign-in", "console.anthropic.com, under API Keys"),
+            MindProvider.OpenAI => ("OpenAI", "sk-", "A ChatGPT sign-in", "platform.openai.com, under API keys"),
+            MindProvider.Gemini or MindProvider.Scribes or MindProvider.Local => (null, null, null, null),
+        };
+        return begins is null || string.IsNullOrWhiteSpace(key) || key.Trim().StartsWith(begins, StringComparison.Ordinal)
+            ? null
+            : $"This is not an {name} API key: those begin with {begins}. {signIn} will not work here; create a key at {where}.";
+    }
+
     /// <summary>A provider's name, for the player.</summary>
     /// <param name="provider">The provider.</param>
     /// <returns>For example "Claude" or "Gemini".</returns>

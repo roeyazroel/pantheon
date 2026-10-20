@@ -90,10 +90,24 @@ internal static class MindsSettings
         var variable = MindFactory.KeyVariables(provider).FirstOrDefault(v => System.Environment.GetEnvironmentVariable(v) is { Length: > 0 });
         var key = UiKit.Field(Startup.Keys.For(provider) ?? string.Empty, variable is not null ? $"using {variable} from your environment" : hint);
         key.Secret = true;
-        void Keep() => Startup.KeepKey(provider, key.Text);
-        key.TextSubmitted += _ => Keep();
-        key.FocusExited += Keep;
+        var advice = UiKit.Text(string.Empty, UiTheme.CaptionSize, UiTheme.Warning);
+        advice.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+
+        void Advise(string text)
+        {
+            advice.Text = MindFactory.KeyAdvice(provider, text) ?? string.Empty;
+            advice.Visible = advice.Text.Length > 0;
+        }
+
+        // Kept as it changes, so a key pasted and tested at once (the Test button takes no focus) is the one asked with.
+        key.TextChanged += text =>
+        {
+            Startup.KeepKey(provider, text);
+            Advise(text);
+        };
         column.AddChild(UiKit.Row(Capital(MindFactory.KeyName(provider)), key));
+        column.AddChild(advice);
+        Advise(key.Text);
         if (menu.Minds is { } minds)
         {
             var offered = models(minds);

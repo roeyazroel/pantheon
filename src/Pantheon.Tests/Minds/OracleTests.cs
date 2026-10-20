@@ -209,6 +209,28 @@ public sealed class OracleTests
         Assert.Equal(["GEMINI_API_KEY", "GOOGLE_API_KEY"], MindFactory.KeyVariables(MindProvider.Gemini));
     }
 
+    [Theory]
+    [InlineData(MindProvider.Claude, "sk-ant-api03-abc", false)]
+    [InlineData(MindProvider.Claude, "  sk-ant-api03-abc ", false)]
+    [InlineData(MindProvider.Claude, "sk-ant-oat01-abc", true)]
+    [InlineData(MindProvider.Claude, "sk-ant-usr-abc", true)]
+    [InlineData(MindProvider.Claude, "sk-proj-abc", true)]
+    [InlineData(MindProvider.Claude, "", false)]
+    [InlineData(MindProvider.OpenAI, "sk-proj-abc", false)]
+    [InlineData(MindProvider.OpenAI, "AIza-abc", true)]
+    [InlineData(MindProvider.Gemini, "anything", false)]
+    [InlineData(MindProvider.Local, "anything", false)]
+    public void KeyAdvice_WarnsOfKeysThatAreNotTheProvidersApiKeys(MindProvider provider, string key, bool warned)
+    {
+        var advice = MindFactory.KeyAdvice(provider, key);
+
+        Assert.Equal(warned, advice is not null);
+        if (provider == MindProvider.Claude && warned)
+        {
+            Assert.Equal("This is not an Anthropic API key: those begin with sk-ant-api. A Claude.ai or Claude Code sign-in will not work here; create a key at console.anthropic.com, under API Keys.", advice);
+        }
+    }
+
     /// <summary>GPT's answer of some text, as the Responses API sends it, after a reasoning item.</summary>
     private static string GptResponse(string text) => new JsonObject
     {

@@ -81,6 +81,14 @@ flowchart LR
 ### Completed
 
 - [x] Both adapters, the keys, the settings, the factory, the Minds tab, content and tests.
+- [x] **Fixed after the owner's first try.** The owner gave a Claude sign-in token (`sk-ant-…`, but
+  not `sk-ant-api…`) where an Anthropic API key belongs, and Anthropic answered 401. Two changes:
+  - `MindFactory.KeyAdvice` warns under the field, as the key is typed, of a key that plainly is
+    not the provider's API key: an Anthropic key must begin `sk-ant-api` and an OpenAI one `sk-`.
+    Gemini's keys are not checked. A key is never refused for its shape: the provider decides.
+  - The key is now kept as it changes. Before, it was kept when the field lost focus, but the Test
+    button takes no focus, so a key pasted and tested at once was not the one asked with.
+  - 10 more `OracleTests`: 1749 tests pass.
 
 ### Future
 
