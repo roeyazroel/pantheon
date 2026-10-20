@@ -28,6 +28,8 @@ internal sealed partial class CreaturePanel : PanelContainer
     private readonly Button _reward;
     private readonly Button _punish;
     private readonly Button _more;
+    private readonly Button _follow;
+    private readonly Button _work;
     private readonly VBoxContainer _details;
     private readonly Label _paths;
     private readonly Label _attributes;
@@ -72,9 +74,9 @@ internal sealed partial class CreaturePanel : PanelContainer
         column.AddChild(buttons);
         _reward = Command(buttons, "Reward", "Z", "Reward it for what it is doing, or just did: it will do it more", () => Judged?.Invoke(CreatureCommandKind.Reward));
         _punish = Command(buttons, "Punish", "X", "Punish it for what it is doing, or just did: it will do it less", () => Judged?.Invoke(CreatureCommandKind.Punish));
-        Command(buttons, "Follow", "C", "Look at it and follow it; move the view to let go", () => LookClicked?.Invoke());
+        _follow = Command(buttons, "Follow", "C", "Look at it and follow it; move the view to let go", () => LookClicked?.Invoke());
         Command(buttons, "Send", "V", "Click the ground where it should go", () => SendClicked?.Invoke());
-        Command(buttons, "Work", "B", "Click a village: it farms, fetches wood or builds as the village needs; click a wood: it fetches timber", () => WorkClicked?.Invoke());
+        _work = Command(buttons, "Work", "B", "Click a village: it farms, fetches wood or builds as the village needs; click a wood: it fetches timber", () => WorkClicked?.Invoke());
         Command(buttons, "Fight", "\u21e7V", "Click near a rival Creature: yours hunts it down and fights it", () => FightClicked?.Invoke());
 
         _more = new Button { Text = "More ▾", Flat = true, FocusMode = FocusModeEnum.None, Alignment = HorizontalAlignment.Left };
@@ -128,6 +130,18 @@ internal sealed partial class CreaturePanel : PanelContainer
         Set(_attributes, card.Attributes);
         Set(_bonds, card.Bonds);
     }
+
+    /// <summary>A button's place on the screen, for the tutorial to point at (ADR-064).</summary>
+    /// <param name="target">What to point at.</param>
+    /// <returns>Its rectangle, or <c>null</c> when the card does not hold it.</returns>
+    public Rect2? TargetRect(Pantheon.Game.Flow.TutorialTarget target) => target switch
+    {
+        Pantheon.Game.Flow.TutorialTarget.FollowButton => _follow.GetGlobalRect(),
+        Pantheon.Game.Flow.TutorialTarget.WorkButton => _work.GetGlobalRect(),
+        Pantheon.Game.Flow.TutorialTarget.JudgeButtons => _reward.GetGlobalRect().Merge(_punish.GetGlobalRect()),
+        Pantheon.Game.Flow.TutorialTarget.None or Pantheon.Game.Flow.TutorialTarget.Plaque or Pantheon.Game.Flow.TutorialTarget.FirstMiracle
+            or Pantheon.Game.Flow.TutorialTarget.TimeControls or Pantheon.Game.Flow.TutorialTarget.Rivals or Pantheon.Game.Flow.TutorialTarget.Race => null,
+    };
 
     /// <summary>Opens or closes the details.</summary>
     private void SetDetails(bool open)

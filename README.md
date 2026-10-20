@@ -208,7 +208,9 @@ godot --path game
 
 `godot` stands for the Godot 4.7.2 .NET executable. You can also open `game/project.godot` in the
 Godot .NET editor and press F5. Started without options, the game opens on its title screen, over
-the living island: Continue your newest save, begin a New World (name it, choose its seed, your
+the living island: Continue your newest save, learn to play with the Tutorial (fifteen steps that
+teach the camera, miracles, your Creature, the hand, time, diplomacy and winning by doing each,
+on a sandbox island; ADR-064), begin a New World (name it, choose its seed, your
 Creature's species, its size, how it may be won and its climate), open Your Worlds to load or
 forget a world, Play Together (host or join a shared world; joining reloads the game with the
 host's address), or change the Settings. No command line is needed to play (ADR-060). A short guide
@@ -1592,6 +1594,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains=<domain>[,<domain>...]` | Take up these domains at the start, as your rank allows. |
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
+| `--tutorial=on\|<step>` | Start the tutorial, or at a step from 1 to 15 (for captures, ADR-064). |
 | `--title-page=new\|worlds\|together\|settings` | Open the title screen on a page (for captures, ADR-060). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
 | `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
@@ -1719,7 +1722,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-42-creature-work.md](.docs/milestone-15-part-42-creature-work.md).
+[.docs/milestone-15-part-43-tutorial.md](.docs/milestone-15-part-43-tutorial.md).
 
 ## Contributing
 

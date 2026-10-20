@@ -73,6 +73,10 @@ internal sealed partial class GodPlaque : VBoxContainer
         AddChild(_rivals);
     }
 
+    /// <summary>The plaque's own panel and the rivals' chips, for the tutorial to point at (ADR-064).</summary>
+    /// <returns>Their rectangles.</returns>
+    public (Rect2 Plaque, Rect2 Rivals) Rects() => (((Control)GetChild(0)).GetGlobalRect(), _rivals.GetGlobalRect());
+
     /// <summary>Shows the model; labels change only where their text did.</summary>
     /// <param name="model">The HUD's model.</param>
     /// <param name="godId">The player's god, for its colour.</param>

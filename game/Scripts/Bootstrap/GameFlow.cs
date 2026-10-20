@@ -44,6 +44,7 @@ internal sealed partial class GameFlow : Node
     private WorldLibrary _library = null!;
     private MenuScreen _menu = null!;
     private HistoryPanel _history = null!;
+    private TutorialController _tutorial = null!;
     private GuidePanel _guidePanel = null!;
     private bool _wasPaused;
     private bool _ended;
@@ -86,6 +87,9 @@ internal sealed partial class GameFlow : Node
         AddChild(_menu);
         AddChild(_history);
         AddChild(_guidePanel);
+        _tutorial = new TutorialController { Name = "Tutorial" };
+        AddChild(_tutorial);
+        _tutorial.Setup(session, camera, divine, ui, GetParent().GetNode<Node3D>("World"), setStatus);
         divine.EventsHandled += events => _guide.Observe(events, _session.LocalGodId, _session.LocalCreature?.Id, _diplomacy.PanelVisible);
         session.WorldReplaced += () => _ended = false;
         WireMenu();
@@ -97,6 +101,10 @@ internal sealed partial class GameFlow : Node
         }
 
         CallDeferred(nameof(Open), showTitle, options.HistoryPanel, options.PauseMenu, options.TitlePage ?? string.Empty);
+        if (options.Tutorial is { } step)
+        {
+            CallDeferred(nameof(StartTutorial), step);
+        }
         if (options.SettingsPage)
         {
             CallDeferred(nameof(OpenSettings));
@@ -162,7 +170,7 @@ internal sealed partial class GameFlow : Node
         }
 
         _guide.Observe([], _session.LocalGodId, _session.LocalCreature?.Id, _diplomacy.PanelVisible);
-        _guidePanel.ShowStep(_guide.IsVisible && !_menu.IsOpen ? _guide.Text(_session.LocalGod?.Name ?? "a god", _session.LocalCreature?.Name ?? "Your Creature") : string.Empty, _guide.CanSkipStep);
+        _guidePanel.ShowStep(_guide.IsVisible && !_menu.IsOpen && !_tutorial.IsActive ? _guide.Text(_session.LocalGod?.Name ?? "a god", _session.LocalCreature?.Name ?? "Your Creature") : string.Empty, _guide.CanSkipStep);
         if (_history.PanelVisible)
         {
             _history.ShowEntries(HistoryReadout.Build(_session.World, _session.Content.History, _session.LocalGodId));
@@ -224,6 +232,7 @@ internal sealed partial class GameFlow : Node
             _setStatus($"{record.Name}: your world begins");
             Begin(guide: true);
         };
+        _menu.TutorialChosen += () => StartTutorial(1);
         _menu.LoadChosen += saveId =>
         {
             _setStatus(_library.Load(_session, saveId));
@@ -289,7 +298,26 @@ internal sealed partial class GameFlow : Node
     }
 
     /// <summary>What the title screen offers now.</summary>
-    private TitleData TitleData() => new(RandomSeed(), _library.Cards(), _library.Latest(), _library.Store.Kind);
+    private TitleData TitleData() => new(RandomSeed(), _library.Cards(), _library.Latest(), _library.Store.Kind, _library.Store.ReadValue(TutorialController.DoneKey) is not null);
+
+    /// <summary>
+    /// The tutorial (ADR-064) on its own island: the first small world, won by nobody so there is no
+    /// hurry, not kept among the player's worlds.
+    /// </summary>
+    /// <param name="step">The step to start at: 1 for the beginning.</param>
+    private void StartTutorial(int step)
+    {
+        if (_session.IsReplica)
+        {
+            return;
+        }
+
+        _setStatus(SessionCommands.NewWorld(_session, Game.Launch.LaunchOptions.DefaultSeed, new NewWorldOptions(Victory: Domain.World.VictorySettings.Sandbox)));
+        _library.Leave();
+        Begin(guide: false);
+        _guide.Hide();
+        _tutorial.Start((Game.Flow.TutorialStep)(step - 1));
+    }
 
     /// <summary>An autosave of a world in the library before the player leaves it.</summary>
     private void SaveBeforeLeaving()

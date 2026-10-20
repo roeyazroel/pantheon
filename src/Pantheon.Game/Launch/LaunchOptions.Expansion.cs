@@ -10,6 +10,9 @@ public sealed partial record LaunchOptions
     /// <summary>A priority the player's god asks of the focused settlement at the start (ADR-023).</summary>
     public Domain.Society.SettlementPriority? Priority { get; init; }
 
+    /// <summary>The tutorial's step to start at (ADR-064): 1 for its beginning; <c>null</c> for no tutorial.</summary>
+    public int? Tutorial { get; init; }
+
     /// <summary>Where the player's Creature is set to work at the start (ADR-063), for captures: the focused village, or the forest richest in timber near it.</summary>
     public string? Work { get; init; }
 
@@ -108,7 +111,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife", "title-page", "fight", "work"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife", "title-page", "fight", "work", "tutorial"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -157,6 +160,10 @@ public sealed partial record LaunchOptions
         var trimmed = value.Trim();
         switch (name)
         {
+            case "tutorial":
+                return trimmed.Equals("on", StringComparison.OrdinalIgnoreCase) ? options with { Tutorial = 1, Menu = false }
+                    : int.TryParse(trimmed, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var step) && step >= 1 && step <= Flow.Tutorial.StepCount ? options with { Tutorial = step, Menu = false }
+                    : Warn(options, warnings, $"'--tutorial' needs on or a step from 1 to {Flow.Tutorial.StepCount}, got '{value}'.");
             case "work":
                 return trimmed is "village" or "forest" ? options with { Work = trimmed } : Warn(options, warnings, $"'--work' needs village or forest, got '{value}'.");
             case "fight":

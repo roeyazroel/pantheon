@@ -732,6 +732,11 @@ and a Lumen an Ape. A missing,
   host, for the players.
 - `History/HistoryText` and `HistoryReadout` word the chronicle ("Year 12 — The Shaking of Elar");
   `Flow/EndSummary` builds the end screen, `Flow/Guide` the first-minutes guide (ADR-020).
+  `Flow/Tutorial` (ADR-064) is the tutorial's fifteen steps: each ends when the player does what it
+  asks (judged from the world's events, a `TutorialView` of the camera, hand, time and panels, and
+  `TutorialSignal`s) or on Next, and names the HUD element (`TutorialTarget`) or the home village it
+  points at; the client's `TutorialController` drives it, `TutorialPanel` shows its card and a gold
+  frame around `Hud.TargetRect`, and a beacon of light marks the village.
   `Flow/WorldLibrary` keeps the player's worlds in the profile (ADR-060): `Begin` records a new
   world (named by the player or after its first village), `Save` writes a save and brings the
   world's record up to date with the time played, `Load` takes a save back through

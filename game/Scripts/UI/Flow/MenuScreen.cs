@@ -28,6 +28,9 @@ internal sealed partial class MenuScreen : CanvasLayer
     /// <summary>A new world: its seed, how to make it and the player's name for it.</summary>
     public event Action<WorldSeed, Pantheon.Game.NewWorldOptions, string>? NewWorldChosen;
 
+    /// <summary>The tutorial (ADR-064).</summary>
+    public event Action? TutorialChosen;
+
     /// <summary>A save to load from the profile.</summary>
     public event Action<long>? LoadChosen;
 
@@ -109,6 +112,14 @@ internal sealed partial class MenuScreen : CanvasLayer
         }
 
         TitleChoice("New World", () => OpenPage(NewWorldPage.Build(this, _data.Seed)));
+        TitleChoice("Tutorial", () => TutorialChosen?.Invoke());
+        if (!data.TutorialDone && data.Worlds.Count == 0)
+        {
+            var hint = UiTheme.Label(null, UiTheme.SmallSize, UiTheme.Gold, UiTheme.Italic);
+            hint.Text = "New here? Learn to play in ten minutes.";
+            _choices.AddChild(hint);
+        }
+
         TitleChoice("Your Worlds", () => OpenPage(WorldsPage.Build(this, _data.Worlds)));
         TitleChoice("Play Together", () => OpenPage(MultiplayerPage.Build(this, _data.Seed)));
         TitleChoice("Settings", () => OpenPage(SettingsPage.Build(this)));
@@ -323,4 +334,5 @@ internal sealed partial class MenuScreen : CanvasLayer
 /// <param name="Worlds">The player's worlds, the most recently played first.</param>
 /// <param name="Latest">The newest save of any world, to continue from.</param>
 /// <param name="ProfileKind">What keeps the profile, in words.</param>
-internal sealed record TitleData(WorldSeed Seed, IReadOnlyList<WorldCard> Worlds, (WorldRecord World, SaveRecord Save)? Latest, string ProfileKind);
+/// <param name="TutorialDone">Whether the player has finished the tutorial (ADR-064).</param>
+internal sealed record TitleData(WorldSeed Seed, IReadOnlyList<WorldCard> Worlds, (WorldRecord World, SaveRecord Save)? Latest, string ProfileKind, bool TutorialDone = false);

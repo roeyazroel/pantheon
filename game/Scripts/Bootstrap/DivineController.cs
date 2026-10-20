@@ -172,6 +172,9 @@ internal sealed class DivineController
         _setStatus(SendMode ? "Click where your Creature should go (Esc cancels)" : "You have no Creature");
     }
 
+    /// <summary>Raised when the player's order to work is accepted, for the tutorial (ADR-064).</summary>
+    public event Action? WorkOrdered;
+
     /// <summary>Whether the next click sets the Creature to work at the village or forest there (ADR-063).</summary>
     public bool WorkMode { get; private set; }
 
@@ -194,8 +197,13 @@ internal sealed class DivineController
             return;
         }
 
-        _setStatus(SessionCommands.CommandCreature(_session, CreatureCommandKind.Work, new GroundPosition(point.X, point.Z)));
+        var status = SessionCommands.CommandCreature(_session, CreatureCommandKind.Work, new GroundPosition(point.X, point.Z));
+        _setStatus(status);
         _hand.Press(point.ToGodot());
+        if (status.Contains(" goes to ", StringComparison.Ordinal))
+        {
+            WorkOrdered?.Invoke();
+        }
     }
 
     /// <summary>Sets the Creature to work for a village, or in the forest richest in timber near it (<c>--work</c>, for captures).</summary>

@@ -144,6 +144,21 @@ public partial class Hud : CanvasLayer
     /// <param name="alerts">Alerts to show.</param>
     public void ShowAlerts(IReadOnlyList<Alert> alerts) => _alerts.ShowAlerts(alerts);
 
+    /// <summary>Where on the screen a tutorial step points (ADR-064), or <c>null</c> when that is not shown.</summary>
+    /// <param name="target">What the step points at.</param>
+    /// <returns>Its rectangle in the screen's design space.</returns>
+    internal Rect2? TargetRect(Pantheon.Game.Flow.TutorialTarget target) => target switch
+    {
+        Pantheon.Game.Flow.TutorialTarget.None => null,
+        Pantheon.Game.Flow.TutorialTarget.Plaque => _plaque.Visible ? _plaque.Rects().Plaque : null,
+        Pantheon.Game.Flow.TutorialTarget.Rivals => _plaque.Visible ? _plaque.Rects().Rivals : null,
+        Pantheon.Game.Flow.TutorialTarget.FirstMiracle => _tiles.Count > 0 ? _tiles[0].GetGlobalRect() : null,
+        Pantheon.Game.Flow.TutorialTarget.TimeControls => _time.GetGlobalRect(),
+        Pantheon.Game.Flow.TutorialTarget.Race => _contestPanel.Visible ? _contestPanel.GetGlobalRect() : null,
+        Pantheon.Game.Flow.TutorialTarget.FollowButton or Pantheon.Game.Flow.TutorialTarget.JudgeButtons or Pantheon.Game.Flow.TutorialTarget.WorkButton
+            => _creature.Visible ? _creature.TargetRect(target) : null,
+    };
+
     /// <summary>Shows a short message above the miracle bar, which fades away.</summary>
     /// <param name="message">The message.</param>
     public void ShowStatus(string message) => _status.ShowMessage(message);
