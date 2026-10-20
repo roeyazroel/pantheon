@@ -551,6 +551,13 @@ its cooldown); hover over a button to read what it does.
     - A village's stores fill, and it is grateful by its need, so feed the starving from the rich.
     - Your Creature eats the food and is the more loyal for it, and the wood and stone go home.
     - Generous gods are seen as generous.
+  - **It feels in your hand (spec §55, ADR-057):** what you hold hangs below your palm and swings
+    as you move, lagging behind a quick sweep and swinging past when you stop; a held Creature
+    dangles the same way. When your hand presses down, to cast or where a throw lands, the rubble
+    and debris about it are knocked away.
+- **Up close (ADR-057).** The camera keeps above the roofs as well as the ground, so on a steep
+  village's edge it never looks out from inside a house. Villagers whose rounds cross a river walk
+  over the bridge where their road has one.
 - **Divine Acts.** A Greater God can do the dearest miracles of all, from the Domains panel (G):
   Hallow the Land (its blessing never fades), Wake the Volcano and Still the World (every quake,
   fire, flood, storm, swarm, blight and drought ends at once). The world's history remembers each.

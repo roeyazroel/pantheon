@@ -37,6 +37,9 @@ public partial class GameRoot : Node3D
     // C brings the camera this close to the Creature.
     private const float CreatureFocusDistance = 90f;
 
+    // How far from where the hand presses debris is knocked away, in metres (ADR-057).
+    private const float PushReach = 12f;
+
     // F2 seeds stay short enough to read off the overlay and pass back with --seed.
     private const long MaxRandomSeed = 1_000_000_000;
 
@@ -95,6 +98,8 @@ public partial class GameRoot : Node3D
         _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView, Pantheon.Client.Presentation.People.PersonAssets.For(presentation.SettlementView));
         var hand = DivineHand.Create();
         worldNode.AddChild(hand);
+        hand.Pressed += point => _presenter.PushDebris(point, PushReach);
+        _camera.Roofs = _presenter.RoofAt;
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
         _session = _network.Join(content, options) ?? CreateSession(content, options);
         _network.Host(_session, options);

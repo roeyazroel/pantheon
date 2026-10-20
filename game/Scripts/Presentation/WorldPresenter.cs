@@ -115,6 +115,17 @@ public sealed class WorldPresenter
     /// <summary>Tier and representatives of every settlement after the latest <see cref="UpdateCitizens"/>.</summary>
     public IReadOnlyList<CrowdStatus> CrowdStatuses => _settlements.CrowdStatuses;
 
+    /// <summary>The highest roof near a ground point, if any, for the camera (ADR-057).</summary>
+    /// <param name="x">The point's X.</param>
+    /// <param name="z">The point's Z.</param>
+    /// <returns>The roof's height, or <c>null</c>.</returns>
+    public float? RoofAt(float x, float z) => _settlements.RoofAt(x, z);
+
+    /// <summary>Knocks the debris near a point away, as the hand presses down there (spec §55, ADR-057).</summary>
+    /// <param name="point">Where the hand pressed.</param>
+    /// <param name="reach">How far from it debris is moved, in metres.</param>
+    public void PushDebris(Vector3 point, float reach) => _debris.Push(point, reach);
+
     /// <summary>Refreshes visuals that follow the simulation, such as settlement labels, houses and fields, the forests and the roads.</summary>
     /// <param name="world">Current world.</param>
     /// <param name="delta">Frame time in seconds.</param>

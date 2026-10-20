@@ -1461,6 +1461,12 @@ running for every settlement either way.
   lids, cheeks, pupils, mouth and tail to match. `CreatureBody.Align` shows its nature: a kind
   Creature warm and softly glowing, a cruel one dark, red-eyed and long-horned. Looking at the
   Creature turns the camera to its face (`GodCameraModel.FaceFront`).
+- `Hand/HeldSwing` (ADR-057) swings what the hand holds as a damped pendulum driven by the hand's
+  acceleration in hand sizes (`DivineHand` tilts its grip by it, and a held Creature hangs offset by
+  it); the hand raises `Pressed` when a press reaches the ground and `DebrisPresenter.Push` knocks
+  the debris there away. `Presentation/Rooftops` gives the highest roof near a point, and the god
+  camera keeps its clearance above it (`GodCameraController.Roofs`). A village's walkers' grid
+  opens the water under its roads' bridges (`LocalNavGrid.Build(..., bridges)`).
 - `Wildlife` (ADR-054) places the herds and flocks near the camera from each region's wildlife
   and biome, closed-form in the crowds' time (a herd grazes, then walks on to the next spot; a
   flock wheels round its point), never on water or a village's bare ground. `AnimalMesh` builds a

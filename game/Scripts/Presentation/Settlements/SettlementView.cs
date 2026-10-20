@@ -117,7 +117,8 @@ internal sealed class SettlementView
     /// <param name="camera">Camera position in the world.</param>
     /// <param name="followed">The villagers the gods follow, whose figures in the crowd they replace (ADR-043).</param>
     /// <returns>The settlement's tier and representatives.</returns>
-    public CrowdStatus UpdateCitizens(SettlementState settlement, double simulationSeconds, Vector3 camera, IReadOnlyList<Pantheon.Domain.Villagers.VillagerState> followed)
+    /// <param name="roads">The world's roads, whose bridges the citizens cross (ADR-057).</param>
+    public CrowdStatus UpdateCitizens(SettlementState settlement, double simulationSeconds, Vector3 camera, IReadOnlyList<Pantheon.Domain.Villagers.VillagerState> followed, IReadOnlyList<Pantheon.Domain.Roads.RoadState> roads)
     {
         var distance = camera.DistanceTo(Site.Center.ToGodot());
         _crowd.SelectTier(distance);
@@ -126,7 +127,7 @@ internal sealed class SettlementView
             _crowd.Refresh(settlement, SettlementEconomy.AllocateLabour(_rules, settlement), Site);
         }
 
-        _crowd.Advance(simulationSeconds, _terrain);
+        _crowd.Advance(simulationSeconds, _terrain, roads);
         _citizens.Show(_crowd, settlement.Id, followed, distance);
         return _crowd.GetStatus(settlement.Population, distance);
     }

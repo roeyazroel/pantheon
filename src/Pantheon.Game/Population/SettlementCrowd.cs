@@ -36,7 +36,7 @@ public sealed class SettlementCrowd : ICitizenWays
     private readonly LocalNavLand _land = new();
     private SettlementState? _settlement;
     private SettlementSite? _site;
-    private (int Houses, HutPlacement? Construction, int Ruins, bool Temple)? _gridFor;
+    private (int Houses, HutPlacement? Construction, int Ruins, bool Temple, int Roads)? _gridFor;
 
     /// <summary>Creates the crowd of a settlement, in Tier 1 with nobody shown.</summary>
     /// <param name="seed">World seed, for the roster hashes.</param>
@@ -108,10 +108,11 @@ public sealed class SettlementCrowd : ICitizenWays
     /// <summary>Poses every representative for the crowds' time (<see cref="CrowdClock"/>), standing on the terrain.</summary>
     /// <param name="simulationSeconds">The crowds' time in seconds.</param>
     /// <param name="terrain">Terrain, for the figures' heights.</param>
-    public void Advance(double simulationSeconds, TerrainField terrain)
+    /// <param name="roads">The world's roads, whose bridges the village's walkers cross (ADR-057).</param>
+    public void Advance(double simulationSeconds, TerrainField terrain, IReadOnlyList<Domain.Roads.RoadState>? roads = null)
     {
         ArgumentNullException.ThrowIfNull(terrain);
-        Bake(terrain);
+        Bake(terrain, roads);
         var elapsed = _lastSeconds is { } last ? Math.Max(0.0, simulationSeconds - last) : 0.0;
         _lastSeconds = simulationSeconds;
         var maxStep = (float)(_settings.Citizens.CatchUpSpeed * elapsed);
@@ -142,24 +143,50 @@ public sealed class SettlementCrowd : ICitizenWays
 
     /// <summary>
     /// Bakes the village's local navigation again when what stands in the way changed (its huts, the
-    /// building site's place, its ruins or its temple), while figures are shown. The layout itself is
-    /// laid out again as building goes on, which moves nothing.
+    /// building site's place, its ruins or its temple) or its roads were built further over water,
+    /// while figures are shown. The layout itself is laid out again as building goes on, which moves
+    /// nothing.
     /// </summary>
-    private void Bake(TerrainField terrain)
+    private void Bake(TerrainField terrain, IReadOnlyList<Domain.Roads.RoadState>? roads)
     {
         if (_roster.Count == 0 || _site is not { } site || _settlement is not { } settlement)
         {
             return;
         }
 
-        var key = (site.Houses.Count, site.Construction?.House, site.Ruins.Count, Simulation.Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Temple));
+        var key = (site.Houses.Count, site.Construction?.House, site.Ruins.Count, Simulation.Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Temple), RoadsBuilt(roads, settlement.Id));
         if (_gridFor == key || (_gridFor is not null && Waiting(_bakedAt)))
         {
             return;
         }
 
-        Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens, _land);
+        var bridges = new List<(Vector3 From, Vector3 To)>();
+        foreach (var road in roads ?? [])
+        {
+            if ((road.FromSettlementId == settlement.Id || road.ToSettlementId == settlement.Id) && road.Built > 0f)
+            {
+                bridges.AddRange(BridgeLayout.Spans(road, terrain));
+            }
+        }
+
+        Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens, _land, bridges);
         (_gridFor, _bakedAt) = (key, _lastSeconds);
+    }
+
+    /// <summary>How far the village's roads are built, as one number that changes when any of them grows.</summary>
+    private static int RoadsBuilt(IReadOnlyList<Domain.Roads.RoadState>? roads, int settlementId)
+    {
+        var built = new HashCode();
+        foreach (var road in roads ?? [])
+        {
+            if (road.FromSettlementId == settlementId || road.ToSettlementId == settlementId)
+            {
+                built.Add(road.Id);
+                built.Add((int)MathF.Round(road.Built * 100f));
+            }
+        }
+
+        return built.ToHashCode();
     }
 
     /// <summary>Whether too little of the crowds' time has passed since a rebuild for another.</summary>

@@ -32,6 +32,9 @@ public sealed class LocalNavGrid
     // terrain can be reused) while a village grows a few houses at a time (ADR-056).
     private const float ReachStep = 16f;
 
+    // Half a bridge deck's width, in metres: walkers cross water on it (ADR-057).
+    private const float DeckHalfWidth = 1.3f;
+
     private static readonly (int X, int Z, float Cost)[] Steps =
     [
         (1, 0, 1f), (-1, 0, 1f), (0, 1, 1f), (0, -1, 1f),
@@ -89,8 +92,9 @@ public sealed class LocalNavGrid
     /// The land under the grid from the last bake, reused when the grid keeps its frame, and updated
     /// (ADR-056: sampling the terrain under every cell cost most of a rebuild).
     /// </param>
+    /// <param name="bridges">Bridges over the water, end to end, which walkers may cross (ADR-057).</param>
     /// <returns>The grid.</returns>
-    public static LocalNavGrid Build(SettlementSite site, SettlementState settlement, TerrainField terrain, CitizenSettings settings, LocalNavLand? land = null)
+    public static LocalNavGrid Build(SettlementSite site, SettlementState settlement, TerrainField terrain, CitizenSettings settings, LocalNavLand? land = null, IReadOnlyList<(Vector3 From, Vector3 To)>? bridges = null)
     {
         ArgumentNullException.ThrowIfNull(site);
         ArgumentNullException.ThrowIfNull(settlement);
@@ -113,6 +117,11 @@ public sealed class LocalNavGrid
         }
 
         var blocked = land is { } kept ? (bool[])kept.Water.Clone() : LocalNavLand.SampleWater(terrain, origin, cell, side);
+        foreach (var (from, to) in bridges ?? [])
+        {
+            Open(blocked, origin, cell, side, new Vector2(from.X, from.Z), new Vector2(to.X, to.Z), DeckHalfWidth);
+        }
+
         var clearance = settings.NavClearance;
         foreach (var hut in site.Houses)
         {
@@ -169,6 +178,28 @@ public sealed class LocalNavGrid
     /// <param name="point">The point.</param>
     /// <returns><c>true</c> when blocked.</returns>
     public bool IsBlocked(Vector2 point) => CellOf(point) is var index && index >= 0 && _blocked[index];
+
+    /// <summary>Opens the cells within a half-width of a segment, as a bridge deck does over water.</summary>
+    private static void Open(bool[] blocked, Vector2 origin, float cell, int side, Vector2 from, Vector2 to, float halfWidth)
+    {
+        var (low, high) = (Vector2.Min(from, to) - new Vector2(halfWidth), Vector2.Max(from, to) + new Vector2(halfWidth));
+        var (x0, z0) = (Math.Max(0, (int)MathF.Floor((low.X - origin.X) / cell)), Math.Max(0, (int)MathF.Floor((low.Y - origin.Y) / cell)));
+        var (x1, z1) = (Math.Min(side - 1, (int)MathF.Ceiling((high.X - origin.X) / cell)), Math.Min(side - 1, (int)MathF.Ceiling((high.Y - origin.Y) / cell)));
+        var along = to - from;
+        var length = along.LengthSquared();
+        for (var z = z0; z <= z1; z++)
+        {
+            for (var x = x0; x <= x1; x++)
+            {
+                var point = origin + new Vector2((x + 0.5f) * cell, (z + 0.5f) * cell);
+                var t = length > 0f ? Math.Clamp(Vector2.Dot(point - from, along) / length, 0f, 1f) : 0f;
+                if (Vector2.DistanceSquared(point, from + (along * t)) <= halfWidth * halfWidth)
+                {
+                    blocked[(z * side) + x] = false;
+                }
+            }
+        }
+    }
 
     /// <summary>Marks the cells within a radius of a point blocked.</summary>
     private static void Block(bool[] blocked, Vector2 origin, float cell, int side, Vector3 point, float radius)

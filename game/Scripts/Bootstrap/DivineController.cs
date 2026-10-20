@@ -199,7 +199,12 @@ internal sealed class DivineController
     /// <param name="cursor">Ground point under the cursor.</param>
     /// <returns>The point, or <c>null</c> when the hand does not hold it.</returns>
     public Vector3? HeldCreatureAt(NVector3? cursor) =>
-        _session.LocalGod?.Held?.Kind == Pantheon.Domain.Hand.HeldKind.Creature && cursor is { } point ? point.ToGodot() + new Vector3(0f, 12f, 0f) : null;
+        _session.LocalGod?.Held?.Kind == Pantheon.Domain.Hand.HeldKind.Creature && cursor is { } point
+            ? point.ToGodot() + new Vector3(_hand.Swing.X * CreatureSwing, 12f, _hand.Swing.Y * CreatureSwing)
+            : null;
+
+    // How far, in metres, a held Creature swings out at the hand's fullest swing (ADR-057).
+    private const float CreatureSwing = 6f;
 
     /// <summary>Shows the next map overlay, or hides it after the last one.</summary>
     public void CycleOverlay()

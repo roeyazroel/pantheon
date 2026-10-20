@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Pantheon.Domain.Settlements;
@@ -86,10 +87,31 @@ public sealed class SettlementPresenter
         {
             if (_views.TryGetValue(settlement.Id, out var view))
             {
-                statuses.Add(view.UpdateCitizens(settlement, simulationSeconds, camera, world.Villagers));
+                statuses.Add(view.UpdateCitizens(settlement, simulationSeconds, camera, world.Villagers, world.Roads));
             }
         }
 
         CrowdStatuses = statuses;
     }
+
+    /// <summary>The highest roof near a point, so the camera keeps above the houses (ADR-057).</summary>
+    /// <param name="x">The point's X.</param>
+    /// <param name="z">The point's Z.</param>
+    /// <returns>The roof's height, or <c>null</c> when no house stands near.</returns>
+    public float? RoofAt(float x, float z)
+    {
+        float? highest = null;
+        foreach (var view in _views.Values)
+        {
+            if (Pantheon.Game.Presentation.Rooftops.Highest(view.Site, x, z, RoofReach) is { } roof)
+            {
+                highest = highest is { } h ? MathF.Max(h, roof) : roof;
+            }
+        }
+
+        return highest;
+    }
+
+    // How far beside a house's walls the camera still keeps above its roof, in metres.
+    private const float RoofReach = 3f;
 }

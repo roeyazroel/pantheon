@@ -72,6 +72,7 @@ silently:
 | [ADR-054](ADR-054-wildlife-and-bridges.md) | Wildlife and bridges | Accepted |
 | [ADR-055](ADR-055-expressive-creatures-and-miracle-looks.md) | Expressive Creatures and miracle looks | Accepted |
 | [ADR-056](ADR-056-cpu-budget-graphics-scaling-and-region-tolerance.md) | The simulation's CPU budget, graphics scaling and regions sent within a tolerance | Accepted (amends ADR-019) |
+| [ADR-057](ADR-057-tactile-hand-camera-above-roofs-and-bridges.md) | A tactile hand, the camera above the roofs, and walkers on bridges | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

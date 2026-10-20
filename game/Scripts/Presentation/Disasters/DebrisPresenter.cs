@@ -137,6 +137,33 @@ public sealed class DebrisPresenter
     }
 
     /// <summary>One piece as a rigid body, making room for it when there are too many.</summary>
+    /// <summary>
+    /// Knocks the pieces near a point away from it and up a little, as the hand presses down there
+    /// (spec §55, ADR-057): the nearer, the harder.
+    /// </summary>
+    /// <param name="point">Where the hand pressed.</param>
+    /// <param name="reach">How far from it pieces are moved, in metres.</param>
+    public void Push(Vector3 point, float reach)
+    {
+        foreach (var (body, _, _, _) in _pieces)
+        {
+            var away = body.GlobalPosition - point;
+            away.Y = 0f;
+            var distance = away.Length();
+            if (distance > reach)
+            {
+                continue;
+            }
+
+            var direction = distance > 0.01f ? away / distance : Vector3.Right;
+            body.Sleeping = false;
+            body.ApplyCentralImpulse((direction + (Vector3.Up * 0.6f)) * (PushSpeed * (1f - (distance / reach)) * body.Mass));
+        }
+    }
+
+    // How fast, in metres a second, the hand's press knocks a piece right beside it.
+    private const float PushSpeed = 7f;
+
     private void Add(DebrisPiece piece, Vector3 at, StaticBody3D ground)
     {
         while (_pieces.Count >= _settings.MaxBodies)

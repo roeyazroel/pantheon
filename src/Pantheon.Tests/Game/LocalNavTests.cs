@@ -164,6 +164,25 @@ public sealed class LocalNavTests
         Assert.NotSame(water, land.Water);
     }
 
+    [Fact]
+    public void ARiver_IsCrossedOnABridge_WhereOneSpansIt_AndWithoutOneThereIsNoWay()
+    {
+        // A river runs north to south at x 80..90; the shrine stands east of it.
+        var terrain = FlatTerrain((x, _) => x is > 80f and < 90f ? -2f : 5f);
+        var hut = new HutPlacement(new Vector3(120f, 5f, 100f), 0f, 1f);
+        var bridge = (From: new Vector3(78f, 5.6f, 60f), To: new Vector3(92f, 5.6f, 60f));
+        var (west, east) = (new Vector2(60f, 70f), new Vector2(110f, 70f));
+
+        var unbridged = LocalNavGrid.Build(Site([hut]), Village(), terrain, Citizens);
+        var bridged = LocalNavGrid.Build(Site([hut]), Village(), terrain, Citizens, bridges: [bridge]);
+
+        Assert.Null(unbridged.Way(west, east));
+        var way = bridged.Way(west, east);
+        Assert.NotNull(way);
+        Assert.Contains(Walk(west, way!), p => p.X is > 82f and < 88f && MathF.Abs(p.Y - 60f) < 1.5f);
+        Assert.All(Walk(west, way!).Where(p => p.X is > 81f and < 89f), p => Assert.InRange(p.Y, 58.5f, 61.5f));
+    }
+
     /// <summary>Whether a point lies inside a hut's walls.</summary>
     private static bool InAHut(SettlementSite site, Vector2 point) =>
         site.Houses.Any(h => Vector2.Distance(new Vector2(h.Position.X, h.Position.Z), point) < (LocalNavGrid.HutRadius * h.Scale) - 0.15f);

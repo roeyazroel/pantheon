@@ -236,10 +236,16 @@ public partial class GodCameraController : Node3D
         }
     }
 
-    /// <summary>Places the camera at the model's pose.</summary>
+    /// <summary>
+    /// The highest roof near a ground point, if any (ADR-057): the camera keeps above roofs as it
+    /// does above the ground, so it never looks out from inside a house on a steep village's edge.
+    /// </summary>
+    public Func<float, float, float?>? Roofs { get; set; }
+
+    /// <summary>Places the camera at the model's pose, above the ground and the roofs.</summary>
     private void ApplyPose()
     {
-        var pose = Model.ComputePose(_groundHeight);
+        var pose = Model.ComputePose((x, z) => Roofs?.Invoke(x, z) is { } roof ? MathF.Max(_groundHeight(x, z), roof) : _groundHeight(x, z));
         _camera.LookAtFromPosition(pose.Position.ToGodot() + ShakeOffset, pose.Target.ToGodot() + ShakeOffset, Vector3.Up);
     }
 

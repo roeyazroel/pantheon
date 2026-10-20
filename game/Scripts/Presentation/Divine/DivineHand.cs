@@ -24,6 +24,11 @@ internal sealed partial class DivineHand : Node3D
     private float _cameraDistance = 300f;
     private float _gestureSize;
     private Node3D _held = null!;
+    private readonly Pantheon.Game.Hand.HeldSwing _swing = new();
+    private bool _pressed;
+
+    // How far below the grip what the hand holds hangs, in hand sizes: it swings about the grip.
+    private const float HangBelowGrip = 0.35f;
 
     private enum Gesture
     {
@@ -69,17 +74,28 @@ internal sealed partial class DivineHand : Node3D
             Rotation = new Vector3(Mathf.Pi / 2f, 0f, 0.7f),
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         });
-        hand._held = new Node3D { Name = "Held", Position = new Vector3(0f, -0.55f, 0.3f) };
+        // The held thing hangs below a grip under the palm and swings about it (ADR-057).
+        hand._held = new Node3D { Name = "Held", Position = new Vector3(0f, -0.55f + HangBelowGrip, 0.3f) };
         hand.AddChild(hand._held);
         foreach (var kind in new[] { HeldKind.Rock, HeldKind.Tree, HeldKind.Villagers, HeldKind.Offering })
         {
             var thing = HeldThing.Create(kind);
             thing.Visible = false;
+            thing.Position = new Vector3(0f, -HangBelowGrip, 0f);
             hand._held.AddChild(thing);
         }
 
         return hand;
     }
+
+    /// <summary>Raised when a press reaches the ground, at the point pressed (spec §55: the debris there is knocked away).</summary>
+    public event System.Action<Vector3>? Pressed;
+
+    /// <summary>
+    /// How far, in hand sizes, what the hand holds has swung from straight below it, towards +X and
+    /// +Z (ADR-057); a held Creature hangs offset by it.
+    /// </summary>
+    public Vector2 Swing => new(Mathf.Sin(_swing.Tilt.X), Mathf.Sin(_swing.Tilt.Y));
 
     /// <summary>Shows what the hand holds under its palm; a held Creature hangs below on its own.</summary>
     /// <param name="kind">What it holds, or <c>null</c>.</param>
@@ -149,22 +165,33 @@ internal sealed partial class DivineHand : Node3D
             var t = Mathf.Clamp(_age / GestureSeconds, 0f, 1f);
             Visible = true;
             Animate(t, size);
+            if (_gesture == Gesture.Press && t >= 0.5f && !_pressed)
+            {
+                _pressed = true;
+                Pressed?.Invoke(_gestureTarget);
+            }
+
             if (t >= 1f)
             {
                 _gesture = Gesture.None;
             }
-
-            return;
+        }
+        else
+        {
+            Visible = _hasCursor;
+            Position = _cursor + new Vector3(0f, (HoverHeight * _cameraDistance) + size, 0f);
+            Rotation = Vector3.Zero;
         }
 
-        Visible = _hasCursor;
-        Position = _cursor + new Vector3(0f, (HoverHeight * _cameraDistance) + size, 0f);
-        Rotation = Vector3.Zero;
+        // What the hand holds lags behind its moves, swings past and settles (ADR-057).
+        _swing.Step(new System.Numerics.Vector2(GlobalPosition.X, GlobalPosition.Z) / size, (float)delta);
+        _held.Rotation = new Vector3(-_swing.Tilt.Y, 0f, _swing.Tilt.X);
     }
 
     /// <summary>Starts a gesture.</summary>
     private void Start(Gesture gesture, Vector3 target, float lift, float size = 0f)
     {
+        _pressed = false;
         _gestureSize = size;
         _gesture = gesture;
         _age = 0f;
