@@ -74,7 +74,7 @@ silently:
 | [ADR-056](ADR-056-cpu-budget-graphics-scaling-and-region-tolerance.md) | The simulation's CPU budget, graphics scaling and regions sent within a tolerance | Accepted (amends ADR-019) |
 | [ADR-057](ADR-057-tactile-hand-camera-above-roofs-and-bridges.md) | A tactile hand, the camera above the roofs, and walkers on bridges | Accepted |
 | [ADR-058](ADR-058-camera-controls-for-mouse-and-trackpad.md) | Camera controls for the mouse and the trackpad | Accepted |
-| [ADR-059](ADR-059-interface-look-scaling-and-hud.md) | The interface's look, its scaling, and a HUD of gauges | Accepted |
+| [ADR-059](ADR-059-interface-look-scaling-and-hud.md) | The interface's look, its scaling, and a HUD of gauges | Accepted; amended by ADR-068 |
 | [ADR-060](ADR-060-main-menu-and-local-sqlite-profile.md) | A main menu and the player's profile in local SQLite | Accepted (amends ADR-020) |
 | [ADR-061](ADR-061-animal-creatures.md) | Animal Creatures, distinct for every god, and their motion close up | Accepted (amends ADR-021) |
 | [ADR-062](ADR-062-creature-fights-on-command.md) | Creature fights on command, and fights you can see | Accepted |
@@ -83,6 +83,7 @@ silently:
 | [ADR-065](ADR-065-the-gods-minds-and-a-born-pantheon.md) | The gods' minds: optional language models and a pantheon born for each world | Accepted; amended by ADR-067 |
 | [ADR-066](ADR-066-talking-to-the-gods.md) | Talking to the gods | Accepted |
 | [ADR-067](ADR-067-openai-and-gemini-minds.md) | OpenAI and Gemini as the gods' minds | Accepted (amends ADR-065) |
+| [ADR-068](ADR-068-every-command-in-view.md) | Every command in view: the god's bar, the key map, and the debug tools behind a setting | Accepted (amends ADR-059) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

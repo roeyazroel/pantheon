@@ -89,6 +89,9 @@ public sealed record HudModel
     /// <summary>Whether the simulation is paused.</summary>
     public bool Paused { get; init; }
 
+    /// <summary>Whether the player's miracles are cast veiled (ADR-026), for the miracle bar's Veil toggle (ADR-068).</summary>
+    public bool Veiled { get; init; }
+
     /// <summary>The speed in use, as an index into <see cref="SessionCommands.SpeedPresets"/>.</summary>
     public int SpeedPreset { get; init; }
 

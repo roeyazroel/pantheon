@@ -63,7 +63,8 @@ src/
   Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing, the player's profile
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
-                              Tier 2 representative citizens (Population), Multiplayer (host and player)
+                              Tier 2 representative citizens (Population), Multiplayer (host and player),
+                              Controls (the key map and the god's bar, ADR-068)
   Pantheon.Networking/        Host-authoritative protocol (ADR-003, ADR-018): messages, codecs, transport
                               contract, in-memory loopback
   Pantheon.Oracle/            The language models behind the gods' minds (ADR-065, ADR-067): Claude
@@ -867,8 +868,18 @@ and a Lumen an Ape. A missing,
   its meter, `TimeControls` (season, pause and speeds), `AlertList`, `StatusToast`, the miracle bar
   of `MiracleTile`s (a vector glyph from `MiracleGlyphs` by the miracle's look, its key, cost,
   cooldown sweep and lock) and `CreaturePanel` (meters for health, needs, loyalty and nature, the
-  command buttons, and its paths, attributes and bonds when opened). It shows `HudModel`s and
-  reports clicks.
+  command buttons, and its paths, attributes and bonds when opened). Under the time controls,
+  `GodBar` (ADR-068): a `CommandButton` per `CommandBar` button, drawn by `CommandGlyphs` with its
+  key on a badge (`KeyText`), and the map's chooser of overlays by name. The miracle bar ends with
+  the Veil toggle, and a rival's chip is a button. It shows `HudModel`s and reports clicks.
+- `Bootstrap/CommandController` (ADR-068) runs the god's bar. A button presses its input action
+  (`Input.ParseInputEvent`), so it runs the same handler as the key; the Map, Keys and Debug
+  buttons open the chooser, `UI/Flow/KeysPanel` (the key map, `KeysPage`, also the settings' Keys
+  tab) and `UI/DebugPalette`. It lights the buttons whose panels are open, and Esc puts its
+  windows away. `Bootstrap/DebugTools` says whether the debug tools are on
+  (`GameSettings.DebugTools`, or the build when that is null); `GameRoot` and `PoliticsController`
+  run the debug group's keys only then. `GodCameraController.CommandGroundPoint` is the ground a
+  command acts on: under the pointer, or the view's centre while the pointer is over the interface.
 - `Presentation/Weather/`: `WeatherPresenter` keeps one `CloudView` per weather cell (soft
   camera-facing puffs that fade near the camera, rain streaks seen nearby, falling white and slow
   when it snows) and plays lightning bolts; it dims the sun under storms over the camera's focus,
@@ -910,7 +921,7 @@ and a Lumen an Ape. A missing,
   follower's colour, posed for walking, work, prayer and rest, with a label (ADR-043).
   `CitizenView` hides their crowd double.
 - `Bootstrap/NatureDebug` wires the weather, disaster, migration and Creature debug hotkeys (F8,
-  F10, F11, F12, M, K) and the `--weather`, `--disaster`, `--migrate`, `--refugees` and `--meet`
+  F10, F11, F12, M, K; run only while the debug tools are on, ADR-068) and the `--weather`, `--disaster`, `--migrate`, `--refugees` and `--meet`
   launch options.
 - `Presentation/Creatures/CreatureView` poses fights (blows traded face to face), games and
   flight, shows a fighter's health on its label, and `CreatureBody` draws scars on the flanks.
@@ -920,8 +931,8 @@ and a Lumen an Ape. A missing,
   hosting and joining from the menu (joining reloads the main scene, whose next start reads the
   host's address from `PendingLaunch`), the end screen, the guide and the history panel (H), drawn
   by `UI/Flow/`: `MenuScreen` (the title with its choices and pages, the pause menu, the end),
-  `NewWorldPage`, `WorldsPage`, `MultiplayerPage`, `SettingsPage` (five tabs, the fifth
-  `MindsSettings`, ADR-065), `PantheonPages` (the gods waking and the gods of a world), `HistoryPanel`,
+  `NewWorldPage`, `WorldsPage`, `MultiplayerPage`, `SettingsPage` (six tabs: graphics, sound,
+  controls, the keys (`KeysPage`, ADR-068), the interface and `MindsSettings`, ADR-065), `PantheonPages` (the gods waking and the gods of a world), `HistoryPanel`,
   `GuidePanel` and `UiKit`. `Bootstrap/Startup.Profile` opens the profile once a run and keeps
   the settings in it, and the Anthropic key apart from them. `Bootstrap/Births` bears a new
   world's gods (ADR-065): by the scribes, or by the chosen model off the main thread.
@@ -931,7 +942,9 @@ and a Lumen an Ape. A missing,
   unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
   (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
   end, says goodbye and saves a host's world.
-- `UI/DiplomacyPanel`: the diplomacy panel (P), built in code from `DiplomacyReadout` entries. Its
+- `UI/DiplomacyPanel`: the diplomacy panel (P), owned by `Bootstrap/PoliticsController` since
+  ADR-068, built in code from `DiplomacyReadout` entries. An unmet god's card offers Seek
+  (`CreatureCommands.Seek`) and, with the debug tools, Bring its Creature (K). Its
   buttons send the moves through `SessionCommands.CommandDiplomacy`, and its refugee row sets the
   player's policy through `MigrationCommands.SetPolicy`. Each card lists the player's treaties with
   that god (with Break), its other treaties, favours and its proposal; "Treaties and requests"
@@ -1890,6 +1903,35 @@ ADR-066 records the decisions, and the plan is
 - **The client.** `TalkController` (created by `GameFlow`) opens `TalkPanel` from Speak on a
   diplomacy card, pauses the world while it is open, and lets only the host talk.
 
+## Every command in view
+
+ADR-068 records the decisions, and the plan is
+[.docs/milestone-15-part-47-commands-in-view.md](../.docs/milestone-15-part-47-commands-in-view.md).
+
+- **The key map** (`Pantheon.Game.Controls.KeyGuide`): every key and gesture of play as
+  `KeyEntry`s in seven `KeyGroup`s, naming `project.godot`'s actions (and a held `KeyModifier`, or
+  a gesture in words). Its debug group is the debug tools: `IsDebug` tells the client which keys
+  run only while they are on. A test holds it to `project.godot` both ways.
+- **The god's bar** (`CommandBar.Buttons`): the buttons in order, each with the action it presses;
+  the Debug palette's only with the debug tools on.
+- **The overlays offered** (`OverlayChoices`): by name, the debug overlays only with the debug
+  tools; `OverlayMap.Next` skips them likewise.
+- **Seeking a god** (`CreatureCommands.Seek`): the Creature's GoTo, through the authority, aimed at
+  the other god's Creature; the meeting is the simulation's own (ADR-017, ADR-036).
+- **Choices** in the menus: `NewWorldOptions.GodsMet` (`WorldMaker` introduces every pair before
+  the history begins), and `GameSettings.DebugTools` and `SimpleTerrain`.
+
+```mermaid
+flowchart LR
+    guide[KeyGuide] --> map[KeysPage: the key map]
+    guide --> palette[DebugPalette]
+    guide --> gate[GameRoot: debug keys only while on]
+    bar[CommandBar] --> godbar[GodBar]
+    godbar --> controller[CommandController]
+    palette --> controller
+    controller -->|presses the action| handlers[the keys' own handlers]
+```
+
 ## Diplomacy
 
 ADR-012 records the decisions, and the Milestone 6 plan
@@ -2449,7 +2491,9 @@ flowchart LR
 
 Every system gets tools to see and drive it from the start (see [AGENTS.md](../AGENTS.md)).
 The readouts are built by pure functions in `Pantheon.Game.Diagnostics` and only displayed by
-the client.
+the client. The keys that change the world, and the debug views, are the debug tools of ADR-068:
+they run while the settings turn them on (on, by default, in a game run from the project), and the
+god's bar's Debug palette has a button for each.
 
 - F1: the debug panel (hidden at the start), built by `DebugReadout` from a `DebugSnapshot`. Its
   second line gives the seed, the island's width and the world's victories (ADR-027).

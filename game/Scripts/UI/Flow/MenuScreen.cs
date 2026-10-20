@@ -131,7 +131,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         _page.Visible = false;
     }
 
-    /// <summary>Opens a page of the title screen by name (new, worlds, together, settings or minds), for captures.</summary>
+    /// <summary>Opens a page of the title screen by name (new, worlds, together, settings, minds or keys), for captures.</summary>
     /// <param name="page">The page.</param>
     public void OpenTitlePage(string page) => OpenPage(page switch
     {
@@ -139,6 +139,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         "together" => MultiplayerPage.Build(this, _data.Seed),
         "settings" => SettingsPage.Build(this),
         "minds" => SettingsPage.Build(this, "Minds"),
+        "keys" => SettingsPage.Build(this, "Keys"),
         _ => NewWorldPage.Build(this, _data.Seed),
     });
 

@@ -35,8 +35,13 @@ public static class OverlayMap
 
     /// <summary>The overlay the overlay key shows next.</summary>
     /// <param name="kind">Current overlay, or <c>null</c> when none is shown.</param>
+    /// <param name="debugTools">Whether the debug tools are on: without them the debug overlays, last in the order, are skipped (ADR-068).</param>
     /// <returns>The next overlay, or <c>null</c> after the last one.</returns>
-    public static OverlayKind? Next(OverlayKind? kind) => kind is { } current ? After(current) : OverlayKind.Influence;
+    public static OverlayKind? Next(OverlayKind? kind, bool debugTools = true)
+    {
+        var next = kind is { } current ? After(current) : OverlayKind.Influence;
+        return next is { } shown && !debugTools && OverlayChoices.IsDebug(shown) ? null : next;
+    }
 
     /// <summary>The overlay after <paramref name="kind"/>, or <c>null</c> after the last one.</summary>
     private static OverlayKind? After(OverlayKind kind) => kind switch

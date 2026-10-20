@@ -68,6 +68,9 @@ internal sealed class DivineController
     /// <summary>The selected miracle, if any.</summary>
     public string? SelectedMiracle { get; private set; }
 
+    /// <summary>Whether a miracle is chosen or an order waits for its click, so Esc cancels it rather than opening the menu (ADR-068).</summary>
+    public bool Aiming => SelectedMiracle is not null || SendMode || FightMode || WorkMode;
+
     /// <summary>The map overlay shown, if any.</summary>
     public OverlayKind? Overlay { get; private set; }
 
@@ -324,12 +327,16 @@ internal sealed class DivineController
     // How far a held Creature's feet swing out, as a share of its height for a full swing of the hand.
     private const float CreatureSwing = 0.5f;
 
-    /// <summary>Shows the next map overlay, or hides it after the last one.</summary>
-    public void CycleOverlay()
+    /// <summary>Shows the next map overlay, or hides it after the last one; the debug overlays only with the debug tools on (ADR-068).</summary>
+    public void CycleOverlay() => ShowOverlay(OverlayMap.Next(Overlay, DebugTools.On));
+
+    /// <summary>Shows a map overlay, or hides it.</summary>
+    /// <param name="kind">The overlay, or <c>null</c> for none.</param>
+    public void ShowOverlay(OverlayKind? kind)
     {
-        Overlay = OverlayMap.Next(Overlay);
+        Overlay = kind;
         _shownOverlay = null;
-        _setStatus(Overlay is { } kind ? $"{kind} overlay" : "Overlay off");
+        _setStatus(Overlay is { } shown ? $"{shown} overlay" : "Overlay off");
     }
 
     /// <summary>Forgets the old world's alerts and effects after a new or loaded world.</summary>

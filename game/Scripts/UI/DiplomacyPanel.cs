@@ -54,6 +54,12 @@ public partial class DiplomacyPanel : CanvasLayer
     /// <summary>The player asked to speak with a god (ADR-066).</summary>
     public event Action<int>? SpeakClicked;
 
+    /// <summary>The player sent their Creature to meet a god's they have not met (ADR-068).</summary>
+    public event Action<int>? SeekClicked;
+
+    /// <summary>The player brought a god's Creature beside theirs, a debug tool (K, ADR-068).</summary>
+    public event Action<int>? BringClicked;
+
     /// <summary>Whether the panel is shown.</summary>
     public bool PanelVisible
     {
@@ -125,6 +131,24 @@ public partial class DiplomacyPanel : CanvasLayer
         }
     }
 
+    /// <summary>Ways to meet a god not yet met (ADR-068): seek it out with the Creature, or, with the debug tools on, bring its Creature at once.</summary>
+    private HBoxContainer MeetingButtons(int godId)
+    {
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 8);
+        var seek = new Button { Text = "Seek them out", FocusMode = Control.FocusModeEnum.None, TooltipText = "Send your Creature to theirs: when the two Creatures meet, so do you" };
+        seek.Pressed += () => SeekClicked?.Invoke(godId);
+        row.AddChild(seek);
+        if (Bootstrap.DebugTools.On)
+        {
+            var bring = new Button { Text = "Bring its Creature (K)", FocusMode = Control.FocusModeEnum.None, TooltipText = "Debug: this god's Creature comes beside yours, so they meet at once" };
+            bring.Pressed += () => BringClicked?.Invoke(godId);
+            row.AddChild(bring);
+        }
+
+        return row;
+    }
+
     /// <summary>A card for one god.</summary>
     private Control BuildCard(DiplomacyEntry entry)
     {
@@ -147,6 +171,7 @@ public partial class DiplomacyPanel : CanvasLayer
         if (!entry.Met)
         {
             card.AddChild(Text(DiplomacyText.Unmet, 13, Muted));
+            card.AddChild(MeetingButtons(entry.GodId));
             return card;
         }
         var practice = MigrationText.Practice(entry.RefugeePolicy);

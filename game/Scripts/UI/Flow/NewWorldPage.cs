@@ -7,7 +7,7 @@ using Pantheon.Game.Flow;
 
 namespace Pantheon.Client.UI.Flow;
 
-/// <summary>The title screen's page for a new world (ADR-060): its name, seed, Creature, size, victory and climate.</summary>
+/// <summary>The title screen's page for a new world (ADR-060): its name, seed, Creature, size, victory, climate and how the gods begin (ADR-068).</summary>
 internal static class NewWorldPage
 {
     /// <summary>The climates offered: seasons first (ADR-028).</summary>
@@ -15,6 +15,13 @@ internal static class NewWorldPage
     [
         ("Four seasons", "Snowy winters and stores to last them, harvests in autumn, heat and fire in summer."),
         ("An even climate", "No seasons: the weather comes and goes the year round."),
+    ];
+
+    /// <summary>How the gods begin (ADR-068): strangers first.</summary>
+    private static readonly (string Name, string Description)[] Acquaintances =
+    [
+        ("Strangers", "The gods meet as their lands, roads, believers or Creatures meet; until then none can deal with another."),
+        ("Known to one another", "Every god knows every other from the start: treaties, wars and talk from the first moment."),
     ];
 
     /// <summary>Builds the page.</summary>
@@ -54,10 +61,13 @@ internal static class NewWorldPage
         var climate = UiKit.Choice(Climates, out var climateAbout);
         column.AddChild(UiKit.Row("Climate", climate));
         column.AddChild(climateAbout);
+        var acquaintance = UiKit.Choice(Acquaintances, out var acquaintanceAbout);
+        column.AddChild(UiKit.Row("The gods", acquaintance));
+        column.AddChild(acquaintanceAbout);
 
         var begin = UiKit.Button("Begin", () => menu.ChooseNewWorld(
             ParseSeed(seedField.Text, seed),
-            new Pantheon.Game.NewWorldOptions(Chosen(menu.Species, species), Chosen(menu.Sizes, size), victory.Selected > 0 ? VictoryText.Choices[victory.Selected].Settings : null, climate.Selected <= 0),
+            new Pantheon.Game.NewWorldOptions(Chosen(menu.Species, species), Chosen(menu.Sizes, size), victory.Selected > 0 ? VictoryText.Choices[victory.Selected].Settings : null, climate.Selected <= 0, GodsMet: acquaintance.Selected == 1),
             name.Text.Trim()));
         begin.AddThemeFontOverride("font", UiTheme.Title);
         begin.AddThemeFontSizeOverride("font_size", 24);

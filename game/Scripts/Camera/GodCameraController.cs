@@ -78,6 +78,9 @@ public partial class GodCameraController : Node3D
     /// <summary>Ground (or sea surface) point under the mouse, updated every frame.</summary>
     public NVector3? CursorGroundPoint { get; private set; }
 
+    /// <summary>The ground a command acts on (ADR-068): under the mouse, or the view's centre while the mouse is over the interface.</summary>
+    public NVector3? CommandGroundPoint { get; private set; }
+
     /// <summary>Whether the cursor point is the screen centre whatever the mouse does (scripted runs, so captures can show targeting and the hand).</summary>
     public bool CenterCursorWhenAway { get; set; }
 
@@ -146,6 +149,7 @@ public partial class GodCameraController : Node3D
             : _mouseInWindow ? GetViewport().GetMousePosition()
             : (Vector2?)null;
         CursorGroundPoint = screenPoint is { } point && TryPickGround(point, out var hit) ? hit : null;
+        CommandGroundPoint = _mouseInWindow && GetViewport().GuiGetHoveredControl() is not null && TryPickGround(GetViewport().GetVisibleRect().Size / 2f, out var centre) ? centre : CursorGroundPoint;
     }
 
     /// <summary>Handles mouse buttons (zoom, grab), motion (drag-rotate) and the strategic overview (`, ADR-031).</summary>

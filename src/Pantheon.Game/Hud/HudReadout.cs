@@ -121,6 +121,7 @@ public static class HudReadout
                 ? Format("{0}, year {1}", SeasonText.Name(season), ClimateModel.YearOf(content.Weather, world))
                 : null,
             Paused = session.Scheduler.IsPaused,
+            Veiled = session.Veiled,
             SpeedPreset = SpeedPreset(session.Scheduler.TimeScale),
             RivalChips = BuildRivalChips(content.Diplomacy, world, god.Id, session.Players),
         };

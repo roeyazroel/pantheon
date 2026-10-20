@@ -5,9 +5,9 @@ using Pantheon.Game.Settings;
 namespace Pantheon.Client.UI.Flow;
 
 /// <summary>
-/// The settings (spec §105, ADR-021, ADR-056, ADR-058, ADR-059, ADR-065) in five tabs: graphics,
-/// sound, controls, the interface and the gods' minds. Each change is kept in the profile and most
-/// apply at once.
+/// The settings (spec §105, ADR-021, ADR-056, ADR-058, ADR-059, ADR-065, ADR-068) in six tabs:
+/// graphics, sound, controls, the keys, the interface and the gods' minds. Each change is kept in the
+/// profile and most apply at once.
 /// </summary>
 internal static class SettingsPage
 {
@@ -33,7 +33,8 @@ internal static class SettingsPage
         Slide(menu, graphics, "Citizens shown", s => s.Citizens, (s, v) => s with { Citizens = v }, GameSettings.MinCitizens, 1f);
         Slide(menu, graphics, "Vegetation", s => s.Vegetation, (s, v) => s with { Vegetation = v }, GameSettings.MinVegetation, 1f);
         Slide(menu, graphics, "Terrain quality", s => s.TerrainQuality, (s, v) => s with { TerrainQuality = v }, GameSettings.MinTerrainQuality, 1f);
-        graphics.AddChild(UiKit.Text("Citizens, vegetation and terrain quality take effect when the game next starts. A lower render scale draws faster on a large screen.", UiTheme.CaptionSize, UiKit.Muted));
+        Toggle(menu, graphics, "Simple terrain", s => s.SimpleTerrain, (s, on) => s with { SimpleTerrain = on });
+        graphics.AddChild(UiKit.Text("Citizens, vegetation, terrain quality and simple terrain take effect when the game next starts. A lower render scale draws faster on a large screen; simple terrain suits a computer the detailed land is slow on.", UiTheme.CaptionSize, UiKit.Muted));
         Slide(menu, graphics, "Simulation budget (ms)", s => s.SimulationBudget, (s, v) => s with { SimulationBudget = v }, GameSettings.MinSimulationBudget, GameSettings.MaxSimulationBudget, 1.0);
 
         var sound = Tab(tabs, "Sound");
@@ -48,8 +49,12 @@ internal static class SettingsPage
         Slide(menu, controls, "Camera speed", s => s.CameraSpeed, (s, v) => s with { CameraSpeed = v }, GameSettings.MinCameraSpeed, GameSettings.MaxCameraSpeed);
         controls.AddChild(UiKit.Text("Drag the land with the left button to move, the right button to turn and tilt, and the wheel or a pinch to zoom. On a trackpad two fingers move the view, and Option with two fingers turns it.", UiTheme.CaptionSize, UiKit.Muted));
 
+        Tab(tabs, "Keys").AddChild(KeysPage.Build(Bootstrap.DebugTools.Of(menu.Settings), 380f));
+
         var view = Tab(tabs, "Interface");
         Slide(menu, view, "Interface size", s => s.InterfaceScale, (s, v) => s with { InterfaceScale = v }, GameSettings.MinInterfaceScale, GameSettings.MaxInterfaceScale);
+        Toggle(menu, view, "Debug tools", Bootstrap.DebugTools.Of, (s, on) => s with { DebugTools = on });
+        view.AddChild(UiKit.Text("The debug tools try the game out: their keys (F4 for power, J for the council, K to meet a Creature and more), a Debug button on the god's bar with all of them, and the debug overlays. They are on when the game runs from its project.", UiTheme.CaptionSize, UiKit.Muted));
 
         MindsSettings.Fill(menu, Tab(tabs, "Minds"));
         for (var i = 0; i < tabs.GetTabCount(); i++)

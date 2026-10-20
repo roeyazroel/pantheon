@@ -19,6 +19,19 @@ public sealed class GameSettingsTests
         Assert.True(new GameSettings().LightingEffects, "the lighting effects are on unless turned off");
     }
 
+    [Fact]
+    public void TheDebugTools_AndSimpleTerrain_RoundTrip_AndAnOlderFileLeavesThemToTheirDefaults()
+    {
+        foreach (var settings in new[] { new GameSettings { DebugTools = true, SimpleTerrain = true }, new GameSettings { DebugTools = false } })
+        {
+            Assert.Equal(settings, GameSettings.Parse(settings.Serialize()));
+        }
+
+        var older = GameSettings.Parse("""{ "fullscreen": true }""");
+        Assert.Null(older.DebugTools);
+        Assert.False(older.SimpleTerrain);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

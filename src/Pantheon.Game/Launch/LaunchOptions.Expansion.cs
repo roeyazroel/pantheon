@@ -169,9 +169,9 @@ public sealed partial record LaunchOptions
             case "fight":
                 return OnOff(value) is { } fight ? options with { Fight = fight } : Warn(options, warnings, $"'--fight' needs on or off, got '{value}'.");
             case "title-page":
-                return value is "new" or "worlds" or "together" or "settings" or "minds"
+                return value is "new" or "worlds" or "together" or "settings" or "minds" or "keys"
                     ? options with { TitlePage = value, Menu = true }
-                    : Warn(options, warnings, $"Unknown title page '{value}'; expected new, worlds, together, settings or minds.");
+                    : Warn(options, warnings, $"Unknown title page '{value}'; expected new, worlds, together, settings, minds or keys.");
             case "priority":
                 return Enum.TryParse<Domain.Society.SettlementPriority>(trimmed, ignoreCase: true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(trimmed, out _)
                     ? options with { Priority = priority }

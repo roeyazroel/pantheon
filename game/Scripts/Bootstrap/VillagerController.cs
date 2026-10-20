@@ -106,7 +106,7 @@ internal sealed partial class VillagerController : Node
             return;
         }
 
-        var cursor = _camera.CursorGroundPoint is { } point ? new GroundPosition(point.X, point.Z) : (GroundPosition?)null;
+        var cursor = _camera.CommandGroundPoint is { } point ? new GroundPosition(point.X, point.Z) : (GroundPosition?)null;
         if (cursor is { } at && VillagerCommands.Pick(_session, _presentation.SettlementView, at) is { } picked)
         {
             _setStatus(VillagerCommands.Follow(_session, picked));

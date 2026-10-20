@@ -131,6 +131,19 @@ public sealed record GameSettings
     public float AmbienceVolume { get; init; } = 0.6f;
 
     /// <summary>
+    /// Whether the debug tools are on (ADR-068): their keys, the god's bar's Debug button and the debug
+    /// overlays. <c>null</c> lets the build decide: on when the game runs from the project, off in an
+    /// exported game.
+    /// </summary>
+    public bool? DebugTools { get; init; }
+
+    /// <summary>
+    /// Whether the land is drawn by the simple renderer rather than Terrain3D, for a computer Terrain3D
+    /// does not suit (ADR-068); it applies when the game next starts, and <c>--terrain</c> overrides it.
+    /// </summary>
+    public bool SimpleTerrain { get; init; }
+
+    /// <summary>
     /// Who gives the rival gods their minds (ADR-065, ADR-067): the scribes (offline, the default),
     /// Claude, GPT, Gemini or a local model. The keys are not kept here but on their own in the profile.
     /// </summary>

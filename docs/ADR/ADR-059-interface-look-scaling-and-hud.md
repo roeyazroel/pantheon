@@ -1,6 +1,6 @@
 # ADR-059: The interface's look, its scaling, and a HUD of gauges
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-068](ADR-068-every-command-in-view.md)
 - Date: 2026-10-20
 - Builds on: [ADR-021](ADR-021-domains-holy-sites-schisms-species-settings-and-audio.md) (the
   settings) and [ADR-058](ADR-058-camera-controls-for-mouse-and-trackpad.md) (the controls)

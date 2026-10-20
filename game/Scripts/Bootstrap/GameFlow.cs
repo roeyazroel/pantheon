@@ -88,6 +88,7 @@ internal sealed partial class GameFlow : Node
         {
             SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);
             Startup.SaveSettings(changed);
+            DebugTools.Apply(changed);
         };
         _history = new HistoryPanel { Name = "History" };
         _guidePanel = new GuidePanel { Name = "Guide" };
@@ -248,7 +249,7 @@ internal sealed partial class GameFlow : Node
             return;
         }
 
-        if (@event.IsActionPressed(InputActions.GameMenu) && _divine.SelectedMiracle is null && !_menu.IsOpen)
+        if (@event.IsActionPressed(InputActions.GameMenu) && !_divine.Aiming && !_menu.IsOpen)
         {
             ShowPause();
             GetViewport().SetInputAsHandled();

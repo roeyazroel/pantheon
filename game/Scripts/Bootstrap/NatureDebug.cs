@@ -59,7 +59,7 @@ internal sealed class NatureDebug
     {
         var kind = Pantheon.Game.GreatEvents.GreatEventCommands.Next(_lastGreatEvent);
         _lastGreatEvent = kind;
-        var point = _camera.CursorGroundPoint is { } cursor ? new GroundPosition(cursor.X, cursor.Z) : new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);
+        var point = _camera.CommandGroundPoint is { } cursor ? new GroundPosition(cursor.X, cursor.Z) : new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);
         _setStatus(Pantheon.Game.GreatEvents.GreatEventCommands.Start(_session, kind, point));
     }
 
@@ -67,7 +67,7 @@ internal sealed class NatureDebug
     private void NextHazard()
     {
         var kind = HazardCommands.Next(_lastHazard);
-        if (_camera.CursorGroundPoint is { } cursor)
+        if (_camera.CommandGroundPoint is { } cursor)
         {
             _lastHazard = kind;
             _setStatus(HazardCommands.Start(_session, kind, new GroundPosition(cursor.X, cursor.Z)));
@@ -204,5 +204,5 @@ internal sealed class NatureDebug
 
     /// <summary>Runs a command at the ground point under the cursor, or says to point at the ground.</summary>
     private void AtCursor(string what, Func<GroundPosition, string> command) =>
-        _setStatus(_camera.CursorGroundPoint is { } cursor ? command(new GroundPosition(cursor.X, cursor.Z)) : "Point at the ground to " + what);
+        _setStatus(_camera.CommandGroundPoint is { } cursor ? command(new GroundPosition(cursor.X, cursor.Z)) : "Point at the ground to " + what);
 }

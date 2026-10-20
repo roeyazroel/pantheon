@@ -55,7 +55,6 @@ public partial class GameRoot : Node3D
     private Pantheon.Client.Presentation.Migration.MigrationPresenter _migrants = null!;
     private NatureDebug _nature = null!;
     private Pantheon.Client.Network.NetworkDriver _network = null!;
-    private DiplomacyPanel _diplomacy = null!;
     private DivineController _divine = null!;
     private int _focusIndex = -1;
     private float? _baseFogDensity;
@@ -76,6 +75,7 @@ public partial class GameRoot : Node3D
         Startup.ReportLaunchWarnings(options);
         Startup.CheckInputMap();
         var settings = Startup.LoadSettings();
+        DebugTools.Apply(settings);
         GD.Print($"Profile kept in {Startup.Profile.Kind}");
         var loaded = Startup.TryLoadContent(settings);
         if (loaded is null)
@@ -89,7 +89,7 @@ public partial class GameRoot : Node3D
         var (content, presentation) = options.Stress ? (StressScenario.Content(loaded.Value.Content), StressScenario.Presentation(loaded.Value.Presentation)) : loaded.Value;
         _camera = GetNode<GodCameraController>("GodCamera");
         _overlay = GetNode<DebugOverlay>("DebugOverlay");
-        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain);
+        _presenter = new WorldPresenter(GetNode<Node3D>("World"), _camera.ViewCamera, presentation, content.SettlementRules, options.Terrain is TerrainBackendPreference.Auto && settings.SimpleTerrain ? TerrainBackendPreference.Fallback : options.Terrain);
         var worldNode = GetNode<Node3D>("World");
         _divinePresenter = new DivinePresenter(worldNode.AddLayer("Divine"), presentation.DivineView);
         _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
@@ -123,15 +123,13 @@ public partial class GameRoot : Node3D
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
         hud.CreatureLookClicked += FocusCreature;
         _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
-        _camera.LeftGrabAllowed = () => _divine.SelectedMiracle is null && !_divine.SendMode && !_divine.FightMode && !_divine.WorkMode;
-        _diplomacy = new DiplomacyPanel { Name = "Diplomacy" };
-        AddChild(_diplomacy);
-        _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
-        _diplomacy.PolicyClicked += policy => SetStatus(Pantheon.Game.Migration.MigrationCommands.SetPolicy(_session, policy));
-        CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
+        _camera.LeftGrabAllowed = () => !_divine.Aiming;
+        var politics = new PoliticsController { Name = "Politics" };
+        AddChild(politics);
+        politics.Setup(_session, _camera, SetStatus, options);
         var flow = new GameFlow { Name = "GameFlow" };
         AddChild(flow);
-        flow.Setup(_session, _network, _divine, (_diplomacy, hud), _camera, SetStatus, options, (settings, minds));
+        flow.Setup(_session, _network, _divine, (politics.Diplomacy, hud), _camera, SetStatus, options, (settings, minds));
         _flow = flow;
         var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };
         AddChild(audio);
@@ -147,15 +145,15 @@ public partial class GameRoot : Node3D
         AddChild(book);
         book.Setup(_session, options);
         book.MiracleAimed += _divine.Select;
-        var politics = new PoliticsController { Name = "Politics" };
-        AddChild(politics);
-        politics.Setup(_session, _camera, _diplomacy, SetStatus, options);
         var society = new SocietyController { Name = "Society" };
         AddChild(society);
         society.Setup(_session, _camera, SetStatus, options);
         var villagers = new VillagerController { Name = "Villagers" };
         AddChild(villagers);
         villagers.Setup(_session, _camera, worldNode.AddLayer("Villagers"), presentation, SetStatus, options);
+        var commands = new CommandController { Name = "Commands" };
+        AddChild(commands);
+        commands.Setup(hud, _divine, politics, _camera, options.Bar);
         _overlay.PanelVisible = options.DebugPanel ?? false;
         _session.Scheduler.TimeScale = options.Speed ?? _session.Scheduler.TimeScale;
         if (options.AdvanceTicks is { } ticks)
@@ -228,11 +226,6 @@ public partial class GameRoot : Node3D
         }
         var cursor = _camera.CursorGroundPoint;
         _divine.Process(delta, cursor, _camera.Model.Distance);
-        if (_diplomacy.PanelVisible)
-        {
-            _diplomacy.ShowEntries(Pantheon.Game.Diplomacy.DiplomacyReadout.Build(_session, _diplomacy.Choice), _session.LocalGod?.RefugeePolicy);
-        }
-
         var cursorRegion = RegionAt(cursor);
         _presenter.SetHoveredRegion(cursorRegion);
         _debug.Update(cursor, cursorRegion, _status, delta);
@@ -250,7 +243,8 @@ public partial class GameRoot : Node3D
 
         foreach (var (action, run) in _hotkeys)
         {
-            if (@event.IsActionPressed(action))
+            // The debug tools' keys run only while the settings turn them on (ADR-068).
+            if (@event.IsActionPressed(action) && (DebugTools.On || !Pantheon.Game.Controls.KeyGuide.IsDebug(action)))
             {
                 run();
                 GetViewport().SetInputAsHandled();
@@ -275,7 +269,6 @@ public partial class GameRoot : Node3D
         .. CreateMiracleHotkeys(),
         (InputActions.MiracleCancel, () => _divine.Select(null)),
         (InputActions.CreatureFocus, FocusCreature),
-        (InputActions.ToggleDiplomacy, () => _diplomacy.PanelVisible = !_diplomacy.PanelVisible),
         (InputActions.CreatureReward, () => _divine.JudgeCreature(CreatureCommandKind.Reward)),
         (InputActions.CreaturePunish, () => _divine.JudgeCreature(CreatureCommandKind.Punish)),
         (InputActions.CreatureSend, () =>
@@ -283,15 +276,15 @@ public partial class GameRoot : Node3D
             // V sends the Creature to the cursor; Shift+V sets it on the rival nearest the cursor (ADR-062).
             if (Input.IsKeyPressed(Key.Shift))
             {
-                _divine.FightAt(_camera.CursorGroundPoint);
+                _divine.FightAt(_camera.CommandGroundPoint);
             }
             else
             {
-                _divine.SendCreature(_camera.CursorGroundPoint);
+                _divine.SendCreature(_camera.CommandGroundPoint);
             }
         }),
-        (InputActions.CreatureWork, () => _divine.WorkAt(_camera.CursorGroundPoint)),
-        (InputActions.HandGrab, () => _divine.UseHand(_camera.CursorGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
+        (InputActions.CreatureWork, () => _divine.WorkAt(_camera.CommandGroundPoint)),
+        (InputActions.HandGrab, () => _divine.UseHand(_camera.CommandGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
         (InputActions.SimStepTick, () => SetStatus(SessionCommands.StepTick(_session))),
@@ -423,10 +416,6 @@ public partial class GameRoot : Node3D
             _divine.WorkFor(settlements[Math.Max(0, _focusIndex)], forest: work == "forest");
         }
     }
-
-    /// <summary>Shows the diplomacy panel once it is ready, when the launch options ask for it.</summary>
-    /// <param name="visible">Whether to show it.</param>
-    private void ShowDiplomacyAtStart(bool visible) => _diplomacy.PanelVisible = visible;
 
     /// <summary>Glides to the player's Creature and follows it until the player pans away (spec §56: focus Creature; ADR-058).</summary>
     private void FocusCreature()

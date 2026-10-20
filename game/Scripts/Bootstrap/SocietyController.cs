@@ -100,7 +100,7 @@ internal sealed partial class SocietyController : Node
     private int? Pick(bool cursorFirst)
     {
         var world = _session.World;
-        if (cursorFirst && _camera.CursorGroundPoint is { } cursor && SettlementPicker.Nearest(world, new GroundPosition(cursor.X, cursor.Z), PickDistance) is { } near)
+        if (cursorFirst && _camera.CommandGroundPoint is { } cursor && SettlementPicker.Nearest(world, new GroundPosition(cursor.X, cursor.Z), PickDistance) is { } near)
         {
             return near.Id;
         }

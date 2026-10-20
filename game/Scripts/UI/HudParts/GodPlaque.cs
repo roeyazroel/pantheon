@@ -26,6 +26,9 @@ internal sealed partial class GodPlaque : VBoxContainer
     private readonly List<(Label Name, Label Status)> _chips = [];
     private IReadOnlyList<RivalChip> _shownRivals = [];
 
+    /// <summary>The player clicked a rival: its god (ADR-068).</summary>
+    public event System.Action<int>? RivalClicked;
+
     /// <summary>Builds the plaque.</summary>
     /// <param name="godColor">A god's colour by its id.</param>
     public GodPlaque(Func<int, Color> godColor)
@@ -112,7 +115,16 @@ internal sealed partial class GodPlaque : VBoxContainer
         {
             var row = new HBoxContainer { MouseFilter = MouseFilterEnum.Pass };
             row.AddThemeConstantOverride("separation", 8);
-            var back = new PanelContainer { MouseFilter = MouseFilterEnum.Pass };
+            var back = new PanelContainer { MouseFilter = MouseFilterEnum.Stop, MouseDefaultCursorShape = CursorShape.PointingHand };
+            var index = _chips.Count;
+            back.GuiInput += input =>
+            {
+                if (input is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } && index < _shownRivals.Count)
+                {
+                    RivalClicked?.Invoke(_shownRivals[index].GodId);
+                    back.AcceptEvent();
+                }
+            };
             back.AddThemeStyleboxOverride("panel", UiTheme.Panel(new Color(0.05f, 0.06f, 0.08f, 0.7f), new Color(0f, 0f, 0f, 0f), 0, 6, margin: 4));
             back.AddChild(row);
             _rivals.AddChild(back);
@@ -136,7 +148,7 @@ internal sealed partial class GodPlaque : VBoxContainer
             name.AddThemeColorOverride("font_color", _godColor(rival.GodId).Lightened(0.2f));
             status.Text = StatusText(rival.Status);
             status.AddThemeColorOverride("font_color", StatusColor(rival.Status));
-            back.TooltipText = rival.Detail;
+            back.TooltipText = rival.Detail + "\nClick to open the gods' panel (P)";
         }
     }
 

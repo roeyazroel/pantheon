@@ -55,7 +55,7 @@ public sealed partial record LaunchOptions
         "domains",
         "domains-panel",
         "settings-page",
-    }.Union(ExpansionOptions()).Union(MindOptions()).ToHashSet(StringComparer.Ordinal);
+    }.Union(ExpansionOptions()).Union(MindOptions()).Union(ControlOptions()).ToHashSet(StringComparer.Ordinal);
 
     /// <summary>Seed used when no <c>--seed</c> or <c>--load</c> option is given.</summary>
     public static WorldSeed DefaultSeed { get; } = new(1234);
@@ -229,7 +229,7 @@ public sealed partial record LaunchOptions
             return Warn(options, warnings, $"Option '--{name}' needs a value.");
         }
 
-        if ((ApplyExpansion(options, name, value, warnings) ?? ApplyMinds(options, name, value, warnings)) is { } expanded)
+        if ((ApplyExpansion(options, name, value, warnings) ?? ApplyMinds(options, name, value, warnings) ?? ApplyControls(options, name, value, warnings)) is { } expanded)
         {
             return expanded;
         }

@@ -5,7 +5,7 @@ using Pantheon.Simulation.Creatures;
 
 namespace Pantheon.Game.Creatures;
 
-/// <summary>Creatures dealing with each other in the session (ADR-017): the debug meeting and the previews of the debug view. Engine-agnostic.</summary>
+/// <summary>Creatures dealing with each other in the session (ADR-017): seeking another god's (ADR-068), the debug meeting and the previews of the debug view. Engine-agnostic.</summary>
 public static class CreatureCommands
 {
     /// <summary>Brings another Creature beside the player's, so they meet at once (K, <c>--meet</c>). Host only.</summary>
@@ -28,6 +28,38 @@ public static class CreatureCommands
         return Bring(session, name) is { } other
             ? $"{other.Name} comes to {mine.Name}"
             : string.IsNullOrEmpty(name) ? $"No other Creature can come to {mine.Name} now" : $"{name} cannot come to {mine.Name} now";
+    }
+
+    /// <summary>
+    /// Sends the player's Creature to another god's (ADR-068): the order Send gives, aimed where their
+    /// Creature is. The two meet when they come within reach of each other, and so do their gods, as
+    /// any two Creatures do. How a god seeks out a god it has not met.
+    /// </summary>
+    /// <param name="session">Game session.</param>
+    /// <param name="godId">The god whose Creature to meet.</param>
+    /// <returns>A status line.</returns>
+    public static string Seek(GameSession session, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var world = session.World;
+        var god = world.Gods.Find(g => g.Id == godId)?.Name ?? "That god";
+        if (session.LocalCreature is not { Activity.Phase: not CreaturePhase.Banished } mine)
+        {
+            return session.LocalCreature is null ? "You have no Creature to send" : $"{session.LocalCreature.Name} is banished and cannot go";
+        }
+
+        if (world.Creatures.Find(c => c.GodId == godId && c.Id != mine.Id && c.Activity.Phase != CreaturePhase.Banished) is not { } theirs)
+        {
+            return $"{god} has no Creature to meet";
+        }
+
+        if (session.Client is not null)
+        {
+            return SessionCommands.CommandCreature(session, CreatureCommandKind.GoTo, theirs.Position);
+        }
+
+        var sent = SessionCommands.CommandCreatureAs(session, session.LocalGodId ?? 0, CreatureCommandKind.GoTo, theirs.Position);
+        return sent.Accepted ? $"{mine.Name} sets out to meet {theirs.Name}, the Creature of {god}" : sent.Text;
     }
 
     /// <summary>Gives the player's Creature the traits named, strongly (<c>--temperament</c>, ADR-037). Host only.</summary>

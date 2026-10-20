@@ -211,11 +211,13 @@ Godot .NET editor and press F5. Started without options, the game opens on its t
 the living island: Continue your newest save, learn to play with the Tutorial (fifteen steps that
 teach the camera, miracles, your Creature, the hand, time, diplomacy and winning by doing each,
 on a sandbox island; ADR-064), begin a New World (name it, choose its seed, your
-Creature's species, its size, how it may be won and its climate, then meet the rival gods born
-with it), open Your Worlds to load or
+Creature's species, its size, how it may be won, its climate and whether the gods begin as
+strangers or known to one another, then meet the rival gods born with it), open Your Worlds to load or
 forget a world, Play Together (host or join a shared world; joining reloads the game with the
 host's address), or change the Settings. No command line is needed to play (ADR-060). A short guide
-walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
+walks you through your first minutes; Esc pauses. In play, the god's bar under the season (top
+right) opens every panel, the map's overlays, the overview, the key map and the menu, each button
+showing its key (ADR-068). If you skip the import step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
 
 ### Building releases
@@ -356,6 +358,19 @@ covers:
 
 ## Controls
 
+Nothing in play needs a key you cannot see (ADR-068). The god's bar, under the season at the top
+right, has a button for the Book, the village at the view's centre, the gods, the council, the
+domains, the history, the map's overlays (a chooser, by name), the overview, the keys and the
+menu, each with its key on a badge, lit while its panel is open. The Veil toggle ends the miracle
+bar, and a rival under your plaque opens the gods' panel. The Keys button, and the settings' Keys
+tab, show every key below in its group, with your keyboard's letters. A key pressed, or a button
+clicked, with the pointer over a panel acts at the view's centre.
+
+The keys marked *debug* are the **debug tools**: they work only while Settings, under Interface,
+turns them on. Left to the build, they are on when the game runs from the project and off in an
+exported game. While they are on, the bar's Debug button opens a palette with a button for each,
+the council panel offers Summon now (J), and an unmet god's card offers Bring its Creature (K).
+
 | Action | Input |
 | --- | --- |
 | Pan | W A S D or the arrow keys; on a trackpad, two fingers; at the window's edge if the settings say so |
@@ -371,7 +386,7 @@ covers:
 | Show the Settlements panel for the village under the cursor (its society, technology, buildings and priority), or hide it | N |
 | Cast the selected miracle at the cursor | Left mouse button |
 | Deselect the miracle | Esc |
-| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture, nature, population, disaster risk, political control, navigation, authority), then off | O |
+| Next map overlay (influence, religion, faith, food, weather, danger, migration, culture, nature, population, disaster risk, political control; navigation and authority with the debug tools), then off; or choose one by name from the bar's map button | O |
 | The Book of the World: the world, religion, miracles, your Creature and your villager | Tab |
 | Follow the villager at the cursor; with nobody there, keep the camera on the one you follow | / |
 | Let the villager you follow go | Shift+/ |
@@ -387,15 +402,15 @@ covers:
 | Show or hide the diplomacy panel | P |
 | Talk with a god (ADR-066) | Speak on its card in the diplomacy panel; Esc ends the talk |
 | Show or hide the Divine Council: the vote in session, decrees, and motions to table | U |
-| Toggle region boundaries | Shift+B |
-| Toggle the debug overlay | F1 |
-| Next region debug map layer, then off | F3 |
-| New world from a random seed (small, won by Divine Ascendancy, with four seasons) | F2 |
+| Toggle region boundaries (debug) | Shift+B |
+| Toggle the debug overlay (debug) | F1 |
+| Next region debug map layer, then off (debug) | F3 |
+| New world from a random seed (small, won by Divine Ascendancy, with four seasons; debug) | F2 |
 | Quicksave / quickload | F5 / F9 |
 | Pause / resume the simulation | Space, or the pause button at the top right |
 | Simulation speed slower / faster (×1, ×4, ×16) | `[` / `]`, or the speed buttons at the top right |
-| Pause and step the simulation by one tick | `.` |
-| Pause and run to the next settlement step | `,` |
+| Pause and step the simulation by one tick (debug) | `.` |
+| Pause and run to the next settlement step (debug) | `,` |
 | Grant your god 500 Divine Power (debug) | F4 |
 | Spoil every settlement's food stores (debug) | F6 |
 | Settlers arrive: every settlement grows by half (debug) | F7 |
@@ -410,8 +425,8 @@ covers:
 | Send 20 people out of the village under the cursor (debug) | M |
 | Bring the nearest other Creature to yours, so they meet (debug) | K |
 | Summon the Divine Council now, on the oldest tabled motion or to condemn your strongest rival (debug) | J |
-| Cast your miracles veiled (dearer, and unattributed unless traced), or in the open | T |
-| Pause menu: resume, save, load, main menu, quit (when no miracle is selected) | Esc |
+| Cast your miracles veiled (dearer, and unattributed unless traced), or in the open | T, or Veil at the end of the miracle bar |
+| Pause menu: resume, save, load, main menu, quit (when no miracle is chosen and no order waits; it first puts away the key map, the debug palette and the map's chooser) | Esc |
 | The world's history | H |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
@@ -742,7 +757,10 @@ each move you can make now. Your status also ends the rival's line on the HUD.
   - one's deeds touch the other's people;
   - they sit in the Divine Council, which brings every god together at its first session.
 
-  An alert tells you whom you met and how, and the history keeps it.
+  An alert tells you whom you met and how, and the history keeps it. To meet a god sooner, press
+  **Seek them out** on its card: your Creature sets off for the god's Creature, and when the two
+  come within 40 m of each other they meet, and so do you (ADR-068). A New World may also begin
+  with its gods known to one another.
 - **The AI gods make plans** (ADR-036). Every 30 seconds each AI god sets itself up to three
   goals:
   - protect its home from the beast, an enemy's Creature or the plague;
@@ -1435,7 +1453,10 @@ of everything, the music, the effects and the wind and rain (spec §105, ADR-056
 vegetation and terrain quality take effect when the game next starts. Three settings shape the
 camera (ADR-058): panning at the window's edge (off unless you turn it on), whether a trackpad's
 two-finger scroll zooms instead of panning, and the camera's speed. The interface size (0.75–1.5)
-scales every panel on top of the window's own stretch (ADR-059). The Minds tab chooses who writes
+scales every panel on top of the window's own stretch (ADR-059). The Keys tab lists every key and
+gesture. Simple terrain draws the land with the built-in renderer from the next start, for a
+computer the detailed land is slow on, and the Debug tools setting turns the debug keys, the bar's
+Debug palette and the debug overlays on or off (ADR-068). The Minds tab chooses who writes
 each new world's rival gods: the scribes, Claude, GPT, Gemini or a model on this computer (see
 [The gods' minds](#the-gods-minds), ADR-065).
 
@@ -1502,6 +1523,10 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
 `CulturalShare` and `VictorySeconds`).
 
 ## Debug tools
+
+The debug tools need Settings, under Interface, to turn them on; a game run from the project has
+them on (ADR-068). The god's bar's Debug button opens a palette with a button for each of the keys
+below that change the world.
 
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed with the island's
   width and the world's victories ("Seed 42   4096 m island   Ascendancy, conquest and cultural
@@ -1617,7 +1642,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | --- | --- |
 | `--seed=<number or text>` | Seed of the generated world (text is hashed). Default: `1234`. |
 | `--load=<path>` | Load a save at startup, for example `user://saves/quicksave.json`. If it fails, a new world is generated. |
-| `--terrain=auto\|terrain3d\|fallback` | Terrain renderer. `auto` (the default) and `terrain3d` use Terrain3D when it is available; `fallback` forces the built-in mesh renderer. |
+| `--terrain=auto\|terrain3d\|fallback` | Terrain renderer. `auto` (the default) and `terrain3d` use Terrain3D when it is available; `fallback` forces the built-in mesh renderer. Without it, the settings' Simple terrain chooses the fallback (ADR-068). |
 | `--advance-ticks=<n>` | Run `n` simulation ticks (10 per simulated second) before the first frame, for example `--advance-ticks=9000` for a settlement of about 425 people. |
 | `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 12–2600, or further over a larger island). |
 | `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). The run prints its frame times, the performance lines with a save timed, and the world's load. |
@@ -1649,7 +1674,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--treaty=<treaty>` | Sign a treaty with your strongest rival at the start (NonAggression, DefensivePact, JointWar, SharedInfluence, ReligiousAccess, CreatureNonAggression, DisasterAssistance, MutualDefense, TerritorialAgreement, Tribute, MigrationAgreement). |
 | `--council-panel=on\|off` | Open the council panel (U) at the start. |
 | `--summon-council=on\|off` | Summon the Divine Council at the start. |
-| `--gods-met=on\|off` | Every god has met every other at the start, so all can deal from the first moment. |
+| `--gods-met=on\|off` | Every god has met every other at the start, so all can deal from the first moment (a New World can choose this too: The gods, known to one another). |
 | `--war-goal=conquest\|holysite\|tribute\|humiliation` | Declare war on your strongest rival at the start, for that goal. |
 | `--holy-war=on\|off` | Send the settlement the camera looks at to holy war on its nearest neighbour of another faith at the start. |
 | `--veil=on\|off` | Cast veiled miracles from the start. |
@@ -1677,7 +1702,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
 | `--tutorial=on\|<step>` | Start the tutorial, or at a step from 1 to 15 (for captures, ADR-064). |
-| `--title-page=new\|worlds\|together\|settings\|minds` | Open the title screen on a page; `minds` is the settings' Minds tab (for captures, ADR-060, ADR-065). |
+| `--title-page=new\|worlds\|together\|settings\|minds\|keys` | Open the title screen on a page; `minds` and `keys` are the settings' Minds and Keys tabs (for captures, ADR-060, ADR-065, ADR-068). |
+| `--bar=book\|villages\|gods\|council\|domains\|history\|map\|overview\|keys\|debug\|menu` | Press one of the god's bar's buttons at the start: for example `keys` opens the key map, `map` the overlays' chooser and `debug` the debug palette (for captures, ADR-068). |
 | `--minds=scribes\|claude\|openai\|gemini\|local` | Who writes the gods of new worlds, and speaks for them, in this run, over the settings' choice (ADR-065, ADR-067). |
 | `--pantheon=on\|off` | Bear the world's gods anew at the start, by the minds chosen, and show their page (ADR-065). |
 | `--mind-check=on\|off` | Ask the chosen model for a greeting at the start and print its answer (ADR-065). |

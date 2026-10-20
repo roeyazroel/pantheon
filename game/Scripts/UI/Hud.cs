@@ -11,8 +11,9 @@ namespace Pantheon.Client.UI;
 /// <summary>
 /// The player HUD (spec §57, ADR-059). At the top left the god's plaque and its rivals; at the top
 /// centre the race for victory, the weather and the domains; at the top right the season, the
-/// speed and the alerts (spec §59); at the bottom the miracle bar under the target hint and a
-/// status toast, and the Creature's card at the bottom left. It shows what
+/// speed, the god's bar of panels (ADR-068) and the alerts (spec §59); at the bottom the miracle bar
+/// with the Veil toggle under the target hint and a status toast, and the Creature's card at the
+/// bottom left. It shows what
 /// <see cref="HudReadout"/> builds and reports clicks; it holds no game state.
 /// </summary>
 public partial class Hud : CanvasLayer
@@ -38,6 +39,8 @@ public partial class Hud : CanvasLayer
     private PanelContainer _hintPanel = null!;
     private Label _hint = null!;
     private HBoxContainer _bar = null!;
+    private Control _veil = null!;
+    private CommandButton _veilButton = null!;
 
     /// <summary>The player clicked a miracle; the id is the miracle, or <c>null</c> to put it down.</summary>
     public event Action<string?>? MiracleClicked;
@@ -63,6 +66,15 @@ public partial class Hud : CanvasLayer
     /// <summary>The player clicked pause.</summary>
     public event Action? PauseClicked;
 
+    /// <summary>The player clicked the Veil toggle at the end of the miracle bar (ADR-068).</summary>
+    public event Action? VeilClicked;
+
+    /// <summary>The player clicked a rival under the god's plaque (ADR-068).</summary>
+    public event Action<int>? RivalClicked;
+
+    /// <summary>The god's bar of panels, under the season (ADR-068).</summary>
+    internal GodBar Bar { get; private set; } = null!;
+
     /// <summary>The player clicked a speed: its index among <see cref="Pantheon.Game.SessionCommands.SpeedPresets"/>.</summary>
     public event Action<int>? SpeedClicked;
 
@@ -84,6 +96,7 @@ public partial class Hud : CanvasLayer
         Layer = 2;
         _plaque = new GodPlaque(GodColor);
         Place(_plaque, Control.LayoutPreset.TopLeft);
+        _plaque.RivalClicked += god => RivalClicked?.Invoke(god);
         BuildTopCentre();
         BuildTopRight();
         BuildBottom();
@@ -109,6 +122,7 @@ public partial class Hud : CanvasLayer
         }
 
         _time.ShowModel(model);
+        _veilButton.Lit = model.Veiled;
         Set(_hint, model.TargetHint ?? string.Empty);
         _hintPanel.Visible = model.TargetHint is not null;
         _hint.Modulate = model.TargetValid ? UiTheme.Good : UiTheme.Bad;
@@ -196,6 +210,8 @@ public partial class Hud : CanvasLayer
         _time.PauseClicked += () => PauseClicked?.Invoke();
         _time.SpeedClicked += preset => SpeedClicked?.Invoke(preset);
         column.AddChild(_time);
+        Bar = new GodBar { SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd };
+        column.AddChild(Bar);
         _alerts = new AlertList();
         _alerts.Clicked += position => AlertClicked?.Invoke(position);
         column.AddChild(_alerts);
@@ -220,6 +236,24 @@ public partial class Hud : CanvasLayer
         _bar = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         _bar.AddThemeConstantOverride("separation", 6);
         column.AddChild(_bar);
+        _veil = BuildVeil();
+        _bar.AddChild(_veil);
+    }
+
+    /// <summary>The Veil toggle, last on the miracle bar (ADR-068): lit while the god's miracles are cast veiled.</summary>
+    private VBoxContainer BuildVeil()
+    {
+        var veil = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Pass };
+        veil.AddThemeConstantOverride("separation", 2);
+        _veilButton = new CommandButton(CommandGlyph.Veil, KeyText.Of("toggle_veil"), "Cast veiled: dearer, and not known as yours unless traced", MiracleTile.Side) { SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };
+        _veilButton.Clicked += () => VeilClicked?.Invoke();
+        veil.AddChild(_veilButton);
+        var name = UiTheme.Label(veil, UiTheme.CaptionSize, UiTheme.Ink);
+        name.Text = "Veil";
+        name.HorizontalAlignment = HorizontalAlignment.Center;
+        name.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
+        name.AddThemeConstantOverride("outline_size", 4);
+        return veil;
     }
 
     /// <summary>Creates, updates or removes the miracle tiles to match the slots.</summary>
@@ -238,6 +272,7 @@ public partial class Hud : CanvasLayer
             var tile = new MiracleTile();
             tile.Clicked += () => MiracleClicked?.Invoke(_tileIds[index].Length > 0 ? _tileIds[index] : null);
             _bar.AddChild(tile);
+            _bar.MoveChild(_veil, -1);
             _tiles.Add(tile);
             _tileIds.Add(string.Empty);
         }

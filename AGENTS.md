@@ -125,6 +125,12 @@ rule is followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
+- Every key goes in the key map, `Pantheon.Game.Controls.KeyGuide` (ADR-068); `ControlsTests`
+  fails for an action of `project.godot` it does not name. A key that changes the world outside
+  the rules, or a debug view, belongs to its debug group: it runs only while the settings' debug
+  tools are on (on, by default, when the game runs from the project), and the god's bar's Debug
+  palette gives it a button. A player's command also gets a control in view: a button on the
+  god's bar, a panel or a card.
 - Current tools: the F1 debug panel (the performance metrics and the simulation's CPU budget, the debris, what streams near the camera with the ground cover and the wildlife, and the world's load, gods, the god AI's goal, persona and temper and top candidates with reasons,
   its plans, the goals it is weighing and the gods it knows, and its diplomatic moves with their factors, influence, the Creature's behaviour, its state and behaviour tree, face, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
@@ -141,8 +147,8 @@ rule is followed by the conventions that meet it in this repository.
   the forest standing and the roads, with the selected village's stores, land and roads, and the
   great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the
   selected village's plague),
-  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the settings' Minds tab (who writes the gods, each provider's key and models, and Test), the talk panel (Speak on a god's card: the conversation, the god's acts and why it would not), the P
-  diplomacy panel (whether you have met each god, status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
+  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the god's bar under the season (a button for every panel, the map's chooser of overlays, the overview, the keys and the menu; with the debug tools, the Debug palette with a button for every debug key), the key map (the bar's Keys button and the settings' Keys tab), the settings' Debug tools and Simple terrain, the settings' Minds tab (who writes the gods, each provider's key and models, and Test), the talk panel (Speak on a god's card: the conversation, the god's acts and why it would not), the P
+  diplomacy panel (whether you have met each god, Seek to meet it (and Bring its Creature with the debug tools), status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
   holy sites and who keeps them, and the Divine Acts to aim), the U council panel (the vote in session, decrees, tabled motions and motions to table), the N Settlements panel (a village's faiths, stores, society,
@@ -159,7 +165,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--reshape`, `--wildlife`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--talk`, `--talk-say`, `--title-page`, `--tutorial`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--talk`, `--talk-say`, `--title-page` (`keys` for the settings' Keys tab), `--bar`, `--tutorial`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a

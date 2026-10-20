@@ -19,9 +19,13 @@ public partial class CouncilPanel : CanvasLayer
     private PanelContainer _panel = null!;
     private VBoxContainer _body = null!;
     private string _shown = string.Empty;
+    private Button _summon = null!;
 
     /// <summary>The player clicked a vote or a motion.</summary>
     public event Action<PoliticsAction>? ActionClicked;
+
+    /// <summary>The player summoned the council now, a debug tool (J, ADR-068).</summary>
+    public event Action? SummonClicked;
 
     /// <summary>Whether the panel is shown.</summary>
     public bool PanelVisible
@@ -49,8 +53,15 @@ public partial class CouncilPanel : CanvasLayer
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", 8);
         _panel.AddChild(column);
+        var heading = new HBoxContainer();
+        heading.AddThemeConstantOverride("separation", 12);
+        column.AddChild(heading);
         var title = Text("The Divine Council  (U to close)", 20, Gold);
-        column.AddChild(title);
+        title.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        heading.AddChild(title);
+        _summon = new Button { Text = "Summon now (J)", FocusMode = Control.FocusModeEnum.None, TooltipText = "Debug: the council meets now, on the oldest motion tabled or to condemn your strongest rival", Visible = false };
+        _summon.Pressed += () => SummonClicked?.Invoke();
+        heading.AddChild(_summon);
         _body = new VBoxContainer();
         _body.AddThemeConstantOverride("separation", 6);
         column.AddChild(_body);
@@ -61,6 +72,7 @@ public partial class CouncilPanel : CanvasLayer
     public void ShowModel(CouncilModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
+        _summon.Visible = Bootstrap.DebugTools.On && model.Session.Length == 0;
         var key = string.Join("|", model.Session, model.Votes, model.Note, model.Waiting, SecretBallot, string.Join(",", model.Decrees), string.Join(",", Labels(model.Ballot)), string.Join(",", Labels(model.Motions)));
         if (key == _shown)
         {
