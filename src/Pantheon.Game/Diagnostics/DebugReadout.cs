@@ -48,6 +48,7 @@ public static class DebugReadout
         lines.AddRange(snapshot.NetworkLines);
         BeliefReadout.AppendGods(lines, snapshot);
         GodAiReadout.Append(lines, snapshot);
+        lines.AddRange(snapshot.AgentLines);
         PoliticsReadout.Append(lines, snapshot);
         ConflictReadout.Append(lines, snapshot, snapshot.ConflictRules);
         CreatureReadout.Append(lines, snapshot);

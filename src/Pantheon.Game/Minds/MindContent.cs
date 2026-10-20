@@ -7,9 +7,9 @@ using Pantheon.Persistence;
 namespace Pantheon.Game.Minds;
 
 /// <summary>
-/// The gods' minds (ADR-065, ADR-067), from <c>game/Data/minds.json</c>: the Claude, GPT and Gemini
-/// models offered, the local model's defaults, how the pantheon is asked for, how talk works, and the
-/// scribes' lore for gods written offline.
+/// The gods' minds (ADR-065, ADR-067, ADR-072), from <c>game/Data/minds.json</c>: the Claude, GPT and
+/// Gemini models offered, the local model's defaults, how the pantheon is asked for, how talk works, how
+/// the gods' and Creatures' agents think, and the scribes' lore and lines for minds written offline.
 /// </summary>
 public sealed record MindContent
 {
@@ -45,6 +45,12 @@ public sealed record MindContent
 
     /// <summary>How talking to a god works (ADR-066).</summary>
     public required TalkRules Talk { get; init; }
+
+    /// <summary>How the gods' and Creatures' agents think (ADR-072).</summary>
+    public required Agents.AgentRules Agents { get; init; }
+
+    /// <summary>What the scribes say for the gods and Creatures when no model does (ADR-072).</summary>
+    public required Agents.VoiceLines Voices { get; init; }
 
     /// <summary>Parses and validates the file.</summary>
     /// <param name="json">Its text.</param>
@@ -98,6 +104,8 @@ public sealed record MindContent
 
         Lore.Validate();
         Talk.Validate();
+        Agents.Validate(this);
+        Voices.Validate();
     }
 }
 

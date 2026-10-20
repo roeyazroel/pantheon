@@ -75,6 +75,9 @@ public sealed record DebugSnapshot
     /// <summary>The network lines of a shared session (ADR-018); none when playing alone.</summary>
     public IReadOnlyList<string> NetworkLines { get; init; } = [];
 
+    /// <summary>The gods' and Creatures' agents' lines (ADR-072), from <see cref="AgentReadout"/>; none when the client has no agents.</summary>
+    public IReadOnlyList<string> AgentLines { get; init; } = [];
+
     /// <summary>What the client measured over its last frames (ADR-044), or <c>null</c> when it measured nothing.</summary>
     public PerformanceSample? Performance { get; init; }
 

@@ -1912,6 +1912,78 @@ ADR-066 records the decisions, and the plan is
 - **The client.** `TalkController` (created by `GameFlow`) opens `TalkPanel` from Speak on a
   diplomacy card, pauses the world while it is open, and lets only the host talk.
 
+## Gods and Creatures as agents
+
+ADR-072 records the decisions, and the plan is
+[.docs/milestone-15-part-51-agents.md](../.docs/milestone-15-part-51-agents.md).
+
+```mermaid
+flowchart LR
+    events[World events] --> reader[HookReader: hooks per mind]
+    reflect[A god's reflection] --> director
+    talk[A talk ended] --> director
+    reader --> director[AgentDirector: gather, turn, hourly limit, rest]
+    director -->|model| ask[Question off the main thread]
+    ask --> replies[AgentReplies between ticks]
+    replies --> tools[GodTools: the authorities]
+    replies --> aims[GodAims: the planner]
+    replies --> will[CreatureWill: the brain]
+    replies --> said[GodSpoke and CreatureSpoke events]
+    director -->|no model| scribe[AgentScribe: minds.json Voices]
+    scribe --> said
+    said --> shown[Alerts, talk lines, speech above Creatures]
+```
+
+- **Minds.** Every AI god and every Creature has one (`Mind`). The player's god has none.
+- **Hooks** (`Minds/Agents/HookReader`): each event that matters to a god or a Creature becomes a
+  `Hook` for it, in words from its side, with the scribes' moment (`Voice`). The `AgentDirector`
+  also wakes a Creature that grows hungry or tired, and a god every `ReflectSeconds` of the world's
+  time. The client adds a talk's end.
+- **Turns** (`AgentDirector`, in `Pantheon.Game`, driven each frame by the client's
+  `AgentController`):
+  - **When a mind is asked:** its hooks gather for `GatherSeconds`, and its turn is at most every
+    `GodTurnSeconds` or `CreatureTurnSeconds` of real time, `MaxAsking` at once, not while paused.
+    The hour's questions (`AgentOptions.TurnsPerHour`) are checked for each mind.
+  - **How:** the question goes to the model off the main thread. The answer is taken in a later
+    frame, between ticks, and dropped if the world was replaced.
+  - **Words between AI gods** wait for another hook.
+  - **After three failures** in a row, the agents rest `RestSeconds`.
+- **A god's turn** (`GodAgentPrompt`, `GodView`): what woke it, itself, the gods it knows (their
+  standing in its own words, `MindWords`), the villages that concern it, the holy sites, proposals,
+  aims, the miracles it can afford, its instincts (the utility AI's candidates, diplomatic moves and
+  goal options), its journal, and its last results.
+
+  Its answer (strict JSON) has a reason, acts, messages and a journal. `AgentReplies.God` does the
+  acts through `GodTools` (the miracle, Creature and diplomacy authorities, as `PoliticsCommands`
+  does for a player), raises `GodSpoke` for words to gods it knows, and writes `GodState.Journal`
+  (saved).
+- **Aims** (`Simulation/Gods/GodAims`): the planner judges each aim (`GodPlanner.Score`) and refuses
+  a moot one. A kept aim weighs at least `AimWeight` and holds `NextPlanTick` back by
+  `AimHoldSeconds`, so `GoalFocus` favours it as it favours the planner's goals.
+- **A Creature's turn** (`CreatureAgentPrompt`): what happened, how it is, who is near, what it was
+  taught, what it did last, and its choices. `Simulation/Creatures/CreatureWill`, an authority in
+  `Authorities.Will`, lists them: the brain's options, each once, with no errands. It carries a
+  choice out through `CreatureBrain.TryStart`, drawing any randomness from the seed and the tick. It
+  refuses while the Creature obeys its god, fights, plays, is held or banished.
+- **The scribes** (`AgentScribe`) speak when there is no model, the agents are off, the hour is spent
+  or they rest. Their lines come from `VoiceLines`, chosen from the seed, the speaker and the tick: a
+  god's only to a player's god, every `ScribeGodSeconds` at most; a Creature's aloud, every
+  `ScribeCreatureSeconds`.
+- **Words and talk.**
+  - `MindAlerts` shows a god's words to the player.
+  - `AgentController` shows a Creature's words above it (`CreatureView.Say`) and adds a god's words
+    to its conversation (`Talks.Heard`); `TalkPrompt` gives them to the god's model with its
+    journal.
+  - `TalkController.Ended` wakes the god with what was said.
+- **The model** (`MindFactory.OpenAgents`): the chosen provider, its quick model when
+  `GameSettings.AgentsQuick` is set; none when `GameSettings.Agents` is off. `--agents` overrides it.
+  No mind thinks while the title screen is open.
+- **Determinism and sharing.**
+  - Acts are commands between ticks, and speech is events, which travel to joined players.
+  - The host runs every mind, and a replica none.
+  - Save version 36 adds the journals, and protocol version 22 carries them.
+- **Debugging.** `AgentReadout` gives the F1 lines, and the log's "Mind:" lines show each turn.
+
 ## Gods answering Creatures, the hand and fights
 
 ADR-070 records the decisions, and the plan is

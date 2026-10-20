@@ -52,6 +52,22 @@ public sealed class Talks
         return talk;
     }
 
+    /// <summary>
+    /// Words the god sent the player unasked (ADR-072): a line of its conversation, begun if new, and what
+    /// its model is told it said when the player next speaks.
+    /// </summary>
+    /// <param name="session">The session.</param>
+    /// <param name="god">The god.</param>
+    /// <param name="me">The player's god.</param>
+    /// <param name="words">What it said.</param>
+    public void Heard(GameSession session, GodState god, int me, string words)
+    {
+        ArgumentNullException.ThrowIfNull(god);
+        var talk = Open(session, god, me);
+        talk.Lines.Add(new TalkLine(TalkSpeaker.God, "“" + words.Trim('“', '”', '"') + "”"));
+        talk.Sent.Add(words);
+    }
+
     /// <summary>The question for the god's model, the player's words added to the conversation.</summary>
     /// <param name="session">The session.</param>
     /// <param name="talk">The conversation.</param>
@@ -67,7 +83,8 @@ public sealed class Talks
         var player = world.Gods.Single(g => g.Id == me);
         var acts = TalkActs.For(session, god, me);
         talk.Lines.Add(new TalkLine(TalkSpeaker.Player, words.Trim()));
-        talk.Turns.Add(new ModelTurn(false, TalkPrompt.Turn(session, god, me, acts, talk.Goodwill(world.Tick, _rules), _rules.PersuasionReach, words)));
+        talk.Turns.Add(new ModelTurn(false, TalkPrompt.Turn(session, god, me, acts, talk.Goodwill(world.Tick, _rules), _rules.PersuasionReach, words, talk.Sent)));
+        talk.Sent.Clear();
         talk.Answering = true;
         talk.Suggestions = [];
         return new ModelQuestion

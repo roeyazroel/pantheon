@@ -226,8 +226,8 @@ public static class DiplomacyText
             DiplomaticAct.HolyWar => "let your people wage holy war on its people" + (where.Length > 0 ? " in" + where : string.Empty),
             DiplomaticAct.CovertAct => "worked against its people in secret" + (where.Length > 0 ? " in" + where : string.Empty),
             DiplomaticAct.Dictated => "dictated peace to it",
-            DiplomaticAct.Trespassed => "let its Creature trespass" + (where.Length > 0 ? " in" + where : " in its lands"),
-            DiplomaticAct.Visited => "sent its Creature as a friend" + (where.Length > 0 ? " to" + where : string.Empty),
+            DiplomaticAct.Trespassed => "let your Creature trespass" + (where.Length > 0 ? " in" + where : " in its lands"),
+            DiplomaticAct.Visited => "sent your Creature as a friend" + (where.Length > 0 ? " to" + where : string.Empty),
         };
     }
 

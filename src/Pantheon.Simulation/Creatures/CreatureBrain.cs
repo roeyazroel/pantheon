@@ -511,7 +511,7 @@ public sealed class CreatureBrain
     }
 
     /// <summary>Plans the route to an option's target and starts it; wandering and ignoring pick a destination first.</summary>
-    private bool TryStart(WorldState world, CreatureState creature, CreatureOption option, SimulationRandom random)
+    internal bool TryStart(WorldState world, CreatureState creature, CreatureOption option, SimulationRandom random)
     {
         var target = option.Action switch
         {

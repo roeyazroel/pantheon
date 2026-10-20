@@ -60,6 +60,22 @@ internal sealed class Births
         return MindFactory.Open(_settings() with { Minds = Provider }, Startup.Keys, _minds, out problem);
     }
 
+    /// <summary>The model the gods' and Creatures' agents ask (ADR-072), or <c>null</c> for the scribes.</summary>
+    /// <param name="settings">The player's settings.</param>
+    /// <param name="forced">Whether <c>--agents</c> turns the agents on or off for the run; the settings decide when <c>null</c>.</param>
+    /// <param name="problem">Why there is no model when one was chosen.</param>
+    /// <returns>The model.</returns>
+    public ILanguageModel? OpenAgentModel(GameSettings settings, bool? forced, out string? problem)
+    {
+        if (_minds is null)
+        {
+            problem = null;
+            return null;
+        }
+
+        return MindFactory.OpenAgents(settings with { Minds = Provider, Agents = forced ?? settings.Agents }, Startup.Keys, _minds, out problem);
+    }
+
     /// <summary>The scribes' gods for a world, at once: for worlds made without asking (F2, the tutorial).</summary>
     /// <param name="seed">The world's seed.</param>
     /// <param name="options">How it is made.</param>

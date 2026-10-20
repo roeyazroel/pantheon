@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Godot;
 using Pantheon.Client.UI;
@@ -34,6 +36,10 @@ internal sealed partial class TalkController : Node
     private bool _wasPaused;
     private (int God, string? Words)? _start;
     private int _frames;
+    private int _openedAt;
+
+    /// <summary>Raised when a conversation the player spoke in ends (ADR-072): the god, and its lines since it was opened.</summary>
+    public event Action<int, IReadOnlyList<TalkLine>>? Ended;
 
     /// <summary>Whether the player is speaking with a god.</summary>
     public bool IsOpen => _talk is not null;
@@ -89,7 +95,8 @@ internal sealed partial class TalkController : Node
             return;
         }
 
-        if (_talk is null)
+        var opening = _talk is null;
+        if (opening)
         {
             _wasPaused = _session.Scheduler.IsPaused;
             _session.Scheduler.IsPaused = true;
@@ -97,6 +104,7 @@ internal sealed partial class TalkController : Node
 
         _model ??= _births.OpenModel(out _modelProblem);
         _talk = _talks.Open(_session, god, me);
+        _openedAt = opening ? _talk.Lines.Count : _openedAt;
         Refresh();
     }
 
@@ -128,12 +136,35 @@ internal sealed partial class TalkController : Node
             return;
         }
 
+        var lines = _talk.Lines.Skip(_openedAt).ToList();
+        if (lines.Exists(l => l.Speaker == TalkSpeaker.Player))
+        {
+            Ended?.Invoke(_talk.GodId, lines);
+        }
+
         _talk = null;
         _session.Scheduler.IsPaused = _wasPaused;
         _asking?.Cancel();
         if (_asking is null)
         {
             Retire();
+        }
+    }
+
+    /// <summary>Words a god sent the player unasked (ADR-072): a line of its conversation, shown at once if it is open.</summary>
+    /// <param name="godId">The god.</param>
+    /// <param name="words">What it said.</param>
+    public void Heard(int godId, string words)
+    {
+        if (_talks is null || _session.LocalGodId is not { } me || _session.World.Gods.Find(g => g.Id == godId) is not { } god)
+        {
+            return;
+        }
+
+        _talks.Heard(_session, god, me, words);
+        if (_talk?.GodId == godId)
+        {
+            Refresh();
         }
     }
 

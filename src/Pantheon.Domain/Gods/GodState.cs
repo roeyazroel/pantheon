@@ -68,4 +68,11 @@ public sealed class GodState
 
     /// <summary>Who the god is (ADR-065): its epithet, history, voice and temper; none for a player's god or a world made before personas.</summary>
     public GodPersona? Persona { get; set; }
+
+    /// <summary>
+    /// What the god's own mind keeps of the world (ADR-072): how it sees the other gods, its grudges, what it was
+    /// promised and what it means to do, in its own words. Its agent writes it each turn; none until it has
+    /// thought, and none for a player's god.
+    /// </summary>
+    public string? Journal { get; set; }
 }

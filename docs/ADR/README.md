@@ -87,6 +87,7 @@ silently:
 | [ADR-069](ADR-069-feet-dialogs-and-territory.md) | Feet on uneven ground, the world still under dialogs, and the gods' territories on the land | Accepted |
 | [ADR-070](ADR-070-gods-answer-creatures.md) | Gods answer Creatures in their lands, a steady hand, and fights you can watch | Accepted |
 | [ADR-071](ADR-071-an-orchestra-made-in-code.md) | An orchestra made in code, and a piece for every mood | Accepted (amends ADR-021) |
+| [ADR-072](ADR-072-gods-and-creatures-as-agents.md) | Gods and Creatures as agents, woken by what happens | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

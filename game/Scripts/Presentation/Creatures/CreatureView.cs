@@ -48,6 +48,7 @@ internal sealed class CreatureView
     private readonly Node3D _frame;
     private readonly FightEffects _fight;
     private readonly DeclutteredLabel _label;
+    private readonly Label3D _speech;
     private readonly Color _godColor;
     private readonly float _glow;
     private readonly float _offset;
@@ -71,6 +72,7 @@ internal sealed class CreatureView
     private float _fallen = float.MaxValue;
     private float _hipShift;
     private float _slopeLean;
+    private float _speaking;
 
     /// <summary>Creates the Creature's nodes under a parent; its body appears once its species' meshes are made.</summary>
     /// <param name="parent">Node that holds the Creatures.</param>
@@ -108,7 +110,37 @@ internal sealed class CreatureView
             VisibilityRangeFadeMode = GeometryInstance3D.VisibilityRangeFadeModeEnum.Self,
         };
         _root.AddChild(_label);
+        // What the Creature says (ADR-072), above its name, always in view while it lasts.
+        _speech = new Label3D
+        {
+            Name = "Speech",
+            Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
+            FixedSize = true,
+            PixelSize = 0.001f,
+            FontSize = 30,
+            OutlineSize = 12,
+            Modulate = new Color(1f, 0.97f, 0.88f),
+            OutlineModulate = new Color(0.05f, 0.04f, 0.03f, 0.9f),
+            NoDepthTest = true,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Offset = new Vector2(0f, 80f),
+            Width = 900f,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            Layers = DeclutteredLabel.Layer,
+            VisibilityRangeEnd = LabelHideDistance,
+            Visible = false,
+        };
+        _root.AddChild(_speech);
         _fight = new FightEffects(_root, parent);
+    }
+
+    /// <summary>Shows what the Creature says above it for a while (ADR-072).</summary>
+    /// <param name="text">Its words.</param>
+    /// <param name="seconds">How long they stay.</param>
+    public void Say(string text, float seconds)
+    {
+        _speech.Text = "“" + text.Trim('“', '”', '"') + "”";
+        _speaking = seconds;
     }
 
     /// <summary>Where the Creature is drawn, for the camera and the hand.</summary>
@@ -202,6 +234,12 @@ internal sealed class CreatureView
         _label.SetTexts($"{title}\n{CreatureText.DescribeActivity(creature, world)}{health}", title);
         // While it fights, its health bar sits over its head and the label rises above the bar.
         _label.Position = new Vector3(0f, (_body?.StandingHeight ?? 7f) * (Resting(creature) ? 0.55f : fighting ? 1.22f : 1.05f), 0f);
+        _speaking = Mathf.Max(0f, _speaking - delta);
+        _speech.Visible = _speaking > 0f;
+        _speech.Position = _label.Position;
+        _speech.Scale = _label.Scale;
+        _speech.Modulate = _speech.Modulate with { A = Mathf.Clamp(_speaking / 0.5f, 0f, 1f) };
+        _speech.OutlineModulate = _speech.OutlineModulate with { A = 0.9f * Mathf.Clamp(_speaking / 0.5f, 0f, 1f) };
     }
 
     /// <summary>Frees the Creature's nodes.</summary>

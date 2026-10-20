@@ -131,6 +131,7 @@ public partial class GameRoot : Node3D
         AddChild(flow);
         flow.Setup(_session, _network, _divine, (politics.Diplomacy, hud), _camera, SetStatus, options, (settings, minds));
         _flow = flow;
+        _debug.AgentLines = flow.AgentLines;
         var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };
         AddChild(audio);
         audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings, options, () => flow.TitleOpen);

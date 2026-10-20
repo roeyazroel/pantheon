@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Pantheon.Client.Camera;
 using Pantheon.Client.Network;
@@ -59,6 +60,9 @@ internal sealed class DebugView
         new(_presenter.Streaming.Forests.Loaded, _presenter.Streaming.Forests.Chunks, _presenter.Streaming.Terrain, _fires().Shown, _fires().Burning, _streaming, (_presenter.GroundCover.Loaded, _presenter.GroundCover.Chunks, _coverRadius), _presenter.Wildlife);
     private readonly Pantheon.Game.Presentation.StreamingSettings _streaming;
     private readonly float _coverRadius;
+
+    /// <summary>The gods' and Creatures' agents' lines (ADR-072), when there are agents.</summary>
+    public Func<IReadOnlyList<string>>? AgentLines { get; set; }
 
     /// <summary>The client's performance measurements.</summary>
     public PerformanceMonitor Performance { get; } = new();
@@ -136,6 +140,7 @@ internal sealed class DebugView
         CreatureOptions = _session.PreviewCreatureOptions(),
         CreatureResponses = Pantheon.Game.Creatures.CreatureCommands.PreviewResponses(_session),
         NetworkLines = _network.Lines(_session),
+        AgentLines = AgentLines?.Invoke() ?? [],
         Performance = Performance.Sample(_presenter.CrowdStatuses, _presenter.Debris),
         GodDiplomacyCandidates = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodDiplomacy(god)))],
         GodAiCandidates = [.. _session.World.Gods.Where(god => god.Controller == GodController.Ai).Select(god => (god.Id, _session.PreviewGodAi(god)))],

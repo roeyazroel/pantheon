@@ -102,6 +102,18 @@ public sealed class CreaturePresenter
         return miss <= height * 0.2f ? feet : null;
     }
 
+    /// <summary>Shows what a Creature says above it for a while (ADR-072).</summary>
+    /// <param name="creatureId">The Creature.</param>
+    /// <param name="text">Its words.</param>
+    /// <param name="seconds">How long they stay.</param>
+    public void Say(int creatureId, string text, float seconds)
+    {
+        if (_views.TryGetValue(creatureId, out var view))
+        {
+            view.Say(text, seconds);
+        }
+    }
+
     /// <summary>Flashes a Creature's colour, and its face shows the god's word a while.</summary>
     /// <param name="creatureId">The Creature.</param>
     /// <param name="color">Flash colour.</param>

@@ -693,7 +693,8 @@ Tyrant may be quicker to war than most and another slower to forgive.
   - Choose the model: Claude Opus 5.5 (the default), Sonnet 5.5, Haiku 5.5 or Fable 5.1.
   - The key is kept on this computer only, in your profile, apart from your other settings, and
     is sent only to Anthropic, with the gods' questions. The questions are billed to your
-    Anthropic account: one for each world made, and one for each thing you say to a god.
+    Anthropic account: one for each world made, one for each thing you say to a god, and the
+    gods' and Creatures' own turns (see below).
 - **GPT, by OpenAI** (ADR-067). Enter your own OpenAI key, from platform.openai.com, or set
   `OPENAI_API_KEY`. Choose GPT-6.1 Sol (the default), GPT-6 Astra (the most capable) or GPT-6
   Luna (the quickest and cheapest). Questions are billed to your OpenAI account, and nothing is
@@ -742,6 +743,73 @@ ambitions, as the diplomacy panel describes them. Your words can win or lose it 
 which fades with time. That is enough to tip a god that is nearly ready to agree, or nearly ready
 to strike, but no flattery or trick makes a god that distrusts you an ally. Only the host, or a
 player alone, can talk to the gods.
+
+### Gods and Creatures that think for themselves
+
+Each rival god and each Creature, yours included, has a mind that is woken by what happens
+(ADR-072).
+
+**What wakes them:**
+
+- **A god:**
+  - a Creature walking into its lands;
+  - a war, peace, an alliance, a proposal or a betrayal;
+  - a treaty signed or broken;
+  - a village won or lost;
+  - a harmful miracle or a disaster on its people;
+  - its Creature's fight;
+  - another god's words;
+  - your talk with it ending;
+  - meeting a god;
+  - and every four minutes of the world's time, to look about it.
+- **A Creature:**
+  - meeting another;
+  - a fight's end;
+  - your reward or punishment;
+  - growing a level;
+  - hunger or tiredness;
+  - its people struck.
+
+**With a model** (Claude, GPT, Gemini or one on your computer), a woken mind is asked what to do:
+
+- **A god** is told how things stand from its side, what its instincts would do and what it keeps
+  in mind. It may then act as you can, through the same rules:
+  - cast miracles;
+  - send its Creature, set it on a rival or put it to work;
+  - offer or break alliances, declare war, ask for peace, propose treaties and answer proposals;
+  - set the aims its instincts then pursue.
+
+  It may send you or another god words, and it keeps a journal of what it remembers: grudges,
+  promises, plans. The same journal is in its mind when you talk with it. What the rules refuse is
+  not done, and the god is told why.
+- **A Creature** says something aloud and chooses what to do next among what its instincts weigh,
+  so your training still steers it. It never overrules your orders, and cannot leave a fight or
+  your hand.
+
+Between turns, the god AI and the Creatures' brains go on as their instincts.
+
+**Without a model**, or with the agents off, the scribes give them their voices:
+
+- a rival tells you what it makes of your Creature in its village, a war, a betrayal or a fight;
+- Creatures speak up when they meet, fight, are rewarded, grow or hunger.
+
+**Where you see it:**
+
+- A god's words to you are an alert, and a line of your conversation with it (P, Speak to answer).
+- A Creature's words show above it.
+
+**Settings** (Minds tab):
+
+- **Think for themselves** turns the agents on or off.
+- **Quickest model for their turns** asks your provider's quickest, cheapest model (Claude Haiku 5.5,
+  GPT-6 Luna or Gemini 3.5 Flash-Lite) rather than the one that writes the gods.
+- **Questions an hour, at most** (300 by default) bounds what they cost you. When it is spent, the
+  scribes speak until the hour frees questions again.
+- **Gods and Creatures speak** silences them.
+
+**What it costs.** A god's turn is about 1,500 tokens asked and a few hundred answered, and a
+Creature's about 600. No mind thinks while the title screen is open. A model that fails three times
+in a row rests the agents for two minutes, and the scribes speak meanwhile.
 
 ## Your territory
 
@@ -1743,6 +1811,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--minds=scribes\|claude\|openai\|gemini\|local` | Who writes the gods of new worlds, and speaks for them, in this run, over the settings' choice (ADR-065, ADR-067). |
 | `--pantheon=on\|off` | Bear the world's gods anew at the start, by the minds chosen, and show their page (ADR-065). |
 | `--mind-check=on\|off` | Ask the chosen model for a greeting at the start and print its answer (ADR-065). |
+| `--agents=on\|off` | Let the gods' and Creatures' agents think through the chosen model for the run, or not (ADR-072). |
+| `--wake=<god>` | Wake an AI god (by its number, 2 or more), or every one with 0, to look about it at the start (ADR-072). |
 | `--talk=<god>` | Talk with a rival god (by its number, 2 or more) at the start (ADR-066). |
 | `--talk-say=<words>` | Say this to that god's model at the start (ADR-066). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
@@ -1849,7 +1919,7 @@ game/                 Godot project: scenes, client scripts (Pantheon.Client), d
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
                       history.json, domains.json, holy_sites.json, world_sizes.json, ecology.json,
                       society.json, water.json, settlement_view.json, biome_palette.json, divine_view.json, weather_view.json,
-                      minds.json (the Claude models and the scribes' lore, ADR-065)
+                      minds.json (the Claude models and the scribes' lore, ADR-065; the agents' rules and voices, ADR-072)
   Fonts/              Cinzel and Alegreya Sans, with their SIL Open Font Licences (ADR-059)
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
@@ -47,6 +48,7 @@ internal sealed partial class GameFlow : Node
     private TutorialController _tutorial = null!;
     private GuidePanel _guidePanel = null!;
     private Births _births = null!;
+    private AgentController? _agents;
     private bool _wasPaused;
     private bool _ended;
     private double _sinceAutosave;
@@ -84,6 +86,9 @@ internal sealed partial class GameFlow : Node
         var talk = new TalkController { Name = "Talk" };
         AddChild(talk);
         talk.Setup(session, _births, ui.Diplomacy, setStatus, options);
+        _agents = new AgentController { Name = "Agents" };
+        AddChild(_agents);
+        _agents.Setup(session, _births, divine, talk, options, () => _menu.Settings, () => TitleOpen);
         _menu.SettingsChanged += changed =>
         {
             SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);
@@ -153,6 +158,10 @@ internal sealed partial class GameFlow : Node
 
         _menu.ShowPantheon(_session.World, _session.LocalGodId, note.Length > 0 ? note : null, () => Begin(guide: true));
     }
+
+    /// <summary>The gods' and Creatures' agents' lines for the debug panel (ADR-072).</summary>
+    /// <returns>The lines.</returns>
+    public IReadOnlyList<string> AgentLines() => _agents?.Lines() ?? [];
 
     /// <summary>Whether the title screen is open, when the orchestra plays the Theme (ADR-071).</summary>
     public bool TitleOpen => _menu?.TitleOpen ?? false;

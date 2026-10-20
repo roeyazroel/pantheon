@@ -83,7 +83,7 @@ internal static class SettingsPage
     }
 
     /// <summary>A check box that changes a setting.</summary>
-    private static void Toggle(MenuScreen menu, Container parent, string caption, Func<GameSettings, bool> read, Func<GameSettings, bool, GameSettings> change)
+    internal static void Toggle(MenuScreen menu, Container parent, string caption, Func<GameSettings, bool> read, Func<GameSettings, bool, GameSettings> change)
     {
         var box = new CheckBox { ButtonPressed = read(menu.Settings), FocusMode = Control.FocusModeEnum.None };
         box.Toggled += on => menu.ChangeSettings(change(menu.Settings, on));
@@ -91,7 +91,7 @@ internal static class SettingsPage
     }
 
     /// <summary>A slider that changes a setting, with its value beside it.</summary>
-    private static void Slide(MenuScreen menu, Container parent, string caption, Func<GameSettings, float> read, Func<GameSettings, float, GameSettings> change, float least, float most, double step = 0.05)
+    internal static void Slide(MenuScreen menu, Container parent, string caption, Func<GameSettings, float> read, Func<GameSettings, float, GameSettings> change, float least, float most, double step = 0.05)
     {
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", 10);

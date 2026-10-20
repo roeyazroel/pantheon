@@ -57,6 +57,9 @@ public sealed class GodTalk
     /// <summary>Whether the god is answering now.</summary>
     public bool Answering { get; set; }
 
+    /// <summary>Words the god sent the player unasked since the player last spoke (ADR-072), for its model to know it said them.</summary>
+    public List<string> Sent { get; } = [];
+
     /// <summary>The conversation's goodwill at a tick: what the player's words have won, from -1 to 1, halving every half-life.</summary>
     /// <param name="tick">The world's tick now.</param>
     /// <param name="rules">The talk's rules.</param>

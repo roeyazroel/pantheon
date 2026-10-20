@@ -142,6 +142,12 @@ internal sealed class DivineController
         return true;
     }
 
+    /// <summary>Shows what a Creature says above it (ADR-072).</summary>
+    /// <param name="creatureId">The Creature.</param>
+    /// <param name="text">Its words.</param>
+    /// <param name="seconds">How long they stay.</param>
+    public void ShowSpeech(int creatureId, string text, float seconds) => _creatures.Say(creatureId, text, seconds);
+
     /// <summary>Rewards or punishes the Creature, with a pat or a swat of the hand when it lands.</summary>
     /// <param name="kind">Reward or punish.</param>
     public void JudgeCreature(CreatureCommandKind kind)

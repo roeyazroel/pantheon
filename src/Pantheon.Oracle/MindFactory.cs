@@ -46,6 +46,32 @@ public static class MindFactory
         }
     }
 
+    /// <summary>
+    /// The model the gods' and Creatures' agents ask (ADR-072): the provider the settings choose, and its
+    /// quickest model when the player prefers it; none when the agents are off or no model can be opened.
+    /// </summary>
+    /// <param name="settings">The player's settings.</param>
+    /// <param name="keys">The player's keys.</param>
+    /// <param name="minds">The minds' content.</param>
+    /// <param name="problem">Why there is no model when one was chosen; <c>null</c> otherwise.</param>
+    /// <returns>The model, or <c>null</c>.</returns>
+    public static ILanguageModel? OpenAgents(GameSettings settings, MindKeys keys, MindContent minds, out string? problem)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(minds);
+        if (!settings.Agents)
+        {
+            problem = null;
+            return null;
+        }
+
+        var quick = minds.Agents;
+        var chosen = settings.AgentsQuick
+            ? settings with { ClaudeModel = quick.QuickClaudeModel, OpenAIModel = quick.QuickOpenAIModel, GeminiModel = quick.QuickGeminiModel }
+            : settings;
+        return Open(chosen, keys, minds, out problem);
+    }
+
     /// <summary>The environment variables a provider's key may be kept in, the first used first.</summary>
     /// <param name="provider">The provider.</param>
     /// <returns>Their names; none for a provider that needs no key.</returns>

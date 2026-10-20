@@ -54,6 +54,7 @@ internal static class MindsSettings
         tab.AddChild(test);
         tab.AddChild(status);
         tab.AddChild(UiKit.Text("Your choice gives minds to the gods of new worlds; a world already made keeps the gods it was born with.", UiTheme.CaptionSize, UiTheme.Muted));
+        Agents(menu, tab);
 
         void Show(MindProvider provider)
         {
@@ -73,6 +74,19 @@ internal static class MindsSettings
             Show(menu.Settings.Minds);
         };
         Show(menu.Settings.Minds);
+    }
+
+    /// <summary>The agents' rows (ADR-072): whether the gods and Creatures think for themselves, with which model, how often, and whether they speak.</summary>
+    private static void Agents(MenuScreen menu, VBoxContainer tab)
+    {
+        tab.AddChild(UiKit.Heading("Gods and Creatures that think for themselves", 22));
+        SettingsPage.Toggle(menu, tab, "Think for themselves", s => s.Agents, (s, on) => s with { Agents = on });
+        SettingsPage.Toggle(menu, tab, "Quickest model for their turns", s => s.AgentsQuick, (s, on) => s with { AgentsQuick = on });
+        SettingsPage.Slide(menu, tab, "Questions an hour, at most", s => s.AgentTurnsPerHour, (s, value) => s with { AgentTurnsPerHour = (int)value }, GameSettings.MinAgentTurns, 1000, 10);
+        SettingsPage.Toggle(menu, tab, "Gods and Creatures speak", s => s.Voices, (s, on) => s with { Voices = on });
+        var about = UiKit.Text("With a model, the rival gods and every Creature are woken by what happens: a Creature in a god's lands, a war, a treaty, a fight, a reward. A god then acts within the island's laws, sets its aims, keeps a journal of what it remembers and sends you words; a Creature speaks and chooses what to do next. Each turn is a question to your provider, billed to you. Without a model, their instincts act and the scribes give them words.", UiTheme.CaptionSize, UiTheme.Muted);
+        about.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        tab.AddChild(about);
     }
 
     /// <summary>An online provider's rows: the player's key and the model.</summary>

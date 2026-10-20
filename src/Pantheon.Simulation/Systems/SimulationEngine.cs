@@ -105,7 +105,8 @@ public sealed class SimulationEngine
             new Politics.CouncilAuthority(),
             new Conflict.ConflictAuthority(divineRules, diplomacyRules.Conflict, ledger),
             new Hand.HandAuthority(divineRules.Hand, divineRules, settlementRules),
-            settlementRules.Villagers.Enabled ? new Villagers.VillagerAuthority(settlementRules.Villagers) : null);
+            settlementRules.Villagers.Enabled ? new Villagers.VillagerAuthority(settlementRules.Villagers) : null,
+            new CreatureWill(Creatures.Brain));
         Politics = new Politics.PoliticsSystem(diplomacyRules, ledger, Authorities.Diplomacy);
         var diplomat = new GodDiplomat(diplomacyRules, divineRules, Authorities.Diplomacy, godAiRules.Planning);
         var ai = new GodAi(godAiRules, divineRules, miracles, Authorities.Miracles, Authorities.Creatures, creatureRules, diplomat, Authorities.Domains);

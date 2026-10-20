@@ -74,8 +74,9 @@ public static class TalkPrompt
     /// <param name="goodwill">The conversation's goodwill now.</param>
     /// <param name="reach">How far full goodwill moves the god.</param>
     /// <param name="words">The player's words.</param>
+    /// <param name="sent">Words the god sent them unasked since they last spoke (ADR-072).</param>
     /// <returns>The turn's text.</returns>
-    public static string Turn(GameSession session, GodState god, int me, IReadOnlyList<TalkAct> acts, float goodwill, float reach, string words)
+    public static string Turn(GameSession session, GodState god, int me, IReadOnlyList<TalkAct> acts, float goodwill, float reach, string words, IReadOnlyList<string>? sent = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(god);
@@ -84,10 +85,10 @@ public static class TalkPrompt
         var player = world.Gods.Find(g => g.Id == me)?.Name ?? "the other god";
         var view = DiplomacyModel.FindRelation(world, god.Id, me);
         var text = new StringBuilder("How things stand:\n");
-        text.Append(CultureInfo.InvariantCulture, $"- You and {player} are {DiplomacyText.Status(DiplomacyModel.StatusOf(world, god.Id, me)).ToLowerInvariant()}. You {DiplomacyText.Attitude(view)}.\n");
-        if (DiplomacyText.Explain(view, world) is { Length: > 0 } memory)
+        text.Append(CultureInfo.InvariantCulture, $"- You and {player} are {DiplomacyText.Status(DiplomacyModel.StatusOf(world, god.Id, me)).ToLowerInvariant()}. {Capital(MindWords.Feeling(view, player))}.\n");
+        if (MindWords.Remembered(view, world, player) is { Length: > 0 } memory)
         {
-            text.Append(CultureInfo.InvariantCulture, $"- You {memory}.\n");
+            text.Append(CultureInfo.InvariantCulture, $"- {memory}.\n");
         }
 
         var people = Math.Max(1, world.Settlements.Sum(s => s.Population));
@@ -95,6 +96,17 @@ public static class TalkPrompt
         if (Ties(world, god.Id) is { Length: > 0 } ties)
         {
             text.Append(CultureInfo.InvariantCulture, $"- {ties}\n");
+        }
+
+        // What the god's own mind keeps, and its words since (ADR-072), so its talk and its deeds are one mind.
+        if (!string.IsNullOrWhiteSpace(god.Journal))
+        {
+            text.Append(CultureInfo.InvariantCulture, $"- What you keep in mind: {god.Journal}\n");
+        }
+
+        foreach (var said in sent ?? [])
+        {
+            text.Append(CultureInfo.InvariantCulture, $"- Since they last spoke, you sent them word: “{said}”\n");
         }
 
         text.Append("\nActs you may take now (by id):\n");
@@ -140,6 +152,9 @@ public static class TalkPrompt
             return null;
         }
     }
+
+    /// <summary>A text with its first letter capital.</summary>
+    private static string Capital(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 
     /// <summary>The god's alliances and wars with the others, in a line.</summary>
     private static string Ties(Domain.World.WorldState world, int godId)

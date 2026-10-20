@@ -59,6 +59,15 @@ public sealed record GameSettings
     /// <summary>Where a local model is served unless the player says otherwise.</summary>
     public const string DefaultLocalUrl = "http://localhost:11434";
 
+    /// <summary>The fewest questions an hour the agents may be allowed (ADR-072).</summary>
+    public const int MinAgentTurns = 10;
+
+    /// <summary>The most questions an hour the agents may be allowed.</summary>
+    public const int MaxAgentTurns = 2000;
+
+    /// <summary>The agents' questions an hour unless the player chooses otherwise.</summary>
+    public const int DefaultAgentTurns = 300;
+
     /// <summary>The local model asked unless the player names another.</summary>
     public const string DefaultLocalModel = "llama3.2";
 
@@ -164,6 +173,22 @@ public sealed record GameSettings
     /// <summary>The local model asked.</summary>
     public string LocalModel { get; init; } = DefaultLocalModel;
 
+    /// <summary>
+    /// Whether the gods and Creatures think for themselves through the chosen model (ADR-072): woken by what
+    /// happens, a god acts, speaks and sets its aims, and a Creature speaks and chooses. Off, or with the
+    /// scribes, their instincts act and the scribes speak for them.
+    /// </summary>
+    public bool Agents { get; init; } = true;
+
+    /// <summary>Whether the agents ask the provider's quickest, cheapest model rather than the one chosen for the gods' birth and talk.</summary>
+    public bool AgentsQuick { get; init; } = true;
+
+    /// <summary>The most questions the agents ask in an hour, so the player's bill stays where they want it.</summary>
+    public int AgentTurnsPerHour { get; init; } = DefaultAgentTurns;
+
+    /// <summary>Whether the gods send the player words and the Creatures speak aloud (ADR-072).</summary>
+    public bool Voices { get; init; } = true;
+
     /// <summary>The same settings with every value in range.</summary>
     /// <returns>The settings.</returns>
     public GameSettings Clamped() => this with
@@ -186,6 +211,7 @@ public sealed record GameSettings
         GeminiModel = string.IsNullOrWhiteSpace(GeminiModel) ? DefaultGeminiModel : GeminiModel.Trim(),
         LocalUrl = Uri.TryCreate(LocalUrl?.Trim(), UriKind.Absolute, out var url) && (url.Scheme == Uri.UriSchemeHttp || url.Scheme == Uri.UriSchemeHttps) ? LocalUrl.Trim() : DefaultLocalUrl,
         LocalModel = string.IsNullOrWhiteSpace(LocalModel) ? DefaultLocalModel : LocalModel.Trim(),
+        AgentTurnsPerHour = Math.Clamp(AgentTurnsPerHour, MinAgentTurns, MaxAgentTurns),
     };
 
     /// <summary>Reads settings from a file's text: the defaults when it is missing or broken, every value in range.</summary>

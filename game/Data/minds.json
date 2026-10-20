@@ -51,6 +51,142 @@
     "TurnsKept": 24
   },
 
+  // The gods' and Creatures' agents (ADR-072). Things that matter wake a mind: a Creature in a god's
+  // lands, a war, a treaty, a village won or lost, a blow to its people, a fight; for a Creature, a
+  // meeting, a fight, a reward or punishment, hunger, tiredness, growing, or its people struck. A god
+  // also looks about it every ReflectSeconds of the world's time. With a model chosen and the agents
+  // on, the mind is asked: a god acts within the rules, sets its aims, speaks and keeps its journal; a
+  // Creature speaks and chooses what to do next. Hooks gather for GatherSeconds, and a mind is asked at
+  // most every GodTurnSeconds or CreatureTurnSeconds of real time, MaxAsking at once and TurnsPerHour
+  // in an hour unless the player chooses another limit. After three failures in a row the agents rest
+  // RestSeconds. A god's aims carry at least AimWeight and the planner leaves them AimHoldSeconds.
+  // Without a model, the scribes give the gods and Creatures their Voices, a god at most every
+  // ScribeGodSeconds and a Creature every ScribeCreatureSeconds of the world's time. A Creature's words
+  // stay above it SpeechSeconds. The Quick models are those asked when the player prefers them.
+  "Agents": {
+    "GodTurnSeconds": 40.0,
+    "CreatureTurnSeconds": 30.0,
+    "GatherSeconds": 2.0,
+    "ReflectSeconds": 240.0,
+    "TurnsPerHour": 300,
+    "MaxAsking": 2,
+    "MaxActions": 3,
+    "MaxMessages": 2,
+    "JournalLength": 900,
+    "AimHoldSeconds": 300.0,
+    "AimWeight": 0.6,
+    "VillagesShown": 12,
+    "Effort": "Low",
+    "MaxTokens": 3000,
+    "RestSeconds": 120.0,
+    "ScribeGodSeconds": 45.0,
+    "ScribeCreatureSeconds": 25.0,
+    "SpeechSeconds": 6.0,
+    "QuickClaudeModel": "claude-haiku-5-5",
+    "QuickOpenAIModel": "gpt-6-luna",
+    "QuickGeminiModel": "gemini-3.5-flash-lite"
+  },
+
+  // What the scribes say when no model speaks. A god speaks to another god of a moment between them;
+  // a Creature speaks aloud. {name} is the speaker, {god} a Creature's god, {other} the god or Creature
+  // spoken of, {village} the village and {creature} the Creature concerned.
+  "Voices": {
+    "Gods": {
+      "Visitor.Welcome": [
+        "Your {creature} walks in {village}, {other}. Let it rest among my people; friends share their fields.",
+        "{village} opens its gates to your {creature}. Such is the way between friends.",
+        "I see your {creature} in {village}. It is welcome, as you are."
+      ],
+      "Visitor.Watch": [
+        "Your {creature} treads in {village}, {other}. My eyes are on it.",
+        "{village} is mine. Your {creature} may look, but it will not take.",
+        "Why does your {creature} wander in {village}? I will remember this."
+      ],
+      "Visitor.Repel": [
+        "Your {creature} dares set foot in {village}? It will be driven out.",
+        "Call back your beast from {village}, {other}, or carry it home in pieces.",
+        "{village} is not yours to walk in. My Creature comes for yours."
+      ],
+      "War.Declared": [
+        "Enough, {other}. From this day we are at war.",
+        "Your people will learn whose island this is. War, {other}.",
+        "I have weighed you and found you wanting. Let war decide."
+      ],
+      "War.Answered": [
+        "So you choose war, {other}. You will regret it.",
+        "War? Then come. My people do not kneel.",
+        "You have woken me, {other}. Do not ask for mercy later."
+      ],
+      "Alliance.Offered": [
+        "Stand with me, {other}. Together the island bows to no one.",
+        "I offer you my hand in alliance. Take it while it is open.",
+        "Our enemies are many and our people few. Let us be allies."
+      ],
+      "Alliance.Formed": [
+        "It is done: we stand together, {other}.",
+        "An alliance, then. Do not make me regret my trust.",
+        "Our peoples are joined. May our enemies tremble."
+      ],
+      "Peace.Asked": [
+        "Enough blood, {other}. Let us make peace.",
+        "This war feeds no one. I ask for peace.",
+        "Lay down your wrath, as I lay down mine. Peace?"
+      ],
+      "Peace.Made": [
+        "Peace, then. Remember it was I who kept it.",
+        "The war is over, {other}. Let the fields grow again.",
+        "We are at peace. I will be watching that you keep it."
+      ],
+      "Betrayed": [
+        "You break our alliance, {other}? I will not forget this betrayal.",
+        "Traitor. My people will sing of your falseness for an age.",
+        "So your word is wind. I will remember, {other}."
+      ],
+      "Betraying": [
+        "Our alliance has served its purpose, {other}. I walk alone now.",
+        "I no longer need you, {other}. Our pact is ended.",
+        "Forgive me, or do not. Our alliance is over."
+      ],
+      "Struck": [
+        "You struck {village}, {other}. My people bleed, and I am watching.",
+        "Harm my people in {village} again and I will answer in kind.",
+        "{village} suffers by your hand. This will not be forgotten."
+      ],
+      "Fight.Won": [
+        "My {creature} has humbled yours, {other}. Remember it.",
+        "Your beast is beaten. Keep it on a shorter leash.",
+        "{creature} stands, and yours does not. A lesson, {other}."
+      ],
+      "Fight.Lost": [
+        "Your beast beat my {creature}, {other}. Enjoy it while it lasts.",
+        "{creature} will heal. And then it will remember yours.",
+        "A lucky blow, {other}. It will not happen twice."
+      ],
+      "Met": [
+        "So you are {other}. I have heard your people's prayers. We will see what you are.",
+        "Greetings, {other}. The island is small; choose your friends with care.",
+        "{other}. At last we meet. Speak to me when you know what you want."
+      ]
+    },
+    "Creatures": {
+      "Meeting.Friend": ["{other}! Friend! {name} happy.", "{name} sees {other}. Play?", "Good {other}. {name} likes {other}."],
+      "Meeting.Foe": ["{other}... enemy of {god}. {name} not afraid.", "Go away, {other}! This is {name}'s land!", "{name} smells {other}. Bad smell. Enemy."],
+      "Meeting.Stranger": ["Who is {other}? {name} watches.", "Strange beast. {name} careful.", "{other} big. {name} bigger?"],
+      "Fight.Won": ["{name} strong! {other} run away!", "{name} wins! {god} sees?", "Ha! {name} beat {other}!"],
+      "Fight.Lost": ["Ow... {other} too strong.", "{name} hurt. {name} remember {other}.", "{name} lose... next time {name} win."],
+      "Fight.Drew": ["{other} strong. {name} strong too.", "Nobody wins. {name} tired.", "Hmph. {other} not beaten. Not yet."],
+      "Fight.Fled": ["Run! {name} run!", "{other} too big! {name} go!", "{name} not fight today."],
+      "Judged.Rewarded": ["{god} pleased! {name} good!", "Yes! {name} do again!", "{name} happy. {god} kind."],
+      "Judged.Punished": ["Ow! {name} sorry, {god}.", "{name} bad? {name} not do again.", "Why hit {name}? {name} sad."],
+      "Grew": ["{name} bigger now! {name} stronger!", "{name} grows! Look, {god}!", "{name} feels new strength."],
+      "Need.Hungry": ["{name} hungry. Food?", "Belly empty. {name} eat now.", "{name} so hungry... village has food?"],
+      "Need.Tired": ["{name} tired. Sleep now.", "Yawn... {name} rest a little.", "{name} legs heavy. Need sleep."],
+      "Home.Struck": ["{village} hurt! {name} help!", "Oh no, {village}! {name} come!", "{god}'s people cry in {village}!"],
+      "Noticed.Watched": ["{other} watches {name}. {name} not afraid.", "{name} just looking, {other}.", "Eyes on {name}... {name} feel them."],
+      "Noticed.Guard": ["{name} go see {other}. {god} says so.", "Who walks in {village}? {name} go look!", "{other} in our village? {name} come!"]
+    }
+  },
+
   // The scribes' lore: gods written from the seed. {name}, {creature} and {animal} become the god's
   // name, its Creature's name and its Creature's animal.
   "Lore": {
