@@ -376,6 +376,8 @@ public sealed class AlertFeed
             CreatureAction.EatFromStores => (key, Format("{0} ate {1:0} food from the stores of {2}.", creature.Name, -acted.Food, settlement.Name), AlertSeverity.Warning, settlement.Position),
             CreatureAction.Feed => (key, Format("{0} brought {1:0} food to {2}.", creature.Name, acted.Food, settlement.Name), AlertSeverity.Good, settlement.Position),
             CreatureAction.HelpBuild => (key, Format("{0} helped {1} build.", creature.Name, settlement.Name), AlertSeverity.Info, settlement.Position),
+            CreatureAction.Farm => (key, Format("{0} tended the fields of {1}: {2:0} food came in.", creature.Name, settlement.Name, acted.Food), AlertSeverity.Good, settlement.Position),
+            CreatureAction.GatherWood => (key, Format("{0} brought {1:0} wood to {2}.", creature.Name, acted.Wood, settlement.Name), AlertSeverity.Info, settlement.Position),
             _ => null,
         };
     }

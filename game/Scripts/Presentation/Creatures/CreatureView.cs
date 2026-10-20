@@ -183,6 +183,8 @@ internal sealed class CreatureView
             body.Align(creature.Morality);
             _judgedSeconds = Mathf.Max(0f, _judgedSeconds - delta);
             body.Express(Pantheon.Game.Presentation.CreatureExpression.FaceOf(creature, world.Tick, _judgedSeconds > 0f ? _judged : null), _clock);
+            var uprooting = creature.Activity.Action == CreatureAction.GatherWood && creature.Activity.Phase == CreaturePhase.Performing && heldAt is null;
+            body.ShowTree(uprooting ? Mathf.Max(0f, Mathf.Sin(_clock * 2.6f)) : null);
             UpdateFlash(body, delta);
             body.ShowScars(creature.Scars);
             _fight.Update(creature, world, _shown, body.StandingHeight, _scale, (_clock, _offset), delta);
@@ -277,6 +279,8 @@ internal sealed class CreatureView
         {
             CreatureAction.Rest => AnimalMotion.Sit(plan, _clock),
             CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.Forage or CreatureAction.EatFromStores => AnimalMotion.Work(plan, _clock),
+            CreatureAction.Farm => AnimalMotion.Farm(plan, _clock),
+            CreatureAction.GatherWood => AnimalMotion.Uproot(plan, _clock),
             CreatureAction.Fight => AnimalMotion.Fight(plan, _clock, _offset),
             CreatureAction.Attack => AnimalMotion.Attack(plan, _clock),
             CreatureAction.Play or CreatureAction.Befriend => AnimalMotion.Play(plan, _clock, _offset),

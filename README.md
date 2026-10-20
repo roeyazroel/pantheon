@@ -378,11 +378,12 @@ covers:
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
 | Set your Creature on the rival Creature nearest the cursor, to hunt it down and fight it | Shift+V (or Fight on its card, then click near the rival) |
+| Set your Creature to work at the village under the cursor (farming, fetching wood or building, as it needs most), or to fetch wood from the wood under the cursor | B (or Work on its card, then click a village or a wood) |
 | Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
 | Your hand takes an offering from a village that follows you (R gives it) | Ctrl+R |
 | Show or hide the diplomacy panel | P |
 | Show or hide the Divine Council: the vote in session, decrees, and motions to table | U |
-| Toggle region boundaries | B |
+| Toggle region boundaries | Shift+B |
 | Toggle the debug overlay | F1 |
 | Next region debug map layer, then off | F3 |
 | New world from a random seed (small, won by Divine Ascendancy, with four seasons) | F2 |
@@ -1146,7 +1147,12 @@ now.
   village it went to attack now follows an ally. You are told, and it decides again.
 - **What it does matters.**
   - Feeding a hungry village fills its stores and wins you love.
-  - Helping a village build raises its houses.
+  - Farming a village's fields waters, weeds and tills them and brings in a harvest by how fertile
+    they are (ADR-063).
+  - Fetching wood uproots trees in the forest around a village, which thins, and brings the timber
+    to its stores.
+  - Helping a village build raises its houses, spending its wood: a village short of wood is
+    better served by fetching some.
   - Eating from a village's stores is theft.
   - Attacking a village kills villagers and makes the people fear you.
 
@@ -1158,6 +1164,10 @@ now.
   - Rewards and punishments also shape its personality and its loyalty.
   - Five rewards for feeding make a dutiful feeder of it.
 - **Send it.** Press V to send it to the cursor; it waits there longer the more loyal it is.
+- **Set it to work.** Press B over a village and it does what that village needs most: tends its
+  fields when it is hungry, fetches wood when it is short or building without enough, else
+  builds or farms. Press B over a wood and it fetches that wood for your nearest village. It works
+  in the village's own situation, so rewarding the work teaches it to do it unasked.
 - **It grows.** Its deeds earn experience. Each level, up to 10, makes it bigger, stronger,
   faster, cleverer (it learns faster), tougher, and carries your influence further. Its card shows
   these attributes.
@@ -1583,6 +1593,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
 | `--title-page=new\|worlds\|together\|settings` | Open the title screen on a page (for captures, ADR-060). |
+| `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
 | `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
@@ -1708,7 +1719,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-41-creature-fights.md](.docs/milestone-15-part-41-creature-fights.md).
+[.docs/milestone-15-part-42-creature-work.md](.docs/milestone-15-part-42-creature-work.md).
 
 ## Contributing
 

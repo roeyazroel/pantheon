@@ -145,6 +145,28 @@ public static class ResourceModel
         return (wood, quarried);
     }
 
+    /// <summary>The forest around a village with the most timber standing, if any holds a fair stand (ADR-063).</summary>
+    /// <param name="rules">Resource rules.</param>
+    /// <param name="grid">Region grid.</param>
+    /// <param name="settlement">The village.</param>
+    /// <returns>The region, or <c>null</c> when none holds a fifth of a full stand.</returns>
+    public static RegionState? RichestForest(ResourceRules rules, RegionGrid grid, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(grid);
+        ArgumentNullException.ThrowIfNull(settlement);
+        RegionState? best = null;
+        foreach (var region in Around(rules, grid, settlement))
+        {
+            if (region.Timber >= 0.2f && (best is null || region.Timber > best.Timber))
+            {
+                best = region;
+            }
+        }
+
+        return best;
+    }
+
     /// <summary>The land regions within the rules' radius of the village's own.</summary>
     private static System.Collections.Generic.IEnumerable<RegionState> Around(ResourceRules rules, RegionGrid grid, SettlementState settlement)
     {

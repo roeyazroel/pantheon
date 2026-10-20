@@ -58,6 +58,7 @@ public static class CreatureTemperament
     private static readonly TraitDrive[] Bold = [new(CreatureTrait.Aggression, false), new(CreatureTrait.Courage, false)];
     private static readonly TraitDrive[] Timid = [new(CreatureTrait.Courage, true)];
     private static readonly TraitDrive[] Idle = [new(CreatureTrait.Laziness, false)];
+    private static readonly TraitDrive[] Toiling = [new(CreatureTrait.Kindness, false), new(CreatureTrait.Laziness, true)];
     private static readonly TraitDrive[] Roaming = [new(CreatureTrait.Curiosity, false)];
 
     /// <summary>
@@ -70,6 +71,7 @@ public static class CreatureTemperament
     public static ReadOnlySpan<TraitDrive> Traits(CreatureAction action) => action switch
     {
         CreatureAction.Feed or CreatureAction.HelpBuild => Kind,
+        CreatureAction.Farm or CreatureAction.GatherWood => Toiling,
         CreatureAction.Play or CreatureAction.Befriend => Playful,
         CreatureAction.Attack or CreatureAction.EatFromStores => Cruel,
         CreatureAction.Fight => Bold,

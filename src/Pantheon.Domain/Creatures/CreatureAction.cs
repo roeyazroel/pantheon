@@ -21,6 +21,12 @@ public enum CreatureAction
     /// <summary>Works on the house a settlement is building.</summary>
     HelpBuild,
 
+    /// <summary>Tends a settlement's fields: tills, weeds and waters them, and brings in a harvest (ADR-063).</summary>
+    Farm,
+
+    /// <summary>Uproots trees in the forest by a settlement and brings the timber to its stores (ADR-063).</summary>
+    GatherWood,
+
     /// <summary>Plays with the villagers.</summary>
     Play,
 

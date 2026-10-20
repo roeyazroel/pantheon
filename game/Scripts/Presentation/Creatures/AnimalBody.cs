@@ -140,6 +140,57 @@ internal sealed class AnimalBody
         }
     }
 
+    /// <summary>
+    /// Shows a tree before the Creature as it uproots it (ADR-063), lifted out of the ground and leaning
+    /// towards it with each heave; <c>null</c> hides it.
+    /// </summary>
+    /// <param name="heave">How hard it heaves now (0..1), or <c>null</c> for no tree.</param>
+    public void ShowTree(float? heave)
+    {
+        if (heave is not { } tug)
+        {
+            if (_tree is not null)
+            {
+                _tree.Visible = false;
+            }
+
+            return;
+        }
+
+        _tree ??= Tree(_plan.Body);
+        _tree.Visible = true;
+        var reach = (_plan.Body.UpperArm + _plan.Body.Forearm) * 0.95f;
+        _tree.Position = new Vector3(0f, 0.3f + (0.6f * tug), reach);
+        _tree.Rotation = new Vector3(-0.25f * tug, 0.3f, 0.08f * tug);
+    }
+
+    /// <summary>A tree the size of the Creature: roots, a trunk and a leafy crown.</summary>
+    private Node3D Tree(AnimalProportions b)
+    {
+        var tree = new Node3D { Name = "Tree" };
+        _hips.GetParent<Node3D>().AddChild(tree);
+        var bark = new StandardMaterial3D { AlbedoColor = new Color(0.36f, 0.25f, 0.16f), Roughness = 0.95f };
+        var leaves = new StandardMaterial3D { AlbedoColor = new Color(0.22f, 0.45f, 0.18f), Roughness = 0.9f };
+        var height = (b.HipHeight + b.Torso) * 1.1f;
+        tree.AddChild(new MeshInstance3D { Mesh = new CylinderMesh { TopRadius = 0.18f, BottomRadius = 0.32f, Height = height, Material = bark }, Position = new Vector3(0f, height / 2f, 0f) });
+        tree.AddChild(new MeshInstance3D { Mesh = new SphereMesh { Radius = 1.3f, Height = 2.2f, Material = leaves }, Position = new Vector3(0f, height + 0.4f, 0f) });
+        tree.AddChild(new MeshInstance3D { Mesh = new SphereMesh { Radius = 0.9f, Height = 1.6f, Material = leaves }, Position = new Vector3(0.6f, height - 0.2f, 0.3f) });
+        for (var i = 0; i < 4; i++)
+        {
+            var angle = i * Mathf.Tau / 4f;
+            tree.AddChild(new MeshInstance3D
+            {
+                Mesh = new CylinderMesh { TopRadius = 0.12f, BottomRadius = 0.03f, Height = 0.9f, Material = bark },
+                Position = new Vector3(Mathf.Cos(angle) * 0.3f, -0.1f, Mathf.Sin(angle) * 0.3f),
+                Rotation = new Vector3(Mathf.Sin(angle) * 0.9f, 0f, -Mathf.Cos(angle) * 0.9f),
+            });
+        }
+
+        return tree;
+    }
+
+    private Node3D? _tree;
+
     /// <summary>Shows how the Creature feels (ADR-055): its face, and its tail wagging in joy, lashing in anger and tucked in fear.</summary>
     /// <param name="face">Its face.</param>
     /// <param name="clock">Seconds of its own clock, for the tail.</param>

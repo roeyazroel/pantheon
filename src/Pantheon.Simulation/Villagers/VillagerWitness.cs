@@ -65,7 +65,7 @@ internal static class VillagerWitness
             case ThirstStarted thirst when thirst.SettlementId == home:
                 Once(rules, villager, new VillagerMemory { Tick = tick, Deed = VillagerDeed.Hungered, SettlementId = home, Detail = "thirst" }, rules.HardshipSeconds);
                 break;
-            case CreatureActed acted when acted.SettlementId == home && acted.Action is CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.EatFromStores or CreatureAction.Attack:
+            case CreatureActed acted when acted.SettlementId == home && acted.Action is CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.Farm or CreatureAction.GatherWood or CreatureAction.EatFromStores or CreatureAction.Attack:
                 var creature = world.Creatures.Find(c => c.Id == acted.CreatureId);
                 Once(rules, villager, new VillagerMemory { Tick = tick, Deed = VillagerDeed.SawCreature, SettlementId = home, GodId = creature?.GodId, OtherId = acted.CreatureId, Detail = acted.Action.ToString(), Count = acted.Deaths }, SameSeconds);
                 break;

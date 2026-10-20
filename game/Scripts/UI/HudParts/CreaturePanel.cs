@@ -74,6 +74,7 @@ internal sealed partial class CreaturePanel : PanelContainer
         _punish = Command(buttons, "Punish", "X", "Punish it for what it is doing, or just did: it will do it less", () => Judged?.Invoke(CreatureCommandKind.Punish));
         Command(buttons, "Follow", "C", "Look at it and follow it; move the view to let go", () => LookClicked?.Invoke());
         Command(buttons, "Send", "V", "Click the ground where it should go", () => SendClicked?.Invoke());
+        Command(buttons, "Work", "B", "Click a village: it farms, fetches wood or builds as the village needs; click a wood: it fetches timber", () => WorkClicked?.Invoke());
         Command(buttons, "Fight", "\u21e7V", "Click near a rival Creature: yours hunts it down and fights it", () => FightClicked?.Invoke());
 
         _more = new Button { Text = "More ▾", Flat = true, FocusMode = FocusModeEnum.None, Alignment = HorizontalAlignment.Left };
@@ -99,6 +100,9 @@ internal sealed partial class CreaturePanel : PanelContainer
 
     /// <summary>The player clicked Fight.</summary>
     public event Action? FightClicked;
+
+    /// <summary>The player clicked Work.</summary>
+    public event Action? WorkClicked;
 
     /// <summary>Shows a card; labels change only where their text did.</summary>
     /// <param name="card">The card.</param>

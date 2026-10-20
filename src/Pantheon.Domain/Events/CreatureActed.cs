@@ -19,4 +19,7 @@ public sealed record CreatureActed : WorldEvent
 
     /// <summary>Food it gave (positive) or took (negative).</summary>
     public required float Food { get; init; }
+
+    /// <summary>Wood it brought to the settlement's stores (ADR-063).</summary>
+    public float Wood { get; init; }
 }

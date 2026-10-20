@@ -122,7 +122,7 @@ public partial class GameRoot : Node3D
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
         hud.CreatureLookClicked += FocusCreature;
         _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
-        _camera.LeftGrabAllowed = () => _divine.SelectedMiracle is null && !_divine.SendMode && !_divine.FightMode;
+        _camera.LeftGrabAllowed = () => _divine.SelectedMiracle is null && !_divine.SendMode && !_divine.FightMode && !_divine.WorkMode;
         _diplomacy = new DiplomacyPanel { Name = "Diplomacy" };
         AddChild(_diplomacy);
         _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
@@ -289,6 +289,7 @@ public partial class GameRoot : Node3D
                 _divine.SendCreature(_camera.CursorGroundPoint);
             }
         }),
+        (InputActions.CreatureWork, () => _divine.WorkAt(_camera.CursorGroundPoint)),
         (InputActions.HandGrab, () => _divine.UseHand(_camera.CursorGroundPoint, Input.IsKeyPressed(Key.Shift), Input.IsKeyPressed(Key.Ctrl))),
         (InputActions.ToggleMapOverlay, _divine.CycleOverlay),
         (InputActions.DebugGrantPower, () => SetStatus(SessionCommands.GrantPower(_session))),
@@ -413,6 +414,11 @@ public partial class GameRoot : Node3D
         if (options.Fight)
         {
             _divine.FightNearest();
+        }
+
+        if (options.Work is { } work && settlements.Count > 0)
+        {
+            _divine.WorkFor(settlements[Math.Max(0, _focusIndex)], forest: work == "forest");
         }
     }
 

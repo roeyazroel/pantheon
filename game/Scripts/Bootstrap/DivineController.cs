@@ -59,6 +59,7 @@ internal sealed class DivineController
         _hud.CreatureJudged += JudgeCreature;
         _hud.CreatureSendClicked += BeginSend;
         _hud.CreatureFightClicked += BeginFight;
+        _hud.CreatureWorkClicked += BeginWork;
     }
 
     /// <summary>Whether the next click on the ground sends the Creature there.</summary>
@@ -88,6 +89,7 @@ internal sealed class DivineController
         SelectedMiracle = miracleId;
         SendMode = false;
         FightMode = false;
+        WorkMode = false;
         if (miracleId is null)
         {
             _presenter.HideTarget();
@@ -113,6 +115,12 @@ internal sealed class DivineController
         if (FightMode)
         {
             FightAt(cursor);
+            return true;
+        }
+
+        if (WorkMode)
+        {
+            WorkAt(cursor);
             return true;
         }
 
@@ -162,6 +170,46 @@ internal sealed class DivineController
         SendMode = _session.LocalCreature is not null;
         _presenter.HideTarget();
         _setStatus(SendMode ? "Click where your Creature should go (Esc cancels)" : "You have no Creature");
+    }
+
+    /// <summary>Whether the next click sets the Creature to work at the village or forest there (ADR-063).</summary>
+    public bool WorkMode { get; private set; }
+
+    /// <summary>The next click on a village or a forest sets the Creature to work there (ADR-063).</summary>
+    public void BeginWork()
+    {
+        SelectedMiracle = null;
+        (SendMode, FightMode) = (false, false);
+        WorkMode = _session.LocalCreature is not null;
+        _setStatus(WorkMode ? "Click a village to work there, or a wood to fetch timber (Esc cancels)" : "You have no Creature");
+    }
+
+    /// <summary>Sets the Creature to work at the village or forest at a ground point (ADR-063).</summary>
+    /// <param name="cursor">Ground point under the cursor.</param>
+    public void WorkAt(NVector3? cursor)
+    {
+        WorkMode = false;
+        if (cursor is not { } point)
+        {
+            return;
+        }
+
+        _setStatus(SessionCommands.CommandCreature(_session, CreatureCommandKind.Work, new GroundPosition(point.X, point.Z)));
+        _hand.Press(point.ToGodot());
+    }
+
+    /// <summary>Sets the Creature to work for a village, or in the forest richest in timber near it (<c>--work</c>, for captures).</summary>
+    /// <param name="village">The village.</param>
+    /// <param name="forest">Whether to fetch wood from its forest rather than work in the village.</param>
+    public void WorkFor(Pantheon.Domain.Settlements.SettlementState village, bool forest)
+    {
+        var at = village.Position;
+        if (forest && Pantheon.Simulation.Resources.ResourceModel.RichestForest(_session.Content.SettlementRules.Resources, _session.World.Regions, village) is { } stand)
+        {
+            at = _session.World.Regions.GetRegionCenter(stand.Id);
+        }
+
+        WorkAt(new NVector3(at.X, 0f, at.Z));
     }
 
     /// <summary>Whether the next click on the ground sets the Creature on the rival nearest it (ADR-062).</summary>

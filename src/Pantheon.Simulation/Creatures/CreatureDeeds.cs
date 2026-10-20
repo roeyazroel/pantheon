@@ -52,7 +52,7 @@ public sealed class CreatureDeeds
         var activity = creature.Activity;
         var rule = activity.Action == CreatureAction.GoTo ? null : CreatureModel.RuleFor(_rules, activity.Action);
         var settlement = activity.TargetSettlementId is { } id ? world.Settlements.Find(s => s.Id == id) : null;
-        var (food, deaths, share) = rule is null ? (0f, 0, 1f) : ApplyToSettlement(world, creature, rule, settlement);
+        var (food, wood, deaths, share) = rule is null ? (0f, 0f, 0, 1f) : ApplyToSettlement(world, creature, rule, settlement);
         if (rule is not null)
         {
             CreatureModel.Relieve(rule, creature.Needs, share);
@@ -86,17 +86,18 @@ public sealed class CreatureDeeds
             SettlementId = settlement?.Id,
             Deaths = deaths,
             Food = food,
+            Wood = wood,
         });
     }
 
     /// <summary>The action's effect on its settlement.</summary>
-    /// <returns>Food given (positive) or taken (negative), people killed, and the share of the action's relief earned.</returns>
-    private (float Food, int Deaths, float Share) ApplyToSettlement(WorldState world, CreatureState creature, CreatureActionRule rule, SettlementState? settlement)
+    /// <returns>Food given (positive) or taken (negative), wood brought, people killed, and the share of the action's relief earned.</returns>
+    private (float Food, float Wood, int Deaths, float Share) ApplyToSettlement(WorldState world, CreatureState creature, CreatureActionRule rule, SettlementState? settlement)
     {
         var size = rule.Amount * CreatureModel.Strength(_rules, creature);
         if (settlement is null)
         {
-            return (0f, 0, 1f);
+            return (0f, 0f, 0, 1f);
         }
 
         switch (rule.Action)
@@ -105,19 +106,23 @@ public sealed class CreatureDeeds
                 var storage = SettlementEconomy.StorageOf(_settlementRules, settlement);
                 var before = settlement.Food;
                 settlement.Food = Math.Max(before, Math.Min(storage, before + size));
-                return (settlement.Food - before, 0, 1f);
+                return (settlement.Food - before, 0f, 0, 1f);
             case CreatureAction.EatFromStores:
                 var eaten = Math.Min(settlement.Food, size);
                 settlement.Food -= eaten;
-                return (-eaten, 0, size > 0f ? eaten / size : 0f);
+                return (-eaten, 0f, 0, size > 0f ? eaten / size : 0f);
             case CreatureAction.HelpBuild:
                 Build(settlement, size);
-                return (0f, 0, 1f);
+                return (0f, 0f, 0, 1f);
+            case CreatureAction.Farm:
+                return (Farm(world, settlement, size), 0f, 0, 1f);
+            case CreatureAction.GatherWood:
+                return (0f, FetchWood(world, creature, settlement, size), 0, 1f);
             case CreatureAction.Attack:
                 var defence = Math.Min(1f, CivicModel.Defence(_settlementRules, settlement) + CallingEffects.CommandedDefence(_rules.Callings, world, settlement));
                 var killed = Math.Min(settlement.Population, (int)MathF.Round(size * CallingEffects.AttackFactor(_rules.Callings, creature) * (1f - defence)));
                 settlement.Population -= killed;
-                return (0f, killed, 1f);
+                return (0f, 0f, killed, 1f);
             case CreatureAction.Wander:
             case CreatureAction.Rest:
             case CreatureAction.Forage:
@@ -127,18 +132,86 @@ public sealed class CreatureDeeds
             case CreatureAction.Fight:
             case CreatureAction.Befriend:
             case CreatureAction.Flee:
-                return (0f, 0, 1f);
+                return (0f, 0f, 0, 1f);
             default:
                 throw new ArgumentOutOfRangeException(nameof(rule), rule.Action, "Unknown creature action.");
         }
     }
 
-    /// <summary>Adds builder-steps to the settlement's house, finishing it (and starting the next) as the settlement step does.</summary>
+    /// <summary>
+    /// Tends a village's fields (ADR-063): it tills and waters the soil, pulls the blight, and brings
+    /// in a harvest by how fertile the fields are, as far as the stores hold it.
+    /// </summary>
+    /// <returns>The food harvested.</returns>
+    private float Farm(WorldState world, SettlementState settlement, float size)
+    {
+        var grid = world.Regions;
+        var (column, row) = grid.GetCoordinates(settlement.RegionId);
+        var radius = _settlementRules.FarmlandRadius;
+        for (var r = Math.Max(0, row - radius); r <= Math.Min(grid.Rows - 1, row + radius); r++)
+        {
+            for (var c = Math.Max(0, column - radius); c <= Math.Min(grid.Columns - 1, column + radius); c++)
+            {
+                var region = grid.Cells[(r * grid.Columns) + c];
+                if (SettlementEconomy.IsFarmland(region))
+                {
+                    region.SoilMoisture = SimMath.Clamp01(region.SoilMoisture + FieldWater);
+                    region.Blight = Math.Max(0f, region.Blight - FieldWeeding);
+                    region.Fertility = Math.Min(1f, region.Fertility + FieldTilling);
+                }
+            }
+        }
+
+        var harvest = size * SettlementEconomy.SurveyFarmland(grid, settlement.RegionId, radius).MeanFertility;
+        var storage = SettlementEconomy.StorageOf(_settlementRules, settlement);
+        var before = settlement.Food;
+        settlement.Food = Math.Max(before, Math.Min(storage, before + harvest));
+        return settlement.Food - before;
+    }
+
+    /// <summary>
+    /// Uproots trees where the Creature stands and brings the timber to the village's stores (ADR-063):
+    /// the forest there thins by what it takes.
+    /// </summary>
+    /// <returns>The wood brought.</returns>
+    private float FetchWood(WorldState world, CreatureState creature, SettlementState settlement, float size)
+    {
+        if (!world.Regions.TryGetRegionIdAt(creature.Position.X, creature.Position.Z, out var regionId))
+        {
+            return 0f;
+        }
+
+        var region = world.Regions.GetRegion(regionId);
+        var timberPerWood = Math.Max(1e-4f, _settlementRules.Resources.TimberPerWood);
+        var wood = Math.Min(size * SimMath.Clamp01(region.Timber), region.Timber / timberPerWood);
+        region.Timber = Math.Max(0f, region.Timber - (wood * timberPerWood));
+        settlement.Wood += wood;
+        return wood;
+    }
+
+    // What a Creature's day in the fields does to each of them: water, blight pulled and fertility tilled in.
+    private const float FieldWater = 0.06f;
+    private const float FieldWeeding = 0.15f;
+    private const float FieldTilling = 0.01f;
+
+    /// <summary>
+    /// Adds builder-steps to the settlement's house, finishing it (and starting the next) as the
+    /// settlement step does. The work spends the house's wood by its share (ADR-063): without wood,
+    /// only what the stores allow is built.
+    /// </summary>
     private void Build(SettlementState settlement, float work)
     {
         if (settlement.Housing >= _settlementRules.MaxHousing)
         {
             return;
+        }
+
+        var houseWood = Resources.ResourceModel.HouseWood(_settlementRules, settlement);
+        if (houseWood > 0f)
+        {
+            var woodPerWork = houseWood / _settlementRules.WorkPerHouse;
+            work = Math.Min(work, settlement.Wood / woodPerWork);
+            settlement.Wood = Math.Max(0f, settlement.Wood - (work * woodPerWork));
         }
 
         settlement.ConstructionProgress += work;

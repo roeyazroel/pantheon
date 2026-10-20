@@ -267,6 +267,54 @@ public static class AnimalMotion
         };
     }
 
+    /// <summary>Tilling the fields (ADR-063): bent over, both fists raised together and brought down to the soil, again and again.</summary>
+    /// <param name="b">The proportions.</param>
+    /// <param name="clock">Seconds of the Creature's clock.</param>
+    /// <returns>The pose.</returns>
+    public static BodyPose Farm(AnimalProportions b, float clock)
+    {
+        ArgumentNullException.ThrowIfNull(b);
+        var swing = 0.5f + (0.5f * MathF.Sin(clock * 3.2f));
+        var hip = b.HipHeight * 0.86f;
+        var leg = Leg(b, 0.31f, 0f, hip, 0f, planted: true);
+        var arm = new LimbAngles(0.6f + (1.9f * swing), 0.3f + (0.5f * (1f - swing)), 0.4f);
+        return new BodyPose
+        {
+            HipHeight = hip,
+            Lean = b.Lean + 0.55f + (0.15f * (1f - swing)),
+            LeftLeg = leg,
+            RightLeg = Leg(b, 0.55f, 0f, hip, 0f, planted: true),
+            LeftArm = arm,
+            RightArm = arm,
+            ArmsOut = (0.12f, 0.12f),
+            HeadPitch = 0.45f,
+            Tail = (0.3f, 0.2f * MathF.Sin(clock * 1.6f)),
+        };
+    }
+
+    /// <summary>Uprooting a tree (ADR-063): feet planted wide, leaning back, both hands gripping low before it and heaving in tugs.</summary>
+    /// <param name="b">The proportions.</param>
+    /// <param name="clock">Seconds of the Creature's clock.</param>
+    /// <returns>The pose.</returns>
+    public static BodyPose Uproot(AnimalProportions b, float clock)
+    {
+        ArgumentNullException.ThrowIfNull(b);
+        var tug = MathF.Max(0f, MathF.Sin(clock * 2.6f));
+        var hip = b.HipHeight * (0.82f + (0.06f * tug));
+        return new BodyPose
+        {
+            HipHeight = hip,
+            Lean = b.Lean - 0.15f - (0.3f * tug),
+            LeftLeg = Leg(b, 0.18f, 0f, hip, 0f, planted: true),
+            RightLeg = Leg(b, 0.6f, 0f, hip, 0f, planted: true),
+            LeftArm = new LimbAngles(1.15f + (0.25f * tug), 0.15f, 0.2f),
+            RightArm = new LimbAngles(1.05f + (0.25f * tug), 0.2f, 0.2f),
+            ArmsOut = (-0.05f, -0.05f),
+            HeadPitch = -0.2f + (0.2f * tug),
+            Tail = (0.5f, 0f),
+        };
+    }
+
     /// <summary>Boxing an enemy: a staggered stance, the guard up, blows thrown in turn.</summary>
     /// <param name="b">The proportions.</param>
     /// <param name="clock">Seconds of the Creature's clock.</param>

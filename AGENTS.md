@@ -138,7 +138,7 @@ rule is followed by the conventions that meet it in this repository.
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
   holy sites and who keeps them, and the Divine Acts to aim), the U council panel (the vote in session, decrees, tabled motions and motions to table), the N Settlements panel (a village's faiths, stores, society,
-  technology, buildings and work, doctrines, turn from the gods and feelings, holy wars, its priority, the player's word to its holy war and proxy acts), the settings page, the B region grid, the F3 region
+  technology, buildings and work, doctrines, turn from the gods and feelings, holy wars, its priority, the player's word to its holy war and proxy acts), the settings page, the Shift+B region grid, the F3 region
   debug map (including blessing, influence, soil water, fire, scorch, fresh water, flood, snow,
   wildlife, damage, scar, pollution, blight, rubble, timber and stone), the
   O map overlays (influence, religion, faith, food, weather, danger, migration, culture, nature, population, risk, politics, navigation, authority), the `.` single-tick step, the
@@ -151,7 +151,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--reshape`, `--wildlife`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--title-page`, `--fight`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--title-page`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a

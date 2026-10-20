@@ -57,6 +57,9 @@ public partial class Hud : CanvasLayer
     /// <summary>The player clicked Fight on the Creature card: the next click near a rival sets it on that rival (ADR-062).</summary>
     public event Action? CreatureFightClicked;
 
+    /// <summary>The player clicked Work on the Creature card: the next click on a village or a wood sets it to work there (ADR-063).</summary>
+    public event Action? CreatureWorkClicked;
+
     /// <summary>The player clicked pause.</summary>
     public event Action? PauseClicked;
 
@@ -91,6 +94,7 @@ public partial class Hud : CanvasLayer
         _creature.LookClicked += () => CreatureLookClicked?.Invoke();
         _creature.SendClicked += () => CreatureSendClicked?.Invoke();
         _creature.FightClicked += () => CreatureFightClicked?.Invoke();
+        _creature.WorkClicked += () => CreatureWorkClicked?.Invoke();
     }
 
     /// <summary>Shows a new HUD model; controls change only where the text or state changed.</summary>

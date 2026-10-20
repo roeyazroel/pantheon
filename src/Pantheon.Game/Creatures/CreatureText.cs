@@ -52,6 +52,8 @@ public static class CreatureText
         CreatureAction.EatFromStores => At("eating the stores of", place),
         CreatureAction.Feed => At("feeding", place),
         CreatureAction.HelpBuild => At("building in", place),
+        CreatureAction.Farm => At("farming the fields of", place),
+        CreatureAction.GatherWood => At("fetching wood for", place),
         CreatureAction.Play => At("playing in", place),
         CreatureAction.Attack => At("attacking", place),
         CreatureAction.Ignore => At("walking away from", place),
@@ -131,6 +133,9 @@ public static class CreatureText
             CreatureCommandKind.Punish => Format("You punish {0} for {1}: it likes that less now ({2:0.00})", name, Doing(result.JudgedAction ?? CreatureAction.Wander, null), result.Preference ?? 0f),
             CreatureCommandKind.GoTo => Format("{0} heads where you pointed", name),
             CreatureCommandKind.Fight => Format("{0} goes after its rival, to fight", name),
+            CreatureCommandKind.Work => result.JudgedAction == CreatureAction.GatherWood ? Format("{0} goes to fetch wood", name)
+                : result.JudgedAction == CreatureAction.HelpBuild ? Format("{0} goes to help build", name)
+                : Format("{0} goes to farm the fields", name),
         },
         CreatureCommandRejection.UnknownGod or CreatureCommandRejection.UnknownCreature => "You have no Creature",
         CreatureCommandRejection.NotAuthorized => "That Creature does not answer to you",
@@ -139,6 +144,7 @@ public static class CreatureText
         CreatureCommandRejection.OutsideWorld => "There is nowhere to go there",
         CreatureCommandRejection.Unreachable => Format("{0} cannot walk there", name),
         CreatureCommandRejection.NoRivalThere => "There is no rival Creature there to fight: click near one",
+        CreatureCommandRejection.NoWorkThere => "There is no village or forest there to work at: click a village or a wood",
         CreatureCommandRejection.Sworn => "A treaty forbids your Creatures to fight each other",
     };
 

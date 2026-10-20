@@ -16,6 +16,9 @@ public enum CreatureCommandKind
 
     /// <summary>Hunt down the rival Creature nearest a place and fight it (ADR-062).</summary>
     Fight,
+
+    /// <summary>Work for the village at a place, at what it needs most, or fetch wood from the forest at a place (ADR-063).</summary>
+    Work,
 }
 
 /// <summary>A god's intent towards its Creature, checked by the authority like a miracle (spec §73).</summary>

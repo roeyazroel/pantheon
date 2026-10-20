@@ -75,7 +75,7 @@ public static class CreatureExpression
             case CreatureAction.Rest when activity.Phase == CreaturePhase.Performing:
                 sleep = 1f;
                 break;
-            case CreatureAction.Feed or CreatureAction.HelpBuild:
+            case CreatureAction.Feed or CreatureAction.HelpBuild or CreatureAction.Farm or CreatureAction.GatherWood:
                 joy += 0.4f;
                 break;
             case CreatureAction.EatFromStores or CreatureAction.Forage:

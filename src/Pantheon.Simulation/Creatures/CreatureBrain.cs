@@ -77,7 +77,7 @@ public sealed class CreatureBrain
             var distance = Distance(here, settlement.Position);
             if (distance <= _rules.PerceptionRadius && settlement.Population > 0)
             {
-                AddVillageOptions(options, creature, settlement, distance, AttackDrive(world, creature, settlement));
+                AddVillageOptions(options, world, creature, settlement, distance, AttackDrive(world, creature, settlement));
             }
         }
 
@@ -344,6 +344,67 @@ public sealed class CreatureBrain
         return true;
     }
 
+    /// <summary>How short of the wood it wants a village is, as a share (0 when it has enough).</summary>
+    private float WoodShort(SettlementState settlement)
+    {
+        var rules = _settlementRules.Resources;
+        var wanted = Resources.ResourceModel.Wanted(rules, settlement).Wood;
+        return wanted > 0f ? Math.Clamp(Resources.ResourceModel.Shortfall(rules, settlement).Wood / wanted, 0f, 1f) : 0f;
+    }
+
+    /// <summary>
+    /// Sets the Creature at its god's command to a village's work (ADR-063): it walks there and does
+    /// it, in the situation the village is in, so a reward teaches it to do so of its own accord.
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="creature">The Creature, which is changed.</param>
+    /// <param name="work">The work: farm, fetch wood or build.</param>
+    /// <param name="settlement">The village it works for.</param>
+    /// <param name="target">Where it works: the village, or the forest it fetches from.</param>
+    /// <returns><c>false</c> when there is no way there.</returns>
+    public bool Work(WorldState world, CreatureState creature, CreatureAction work, SettlementState settlement, GroundPosition target)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(settlement);
+        var spot = work == CreatureAction.GatherWood ? target : StandBeside(settlement.Position, creature.Position);
+        if (RegionPathfinder.FindPath(world.Regions, creature.Position, spot) is not { } path)
+        {
+            return false;
+        }
+
+        var conditions = BeliefModel.AssessConditions(_divine, settlement, Hazards.None);
+        var situation = Math.Max(conditions.FoodNeed, conditions.HealthNeed) >= _rules.VillageNeedThreshold ? CreatureSituation.VillageInNeed
+            : SettlementEconomy.WantsConstruction(_settlementRules, settlement) ? CreatureSituation.VillageBuilding
+            : CreatureSituation.VillageThriving;
+        Start(creature, situation, work, settlement.Id, spot, path);
+        return true;
+    }
+
+    /// <summary>The work a village needs most from a Creature (ADR-063): its fields when it is hungry, wood when it builds without enough, building, wood it lacks, else its fields.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="settlement">The village.</param>
+    /// <returns>The work, and where to do it.</returns>
+    public (CreatureAction Work, GroundPosition Target) NeededWork(WorldState world, SettlementState settlement)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(settlement);
+        var conditions = BeliefModel.AssessConditions(_divine, settlement, Hazards.None);
+        var forest = Resources.ResourceModel.RichestForest(_settlementRules.Resources, world.Regions, settlement) is { } stand ? world.Regions.GetRegionCenter(stand.Id) : (GroundPosition?)null;
+        var building = SettlementEconomy.WantsConstruction(_settlementRules, settlement);
+        if (conditions.FoodNeed >= _rules.VillageNeedThreshold)
+        {
+            return (CreatureAction.Farm, settlement.Position);
+        }
+
+        if (forest is { } wood && (WoodShort(settlement) > 0f || (building && !Resources.ResourceModel.HasWoodForHouse(_settlementRules, settlement))))
+        {
+            return (CreatureAction.GatherWood, wood);
+        }
+
+        return building ? (CreatureAction.HelpBuild, settlement.Position) : (CreatureAction.Farm, settlement.Position);
+    }
+
     /// <summary>
     /// The urge to attack a settlement: a base, more when most of its people follow a god at war with
     /// the Creature's own, far less when they follow an ally.
@@ -370,7 +431,7 @@ public sealed class CreatureBrain
     }
 
     /// <summary>Options a settlement offers, by how it is faring.</summary>
-    private void AddVillageOptions(List<CreatureOption> options, CreatureState creature, SettlementState settlement, float distance, float attack)
+    private void AddVillageOptions(List<CreatureOption> options, WorldState world, CreatureState creature, SettlementState settlement, float distance, float attack)
     {
         // A Creature sees hunger and illness, not the land's hazards.
         var conditions = BeliefModel.AssessConditions(_divine, settlement, Hazards.None);
@@ -384,10 +445,22 @@ public sealed class CreatureBrain
             Add(options, creature, CreatureSituation.Hungry, CreatureAction.EatFromStores, id, spot, hunger * closeness);
         }
 
+        // Work the village's fields and fetch it wood (ADR-063): the fields when it needs food or is
+        // well, the forest when it builds or its wood runs short.
+        var farmland = SettlementEconomy.SurveyFarmland(world.Regions, settlement.RegionId, _settlementRules.FarmlandRadius).LandRegions > 0;
+        var woodShort = WoodShort(settlement);
+        var forest = woodShort > 0f && Resources.ResourceModel.RichestForest(_settlementRules.Resources, world.Regions, settlement) is { } stand
+            ? world.Regions.GetRegionCenter(stand.Id)
+            : (GroundPosition?)null;
         if (need >= _rules.VillageNeedThreshold)
         {
             const CreatureSituation inNeed = CreatureSituation.VillageInNeed;
             Add(options, creature, inNeed, CreatureAction.Feed, id, spot, need * closeness);
+            if (farmland)
+            {
+                Add(options, creature, inNeed, CreatureAction.Farm, id, spot, 0.7f * conditions.FoodNeed * closeness);
+            }
+
             Add(options, creature, inNeed, CreatureAction.EatFromStores, id, spot, (0.3f + (0.7f * hunger)) * closeness * (settlement.Food > 0f ? 1f : 0f));
             Add(options, creature, inNeed, CreatureAction.Attack, id, spot, attack * closeness);
             Add(options, creature, inNeed, CreatureAction.Ignore, id, spot, 0.3f * closeness);
@@ -395,7 +468,13 @@ public sealed class CreatureBrain
         else if (SettlementEconomy.WantsConstruction(_settlementRules, settlement))
         {
             const CreatureSituation building = CreatureSituation.VillageBuilding;
-            Add(options, creature, building, CreatureAction.HelpBuild, id, spot, 0.5f * closeness);
+            var hasWood = Resources.ResourceModel.HasWoodForHouse(_settlementRules, settlement);
+            Add(options, creature, building, CreatureAction.HelpBuild, id, spot, (hasWood ? 0.5f : 0.15f) * closeness);
+            if (forest is { } wood)
+            {
+                Add(options, creature, building, CreatureAction.GatherWood, id, wood, (0.3f + (0.6f * woodShort)) * closeness);
+            }
+
             Add(options, creature, building, CreatureAction.Attack, id, spot, attack * closeness);
             Add(options, creature, building, CreatureAction.Ignore, id, spot, 0.3f * closeness);
         }
@@ -403,6 +482,16 @@ public sealed class CreatureBrain
         {
             const CreatureSituation thriving = CreatureSituation.VillageThriving;
             Add(options, creature, thriving, CreatureAction.Play, id, spot, (0.3f + (0.7f * creature.Needs.Boredom)) * closeness);
+            if (farmland)
+            {
+                Add(options, creature, thriving, CreatureAction.Farm, id, spot, 0.3f * closeness);
+            }
+
+            if (forest is { } wood)
+            {
+                Add(options, creature, thriving, CreatureAction.GatherWood, id, wood, 0.5f * woodShort * closeness);
+            }
+
             Add(options, creature, thriving, CreatureAction.Attack, id, spot, attack * closeness);
             Add(options, creature, thriving, CreatureAction.Ignore, id, spot, 0.3f * closeness);
         }
@@ -430,7 +519,7 @@ public sealed class CreatureBrain
             CreatureAction.Ignore => PickRoamTarget(world, creature.Position, option.Target, random, CreatureAction.Wander, away: true),
             CreatureAction.Flee => PickRoamTarget(world, creature.Position, option.Target, random, CreatureAction.Flee, away: true),
             CreatureAction.Forage or CreatureAction.Rest or CreatureAction.EatFromStores or CreatureAction.Feed
-                or CreatureAction.HelpBuild or CreatureAction.Play or CreatureAction.Attack or CreatureAction.GoTo
+                or CreatureAction.HelpBuild or CreatureAction.Farm or CreatureAction.GatherWood or CreatureAction.Play or CreatureAction.Attack or CreatureAction.GoTo
                 or CreatureAction.Fight or CreatureAction.Befriend => option.Target,
         };
         if (target is not { } destination)

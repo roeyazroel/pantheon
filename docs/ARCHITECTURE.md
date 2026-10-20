@@ -1729,6 +1729,15 @@ has the rules with their shipped values and the measured runs.
   `FightEffects` shows a fight: a health bar over each fighter (`health_bar.gdshader`), sparks and
   dust as each blow lands (`AnimalMotion.Blows`, `MiracleLayers.Impact`), and the loser falling
   (`AnimalMotion.Fallen`) before it is banished from sight.
+- **Work for the villages** (ADR-063): `CreatureAction.Farm` waters, weeds and tills the village's
+  farmland and brings in a harvest by its fertility; `CreatureAction.GatherWood` uproots trees in
+  the forest richest in timber around the village (`ResourceModel.RichestForest`), which thins by
+  the village's `TimberPerWood`, and the wood goes to its stores (`CreatureActed.Wood`); HelpBuild
+  spends a house's wood by its share. The brain offers farming to villages in need and thriving
+  ones, and fetching wood to those short of it. `CreatureCommandKind.Work` at a village does what
+  it needs most (`CreatureBrain.NeededWork`), at a wood fetches its timber, in the village's own
+  situation so a reward teaches it; the client's B and the card's Work aim it, and the poses
+  `AnimalMotion.Farm` and `Uproot` (with `AnimalBody.ShowTree`) show it.
 - **Combat** (`CreatureCombat`, every tick): blows by strength × combat skill with jitter from a
   stream derived from the seed and the tick. It ends in a banishment (scar, loyalty, experience,
   witnesses' belief, the god's `CreatureDefeated` memory), mercy, a draw or a broken-off fight.

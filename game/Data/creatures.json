@@ -71,7 +71,9 @@
   "LevelExperience": [40.0, 100.0, 180.0, 280.0, 400.0, 540.0, 700.0, 880.0, 1080.0],
 
   // Amount (times strength where it does work): food given (Feed), food eaten (EatFromStores),
-  // builder-steps (HelpBuild), people killed (Attack), metres walked (Wander, Ignore).
+  // builder-steps (HelpBuild, each spending a house's wood by its share), food harvested at full
+  // fertility (Farm, ADR-063: it also tills, weeds and waters the fields), wood fetched from the
+  // forest (GatherWood, which thins the forest), people killed (Attack), metres walked (Wander, Ignore).
   // Kindness moves the Creature's morality; Witness changes the belief of the people it acts on.
   "Actions": [
     { "Action": "Wander", "Seconds": 3.0, "Amount": 160.0, "Experience": 1.0, "HungerRelief": 0.0, "FatigueRelief": 0.0, "BoredomRelief": 0.35, "Kindness": 0.0,
@@ -86,6 +88,10 @@
       "Witness": { "Faith": 0.1, "Love": 0.2, "Fear": 0.0, "Doubt": -0.1 } },
     { "Action": "HelpBuild", "Seconds": 12.0, "Amount": 40.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.2, "BoredomRelief": 0.2, "Kindness": 0.6,
       "Witness": { "Faith": 0.08, "Love": 0.15, "Fear": 0.0, "Doubt": -0.05 } },
+    { "Action": "Farm", "Seconds": 14.0, "Amount": 45.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.2, "BoredomRelief": 0.15, "Kindness": 0.6,
+      "Witness": { "Faith": 0.08, "Love": 0.15, "Fear": 0.0, "Doubt": -0.05 } },
+    { "Action": "GatherWood", "Seconds": 12.0, "Amount": 22.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.25, "BoredomRelief": 0.2, "Kindness": 0.5,
+      "Witness": { "Faith": 0.06, "Love": 0.12, "Fear": 0.02, "Doubt": -0.04 } },
     { "Action": "Play", "Seconds": 8.0, "Amount": 0.0, "Experience": 3.0, "HungerRelief": 0.0, "FatigueRelief": -0.1, "BoredomRelief": 0.7, "Kindness": 0.3,
       "Witness": { "Faith": 0.05, "Love": 0.1, "Fear": 0.0, "Doubt": -0.03 } },
     { "Action": "Attack", "Seconds": 5.0, "Amount": 3.0, "Experience": 5.0, "HungerRelief": 0.0, "FatigueRelief": -0.15, "BoredomRelief": 0.3, "Kindness": -1.0,
@@ -115,6 +121,10 @@
     { "Situation": "Idle", "Action": "Wander", "Weight": 0.4 },
     { "Situation": "Idle", "Action": "Rest", "Weight": 0.3 },
     { "Situation": "VillageBuilding", "Action": "HelpBuild", "Weight": 0.45 },
+    { "Situation": "VillageBuilding", "Action": "GatherWood", "Weight": 0.4 },
+    { "Situation": "VillageInNeed", "Action": "Farm", "Weight": 0.3 },
+    { "Situation": "VillageThriving", "Action": "Farm", "Weight": 0.3 },
+    { "Situation": "VillageThriving", "Action": "GatherWood", "Weight": 0.25 },
     { "Situation": "VillageBuilding", "Action": "Ignore", "Weight": 0.3 },
     { "Situation": "VillageBuilding", "Action": "Attack", "Weight": 0.05 },
     { "Situation": "VillageThriving", "Action": "Play", "Weight": 0.45 },

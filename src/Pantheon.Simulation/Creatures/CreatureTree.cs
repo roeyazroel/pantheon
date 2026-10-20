@@ -204,6 +204,8 @@ public sealed class CreatureTree
         {
             CreatureAction.Feed => Need(village) < _rules.VillageNeedThreshold * NeedHysteresis ? GiveUpReason.NoLongerInNeed : null,
             CreatureAction.HelpBuild => SettlementEconomy.WantsConstruction(_settlements, village) ? null : GiveUpReason.NothingToBuild,
+            CreatureAction.Farm => SettlementEconomy.SurveyFarmland(world.Regions, village.RegionId, _settlements.FarmlandRadius).LandRegions > 0 ? null : GiveUpReason.VillageGone,
+            CreatureAction.GatherWood => null,
             CreatureAction.EatFromStores => village.Food > 0f ? null : GiveUpReason.StoresEmpty,
             CreatureAction.Attack => Migration.MigrationModel.MainGod(village.Beliefs) is { } main && DiplomacyModel.AreAllied(world, creature.GodId, main) ? GiveUpReason.NowAnAlly : null,
             CreatureAction.Wander or CreatureAction.Rest or CreatureAction.Forage or CreatureAction.Play or CreatureAction.Ignore
@@ -223,6 +225,8 @@ public sealed class CreatureTree
     {
         CreatureAction.Feed => "guard: still in need",
         CreatureAction.HelpBuild => "guard: still building",
+        CreatureAction.Farm => "guard: fields to farm",
+        CreatureAction.GatherWood => "no guard: wood is always wanted",
         CreatureAction.EatFromStores => "guard: stores not empty",
         CreatureAction.Attack => "guard: not an ally",
         CreatureAction.Fight or CreatureAction.Befriend => "guard: the other still there",

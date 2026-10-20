@@ -45,7 +45,7 @@ public static class InputActions
     /// <summary>Glide to the next settlement (F, Home).</summary>
     public static readonly StringName CameraFocusSettlement = "camera_focus_settlement";
 
-    /// <summary>Show or hide the region grid (B).</summary>
+    /// <summary>Toggle region boundaries (Shift+B; B sets the Creature to work, ADR-063).</summary>
     public static readonly StringName ToggleRegionBoundaries = "toggle_region_boundaries";
 
     /// <summary>Show or hide the debug panel (F1).</summary>
@@ -98,6 +98,9 @@ public static class InputActions
 
     /// <summary>Send the Creature to the ground under the cursor (V).</summary>
     public static readonly StringName CreatureSend = "creature_send";
+
+    /// <summary>Set the Creature to work at the village or forest under the cursor (B, ADR-063).</summary>
+    public static readonly StringName CreatureWork = "creature_work";
 
     /// <summary>Show or hide the diplomacy panel (P).</summary>
     public static readonly StringName ToggleDiplomacy = "toggle_diplomacy";
@@ -188,6 +191,6 @@ public static class InputActions
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
         SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, DebugGreatEvent, HandGrab, ToggleBook, CameraOverview, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil, VillagerFollow,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
-        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, ToggleDiplomacy,
+        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, CreatureWork, ToggleDiplomacy,
     ];
 }

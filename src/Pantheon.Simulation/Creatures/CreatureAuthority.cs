@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.World;
@@ -36,6 +37,9 @@ public enum CreatureCommandRejection
 
     /// <summary>No rival Creature is near where the god pointed (ADR-062).</summary>
     NoRivalThere,
+
+    /// <summary>There is no village or forest near where the god pointed to work at (ADR-063).</summary>
+    NoWorkThere,
 
     /// <summary>A treaty between the gods forbids their Creatures to fight (ADR-025).</summary>
     Sworn,
@@ -119,6 +123,7 @@ public sealed class CreatureAuthority
             CreatureCommandKind.Punish => Judge(world, creature, CreatureFeedback.Punished, events),
             CreatureCommandKind.GoTo => GoTo(world, creature, command.Target),
             CreatureCommandKind.Fight => Fight(world, creature, command.Target),
+            CreatureCommandKind.Work => Work(world, creature, command.Target),
         };
     }
 
@@ -226,6 +231,48 @@ public sealed class CreatureAuthority
             ? new CreatureCommandResult(CreatureCommandRejection.None)
             : new CreatureCommandResult(CreatureCommandRejection.Unreachable);
     }
+
+    /// <summary>
+    /// Sets the Creature to work where its god points (ADR-063): at a village, the work it needs most
+    /// (its fields, wood, building); in a forest, fetching wood for the village of its god nearest it.
+    /// </summary>
+    private CreatureCommandResult Work(WorldState world, CreatureState creature, GroundPosition target)
+    {
+        static float Distance(GroundPosition a, GroundPosition b) => MathF.Sqrt(((a.X - b.X) * (a.X - b.X)) + ((a.Z - b.Z) * (a.Z - b.Z)));
+        var village = world.Settlements.FindAll(s => s.Population > 0 && Distance(s.Position, target) <= WorkReach).MinBy(s => Distance(s.Position, target));
+
+        // A wood pointed at away from a village's houses means its timber, even beside the village.
+        var wood = world.Regions.TryGetRegionIdAt(target.X, target.Z, out var pointed) && world.Regions.GetRegion(pointed).Timber >= 0.3f;
+        if (village is not null && !(wood && Distance(village.Position, target) > VillageCore))
+        {
+            var (work, place) = _brain.NeededWork(world, village);
+            return _brain.Work(world, creature, work, village, place)
+                ? new CreatureCommandResult(CreatureCommandRejection.None, work)
+                : new CreatureCommandResult(CreatureCommandRejection.Unreachable);
+        }
+
+        if (!world.Regions.TryGetRegionIdAt(target.X, target.Z, out var regionId) || world.Regions.GetRegion(regionId).Timber < 0.2f)
+        {
+            return new CreatureCommandResult(CreatureCommandRejection.NoWorkThere);
+        }
+
+        var home = world.Settlements.FindAll(s => s.Population > 0 && Politics.TreatyModel.Leader(s) == creature.GodId).MinBy(s => Distance(s.Position, target))
+            ?? world.Settlements.FindAll(s => s.Population > 0).MinBy(s => Distance(s.Position, target));
+        if (home is null)
+        {
+            return new CreatureCommandResult(CreatureCommandRejection.NoWorkThere);
+        }
+
+        return _brain.Work(world, creature, CreatureAction.GatherWood, home, world.Regions.GetRegionCenter(regionId))
+            ? new CreatureCommandResult(CreatureCommandRejection.None, CreatureAction.GatherWood)
+            : new CreatureCommandResult(CreatureCommandRejection.Unreachable);
+    }
+
+    // How far from a village's centre a god may point to set its Creature to work there, in metres.
+    private const float WorkReach = 120f;
+
+    // Within this many metres of a village's centre a point is the village, whatever grows there.
+    private const float VillageCore = 45f;
 
     private CreatureCommandResult GoTo(WorldState world, CreatureState creature, GroundPosition target)
     {
