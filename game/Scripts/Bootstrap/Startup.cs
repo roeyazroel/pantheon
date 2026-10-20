@@ -15,7 +15,10 @@ internal static class Startup
     /// <summary>Where the player's settings are kept.</summary>
     public const string SettingsPath = "user://settings.json";
 
-    /// <summary>Loads the simulation and presentation content, logging the reason on failure; the settings' share of citizens applies.</summary>
+    /// <summary>
+    /// Loads the simulation and presentation content, logging the reason on failure; the settings'
+    /// citizens, vegetation and terrain quality apply (ADR-056).
+    /// </summary>
     /// <param name="settings">The player's settings.</param>
     /// <returns>The content, or <c>null</c> when it is broken.</returns>
     public static (GameContent Content, PresentationContent Presentation)? TryLoadContent(GameSettings settings)
@@ -23,10 +26,8 @@ internal static class Startup
         ArgumentNullException.ThrowIfNull(settings);
         try
         {
-            var presentation = GodotContentLoader.LoadPresentationContent();
-            var citizens = presentation.SettlementView.Citizens;
-            var shown = citizens with { MaxRepresentatives = (int)MathF.Round(citizens.MaxRepresentatives * settings.Citizens) };
-            return (GodotContentLoader.LoadGameContent(), presentation with { SettlementView = presentation.SettlementView with { Citizens = shown } });
+            Presentation.GraphicsScale.Terrain = settings.TerrainQuality;
+            return (GodotContentLoader.LoadGameContent(), GraphicsScaling.Apply(GodotContentLoader.LoadPresentationContent(), settings));
         }
         catch (Exception exception) when (exception is ContentFormatException or IOException)
         {

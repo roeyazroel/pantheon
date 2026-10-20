@@ -65,7 +65,17 @@ public sealed record PerformanceSample
 
     /// <summary>The last save measured, if any.</summary>
     public SaveTiming? Save { get; init; }
+
+    /// <summary>The simulation's CPU budget and how it kept to it (spec §105, ADR-056), if there is one.</summary>
+    public BudgetStatus? Budget { get; init; }
 }
+
+/// <summary>How the simulation kept to its CPU budget (spec §105, ADR-056).</summary>
+/// <param name="Milliseconds">The budget, in milliseconds a frame.</param>
+/// <param name="Hits">Frames the budget cut short.</param>
+/// <param name="Backlog">Ticks due and waiting now.</param>
+/// <param name="Dropped">Ticks dropped since the game began: too many to catch up.</param>
+public readonly record struct BudgetStatus(double Milliseconds, long Hits, int Backlog, long Dropped);
 
 /// <summary>The F1 panel's performance lines (spec §104, §106, ADR-044): what the client measured, and what the world holds. Pure.</summary>
 public static class PerformanceReadout
@@ -87,7 +97,7 @@ public static class PerformanceReadout
 
     /// <summary>The measurements as lines.</summary>
     /// <param name="sample">The measurements.</param>
-    /// <returns>Two lines, three with a save measured.</returns>
+    /// <returns>Two lines, and one each for the budget, the debris and a save measured.</returns>
     public static IReadOnlyList<string> Describe(PerformanceSample sample)
     {
         ArgumentNullException.ThrowIfNull(sample);
@@ -100,6 +110,11 @@ public static class PerformanceReadout
                 "  memory {0:0} MB managed, {1:0} MB engine; {2} objects, {3} nodes; {4} draw calls, {5:0.0}k primitives; {6} citizens shown",
                 sample.ManagedMegabytes, sample.EngineMegabytes, sample.Objects, sample.Nodes, sample.DrawCalls, sample.Primitives / 1000.0, sample.CitizensShown),
         };
+        if (sample.Budget is { } budget)
+        {
+            lines.Add(Format("  simulation budget {0:0.0} ms a frame: cut short {1} times, {2} ticks waiting, {3} dropped", budget.Milliseconds, budget.Hits, budget.Backlog, budget.Dropped));
+        }
+
         if (sample.Debris > 0)
         {
             lines.Add(Format("  physics: {0} debris pieces, {1} still moving", sample.Debris, sample.DebrisMoving));

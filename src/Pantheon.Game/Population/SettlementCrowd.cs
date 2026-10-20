@@ -31,6 +31,9 @@ public sealed class SettlementCrowd : ICitizenWays
     private CitizenPose[] _poses = [];
     private RosterInputs? _rosterInputs;
     private double? _lastSeconds;
+    private double? _rebuiltAt;
+    private double? _bakedAt;
+    private readonly LocalNavLand _land = new();
     private SettlementState? _settlement;
     private SettlementSite? _site;
     private (int Houses, HutPlacement? Construction, int Ruins, bool Temple)? _gridFor;
@@ -73,7 +76,11 @@ public sealed class SettlementCrowd : ICitizenWays
         }
     }
 
-    /// <summary>In Tier 2, rebuilds the roster when the representative count, the role split or the layout changed.</summary>
+    /// <summary>
+    /// In Tier 2, rebuilds the roster when the representative count, the role split or the layout
+    /// changed, at most once every <see cref="CitizenSettings.RosterRefreshSeconds"/> of the crowds'
+    /// time (ADR-056): at ×16 a big village's roles shift every few frames.
+    /// </summary>
     /// <param name="settlement">Current settlement state.</param>
     /// <param name="labour">Its labour split.</param>
     /// <param name="site">Its current layout.</param>
@@ -89,13 +96,13 @@ public sealed class SettlementCrowd : ICitizenWays
         (_settlement, _site) = (settlement, site);
         var count = RepresentativeRoster.ComputeCount(settlement.Population, _settings.Citizens.MaxRepresentatives);
         var inputs = RosterInputs.Of(RepresentativeRoster.SplitRoles(count, settlement.Population, labour), site);
-        if (inputs == _rosterInputs)
+        if (inputs == _rosterInputs || (_rosterInputs is not null && Waiting(_rebuiltAt)))
         {
             return;
         }
 
         Rebuild(RepresentativeRoster.Build(_seed, settlement, labour, site, _settings), promoted: _rosterInputs is null);
-        _rosterInputs = inputs;
+        (_rosterInputs, _rebuiltAt) = (inputs, _lastSeconds);
     }
 
     /// <summary>Poses every representative for the crowds' time (<see cref="CrowdClock"/>), standing on the terrain.</summary>
@@ -146,14 +153,18 @@ public sealed class SettlementCrowd : ICitizenWays
         }
 
         var key = (site.Houses.Count, site.Construction?.House, site.Ruins.Count, Simulation.Settlements.CivicModel.Has(settlement, Domain.Society.BuildingKind.Temple));
-        if (_gridFor == key)
+        if (_gridFor == key || (_gridFor is not null && Waiting(_bakedAt)))
         {
             return;
         }
 
-        Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens);
-        _gridFor = key;
+        Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens, _land);
+        (_gridFor, _bakedAt) = (key, _lastSeconds);
     }
+
+    /// <summary>Whether too little of the crowds' time has passed since a rebuild for another.</summary>
+    private bool Waiting(double? since) =>
+        since is { } at && _lastSeconds is { } now && now - at < _settings.Citizens.RosterRefreshSeconds;
 
     /// <summary>
     /// Moves a figure along its routine, or towards it at the catch-up speed when the routine is

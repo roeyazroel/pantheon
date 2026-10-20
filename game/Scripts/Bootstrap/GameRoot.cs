@@ -118,7 +118,7 @@ public partial class GameRoot : Node3D
         audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
         _divine.EventsHandled += audio.Hear;
         _divine.EventsHandled += _presenter.React;
-        SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true, GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment);
+        SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true, GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session);
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);
         faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);

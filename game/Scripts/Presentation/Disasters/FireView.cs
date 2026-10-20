@@ -79,7 +79,7 @@ internal sealed partial class FireView : Node3D
         return new GpuParticles3D
         {
             Name = name,
-            Amount = amount,
+            Amount = GraphicsScale.Of(amount),
             Lifetime = lifetime,
             ProcessMaterial = process,
             DrawPass1 = new QuadMesh { Size = size, Material = material },

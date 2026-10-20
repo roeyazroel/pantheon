@@ -115,7 +115,7 @@ rule is followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
-- Current tools: the F1 debug panel (the performance metrics, the debris, what streams near the camera with the ground cover and the wildlife, and the world's load, gods, the god AI's goal and top candidates with reasons,
+- Current tools: the F1 debug panel (the performance metrics and the simulation's CPU budget, the debris, what streams near the camera with the ground cover and the wildlife, and the world's load, gods, the god AI's goal and top candidates with reasons,
   its plans, the goals it is weighing and the gods it knows, and its diplomatic moves with their factors, influence, the Creature's behaviour, its state and behaviour tree, face, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
   others, and how yours would meet the nearest one, its attributes, paths and callings, the climate (the season and what it and a heat

@@ -140,6 +140,30 @@ public sealed class LocalNavTests
         Assert.Equal((3, 1), (grid.Searches, grid.Detours));
     }
 
+    [Fact]
+    public void TheLandUnderAGrid_IsKeptBetweenBakes_WhileItsFrameHolds_AndGivesTheSameGrid()
+    {
+        var terrain = FlatTerrain((x, z) => Vector2.Distance(new Vector2(x, z), new Vector2(70f, 60f)) is > 6f and < 10f ? -2f : 5f);
+        var land = new LocalNavLand();
+        var one = new HutPlacement(new Vector3(100f, 5f, 100f), 0f, 1f);
+        var two = new HutPlacement(new Vector3(90f, 5f, 80f), 0f, 1f);
+
+        var first = LocalNavGrid.Build(Site([one]), Village(), terrain, Citizens, land);
+        var water = land.Water;
+        var second = LocalNavGrid.Build(Site([one, two]), Village(), terrain, Citizens, land);
+        var fresh = LocalNavGrid.Build(Site([one, two]), Village(), terrain, Citizens);
+
+        Assert.Same(water, land.Water);
+        Assert.Equal(fresh.Cells, second.Cells);
+        Assert.Equal(fresh.Blocked, second.Blocked);
+        Assert.True(second.Blocked > first.Blocked, "the new hut blocks its cells");
+        Assert.Equal(fresh.Way(new Vector2(70f, 85f), new Vector2(110f, 75f)), second.Way(new Vector2(70f, 85f), new Vector2(110f, 75f)));
+
+        // Another terrain is sampled afresh.
+        LocalNavGrid.Build(Site([one, two]), Village(), FlatTerrain(), Citizens, land);
+        Assert.NotSame(water, land.Water);
+    }
+
     /// <summary>Whether a point lies inside a hut's walls.</summary>
     private static bool InAHut(SettlementSite site, Vector2 point) =>
         site.Houses.Any(h => Vector2.Distance(new Vector2(h.Position.X, h.Position.Z), point) < (LocalNavGrid.HutRadius * h.Scale) - 0.15f);

@@ -183,7 +183,7 @@ internal static class MiracleLayers
         return new GpuParticles3D
         {
             Name = name,
-            Amount = amount,
+            Amount = GraphicsScale.Of(amount),
             Lifetime = lifetime,
             Explosiveness = explosive ? 0.95f : 0.1f,
             ProcessMaterial = process,

@@ -117,7 +117,7 @@ internal static class HazardViews
     private static GpuParticles3D Emitter(string name, int amount, double lifetime, ParticleProcessMaterial process, StandardMaterial3D material, Vector2 size, Aabb bounds) => new()
     {
         Name = name,
-        Amount = amount,
+        Amount = GraphicsScale.Of(amount),
         Lifetime = lifetime,
         ProcessMaterial = process,
         DrawPass1 = new QuadMesh { Size = size, Material = material },

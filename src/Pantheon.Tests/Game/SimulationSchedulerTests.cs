@@ -101,4 +101,47 @@ public sealed class SimulationSchedulerTests
 
         return ticks;
     }
+
+    [Fact]
+    public void TheBudget_LeavesDueTicksForTheNextUpdate_ButAlwaysRunsOne()
+    {
+        // Each tick "takes" 2 ms of a 5 ms budget, so an update runs three and leaves the rest.
+        var scheduler = new SimulationScheduler(10.0, 32) { BudgetSeconds = 0.005 };
+        var spent = 0.0;
+        var ticks = 0;
+        void Step()
+        {
+            ticks++;
+            spent += 0.002;
+        }
+
+        Assert.Equal(3, scheduler.Advance(1.0, Step, () => spent));
+        Assert.Equal(7, scheduler.Backlog);
+        Assert.Equal(1, scheduler.BudgetHits);
+        Assert.Equal(0, scheduler.DroppedTicks);
+
+        spent = 1.0;
+        Assert.Equal(1, scheduler.Advance(0.001, Step, () => spent));
+        spent = 0.0;
+        Assert.Equal(3, scheduler.Advance(0.001, Step, () => spent));
+        Assert.Equal(7, ticks);
+        Assert.Equal(3, scheduler.Backlog);
+    }
+
+    [Fact]
+    public void ABacklogPastItsLimit_IsDropped_AndWithoutAClockOrBudgetTheOldCapHolds()
+    {
+        var scheduler = new SimulationScheduler(10.0, 4) { BudgetSeconds = 0.001 };
+        Assert.Equal(8, scheduler.MaxBacklogTicks);
+
+        Assert.Equal(1, scheduler.Advance(5.0, () => { }, () => 1.0));
+        Assert.Equal(8, scheduler.Backlog);
+        Assert.Equal(41, scheduler.DroppedTicks);
+
+        var unbudgeted = new SimulationScheduler(10.0, 4);
+        Assert.Equal(4, unbudgeted.Advance(5.0, () => { }, () => 1.0));
+        Assert.Equal(0, unbudgeted.Backlog);
+        Assert.Equal(4, scheduler.Advance(0.0001, () => { }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => scheduler.BudgetSeconds = 0.0);
+    }
 }

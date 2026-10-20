@@ -28,6 +28,9 @@ internal static class TestContent
     /// <summary>The shipped settlement view settings.</summary>
     public static SettlementViewSettings SettlementView => ShippedPresentationContent.Value.SettlementView;
 
+    /// <summary>The shipped presentation content, whole.</summary>
+    public static PresentationContent ShippedPresentation => ShippedPresentationContent.Value;
+
     /// <summary>
     /// Shipped generation settings at a quarter of the resolution. The island keeps its physical
     /// size, so tests run fast on a world shaped like the real one.

@@ -115,11 +115,31 @@ public sealed class FloodSurface
         var depths = new List<float>();
         var indices = new List<int>();
         Span<float> levels = stackalloc float[4];
+
+        // Which regions are wet (flooded, or beside a flood) and which region each grid line lies in,
+        // worked out once: testing every cell of a large island against its neighbours took a tenth
+        // of a second (ADR-056).
+        var (wet, wetRows) = WetRegions(grid, floods);
+        var columnOf = new int[_size];
+        var rowOf = new int[_size];
+        for (var g = 0; g < _size; g++)
+        {
+            // As RegionGrid.TryGetRegionIdAt places a point.
+            var line = (int)MathF.Floor(g * _step * _field.Spacing / grid.RegionSize);
+            columnOf[g] = line < grid.Columns ? line : -1;
+            rowOf[g] = line < grid.Rows ? line : -1;
+        }
+
         for (var gz = 0; gz < _size - 1; gz++)
         {
+            if (rowOf[gz] is var row && (row < 0 || !wetRows[row]))
+            {
+                continue;
+            }
+
             for (var gx = 0; gx < _size - 1; gx++)
             {
-                if (!Wet(grid, floods, gx, gz))
+                if (columnOf[gx] is var column && (column < 0 || !wet[(row * grid.Columns) + column]))
                 {
                     continue;
                 }
@@ -177,27 +197,32 @@ public sealed class FloodSurface
         return flood <= 0f ? float.NaN : level + WaterSurfaceMesh.FloodClearance + (rise * flood);
     }
 
-    /// <summary>Whether the region of a grid cell, or one beside it, is flooded at all.</summary>
-    private bool Wet(RegionGrid grid, IReadOnlyList<float> floods, int gx, int gz)
+    /// <summary>The regions that are flooded or beside a flood, and the rows that hold any.</summary>
+    private static (bool[] Wet, bool[] Rows) WetRegions(RegionGrid grid, IReadOnlyList<float> floods)
     {
-        if (!grid.TryGetRegionIdAt(gx * _step * _field.Spacing, gz * _step * _field.Spacing, out var id))
+        var wet = new bool[grid.Columns * grid.Rows];
+        var rows = new bool[grid.Rows];
+        for (var row = 0; row < grid.Rows; row++)
         {
-            return false;
-        }
-
-        var (column, row) = grid.GetCoordinates(id);
-        for (var r = Math.Max(0, row - 1); r <= Math.Min(grid.Rows - 1, row + 1); r++)
-        {
-            for (var c = Math.Max(0, column - 1); c <= Math.Min(grid.Columns - 1, column + 1); c++)
+            for (var column = 0; column < grid.Columns; column++)
             {
-                if (floods[(r * grid.Columns) + c] > 0f)
+                if (floods[(row * grid.Columns) + column] <= 0f)
                 {
-                    return true;
+                    continue;
+                }
+
+                for (var r = Math.Max(0, row - 1); r <= Math.Min(grid.Rows - 1, row + 1); r++)
+                {
+                    for (var c = Math.Max(0, column - 1); c <= Math.Min(grid.Columns - 1, column + 1); c++)
+                    {
+                        wet[(r * grid.Columns) + c] = true;
+                        rows[r] = true;
+                    }
                 }
             }
         }
 
-        return false;
+        return (wet, rows);
     }
 
     /// <summary>The regions' floods blended between their centres at a point.</summary>

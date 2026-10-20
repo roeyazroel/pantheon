@@ -1,6 +1,6 @@
 # ADR-019: Replication by section and rate, with interest and event-based diplomacy
 
-- Status: Accepted (amends ADR-018's replication); amended by ADR-024 (the settlements section's rate)
+- Status: Accepted (amends ADR-018's replication); amended by ADR-024 (the settlements section's rate) and ADR-056 (regions sent within a tolerance)
 - Date: 2026-10-19
 - Builds on: [ADR-018](ADR-018-multiplayer-host-snapshots-and-intents.md) (a host's world, players'
   intents, replicas that predict)

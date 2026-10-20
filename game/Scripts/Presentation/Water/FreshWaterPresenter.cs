@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -29,12 +30,17 @@ public sealed class FreshWaterPresenter
     // Floods are drawn in steps of this share, so the sheet is rebuilt only when it changes visibly.
     private const float FloodQuantum = 0.05f;
 
+    // The floods are looked at this often, in real seconds (ADR-056): at ×16 they change every frame,
+    // and rebuilding the sheet each time took a frame's share.
+    private const double CheckSeconds = 1.0;
+
     private readonly Node3D _parent;
     private readonly ShaderMaterial _rivers;
     private readonly ShaderMaterial _floods;
     private MeshInstance3D? _floodSheet;
     private FloodSurface? _floodSurface;
-    private string _floodKey = string.Empty;
+    private int? _floodKey;
+    private double _sinceCheck = CheckSeconds;
 
     /// <summary>Creates the presenter; nothing is drawn until <see cref="Build"/>.</summary>
     /// <param name="parent">Node that holds the water.</param>
@@ -55,7 +61,7 @@ public sealed class FreshWaterPresenter
     {
         _parent.FreeChildren();
         _floodSurface = FloodSurface.Build(terrain, FloodStep, FloodReach);
-        _floodKey = string.Empty;
+        (_floodKey, _sinceCheck) = (null, CheckSeconds);
         var mesh = WaterSurfaceMesh.BuildFreshWater(terrain, RiverStep);
         if (!mesh.IsEmpty)
         {
@@ -72,24 +78,42 @@ public sealed class FreshWaterPresenter
         _parent.AddChild(_floodSheet);
     }
 
-    /// <summary>Redraws the floods when they have changed visibly.</summary>
+    /// <summary>Redraws the floods when they have changed visibly, looking about once a second.</summary>
     /// <param name="world">Current world.</param>
-    public void Sync(WorldState world)
+    /// <param name="delta">Frame time in seconds.</param>
+    public void Sync(WorldState world, double delta)
     {
-        if (_floodSurface is null || _floodSheet is null)
+        _sinceCheck += delta;
+        if (_floodSurface is null || _floodSheet is null || _sinceCheck < CheckSeconds)
         {
             return;
         }
 
-        var floods = world.Regions.Cells.Select(region => region.Flood >= FloodQuantum ? Mathf.Round(region.Flood / FloodQuantum) * FloodQuantum : 0f).ToArray();
-        var key = string.Join(';', floods.Select((flood, id) => (flood, id)).Where(f => f.flood > 0f).Select(f => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{f.id}:{f.flood:0.00}")));
-        if (key == _floodKey)
+        _sinceCheck = 0.0;
+        var cells = world.Regions.Cells;
+        var floods = new float[cells.Count];
+        var key = new HashCode();
+        var flooded = 0;
+        for (var id = 0; id < cells.Count; id++)
+        {
+            var steps = (int)MathF.Round(cells[id].Flood / FloodQuantum);
+            if (steps > 0)
+            {
+                floods[id] = steps * FloodQuantum;
+                key.Add(id);
+                key.Add(steps);
+                flooded++;
+            }
+        }
+
+        var hash = key.ToHashCode();
+        if (hash == _floodKey)
         {
             return;
         }
 
-        _floodKey = key;
-        var mesh = key.Length == 0 ? null : _floodSurface.Mesh(world.Regions, floods, FloodRise);
+        _floodKey = hash;
+        var mesh = flooded == 0 ? null : _floodSurface.Mesh(world.Regions, floods, FloodRise);
         _floodSheet.Mesh = mesh is null || mesh.IsEmpty ? null : ToArrayMesh(mesh);
     }
 

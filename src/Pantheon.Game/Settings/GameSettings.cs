@@ -17,6 +17,24 @@ public sealed record GameSettings
     /// <summary>Lowest share of the citizens offered.</summary>
     public const float MinCitizens = 0.2f;
 
+    /// <summary>Lowest share of the vegetation offered.</summary>
+    public const float MinVegetation = 0.25f;
+
+    /// <summary>Lowest share of the particles offered.</summary>
+    public const float MinParticles = 0.25f;
+
+    /// <summary>Lowest terrain quality offered.</summary>
+    public const float MinTerrainQuality = 0.5f;
+
+    /// <summary>Smallest simulation budget offered, in milliseconds a frame.</summary>
+    public const float MinSimulationBudget = 2f;
+
+    /// <summary>Largest simulation budget offered, in milliseconds a frame.</summary>
+    public const float MaxSimulationBudget = 16f;
+
+    /// <summary>The simulation budget unless the player chooses another, in milliseconds a frame.</summary>
+    public const float DefaultSimulationBudget = 6f;
+
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true, PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
 
     /// <summary>Whether the game fills the screen.</summary>
@@ -37,6 +55,27 @@ public sealed record GameSettings
     /// <summary>Share of the representative citizens shown (0.2..1); it applies to the next world shown.</summary>
     public float Citizens { get; init; } = 1f;
 
+    /// <summary>
+    /// Share of the vegetation drawn (0.25..1, spec §105, ADR-056): how far from the camera the ground
+    /// cover reaches and the forests are planted; it applies when the game next starts.
+    /// </summary>
+    public float Vegetation { get; init; } = 1f;
+
+    /// <summary>Share of the particles drawn (0.25..1): rain, fire, smoke and the miracles' looks.</summary>
+    public float Particles { get; init; } = 1f;
+
+    /// <summary>
+    /// The terrain's detail (0.5..1): the size of Terrain3D's finest mesh, or how far the fallback
+    /// draws the land in full detail; it applies when the game next starts.
+    /// </summary>
+    public float TerrainQuality { get; init; } = 1f;
+
+    /// <summary>
+    /// The CPU budget the simulation keeps within, in milliseconds a frame (2..16, spec §105): past it,
+    /// the ticks still due wait for the next frame.
+    /// </summary>
+    public float SimulationBudget { get; init; } = DefaultSimulationBudget;
+
     /// <summary>Loudness of everything (0..1).</summary>
     public float MasterVolume { get; init; } = 0.8f;
 
@@ -55,6 +94,10 @@ public sealed record GameSettings
     {
         RenderScale = Range(RenderScale, MinRenderScale, 1f, 1f),
         Citizens = Range(Citizens, MinCitizens, 1f, 1f),
+        Vegetation = Range(Vegetation, MinVegetation, 1f, 1f),
+        Particles = Range(Particles, MinParticles, 1f, 1f),
+        TerrainQuality = Range(TerrainQuality, MinTerrainQuality, 1f, 1f),
+        SimulationBudget = Range(SimulationBudget, MinSimulationBudget, MaxSimulationBudget, DefaultSimulationBudget),
         MasterVolume = Range(MasterVolume, 0f, 1f, 0.8f),
         MusicVolume = Range(MusicVolume, 0f, 1f, 0.55f),
         EffectsVolume = Range(EffectsVolume, 0f, 1f, 0.8f),

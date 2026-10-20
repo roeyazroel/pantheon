@@ -41,6 +41,7 @@ public sealed class ForestPresenter
     private bool _firstStream;
     private int[] _shown = [];
     private List<Clearing> _clearings = [];
+    private readonly Dictionary<int, Clearing> _clearingOf = [];
     private TerrainField? _terrain;
     private int _regionsPerChunk;
     private int _chunksPerSide;
@@ -155,7 +156,11 @@ public sealed class ForestPresenter
         }
     }
 
-    /// <summary>Marks the chunks of regions whose tree count or snow changed, and every chunk when a village grows or a road is planned.</summary>
+    /// <summary>
+    /// Marks the chunks of regions whose tree count or snow changed, those about a village whose
+    /// clearing grew or shrank, and those along a new road (ADR-056: in a busy world at ×16 some
+    /// village grows every second, and redrawing every chunk for it took a frame's share).
+    /// </summary>
     private void FindChanges(WorldState world)
     {
         var grid = world.Regions;
@@ -167,26 +172,71 @@ public sealed class ForestPresenter
             }
         }
 
-        var grown = false;
+        var changed = false;
         foreach (var settlement in world.Settlements)
         {
             var houses = SettlementLayout.ComputeHouseCount(settlement, _rules);
-            grown |= !_housesShown.TryGetValue(settlement.Id, out var shown) || shown != houses;
+            if (_housesShown.TryGetValue(settlement.Id, out var shown) && shown == houses)
+            {
+                continue;
+            }
+
+            _housesShown[settlement.Id] = houses;
+            if (_clearingOf.Remove(settlement.Id, out var before))
+            {
+                MarkAround(grid, before);
+            }
+
+            if (settlement.Population > 0 || settlement.Housing > 0)
+            {
+                var now = ClearingFor(settlement);
+                _clearingOf[settlement.Id] = now;
+                MarkAround(grid, now);
+            }
+
+            changed = true;
         }
 
-        var newRoad = world.Roads.Count != _roadsShown.Count || world.Roads.Exists(r => !_roadsShown.Contains(r.Id));
-        if (grown || newRoad)
+        foreach (var road in world.Roads)
         {
-            _clearings = Clearings(world);
-            for (var i = 0; i < _chunks.Length; i++)
+            if (_roadsShown.Add(road.Id))
             {
-                if (_chunks[i] is not null)
+                foreach (var point in road.Path)
                 {
-                    _dirty.Add(i);
+                    MarkAround(grid, new Clearing(new System.Numerics.Vector2(point.X, point.Z), ForestLayout.RoadClearance + 1f));
+                }
+            }
+        }
+
+        if (changed)
+        {
+            _clearings = [.. _clearingOf.Values];
+        }
+    }
+
+    /// <summary>Marks the planted chunks a clearing touches as needing a redraw.</summary>
+    private void MarkAround(RegionGrid grid, Clearing clearing)
+    {
+        var size = _regionsPerChunk * grid.RegionSize;
+        var last = _chunksPerSide - 1;
+        var (fromColumn, toColumn) = (Math.Clamp((int)MathF.Floor((clearing.Center.X - clearing.Radius) / size), 0, last), Math.Clamp((int)MathF.Floor((clearing.Center.X + clearing.Radius) / size), 0, last));
+        var (fromRow, toRow) = (Math.Clamp((int)MathF.Floor((clearing.Center.Y - clearing.Radius) / size), 0, last), Math.Clamp((int)MathF.Floor((clearing.Center.Y + clearing.Radius) / size), 0, last));
+        for (var row = fromRow; row <= toRow; row++)
+        {
+            for (var column = fromColumn; column <= toColumn; column++)
+            {
+                var chunk = (row * _chunksPerSide) + column;
+                if (_chunks[chunk] is not null)
+                {
+                    _dirty.Add(chunk);
                 }
             }
         }
     }
+
+    /// <summary>A village's clearing: its houses and fields, kept free of trees.</summary>
+    private Clearing ClearingFor(SettlementState settlement) =>
+        ForestLayout.ClearingOf(SettlementLayout.ComputeSite(settlement, _rules, _terrain!, _layout), _layout.FieldSize);
 
     /// <summary>Draws one chunk's trees.</summary>
     private void Draw(WorldState world, int chunk)
@@ -282,13 +332,13 @@ public sealed class ForestPresenter
     /// <summary>The villages' clearings, from their sites as drawn now.</summary>
     private List<Clearing> Clearings(WorldState world)
     {
-        var clearings = new List<Clearing>(world.Settlements.Count);
+        _clearingOf.Clear();
         foreach (var settlement in world.Settlements)
         {
             _housesShown[settlement.Id] = SettlementLayout.ComputeHouseCount(settlement, _rules);
             if (settlement.Population > 0 || settlement.Housing > 0)
             {
-                clearings.Add(ForestLayout.ClearingOf(SettlementLayout.ComputeSite(settlement, _rules, _terrain!, _layout), _layout.FieldSize));
+                _clearingOf[settlement.Id] = ClearingFor(settlement);
             }
         }
 
@@ -298,7 +348,7 @@ public sealed class ForestPresenter
             _roadsShown.Add(road.Id);
         }
 
-        return clearings;
+        return [.. _clearingOf.Values];
     }
 
     /// <summary>What a region shows, to tell when it changes: its tree count and whether snow lies on it.</summary>

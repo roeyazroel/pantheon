@@ -5,7 +5,10 @@ using Pantheon.Game.Settings;
 
 namespace Pantheon.Client.Bootstrap;
 
-/// <summary>Puts the player's settings into effect (spec §105, ADR-021): the window, frame pacing, shadows, render scale and loudness.</summary>
+/// <summary>
+/// Puts the player's settings into effect (spec §105, ADR-021, ADR-056): the window, frame pacing,
+/// shadows, render scale, particles, the simulation's budget and loudness.
+/// </summary>
 internal static class SettingsApplier
 {
     /// <summary>Applies the settings.</summary>
@@ -17,7 +20,8 @@ internal static class SettingsApplier
     /// <c>--disable-vsync</c> for measuring still holds.
     /// </param>
     /// <param name="environment">The world's environment, for the lighting effects.</param>
-    public static void Apply(GameSettings settings, Viewport viewport, DirectionalLight3D? sun, bool startup, Godot.Environment? environment = null)
+    /// <param name="session">The session, for the simulation's budget.</param>
+    public static void Apply(GameSettings settings, Viewport viewport, DirectionalLight3D? sun, bool startup, Godot.Environment? environment = null, Pantheon.Game.GameSession? session = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(viewport);
@@ -41,6 +45,12 @@ internal static class SettingsApplier
         {
             environment.SsaoEnabled = settings.LightingEffects;
             environment.GlowEnabled = settings.LightingEffects;
+        }
+
+        Presentation.GraphicsScale.Particles = settings.Particles;
+        if (session is not null)
+        {
+            session.Scheduler.BudgetSeconds = settings.SimulationBudget / 1000.0;
         }
 
         viewport.Scaling3DMode = settings.RenderScale < 1f ? Viewport.Scaling3DModeEnum.Fsr : Viewport.Scaling3DModeEnum.Bilinear;

@@ -23,7 +23,7 @@ public sealed class SettlementCrowdTests
     // Pinned cap and tier distances, so the counts below keep their meaning when settlement_view.json is retuned.
     private static readonly SettlementViewSettings Settings = View with
     {
-        Citizens = View.Citizens with { MaxRepresentatives = 300, RegionalTierEnterDistance = 450f, RegionalTierExitDistance = 550f },
+        Citizens = View.Citizens with { MaxRepresentatives = 300, RegionalTierEnterDistance = 450f, RegionalTierExitDistance = 550f, RosterRefreshSeconds = 0f },
     };
 
     private static readonly CitizenSettings Citizens = Settings.Citizens;
@@ -198,6 +198,25 @@ public sealed class SettlementCrowdTests
 
         Show(crowd, Building(400), 4.0, Far);
         Assert.Equal(version + 2, crowd.RosterVersion);
+    }
+
+    [Fact]
+    public void AVillagesRoster_IsRebuiltAtMostOnceEveryRefreshInterval_ThenCatchesUp()
+    {
+        var crowd = new SettlementCrowd(Seed, SettlementId, Settings with { Citizens = Citizens with { RosterRefreshSeconds = 2f } });
+        Show(crowd, Building(100), 0.0, Near);
+        Show(crowd, Building(100), 0.5, Near);
+        var version = crowd.RosterVersion;
+
+        Show(crowd, Building(120), 1.0, Near);
+        Show(crowd, Building(140), 1.5, Near);
+        Assert.Equal(version + 1, crowd.RosterVersion);
+        Assert.InRange(crowd.Roster.Count, 115, 125);
+
+        Show(crowd, Building(140), 3.0, Near);
+        Show(crowd, Building(140), 3.5, Near);
+        Assert.Equal(version + 2, crowd.RosterVersion);
+        Assert.InRange(crowd.Roster.Count, 135, 145);
     }
 
     [Fact]

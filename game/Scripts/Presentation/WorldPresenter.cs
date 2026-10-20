@@ -124,7 +124,7 @@ public sealed class WorldPresenter
         _settlements.Sync(world);
         _debris.Houses(_settlements.Fell, _camera.GlobalPosition);
         _debris.Sync(delta);
-        _freshWater.Sync(world);
+        _freshWater.Sync(world, delta);
         _forests.Sync(world, delta, _camera.GlobalPosition);
         _groundCover.Sync(world, delta, _camera.GlobalPosition, _forests.Wind);
         _roads.Sync(world);

@@ -37,9 +37,43 @@ public sealed class MultiplayerReplicationTests
             }
         }
 
+        // Regions arrive within the tolerance (ADR-056); everything else exactly.
+        Assert.All(host.World.Regions.Cells, region => Assert.True(RegionChange.Of(region).IsNear(RegionChange.Of(replica.Regions.Cells[region.Id]), WorldSections.RegionTolerance)));
+        foreach (var region in host.World.Regions.Cells)
+        {
+            RegionChange.Of(region).ApplyTo(replica.Regions.Cells[region.Id]);
+        }
+
         replica.Tick = host.World.Tick;
         WorldAssert.Equal(host.World, replica);
         Assert.Null(WorldSections.WriteRegions(host.World, sent));
+    }
+
+    [Fact]
+    public void ARegion_IsSentAgain_OnlyWhenAValueMovesPastTheTolerance_OrReachesOrLeavesNothing_InThousandths()
+    {
+        var world = GameSession.CreateNew(TestContent.Small, new WorldSeed(1234)).World;
+        var sent = new Dictionary<int, RegionChange>();
+        var region = world.Regions.Cells[3];
+        (region.Vegetation, region.Fire) = (0.5f, 0f);
+        Assert.NotNull(WorldSections.WriteRegions(world, sent));
+
+        region.Vegetation += WorldSections.RegionTolerance * 0.5f;
+        var creep = WorldSections.WriteRegions(world, sent);
+        region.Vegetation += WorldSections.RegionTolerance;
+        var moved = WorldSections.WriteRegions(world, sent);
+        region.Fire = 0.001f;
+        var kindled = WorldSections.WriteRegions(world, sent);
+        region.Fire = 0f;
+        var out_ = WorldSections.WriteRegions(world, sent);
+
+        Assert.Null(creep);
+        Assert.Contains("\"Id\":3", moved, StringComparison.Ordinal);
+        Assert.NotNull(kindled);
+        Assert.NotNull(out_);
+        Assert.Equal(RegionChange.Of(region).Rounded(), sent[3]);
+        Assert.Equal(0.001f, new RegionChange(0, 0.0004f, 0f, 0f, 0f, 0f, 0f, 0f).Rounded().Fertility);
+        Assert.Equal(0.123f, new RegionChange(0, 0.12345f, 0f, 0f, 0f, 0f, 0f, 0f).Rounded().Fertility);
     }
 
     [Fact]

@@ -32,6 +32,13 @@ public sealed record CitizenSettings
     /// </summary>
     public float PaceCap { get; init; } = 1f;
 
+    /// <summary>
+    /// The least of the crowds' time between two rebuilds of a village's roster or of its walkers'
+    /// grid (ADR-056): a village's roles and buildings change every few frames at ×16, and each
+    /// rebuild costs a frame's share. 0 rebuilds at once.
+    /// </summary>
+    public float RosterRefreshSeconds { get; init; }
+
     /// <summary>Time spent resting at home in each cycle.</summary>
     public required float RestSeconds { get; init; }
 
@@ -109,6 +116,7 @@ public sealed record CitizenSettings
         Require(errors, RegionalTierExitDistance >= RegionalTierEnterDistance, "RegionalTierExitDistance must be at least RegionalTierEnterDistance.");
         Require(errors, WalkSpeed > 0f, "WalkSpeed must be positive.");
         Require(errors, PaceCap > 0f, "PaceCap must be positive.");
+        Require(errors, RosterRefreshSeconds >= 0f, "RosterRefreshSeconds must not be negative.");
         Require(errors, CatchUpSpeed >= WalkSpeed, "CatchUpSpeed must be at least WalkSpeed, or citizens could never catch up with their routine.");
         Require(errors, RestSeconds >= 0f && WorkSeconds >= 0f && GatherSeconds >= 0f, "RestSeconds, WorkSeconds and GatherSeconds must not be negative.");
         Require(errors, RestSeconds + WorkSeconds + GatherSeconds > 0f, "RestSeconds, WorkSeconds and GatherSeconds must not all be 0.");

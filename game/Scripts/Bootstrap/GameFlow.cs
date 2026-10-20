@@ -64,7 +64,7 @@ internal sealed partial class GameFlow : Node
         _menu.Settings = settings;
         _menu.SettingsChanged += changed =>
         {
-            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment);
+            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session);
             Startup.SaveSettings(changed);
         };
         _history = new HistoryPanel { Name = "History" };

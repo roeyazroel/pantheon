@@ -214,7 +214,7 @@ internal sealed partial class MiracleEffect : Node3D
         _motes = new CpuParticles3D
         {
             Name = "Motes",
-            Amount = (int)Math.Clamp(_radius * 4f, 60f, 400f),
+            Amount = GraphicsScale.Of((int)Math.Clamp(_radius * 4f, 60f, 400f)),
             Lifetime = falling ? 1.8 : 1.6,
             Explosiveness = 0.1f,
             Mesh = new QuadMesh { Size = new Vector2(1.6f, 1.6f), Material = material },

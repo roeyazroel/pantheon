@@ -1294,8 +1294,16 @@ Every sound is made by the game itself:
 - the earthquake's rumble, fire, and the wind and rain where you look.
 
 The settings page (start screen or Esc) sets fullscreen, vertical sync, shadows, the lighting
-effects (ambient occlusion and a soft glow), the render scale, the citizens shown, and the loudness of everything, the music, the effects and the wind and
-rain.
+effects (ambient occlusion and a soft glow), the render scale, the citizens shown, the
+vegetation (how far the grass and flowers reach and the forests are planted), the terrain quality,
+the particles (rain, fire, smoke and the miracles' looks), the simulation budget, and the loudness
+of everything, the music, the effects and the wind and rain (spec §105, ADR-056). Citizens,
+vegetation and terrain quality take effect when the game next starts.
+
+The simulation keeps to its budget, 6 ms a frame unless you choose another (2–16 ms). When a big
+world at ×16 needs more, the ticks still due wait for the next frame, so the game runs a little
+slower than asked instead of stuttering. The debug panel's performance lines show the budget, how
+often it cut a frame short, and the ticks waiting or dropped.
 
 ## World sizes
 

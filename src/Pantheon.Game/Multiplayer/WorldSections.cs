@@ -54,10 +54,20 @@ public static class WorldSections
         };
     }
 
-    /// <summary>Writes the regions whose changing values differ from what a player last received, and remembers them as sent.</summary>
+    /// <summary>
+    /// How far a region's value may drift from what a player last received before the region is
+    /// sent again (ADR-056): the land's values creep a little every tick, and sending each creep
+    /// filled a shared game's bandwidth. A value that reaches or leaves nothing is always sent.
+    /// </summary>
+    public const float RegionTolerance = 0.01f;
+
+    /// <summary>
+    /// Writes the regions whose changing values have moved past <see cref="RegionTolerance"/> from
+    /// what a player last received, and remembers them as sent.
+    /// </summary>
     /// <param name="world">The host's world.</param>
     /// <param name="sent">What the player has, by region id; updated.</param>
-    /// <returns>The changes as JSON, or <c>null</c> when nothing changed.</returns>
+    /// <returns>The changes as JSON, or <c>null</c> when nothing changed enough.</returns>
     public static string? WriteRegions(WorldState world, Dictionary<int, RegionChange> sent)
     {
         ArgumentNullException.ThrowIfNull(world);
@@ -65,8 +75,8 @@ public static class WorldSections
         var changes = new List<RegionChange>();
         foreach (var region in world.Regions.Cells)
         {
-            var now = RegionChange.Of(region);
-            if (!sent.TryGetValue(region.Id, out var before) || before != now)
+            var now = RegionChange.Of(region).Rounded();
+            if (!sent.TryGetValue(region.Id, out var before) || !before.IsNear(now, RegionTolerance))
             {
                 changes.Add(now);
                 sent[region.Id] = now;
@@ -305,6 +315,28 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
         return new(region.Id, region.Fertility, region.Vegetation, region.Blessing, region.SoilMoisture, region.Fire, region.Scorch, region.Flood, region.Snow, region.Wildlife, region.Damage, region.Scar, region.Pollution, region.Blight, region.Rubble, region.Hallowed, region.Forest, region.Timber, region.Stone);
     }
 
+    /// <summary>
+    /// The values rounded to thousandths for the wire, well within <see cref="WorldSections.RegionTolerance"/>;
+    /// a value above nothing stays above it.
+    /// </summary>
+    /// <returns>The rounded values.</returns>
+    public RegionChange Rounded() => new(
+        Id, R(Fertility), R(Vegetation), R(Blessing), R(SoilMoisture), R(Fire), R(Scorch), R(Flood), R(Snow), R(Wildlife),
+        R(Damage), R(Scar), R(Pollution), R(Blight), R(Rubble), R(Hallowed), R(Forest), R(Timber), R(Stone));
+
+    /// <summary>Whether every value is within a tolerance of another's, and none has reached or left nothing.</summary>
+    /// <param name="other">The other values.</param>
+    /// <param name="tolerance">The tolerance.</param>
+    /// <returns><c>true</c> when they are near.</returns>
+    public bool IsNear(RegionChange other, float tolerance) =>
+        Id == other.Id
+        && Near(Fertility, other.Fertility, tolerance) && Near(Vegetation, other.Vegetation, tolerance) && Near(Blessing, other.Blessing, tolerance)
+        && Near(SoilMoisture, other.SoilMoisture, tolerance) && Near(Fire, other.Fire, tolerance) && Near(Scorch, other.Scorch, tolerance)
+        && Near(Flood, other.Flood, tolerance) && Near(Snow, other.Snow, tolerance) && Near(Wildlife, other.Wildlife, tolerance)
+        && Near(Damage, other.Damage, tolerance) && Near(Scar, other.Scar, tolerance) && Near(Pollution, other.Pollution, tolerance)
+        && Near(Blight, other.Blight, tolerance) && Near(Rubble, other.Rubble, tolerance) && Near(Hallowed, other.Hallowed, tolerance)
+        && Near(Forest, other.Forest, tolerance) && Near(Timber, other.Timber, tolerance) && Near(Stone, other.Stone, tolerance);
+
     /// <summary>Sets a replica's region to these values.</summary>
     /// <param name="region">The replica's region.</param>
     public void ApplyTo(RegionState region)
@@ -315,4 +347,14 @@ public readonly record struct RegionChange(int Id, float Fertility, float Vegeta
         (region.Blight, region.Rubble, region.Hallowed) = (Blight, Rubble, Hallowed);
         (region.Forest, region.Timber, region.Stone) = (Forest, Timber, Stone);
     }
+
+    /// <summary>A value rounded to thousandths; a value above nothing stays at least a thousandth.</summary>
+    private static float R(float value)
+    {
+        var rounded = MathF.Round(value * 1000f) / 1000f;
+        return value == 0f || rounded != 0f ? rounded : MathF.CopySign(0.001f, value);
+    }
+
+    /// <summary>Two values within a tolerance, both nothing or both something.</summary>
+    private static bool Near(float a, float b, float tolerance) => MathF.Abs(a - b) <= tolerance && (a == 0f) == (b == 0f);
 }

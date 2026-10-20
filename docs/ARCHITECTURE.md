@@ -588,7 +588,19 @@ keep it in 0..1. A missing,
   stepping the speed presets and the F4 grant of Divine Power. Each returns the status line shown
   in the overlay.
 - `SimulationScheduler`: fixed-step accumulator (10 ticks/s × time scale, pause, a cap on
-  ticks per frame so a long frame cannot cause a spiral of death).
+  ticks per frame so a long frame cannot cause a spiral of death). Since ADR-056 it also keeps to
+  a CPU budget (§105): once the ticks of a frame have spent `BudgetSeconds`, measured by the client
+  and passed to `GameSession.Update`, the ticks still due wait for the next frame, up to
+  `MaxBacklogTicks`. The budget is the player's "Simulation budget" setting.
+- `Settings/GraphicsScaling` (ADR-056) scales the presentation content by the player's citizens,
+  vegetation (the ground cover's and the forests' reach) and terrain quality (the fallback's
+  detail; Terrain3D's mesh size through the client's `GraphicsScale`, which also scales every
+  particle system).
+- The client reacts to a busy world at a pace (ADR-056): a village's roster and walkers' grid are
+  rebuilt at most every `RosterRefreshSeconds`, and the grid keeps the land under it
+  (`Population/LocalNavLand`) while its frame holds; the flood sheet is looked at once a second and
+  `FloodSurface.Mesh` skips dry rows and regions; the forests redraw only the chunks about a
+  changed clearing or a new road.
 - `Camera/GodCameraModel`: engine-agnostic god-camera math: focus, yaw and distance targets
   with exponential smoothing, pitch from zoom, bounds, terrain clearance, and the zoom bands
   Close (≤ 120 m), Regional (≤ 700 m) and Strategic (≤ 2600 m). `MaxDistance` grows with the

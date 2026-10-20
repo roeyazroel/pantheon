@@ -59,6 +59,7 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
         terrain.Set("collision_mode", CollisionModeDisabled);
         terrain.Call("change_region_size", RegionSize);
         terrain.Set("vertex_spacing", field.Spacing);
+        terrain.Set("mesh_size", Pantheon.Game.Settings.GraphicsScaling.TerrainMeshSize(GraphicsScale.Terrain));
         terrain.Call("set_camera", _camera);
         terrain.Set("assets", CreateAssets(palette.Ground));
         var material = terrain.Get("material").AsGodotObject();

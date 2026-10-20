@@ -155,8 +155,9 @@ internal sealed partial class MenuScreen : CanvasLayer
     }
 
     /// <summary>
-    /// The settings (spec §105, ADR-021): the window, frame pacing, shadows, render scale, citizens
-    /// shown and loudness. Each change applies at once and is kept for the next run.
+    /// The settings (spec §105, ADR-021, ADR-056): the window, frame pacing, shadows, render scale,
+    /// citizens shown, vegetation, terrain quality, particles, the simulation's budget and loudness.
+    /// Each change is kept for the next run, and most apply at once.
     /// </summary>
     /// <param name="back">Where Back leads.</param>
     public void ShowSettings(Action back)
@@ -169,7 +170,11 @@ internal sealed partial class MenuScreen : CanvasLayer
         Toggle("Lighting effects", Settings.LightingEffects, on => Settings with { LightingEffects = on });
         Slide("Render scale", Settings.RenderScale, Pantheon.Game.Settings.GameSettings.MinRenderScale, value => Settings with { RenderScale = value });
         Slide("Citizens shown", Settings.Citizens, Pantheon.Game.Settings.GameSettings.MinCitizens, value => Settings with { Citizens = value });
-        _column.AddChild(UiKit.Text("Fewer citizens take effect when the game next starts.", 13, UiKit.Muted));
+        Slide("Vegetation", Settings.Vegetation, Pantheon.Game.Settings.GameSettings.MinVegetation, value => Settings with { Vegetation = value });
+        Slide("Terrain quality", Settings.TerrainQuality, Pantheon.Game.Settings.GameSettings.MinTerrainQuality, value => Settings with { TerrainQuality = value });
+        _column.AddChild(UiKit.Text("Citizens, vegetation and terrain quality take effect when the game next starts.", 13, UiKit.Muted));
+        Slide("Particles", Settings.Particles, Pantheon.Game.Settings.GameSettings.MinParticles, value => Settings with { Particles = value });
+        Slide("Simulation budget (ms)", Settings.SimulationBudget, Pantheon.Game.Settings.GameSettings.MinSimulationBudget, value => Settings with { SimulationBudget = value }, Pantheon.Game.Settings.GameSettings.MaxSimulationBudget, 1.0);
         Slide("Volume", Settings.MasterVolume, 0f, value => Settings with { MasterVolume = value });
         Slide("Music", Settings.MusicVolume, 0f, value => Settings with { MusicVolume = value });
         Slide("Effects", Settings.EffectsVolume, 0f, value => Settings with { EffectsVolume = value });
@@ -185,10 +190,10 @@ internal sealed partial class MenuScreen : CanvasLayer
         _column.AddChild(UiKit.Row(caption, box));
     }
 
-    /// <summary>A slider from a least value to 1 that changes a setting.</summary>
-    private void Slide(string caption, float value, float least, Func<float, Pantheon.Game.Settings.GameSettings> change)
+    /// <summary>A slider from a least value to a most (1 unless given) that changes a setting.</summary>
+    private void Slide(string caption, float value, float least, Func<float, Pantheon.Game.Settings.GameSettings> change, float most = 1f, double step = 0.05)
     {
-        var slider = new HSlider { MinValue = least, MaxValue = 1.0, Step = 0.05, Value = value, CustomMinimumSize = new Vector2(280, 28) };
+        var slider = new HSlider { MinValue = least, MaxValue = most, Step = step, Value = value, CustomMinimumSize = new Vector2(280, 28) };
         slider.ValueChanged += changed => Change(change((float)changed));
         _column.AddChild(UiKit.Row(caption, slider));
     }

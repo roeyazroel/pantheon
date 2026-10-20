@@ -28,6 +28,10 @@ public sealed class LocalNavGrid
     // How far, in metres, the grid reaches beyond the farthest hut or field.
     private const float Margin = 12f;
 
+    // The grid's reach is rounded up to a multiple of this, in metres, so it keeps its frame (and its
+    // terrain can be reused) while a village grows a few houses at a time (ADR-056).
+    private const float ReachStep = 16f;
+
     private static readonly (int X, int Z, float Cost)[] Steps =
     [
         (1, 0, 1f), (-1, 0, 1f), (0, 1, 1f), (0, -1, 1f),
@@ -81,8 +85,12 @@ public sealed class LocalNavGrid
     /// <param name="settlement">The village, for its temple.</param>
     /// <param name="terrain">Terrain, for water.</param>
     /// <param name="settings">Citizen settings: the cell size and the clearance.</param>
+    /// <param name="land">
+    /// The land under the grid from the last bake, reused when the grid keeps its frame, and updated
+    /// (ADR-056: sampling the terrain under every cell cost most of a rebuild).
+    /// </param>
     /// <returns>The grid.</returns>
-    public static LocalNavGrid Build(SettlementSite site, SettlementState settlement, TerrainField terrain, CitizenSettings settings)
+    public static LocalNavGrid Build(SettlementSite site, SettlementState settlement, TerrainField terrain, CitizenSettings settings, LocalNavLand? land = null)
     {
         ArgumentNullException.ThrowIfNull(site);
         ArgumentNullException.ThrowIfNull(settlement);
@@ -95,41 +103,36 @@ public sealed class LocalNavGrid
             reach = MathF.Max(reach, Vector2.Distance(centre, new Vector2(field.Position.X, field.Position.Z)) + Margin);
         }
 
+        reach = MathF.Ceiling(reach / ReachStep) * ReachStep;
         var cell = settings.NavCellSize;
         var side = Math.Max(2, (int)MathF.Ceiling(2f * reach / cell));
         var origin = centre - new Vector2(side * cell / 2f);
-        var blocked = new bool[side * side];
-        for (var z = 0; z < side; z++)
+        if (land is not null && !land.Fits(terrain, origin, cell, side))
         {
-            for (var x = 0; x < side; x++)
-            {
-                var (wx, wz) = (origin.X + ((x + 0.5f) * cell), origin.Y + ((z + 0.5f) * cell));
-                blocked[(z * side) + x] = terrain.SampleHeight(wx, wz) < 0f || terrain.IsUnderFreshWater(wx, wz);
-            }
+            land.Sample(terrain, origin, cell, side);
         }
 
-        // The obstacles are marked on a first grid over the same cells, which the finished grid then counts and divides into areas.
-        var grid = new LocalNavGrid(origin, cell, side, side, blocked);
+        var blocked = land is { } kept ? (bool[])kept.Water.Clone() : LocalNavLand.SampleWater(terrain, origin, cell, side);
         var clearance = settings.NavClearance;
         foreach (var hut in site.Houses)
         {
-            grid.Block(hut.Position, (HutRadius * hut.Scale) + clearance);
+            Block(blocked, origin, cell, side, hut.Position, (HutRadius * hut.Scale) + clearance);
         }
 
         foreach (var ruin in site.Ruins)
         {
-            grid.Block(ruin.Position, (HutRadius * ruin.Scale) + clearance);
+            Block(blocked, origin, cell, side, ruin.Position, (HutRadius * ruin.Scale) + clearance);
         }
 
         if (site.Construction is { } construction)
         {
-            grid.Block(construction.House.Position, (HutRadius * construction.House.Scale) + clearance);
+            Block(blocked, origin, cell, side, construction.House.Position, (HutRadius * construction.House.Scale) + clearance);
         }
 
-        grid.Block(site.Center, ShrineRadius + clearance);
+        Block(blocked, origin, cell, side, site.Center, ShrineRadius + clearance);
         if (Simulation.Settlements.CivicModel.Has(settlement, BuildingKind.Temple))
         {
-            grid.Block(CivicLayout.Temple(site, terrain, settlement.Id).Position, TempleRadius + clearance);
+            Block(blocked, origin, cell, side, CivicLayout.Temple(site, terrain, settlement.Id).Position, TempleRadius + clearance);
         }
 
         return new LocalNavGrid(origin, cell, side, side, blocked);
@@ -168,18 +171,18 @@ public sealed class LocalNavGrid
     public bool IsBlocked(Vector2 point) => CellOf(point) is var index && index >= 0 && _blocked[index];
 
     /// <summary>Marks the cells within a radius of a point blocked.</summary>
-    private void Block(Vector3 point, float radius)
+    private static void Block(bool[] blocked, Vector2 origin, float cell, int side, Vector3 point, float radius)
     {
-        var (x0, z0) = ((int)MathF.Floor((point.X - radius - _origin.X) / _cell), (int)MathF.Floor((point.Z - radius - _origin.Y) / _cell));
-        var (x1, z1) = ((int)MathF.Ceiling((point.X + radius - _origin.X) / _cell), (int)MathF.Ceiling((point.Z + radius - _origin.Y) / _cell));
-        for (var z = Math.Max(0, z0); z <= Math.Min(_rows - 1, z1); z++)
+        var (x0, z0) = ((int)MathF.Floor((point.X - radius - origin.X) / cell), (int)MathF.Floor((point.Z - radius - origin.Y) / cell));
+        var (x1, z1) = ((int)MathF.Ceiling((point.X + radius - origin.X) / cell), (int)MathF.Ceiling((point.Z + radius - origin.Y) / cell));
+        for (var z = Math.Max(0, z0); z <= Math.Min(side - 1, z1); z++)
         {
-            for (var x = Math.Max(0, x0); x <= Math.Min(_columns - 1, x1); x++)
+            for (var x = Math.Max(0, x0); x <= Math.Min(side - 1, x1); x++)
             {
-                var (dx, dz) = (_origin.X + ((x + 0.5f) * _cell) - point.X, _origin.Y + ((z + 0.5f) * _cell) - point.Z);
+                var (dx, dz) = (origin.X + ((x + 0.5f) * cell) - point.X, origin.Y + ((z + 0.5f) * cell) - point.Z);
                 if ((dx * dx) + (dz * dz) <= radius * radius)
                 {
-                    _blocked[(z * _columns) + x] = true;
+                    blocked[(z * side) + x] = true;
                 }
             }
         }

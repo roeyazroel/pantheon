@@ -34,6 +34,9 @@
     "WalkSpeed": 1.3,
     "CatchUpSpeed": 2.6,
     "PaceCap": 1.0,
+    // A village's citizens and their ways round the houses are rebuilt at most this often (s of the
+    // crowds' time) as its people and buildings change (ADR-056).
+    "RosterRefreshSeconds": 2.0,
     "RestSeconds": 50.0,
     "WorkSeconds": 110.0,
     "GatherSeconds": 30.0,

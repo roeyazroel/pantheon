@@ -25,6 +25,7 @@ internal sealed class PerformanceMonitor
     private double _pendingSimulation;
     private long _pendingTicks;
     private SaveTiming? _save;
+    private BudgetStatus? _budget;
 
     /// <summary>Advances the session, timing the simulation.</summary>
     /// <param name="session">The session.</param>
@@ -34,9 +35,11 @@ internal sealed class PerformanceMonitor
         var tick = session.World.Tick;
         var world = session.World;
         var clock = Stopwatch.StartNew();
-        session.Update(delta);
+        session.Update(delta, () => clock.Elapsed.TotalSeconds);
         _pendingSimulation = clock.Elapsed.TotalMilliseconds;
         _pendingTicks = ReferenceEquals(world, session.World) ? Math.Max(0, session.World.Tick - tick) : 0;
+        var scheduler = session.Scheduler;
+        _budget = scheduler.BudgetSeconds is { } budget ? new BudgetStatus(budget * 1000.0, scheduler.BudgetHits, scheduler.Backlog, scheduler.DroppedTicks) : null;
     }
 
     /// <summary>Records the frame that just ran.</summary>
@@ -79,6 +82,7 @@ internal sealed class PerformanceMonitor
             Debris = debris.Pieces,
             DebrisMoving = debris.Moving,
             Save = _save,
+            Budget = _budget,
         };
     }
 

@@ -142,7 +142,7 @@ internal sealed partial class CloudView : Node3D
         _rain = new GpuParticles3D
         {
             Name = "Rain",
-            Amount = _maxDrops,
+            Amount = GraphicsScale.Of(_maxDrops),
             Lifetime = fall / speed,
             Position = new Vector3(0f, view.CloudHeight, 0f),
             ProcessMaterial = process,

@@ -215,10 +215,11 @@ public sealed class GameSession
     /// <returns>The events; none unless <see cref="KeepsOutbox"/> is set.</returns>
     public IReadOnlyList<WorldEvent> DrainOutbox() => _queue.DrainOutbox();
 
-    /// <summary>Advances the simulation by real elapsed time.</summary>
+    /// <summary>Advances the simulation by real elapsed time, within the scheduler's CPU budget.</summary>
     /// <param name="realDeltaSeconds">Real seconds since the previous frame.</param>
+    /// <param name="elapsedSeconds">Real seconds spent since this update began, measured by the client, for the budget.</param>
     /// <returns>Number of ticks run.</returns>
-    public int Update(double realDeltaSeconds) => Scheduler.Advance(realDeltaSeconds, _step);
+    public int Update(double realDeltaSeconds, Func<double>? elapsedSeconds = null) => Scheduler.Advance(realDeltaSeconds, _step, elapsedSeconds);
 
     /// <summary>
     /// Runs exactly one tick now, through the same engine call as <see cref="Update"/>. The
