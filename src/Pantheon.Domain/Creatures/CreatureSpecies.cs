@@ -2,7 +2,7 @@ namespace Pantheon.Domain.Creatures;
 
 /// <summary>
 /// A kind of Creature (spec §130's "more Creatures", ADR-021), part of <c>game/Data/creatures.json</c>.
-/// Its factors scale the shared rules; 1 is the plain Mossback.
+/// Its factors scale the shared rules; 1 is the plain Cow.
 /// </summary>
 public sealed record CreatureSpecies
 {

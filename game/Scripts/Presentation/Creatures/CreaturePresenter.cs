@@ -32,13 +32,24 @@ public sealed class CreaturePresenter
         _terrain = terrain;
     }
 
+    /// <summary>Starts making the bodies of a world's species on worker threads, so they are ready when first shown (ADR-061).</summary>
+    /// <param name="world">The world.</param>
+    public void Prepare(WorldState world)
+    {
+        foreach (var creature in world.Creatures)
+        {
+            _ = AnimalMeshes.For(_view.LookFor(creature.Species));
+        }
+    }
+
     /// <summary>Creates, moves and poses the views of every Creature.</summary>
     /// <param name="world">Current world.</param>
     /// <param name="delta">Frame time in seconds.</param>
     /// <param name="simulationRunning">Whether the simulation clock is running.</param>
     /// <param name="localGodId">The player's god, whose Creature's label shows no owner.</param>
     /// <param name="heldAt">Where the player's hand holds its Creature, if it does (ADR-030).</param>
-    public void Sync(WorldState world, float delta, bool simulationRunning, int? localGodId, Vector3? heldAt = null)
+    /// <param name="alpha">How far the simulation's clock has run towards the next tick (0..1), to draw between ticks (ADR-061).</param>
+    public void Sync(WorldState world, float delta, bool simulationRunning, int? localGodId, Vector3? heldAt = null, float alpha = 1f)
     {
         if (_terrain is null)
         {
@@ -54,7 +65,7 @@ public sealed class CreaturePresenter
                 _views[creature.Id] = view;
             }
 
-            view.Sync(creature, world, _terrain, delta, simulationRunning, creature.GodId == localGodId ? heldAt : null);
+            view.Sync(creature, world, _terrain, (delta, simulationRunning, alpha), creature.GodId == localGodId ? heldAt : null);
         }
     }
 

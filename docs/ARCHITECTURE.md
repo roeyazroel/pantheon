@@ -485,7 +485,7 @@ files and compiled assemblies and fails when either rule is broken.
   SQLite's native library or the file cannot be opened. A world keeps every manual save and only
   its newest autosave and quicksave. The core never reads the clock: times come from the client.
 
-- Save envelope: `{ "SaveVersion": 33, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 34, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -536,7 +536,9 @@ followed villagers; `VillagerIntegrity` checks them (one for each god, known vil
 needs and faith in 0..1, a life longer than their age). Version 31 → 32 (`LandSaveMigration`)
 gives the land no reshapings, and `LandIntegrity` checks them. Version 32 → 33
 (`StructureSaveMigration`) gives every settlement sound houses (integrity 1), and the save checks
-keep it in 0..1. A missing,
+keep it in 0..1. Version 33 → 34 (`AnimalSaveMigration`, ADR-061) makes each Creature of the four
+old species the animal of its nature: a Mossback a Cow, a Stonehide a Tortoise, a Swiftclaw a Tiger
+and a Lumen an Ape. A missing,
   unsupported or newer version
   raises `SaveFormatException` with a clear message.
 - `SaveIntegrity` then checks the world's structure and lists every inconsistency: the grid
@@ -629,6 +631,16 @@ keep it in 0..1. A missing,
 - `Launch/LaunchOptions`: parses user arguments `--seed=`, `--load=`,
   `--terrain=auto|terrain3d|fallback`, `--advance-ticks=`, `--camera-distance=`,
   `--quit-after-frames=` and `--screenshot=`. Bad input becomes a warning, never an error.
+- `Presentation/Animals/` (ADR-061): the Creatures' bodies as pure data and maths. `Sdf` holds
+  signed-distance parts (ellipsoids, round cones, round boxes) that `SdfShape` blends smoothly
+  and paints by the nearest part's `PaintTag`; `SurfaceNets` meshes a shape into positions,
+  gradient normals, colours and outward triangles. `AnimalPlans` gives each body (Cow, Ape, Tiger,
+  Lion, Wolf, Bear, Horse, Tortoise and the Beast) its `AnimalProportions`, parts and `FacePlan`,
+  sharing the torso, limbs, paws, hooves, hands and stumps of `AnimalParts`; `AnimalPaint` paints
+  fur, belly, muzzle and the rest with a species' `AnimalPalette` and its pattern (stripes,
+  patches, plates). `AnimalMotion` moves them: a walk whose planted foot stays where it landed and
+  whose swinging foot arcs to the next step, two-bone `Reach` for hip and knee, and the standing,
+  sitting, working, fighting, attacking, playing and dangling `BodyPose`s.
 - `Presentation/*`: engine-agnostic presentation data shared by both terrain renderers (colour
   map, fallback mesh chunks, water depth map, region lines, labels) and `Terrain3DShaderPatch`.
   `SettlementLayout.ComputeSite` lays out a settlement's houses, building site and fields as a
@@ -909,9 +921,16 @@ keep it in 0..1. A missing,
   the bar), casts at the cursor on a left click, rewards, punishes and sends the Creature (Z, X, V
   or the card), drives the hand's gestures, drains the session's events into effects and alerts,
   and refreshes the HUD, the targeting ring and the overlay.
-- `Presentation/Creatures/`: `CreatureBody` (the Mossback from primitive meshes, tinted by its
-  god), `CreatureView` (follows the simulated position smoothly, grows with level, walks and poses
-  per action, flashes on feedback, labels its activity) and `CreaturePresenter`.
+- `Presentation/Creatures/` (ADR-061): `AnimalMeshes` makes each species' body once a run on
+  worker threads: every part of its plan meshed by `SurfaceNets` and painted by `AnimalPaint`.
+  `AnimalBody` hangs the meshes on a skeleton of joints (hips, knees, ankles, shoulders, elbows,
+  wrists, neck, head and a tail of three), takes a `BodyPose` each frame, and shows the face
+  (`AnimalFace`), its god's collar, its nature's tint and its scars. `CreatureView` draws the
+  Creature between the simulation's last two places by the scheduler's `Alpha`, walks it with
+  `AnimalMotion.Walk` (the stride by the distance moved, each foot on the ground under it), leans
+  it with the slope, chooses its still pose by what it does, dangles it by its scruff from the
+  hand's grip, flashes on feedback and labels its activity; `CreaturePresenter` starts the meshes
+  of a world's species as it is shown. The Beast is a great horned bear on the same body.
   `Presentation/Divine/DivineHand`: the god's hand: it follows the cursor, presses when casting or
   sending, pats or swats the Creature, shows the rock, tree or villagers it holds (`HeldThing`) and
   flings them when it throws; a held Creature hangs under it (ADR-030). Since ADR-057 its grip swings
@@ -2420,11 +2439,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 33 (current)
+    alt version 34 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 32
+    else versions 1 to 33
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 33, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings, 32→33: the houses' integrity)
+        Mig-->>Save: JsonObject at version 34, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings, 32→33: the houses' integrity, 33→34: the Creatures' animals)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

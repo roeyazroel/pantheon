@@ -28,7 +28,7 @@ your influence spreads with your followers. People who see a miracle change thei
 you. Help them when they need it and they love you. Strike them and they fear you; fear converts
 quickly but does not last. Neglect your followers in a famine and they doubt you and leave.
 
-**Milestone 4 (Creature)** gives your god a Creature: Bramble the Mossback, a mossy giant born
+**Milestone 4 (Creature)** gives your god a Creature: Bramble, a giant animal (a Cow unless you choose another) born
 beside your home village. It lives on its own. It forages, rests and wanders, plays with
 villagers, helps them build, feeds them when they go hungry, or raids their stores and attacks
 them. What it does depends on its needs, its personality and what it has learned. Teach it with
@@ -1193,7 +1193,7 @@ now.
     - victories make it braver, while defeats and wounds cow it and make it jealous;
     - play makes it more playful.
 
-  Its species shades it from birth: a Stonehide is brave, a Lumen playful, a Swiftclaw jealous.
+  Its species shades it from birth: a Lion or a Tortoise is brave, an Ape playful, a Tiger jealous.
 
 ## Creatures together
 
@@ -1296,15 +1296,28 @@ The rules for what is significant are in `game/Data/history.json`.
 
 ## Your Creature's species
 
-On the start screen you choose your Creature's species for a new world (or pass `--species`):
+Every Creature is an animal that walks upright, as Black & White's did, with hands to carry, build
+and fight (ADR-061). On New World you choose yours (or pass `--species`):
 
-- the **Mossback**, steady in all things;
-- the **Stonehide**, slow but hard to hurt;
-- the **Swiftclaw**, fast and fierce but fragile;
-- the **Lumen**, gentle and quick to learn.
+- the **Cow**, gentle and steady, quick to care for the villages;
+- the **Ape**, clever and playful, the quickest to learn but frail in a fight;
+- the **Tiger**, a fast, striped hunter, quick to anger and easily hurt;
+- the **Lion**, maned, proud and brave, strong in a fight;
+- the **Wolf**, swift and loyal, fierce in defence of its own;
+- the **Bear**, massive, strong and hard to hurt, slow and steady;
+- the **Horse**, the swiftest of all and a tireless worker, but timid;
+- the **Tortoise**, under a shell like granite: the hardest to hurt, slow to move and to learn.
 
-The rival gods' Creatures are a Stonehide (Vael), a Lumen (Seren) and a Swiftclaw (Kaio), and in
-larger worlds a Swiftclaw (Aurel), a Mossback (Maren), a Stonehide (Thorn) and a Lumen (Ysolde).
+Every god has an animal of its own: Vael the Tyrant a Lion, Seren the Guardian a Bear and Kaio the
+Trickster an Ape, and in larger worlds Aurel a Horse, Maren a Tortoise, Thorn a Tiger and Ysolde a
+Wolf. Choose a rival's animal and that rival takes yours. Saves from before keep their Creatures as
+the animals of their natures: a Mossback becomes a Cow, a Stonehide a Tortoise, a Swiftclaw a Tiger
+and a Lumen an Ape.
+
+Up close, a Creature walks with its feet planted where they land and its stride matched to its
+speed, leans with the slope, runs when it flees, sits to rest, works with its hands, boxes in a
+fight and dangles from your hand by its scruff. Its face shows how it feels, a collar of its god's
+colour shows whose it is, and its nature tints it warm or dark.
 
 ## Sound and settings
 
@@ -1552,7 +1565,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--god=<name>` | The god you ask for when joining. |
 | `--upnp=on\|off` | Ask the router to forward the host's port. |
 | `--meet=on\|off\|<name>` | Bring the nearest other Creature (or the one with that name) beside yours at the start, so they meet. |
-| `--species=<name>` | The species of your Creature in a new world: Mossback, Stonehide, Swiftclaw or Lumen. |
+| `--species=<name>` | The species of your Creature in a new world: Cow, Ape, Tiger, Lion, Wolf, Bear, Horse or Tortoise. |
 | `--temperament=<words>` | Give your Creature these traits strongly at the start, separated by commas: brave, cowardly, kind, sadistic, curious, lazy, protective, jealous, playful, aggressive, loyal or independent. |
 | `--world-size=small\|large\|huge\|vast` | The size of a new world (see [World sizes](#world-sizes)). An unknown size makes a small world. |
 | `--victory=all\|sandbox\|<list>` | How a new world may be won: every way, no way, or a list of `ascendancy`, `conquest` and `cultural` separated by commas, for example `--victory=conquest,cultural`. Default: ascendancy. |
@@ -1619,7 +1632,7 @@ quit) and its newest quicksave (F5; F9 loads it back). Save files from before th
 brought into it the first time the game starts, each as a world, and so are the old settings. A
 host's world is still written to `user://saves/hosted.json` when it ends a shared session.
 
-Saves are JSON of the simulation state, compressed in the profile, starting with `"SaveVersion": 33`. The scene tree
+Saves are JSON of the simulation state, compressed in the profile, starting with `"SaveVersion": 34`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1646,7 +1659,7 @@ find their beast's lair and set their first anomaly when loaded. In saves from b
 every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
 start with middling courage, protectiveness, jealousy and playfulness. Worlds from before part 18
 keep their four biomes. Hands from before part 19 hold no offering. In saves from before part 22
-no god follows a villager. In saves from before part 24 the land is as the seed made it. Saves from before part 27 give every village sound houses. Saves from before part 13
+no god follows a villager. In saves from before part 24 the land is as the seed made it. Saves from before part 27 give every village sound houses. Saves from before part 40 keep their Creatures as the animals of their natures (a Mossback a Cow, a Stonehide a Tortoise, a Swiftclaw a Tiger, a Lumen an Ape). Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
@@ -1687,7 +1700,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-39-menu-and-profile.md](.docs/milestone-15-part-39-menu-and-profile.md).
+[.docs/milestone-15-part-40-animal-creatures.md](.docs/milestone-15-part-40-animal-creatures.md).
 
 ## Contributing
 

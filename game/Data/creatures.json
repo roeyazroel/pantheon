@@ -2,21 +2,34 @@
   // Creatures (ADR-010). Rates are per simulated second; distances in metres. The Creature moves
   // every tick and decides at most every DecisionIntervalTicks ticks (2 ticks = 5 Hz at x1).
   "DecisionIntervalTicks": 2,
-  // Species (ADR-021): their factors scale the rules below. Toughness divides the harm a Creature takes;
-  // Kindness and Aggression are added to the temperament it is born with. The first is the default.
+  // Species (ADR-021, ADR-061): eight upright animals, as Black & White's Creatures. Their factors
+  // scale the rules below. Toughness divides the harm a Creature takes; Kindness and Aggression are
+  // added to the temperament it is born with. The first is the default.
   "Species": [
-    { "Name": "Mossback", "Description": "A patient, moss-covered beast, steady in all things.",
-      "Toughness": 1.0, "Strength": 1.0, "Speed": 1.0, "Learning": 1.0, "Kindness": 0.0, "Aggression": 0.0,
+    { "Name": "Cow", "Description": "A gentle, patient cow, steady in all things and quick to care for the villages.",
+      "Toughness": 1.0, "Strength": 1.0, "Speed": 1.0, "Learning": 1.0, "Kindness": 0.05, "Aggression": -0.05,
       "Courage": 0.0, "Protectiveness": 0.1, "Jealousy": -0.1, "Playfulness": 0.0 },
-    { "Name": "Stonehide", "Description": "Slow and massive, with a hide like granite: hard to hurt and strong, but slow to learn.",
-      "Toughness": 1.5, "Strength": 1.25, "Speed": 0.75, "Learning": 0.8, "Kindness": 0.05, "Aggression": 0.0,
-      "Courage": 0.15, "Protectiveness": 0.05, "Jealousy": 0.0, "Playfulness": -0.1 },
-    { "Name": "Swiftclaw", "Description": "Lean and quick to anger: it covers ground fast and strikes hard, but breaks easily.",
-      "Toughness": 0.8, "Strength": 1.1, "Speed": 1.4, "Learning": 1.0, "Kindness": -0.05, "Aggression": 0.15,
+    { "Name": "Ape", "Description": "A clever ape that learns quickly from its god and loves to play, but is frail in a fight.",
+      "Toughness": 0.85, "Strength": 0.9, "Speed": 1.1, "Learning": 1.5, "Kindness": 0.1, "Aggression": -0.05,
+      "Courage": -0.1, "Protectiveness": 0.0, "Jealousy": 0.05, "Playfulness": 0.2 },
+    { "Name": "Tiger", "Description": "A lean, striped hunter: it covers ground fast and strikes hard, but breaks easily and angers quickly.",
+      "Toughness": 0.8, "Strength": 1.15, "Speed": 1.4, "Learning": 1.0, "Kindness": -0.05, "Aggression": 0.15,
       "Courage": 0.05, "Protectiveness": -0.05, "Jealousy": 0.15, "Playfulness": 0.0 },
-    { "Name": "Lumen", "Description": "A gentle, glowing beast that learns quickly from its god but is frail in a fight.",
-      "Toughness": 0.85, "Strength": 0.85, "Speed": 1.1, "Learning": 1.5, "Kindness": 0.15, "Aggression": -0.1,
-      "Courage": -0.1, "Protectiveness": 0.0, "Jealousy": 0.0, "Playfulness": 0.15 }
+    { "Name": "Lion", "Description": "A maned lion, proud and brave: strong in a fight and slow to back down.",
+      "Toughness": 1.1, "Strength": 1.3, "Speed": 1.1, "Learning": 0.9, "Kindness": -0.05, "Aggression": 0.1,
+      "Courage": 0.2, "Protectiveness": 0.05, "Jealousy": 0.1, "Playfulness": -0.05 },
+    { "Name": "Wolf", "Description": "A grey wolf, swift and loyal, fierce in defence of its own.",
+      "Toughness": 0.95, "Strength": 1.05, "Speed": 1.3, "Learning": 1.05, "Kindness": 0.0, "Aggression": 0.05,
+      "Courage": 0.1, "Protectiveness": 0.2, "Jealousy": 0.05, "Playfulness": 0.05 },
+    { "Name": "Bear", "Description": "A great bear, massive and strong, hard to hurt, slow and steady.",
+      "Toughness": 1.3, "Strength": 1.35, "Speed": 0.85, "Learning": 0.9, "Kindness": 0.0, "Aggression": 0.05,
+      "Courage": 0.15, "Protectiveness": 0.15, "Jealousy": 0.0, "Playfulness": 0.05 },
+    { "Name": "Horse", "Description": "A tall horse, the swiftest of all and a tireless worker, but timid in a fight.",
+      "Toughness": 0.95, "Strength": 1.1, "Speed": 1.45, "Learning": 1.0, "Kindness": 0.1, "Aggression": -0.1,
+      "Courage": -0.05, "Protectiveness": 0.05, "Jealousy": 0.0, "Playfulness": 0.1 },
+    { "Name": "Tortoise", "Description": "An ancient tortoise under a shell like granite: very hard to hurt and strong, but slow to move and to learn.",
+      "Toughness": 1.5, "Strength": 1.25, "Speed": 0.75, "Learning": 0.8, "Kindness": 0.05, "Aggression": 0.0,
+      "Courage": 0.15, "Protectiveness": 0.05, "Jealousy": 0.0, "Playfulness": -0.1 }
   ],
   "BaseSpeed": 7.0,
   "SpeedPerLevel": 0.5,

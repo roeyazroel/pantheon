@@ -58,7 +58,7 @@ public sealed class SaveLoadTests
         var first = document.RootElement.EnumerateObject().First();
         Assert.Equal("SaveVersion", first.Name);
         Assert.Equal(WorldSaveSerializer.CurrentSaveVersion, first.Value.GetInt32());
-        Assert.Equal(33, WorldSaveSerializer.CurrentSaveVersion);
+        Assert.Equal(34, WorldSaveSerializer.CurrentSaveVersion);
     }
 
     [Fact]

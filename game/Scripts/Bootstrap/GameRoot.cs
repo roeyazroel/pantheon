@@ -214,7 +214,7 @@ public partial class GameRoot : Node3D
         var crowds = _session.Crowds.Advance(delta, _session.Scheduler.TimeScale, _session.Scheduler.IsPaused, _presenter.CrowdPace);
         _presenter.UpdateCitizens(_session.World, crowds, _camera.ViewCamera.GlobalPosition, delta);
 
-        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId, _divine.HeldCreatureAt(_camera.CursorGroundPoint));
+        _creatures.Sync(_session.World, (float)delta, !_session.Scheduler.IsPaused, _session.LocalGodId, _divine.HeldCreatureAt(_camera.CursorGroundPoint), (float)_session.Scheduler.Alpha);
         var focus = new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y);
         _weather.Sync(_session.World, _session.SimulationSeconds, (float)delta, focus);
         _disasters.Sync(_session.World, (float)delta, focus);
@@ -341,6 +341,7 @@ public partial class GameRoot : Node3D
         _presenter.Rebuild(_session.World, _session.Terrain);
         _divinePresenter.Rebuild(_session.Terrain, _session.World.Regions.Columns * _session.World.Regions.RegionSize);
         _creatures.Rebuild(_session.Terrain);
+        _creatures.Prepare(_session.World);
         _weather.Rebuild(_session.Terrain);
         _disasters.Rebuild(_session.Terrain, _session.World.Regions.RegionSize);
         _migrants.Rebuild(_session.Terrain);

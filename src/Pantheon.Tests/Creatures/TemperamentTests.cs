@@ -39,15 +39,15 @@ public sealed class TemperamentTests
     {
         var world = DivineWorlds.Create(100f, 300f);
         var god = world.Gods[0];
-        var stonehide = CreatureFounder.Found(Rules, world.Seed, god, "Rock", world.Settlements[0], world.Regions, "Stonehide");
-        var lumen = CreatureFounder.Found(Rules, world.Seed, god, "Glow", world.Settlements[0], world.Regions, "Lumen");
-        var again = CreatureFounder.Found(Rules, world.Seed, god, "Rock", world.Settlements[0], world.Regions, "Stonehide");
+        var stonehide = CreatureFounder.Found(Rules, world.Seed, god, "Rock", world.Settlements[0], world.Regions, "Tortoise");
+        var lumen = CreatureFounder.Found(Rules, world.Seed, god, "Glow", world.Settlements[0], world.Regions, "Ape");
+        var again = CreatureFounder.Found(Rules, world.Seed, god, "Rock", world.Settlements[0], world.Regions, "Tortoise");
 
         var species = Rules.Species.ToDictionary(s => s.Name);
-        Assert.Equal(species["Stonehide"].Courage - species["Lumen"].Courage, stonehide.Personality.Courage - lumen.Personality.Courage, 4);
-        Assert.Equal(species["Lumen"].Playfulness - species["Stonehide"].Playfulness, lumen.Personality.Playfulness - stonehide.Personality.Playfulness, 4);
+        Assert.Equal(species["Tortoise"].Courage - species["Ape"].Courage, stonehide.Personality.Courage - lumen.Personality.Courage, 4);
+        Assert.Equal(species["Ape"].Playfulness - species["Tortoise"].Playfulness, lumen.Personality.Playfulness - stonehide.Personality.Playfulness, 4);
         Assert.Equal((stonehide.Personality.Jealousy, stonehide.Personality.Protectiveness), (again.Personality.Jealousy, again.Personality.Protectiveness));
-        Assert.Equal(lumen.Personality.Kindness - species["Lumen"].Kindness, stonehide.Personality.Kindness - species["Stonehide"].Kindness, 4);
+        Assert.Equal(lumen.Personality.Kindness - species["Ape"].Kindness, stonehide.Personality.Kindness - species["Tortoise"].Kindness, 4);
     }
 
     [Fact]

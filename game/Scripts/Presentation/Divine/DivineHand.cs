@@ -126,6 +126,12 @@ internal sealed partial class DivineHand : Node3D
         Press(target);
     }
 
+    /// <summary>How high over the ground the hand keeps at least, in metres: what it holds hangs below it (ADR-061).</summary>
+    public float HoldLift { get; set; }
+
+    /// <summary>Where what the hand holds hangs from: the grip under its palm, in the world.</summary>
+    public Vector3 Grip => _held.GlobalPosition;
+
     /// <summary>Puts the hand over the cursor point, or hides it when there is none.</summary>
     /// <param name="cursor">Ground point under the cursor.</param>
     /// <param name="cameraDistance">Camera distance in metres, for the hand's size.</param>
@@ -179,7 +185,7 @@ internal sealed partial class DivineHand : Node3D
         else
         {
             Visible = _hasCursor;
-            Position = _cursor + new Vector3(0f, (HoverHeight * _cameraDistance) + size, 0f);
+            Position = _cursor + new Vector3(0f, Mathf.Max((HoverHeight * _cameraDistance) + size, HoldLift), 0f);
             Rotation = Vector3.Zero;
         }
 

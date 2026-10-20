@@ -1,20 +1,21 @@
 {
   // The gods of a new world. The first god's home is the best site; each later god's home is the
   // settlement furthest from the homes already taken. AI gods need a Personality (god_ai.json).
-  // CreatureSpecies is one of creatures.json's species; a player may choose another for a new world.
+  // CreatureSpecies is one of creatures.json's species, a different animal for each god (ADR-061); a
+  // player may choose another for a new world, and a rival with that animal then takes the player's.
   "StartingDivinePower": 100.0,
   "HomeBelief": { "Adherence": 0.6, "Faith": 0.5, "Love": 0.3, "Fear": 0.1, "Doubt": 0.15 },
   "Gods": [
-    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble", "CreatureSpecies": "Mossback", "Personality": "None" },
-    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "CreatureSpecies": "Stonehide", "Personality": "Tyrant" },
-    { "Name": "Seren", "Controller": "Ai", "CreatureName": "Thistle", "CreatureSpecies": "Lumen", "Personality": "Guardian" },
-    { "Name": "Kaio", "Controller": "Ai", "CreatureName": "Quill", "CreatureSpecies": "Swiftclaw", "Personality": "Trickster" }
+    { "Name": "Ilyra", "Controller": "Human", "CreatureName": "Bramble", "CreatureSpecies": "Cow", "Personality": "None" },
+    { "Name": "Vael", "Controller": "Ai", "CreatureName": "Gristle", "CreatureSpecies": "Lion", "Personality": "Tyrant" },
+    { "Name": "Seren", "Controller": "Ai", "CreatureName": "Thistle", "CreatureSpecies": "Bear", "Personality": "Guardian" },
+    { "Name": "Kaio", "Controller": "Ai", "CreatureName": "Quill", "CreatureSpecies": "Ape", "Personality": "Trickster" }
   ],
   // Gods that join in larger worlds (world_sizes.json), in order.
   "ExtraGods": [
-    { "Name": "Aurel", "Controller": "Ai", "CreatureName": "Ember", "CreatureSpecies": "Swiftclaw", "Personality": "Zealot" },
-    { "Name": "Maren", "Controller": "Ai", "CreatureName": "Fern", "CreatureSpecies": "Mossback", "Personality": "NatureKeeper" },
-    { "Name": "Thorn", "Controller": "Ai", "CreatureName": "Brute", "CreatureSpecies": "Stonehide", "Personality": "Warlord" },
-    { "Name": "Ysolde", "Controller": "Ai", "CreatureName": "Wisp", "CreatureSpecies": "Lumen", "Personality": "Isolationist" }
+    { "Name": "Aurel", "Controller": "Ai", "CreatureName": "Ember", "CreatureSpecies": "Horse", "Personality": "Zealot" },
+    { "Name": "Maren", "Controller": "Ai", "CreatureName": "Fern", "CreatureSpecies": "Tortoise", "Personality": "NatureKeeper" },
+    { "Name": "Thorn", "Controller": "Ai", "CreatureName": "Brute", "CreatureSpecies": "Tiger", "Personality": "Warlord" },
+    { "Name": "Ysolde", "Controller": "Ai", "CreatureName": "Wisp", "CreatureSpecies": "Wolf", "Personality": "Isolationist" }
   ]
 }

@@ -29,7 +29,17 @@ public static class WorldMaker
         var (worldGen, pantheon) = AtSize(content, options.Size);
         if (options.Species is { } species && pantheon.Gods.ToList().FindIndex(g => g.Controller == GodController.Human) is var player and >= 0)
         {
+            // Every god keeps an animal of its own (ADR-061): a rival with the animal the player chose takes the player's.
             var gods = pantheon.Gods.ToList();
+            var given = gods[player].CreatureSpecies;
+            for (var i = 0; i < gods.Count; i++)
+            {
+                if (i != player && string.Equals(gods[i].CreatureSpecies, species, StringComparison.Ordinal))
+                {
+                    gods[i] = gods[i] with { CreatureSpecies = given };
+                }
+            }
+
             gods[player] = gods[player] with { CreatureSpecies = species };
             pantheon = pantheon with { Gods = gods };
         }

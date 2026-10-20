@@ -81,6 +81,7 @@ public sealed class SaveMigrationTests
         Version31Expectations.Apply(expected);
         Version32Expectations.Apply(expected);
         Version33Expectations.Apply(expected);
+        Version34Expectations.Apply(expected);
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version1SavePath)));
 
         Assert.True(JsonNode.DeepEquals(expected, resaved), resaved!.ToJsonString(Indented));

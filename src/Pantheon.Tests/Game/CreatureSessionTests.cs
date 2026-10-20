@@ -81,7 +81,7 @@ public sealed class CreatureSessionTests
 
         var card = HudReadout.Build(_session, null, null).Creature!;
 
-        Assert.Equal($"{creature.Name} the Mossback - level 1", card.Title);
+        Assert.Equal($"{creature.Name} the Cow - level 1", card.Title);
         Assert.Equal($"Feeding {_session.World.Settlements[0].Name}", card.Doing);
         Assert.StartsWith("health 100%", card.Condition, StringComparison.Ordinal);
         Assert.StartsWith("loyalty 70%", card.Temperament, StringComparison.Ordinal);
@@ -139,7 +139,7 @@ public sealed class CreatureSessionTests
 
         var lines = DebugReadout.Build(snapshot).Lines;
 
-        Assert.Contains(lines, line => line.StartsWith($"Creature {creature.Name} (Mossback) Lv ", StringComparison.Ordinal));
+        Assert.Contains(lines, line => line.StartsWith($"Creature {creature.Name} (Cow) Lv ", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.StartsWith("  doing: ", StringComparison.Ordinal));
         var mood = CreatureExpression.MoodOf(CreatureExpression.FaceOf(creature, _session.World.Tick)).ToString().ToLowerInvariant();
         Assert.Contains(lines, line => line.StartsWith($"  face: {mood} (joy ", StringComparison.Ordinal) && line.Contains("; nature ", StringComparison.Ordinal));

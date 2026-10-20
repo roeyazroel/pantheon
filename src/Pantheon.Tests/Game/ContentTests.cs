@@ -89,7 +89,7 @@ public sealed class ContentTests
     {
         var rules = TestContent.Shipped.Creatures;
 
-        Assert.Equal("Mossback", rules.Species[0].Name);
+        Assert.Equal("Cow", rules.Species[0].Name);
         Assert.Equal(Enum.GetValues<Pantheon.Domain.Creatures.CreatureAction>().Length - 1, rules.Actions.Count);
         Assert.Contains(rules.StartingPreferences, p => p.Action == Pantheon.Domain.Creatures.CreatureAction.Feed && p.Weight == 0.4f);
     }
@@ -100,7 +100,7 @@ public sealed class ContentTests
     [InlineData("\"LevelExperience\": [40.0, 100.0", "\"LevelExperience\": [100.0, 40.0", "must rise")]
     [InlineData("\"GuardFight\": 0.2", "\"GuardFight\": -0.2", "Temperament.GuardFight")]
     [InlineData("\"CouragePerDefeat\": 0.08", "\"CouragePerDefeat\": 1.5", "Temperament.CouragePerDefeat")]
-    [InlineData("\"Courage\": 0.15", "\"Courage\": 1.5", "Stonehide.Courage")]
+    [InlineData("\"Courage\": 0.15", "\"Courage\": 1.5", "Bear.Courage")]
     public void CreatureRules_WithBadValues_FailValidation(string from, string to, string expected)
     {
         var text = TestContent.ReadText(ContentJson.CreaturesFileName);

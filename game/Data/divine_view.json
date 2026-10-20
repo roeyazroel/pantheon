@@ -38,15 +38,20 @@
     { "MiracleId": "awaken", "Style": "Flames", "Color": "#ff5a1f", "Seconds": 6.0 },
     { "MiracleId": "still", "Style": "Shower", "Color": "#e8f4ff", "Seconds": 6.0 }
   ],
-  // Creature species (creatures.json): colours of hide, belly and back tufts (tinted by the god), girth,
-  // height and horn length as factors, and how much the hide glows.
+  // Creature species (creatures.json, ADR-061): each an upright animal drawn by its Body (its species'
+  // name unless given). Colours of its hide, belly, tufts (mane, tail tuft), markings (stripes and
+  // patches), muzzle, nose, inner ears, horn (and beak and claws), hooves and a tortoise's shell; girth
+  // and height as factors (the Beast is huge); how much the hide glows.
   "CreatureLooks": [
-    { "Species": "Mossback", "Hide": "#6b5c45", "Belly": "#c7b085", "Tufts": "#4d8038", "Width": 1.0, "Height": 1.0, "Horns": 1.0, "Glow": 0.0 },
-    { "Species": "Stonehide", "Hide": "#6e6c67", "Belly": "#a19d93", "Tufts": "#58554f", "Width": 1.25, "Height": 0.95, "Horns": 0.6, "Glow": 0.0 },
-    { "Species": "Swiftclaw", "Hide": "#7a4630", "Belly": "#c99a6a", "Tufts": "#3a2a22", "Width": 0.82, "Height": 1.1, "Horns": 1.5, "Glow": 0.0 },
-    { "Species": "Lumen", "Hide": "#b5c4d4", "Belly": "#eaf0f6", "Tufts": "#8fe0ff", "Width": 0.9, "Height": 1.0, "Horns": 0.7, "Glow": 0.5 },
-    // The ancient beast's look (ADR-035): no Creature is of this species.
-    { "Species": "Beast", "Hide": "#2e2622", "Belly": "#5a4a3e", "Tufts": "#b0361e", "Width": 3.2, "Height": 3.0, "Horns": 1.8, "Glow": 0.35 }
+    { "Species": "Cow", "Hide": "#f2ede2", "Belly": "#f7f2e8", "Tufts": "#3b302a", "Marking": "#2b2522", "Muzzle": "#e7a59d", "Nose": "#6b3a36", "InnerEar": "#e7a59d", "Horn": "#ebe1c8", "Hoof": "#3a302a", "Width": 1.0, "Height": 1.0, "Horns": 1.0, "Glow": 0.0 },
+    { "Species": "Ape", "Hide": "#3b2f2a", "Belly": "#5a4840", "Tufts": "#2e2420", "Muzzle": "#a8836c", "Nose": "#4a3530", "InnerEar": "#a8836c", "Horn": "#3a2e28", "Hoof": "#5a463c", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Tiger", "Hide": "#e27c28", "Belly": "#f4ecdb", "Tufts": "#1f1a17", "Marking": "#1f1a17", "Muzzle": "#f4ecdb", "Nose": "#d98e88", "InnerEar": "#f4ecdb", "Horn": "#ece6d4", "Hoof": "#3b2f2a", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Lion", "Hide": "#c99f62", "Belly": "#ead8b2", "Tufts": "#7a4822", "Muzzle": "#efe1c4", "Nose": "#7a4b3a", "InnerEar": "#5a3a26", "Horn": "#ece6d4", "Hoof": "#3b2f2a", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Wolf", "Hide": "#787d85", "Belly": "#dadad5", "Tufts": "#565a62", "Muzzle": "#dadad5", "Nose": "#1f1f22", "InnerEar": "#c9a9a0", "Horn": "#ece6d4", "Hoof": "#2f2f33", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Bear", "Hide": "#6b4a2f", "Belly": "#7d5a3c", "Tufts": "#5a3d26", "Muzzle": "#b08a62", "Nose": "#1f1a17", "InnerEar": "#4a3322", "Horn": "#ece6d4", "Hoof": "#2f241c", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Horse", "Hide": "#8a4f2a", "Belly": "#f2ece0", "Tufts": "#2a1d16", "Muzzle": "#4f3d37", "Nose": "#1f1a17", "InnerEar": "#5a3a2a", "Horn": "#ece6d4", "Hoof": "#2f2824", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Tortoise", "Hide": "#7d8463", "Belly": "#cdb87d", "Tufts": "#5c6448", "Marking": "#5c6448", "Shell": "#6e5433", "Muzzle": "#7d8463", "Nose": "#2a2a24", "Horn": "#3d3a30", "Hoof": "#4a4a3c", "Width": 1.0, "Height": 1.0, "Horns": 0.0, "Glow": 0.0 },
+    { "Species": "Beast", "Body": "Beast", "Hide": "#2e2622", "Belly": "#4a3d33", "Tufts": "#b0361e", "Muzzle": "#4a3a32", "Nose": "#0f0d0c", "InnerEar": "#6a2a1e", "Horn": "#d8c8a8", "Hoof": "#1a1512", "Width": 3.2, "Height": 3.0, "Horns": 1.8, "Glow": 0.35 }
   ],
   // The magical anomaly's column of light (ADR-035).
   "AnomalyColor": "#b78cff"

@@ -22,6 +22,9 @@ public sealed class GreatEventPresenter
     private readonly DivineViewSettings _view;
     private Node3D? _beast;
     private Node3D? _beastBody;
+    private System.Threading.Tasks.Task<Pantheon.Client.Presentation.Creatures.AnimalMeshes>? _beastMeshes;
+    private Pantheon.Client.Presentation.Creatures.AnimalBody? _beastFrame;
+    private float _beastStride;
     private DeclutteredLabel? _beastLabel;
     private Node3D? _anomaly;
     private OmniLight3D? _anomalyLight;
@@ -46,6 +49,7 @@ public sealed class GreatEventPresenter
     {
         _parent.FreeChildren();
         (_beast, _beastBody, _beastLabel, _anomaly, _anomalyLight, _anomalyId) = (null, null, null, null, null, 0);
+        (_beastMeshes, _beastFrame) = (null, null);
         _terrain = terrain;
     }
 
@@ -64,6 +68,35 @@ public sealed class GreatEventPresenter
         SyncAnomaly(world);
     }
 
+    /// <summary>
+    /// The beast's body (ADR-061): a great horned bear, sitting asleep in its lair, walking with its
+    /// stride when it roams and standing when it stops, made once its meshes are ready.
+    /// </summary>
+    private void PoseBeast(BeastPhase phase, float moved, float delta)
+    {
+        if (_beastFrame is null && _beastMeshes is { IsCompletedSuccessfully: true } meshes)
+        {
+            _beastFrame = new Pantheon.Client.Presentation.Creatures.AnimalBody(_beastBody!, meshes.Result, new Color(0.7f, 0.2f, 0.1f), _view.LookFor("Beast").Glow);
+        }
+
+        if (_beastFrame is not { } body)
+        {
+            return;
+        }
+
+        var plan = body.Plan.Body;
+        var units = moved / Mathf.Max(0.01f, _beastBody!.Scale.Y);
+        _beastStride += units / Pantheon.Game.Presentation.Animals.AnimalMotion.Stride(plan, 0.3f);
+        body.Apply(phase switch
+        {
+            BeastPhase.Sleeping or BeastPhase.Slain => Pantheon.Game.Presentation.Animals.AnimalMotion.Sit(plan, _clock),
+            BeastPhase.Awake or BeastPhase.Returning => units / Mathf.Max(delta, 1e-4f) > 0.2f
+                ? Pantheon.Game.Presentation.Animals.AnimalMotion.Walk(plan, _beastStride, 0.3f)
+                : Pantheon.Game.Presentation.Animals.AnimalMotion.Stand(plan, _clock),
+        });
+        body.Express(new Pantheon.Game.Presentation.CreatureFace(phase == BeastPhase.Sleeping ? 0f : -0.4f, phase is BeastPhase.Awake or BeastPhase.Returning ? 0.8f : 0f, 0f, phase is BeastPhase.Sleeping or BeastPhase.Slain ? 1f : 0f, 0f));
+    }
+
     /// <summary>The beast: where it is, how it lies, and its label.</summary>
     private void SyncBeast(WorldState world, float delta)
     {
@@ -78,7 +111,9 @@ public sealed class GreatEventPresenter
             _parent.AddChild(_beast);
             _beastBody = new Node3D { Name = "Body" };
             _beast.AddChild(_beastBody);
-            _ = new CreatureBody(_beastBody, new Color(0.7f, 0.2f, 0.1f), _view.LookFor("Beast"));
+            var look = _view.LookFor("Beast");
+            _beastBody.Scale = new Vector3(look.Width, look.Height, look.Width);
+            _beastMeshes = Pantheon.Client.Presentation.Creatures.AnimalMeshes.For(look);
             _beastLabel = new DeclutteredLabel
             {
                 Priority = 1.5f, Name = "Label", Billboard = BaseMaterial3D.BillboardModeEnum.Enabled, FixedSize = true, PixelSize = 0.001f, FontSize = 24, OutlineSize = 8,
@@ -96,13 +131,15 @@ public sealed class GreatEventPresenter
             _heading = Mathf.LerpAngle(_heading, MathF.Atan2(dx, dz), 1f - Mathf.Exp(-3f * delta));
         }
 
+        var before = _shown;
         _shown = _shown.Lerp(target, 1f - Mathf.Exp(-FollowRate * delta));
         _beast.Position = _shown;
+        PoseBeast(beast.Phase, new Vector2(_shown.X - before.X, _shown.Z - before.Z).Length(), delta);
         var (sink, lean) = beast.Phase switch
         {
-            BeastPhase.Sleeping => (-4f, 0f),
+            BeastPhase.Sleeping => (0f, 0f),
             BeastPhase.Slain => (-1f, Mathf.Pi / 2f),
-            BeastPhase.Awake or BeastPhase.Returning => (MathF.Abs(MathF.Sin(_clock * 2f)) * 0.6f, 0f),
+            BeastPhase.Awake or BeastPhase.Returning => (0f, 0f),
         };
         _beastBody!.Position = new Vector3(0f, sink, 0f);
         _beastBody.Rotation = new Vector3(0f, _heading, lean);

@@ -121,6 +121,21 @@ public sealed class CameraControlTests
         Assert.Throws<ArgumentException>(() => new GodCameraModel(Settings with { LowestPitchDegrees = 80f, SteepestPitchDegrees = 70f }));
     }
 
+    [Fact]
+    public void AHillBetween_LiftsTheCamera_UntilItSeesTheFocusOverIt()
+    {
+        var camera = Snapped(100f);
+        var open = camera.ComputePose(FlatGround);
+
+        // A ridge halfway between the camera and the focus, higher than the line of sight.
+        Func<float, float, float> ridge = (_, z) => MathF.Abs(z - (open.Position.Z / 2f)) < 3f ? open.Position.Y : 0f;
+        var lifted = camera.ComputePose(ridge);
+
+        Assert.True(lifted.Position.Y > open.Position.Y, "the camera rises over the ridge");
+        var mid = (lifted.Position + lifted.Target) / 2f;
+        Assert.True(mid.Y >= open.Position.Y + Settings.MinClearance - 0.5f, "the line of sight clears the ridge");
+    }
+
     /// <summary>A camera at the origin, already at a distance.</summary>
     private static GodCameraModel Snapped(float distance)
     {

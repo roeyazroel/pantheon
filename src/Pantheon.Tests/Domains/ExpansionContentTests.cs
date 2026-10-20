@@ -23,7 +23,7 @@ public sealed class ExpansionContentTests
         Assert.Equal(System.Enum.GetValues<GodDomain>().Length, content.Domains.Domains.Count);
         Assert.All(content.Domains.Domains, d => Assert.Single(content.Miracles.Miracles, m => m.RequiresDomain && m.Domain == d.Domain));
         Assert.Equal(4, content.HolySites.Sites.Count);
-        Assert.Equal(["Mossback", "Stonehide", "Swiftclaw", "Lumen"], content.Creatures.Species.Select(s => s.Name));
+        Assert.Equal(["Cow", "Ape", "Tiger", "Lion", "Wolf", "Bear", "Horse", "Tortoise"], content.Creatures.Species.Select(s => s.Name));
         Assert.All(content.GodAi.Profiles!, p => Assert.Equal(3, p.Domains.Count));
         Assert.Equal(0.6f, content.DivineRules.Schism.Doubt);
     }
@@ -55,8 +55,8 @@ public sealed class ExpansionContentTests
     [InlineData(ContentJson.HolySitesFileName, "\"ClaimInfluence\": 0.35", "\"ClaimInfluence\": 1.35", "ClaimInfluence")]
     [InlineData(ContentJson.HolySitesFileName, "\"Kind\": \"HolySpring\"", "\"Kind\": \"SacredPeak\"", "listed twice")]
     [InlineData(ContentJson.DivineRulesFileName, "\"ReturnPerStep\": 0.02", "\"ReturnPerStep\": 2.0", "Schism.ReturnPerStep")]
-    [InlineData(ContentJson.CreaturesFileName, "\"Toughness\": 1.5", "\"Toughness\": 0.0", "Stonehide.Toughness")]
-    [InlineData(ContentJson.GodsFileName, "\"CreatureSpecies\": \"Lumen\"", "\"CreatureSpecies\": \"Griffin\"", "Griffin")]
+    [InlineData(ContentJson.CreaturesFileName, "\"Toughness\": 1.5", "\"Toughness\": 0.0", "Tortoise.Toughness")]
+    [InlineData(ContentJson.GodsFileName, "\"CreatureSpecies\": \"Bear\"", "\"CreatureSpecies\": \"Griffin\"", "Griffin")]
     [InlineData(ContentJson.DomainsFileName, "{ \"Domain\": \"Ocean\",", "{ \"Domain\": \"Fire\",", "listed twice")]
     [InlineData(ContentJson.DomainsFileName, "\"OceanMaxWaterRegions\": 8", "\"OceanMaxWaterRegions\": -1", "OceanMaxWaterRegions")]
     public void BrokenExpansionContent_IsRefused_WithTheReason(string file, string from, string to, string expected)
@@ -74,18 +74,25 @@ public sealed class ExpansionContentTests
     public void EachGodsCreature_IsOfItsSpecies_WithItsTemperament_AndThePlayerMayChooseAnother()
     {
         var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(42));
-        var chosen = GameSession.CreateNew(TestContent.Small, new WorldSeed(42), species: "Swiftclaw");
+        var chosen = GameSession.CreateNew(TestContent.Small, new WorldSeed(42), species: "Tiger");
         var rules = TestContent.Shipped.Creatures;
 
         Assert.All(session.World.Creatures, c => Assert.Equal(TestContent.Shipped.Pantheon.Gods[c.GodId - 1].CreatureSpecies, c.Species));
-        Assert.Equal("Swiftclaw", chosen.LocalCreature!.Species);
+        Assert.Equal(session.World.Creatures.Count, session.World.Creatures.Select(c => c.Species).Distinct().Count());
+        Assert.Equal("Tiger", chosen.LocalCreature!.Species);
         Assert.Equal(session.World.Creatures.Skip(1).Select(c => c.Species), chosen.World.Creatures.Skip(1).Select(c => c.Species));
         var plain = session.LocalCreature!;
         var swift = chosen.LocalCreature!;
-        Assert.Equal(Math.Clamp(plain.Personality.Aggression + 0.15f, 0f, 1f), swift.Personality.Aggression, 4);
+        Assert.True(swift.Personality.Aggression >= plain.Personality.Aggression, "a tiger is quicker to anger than a cow");
         Assert.Equal(plain.Personality.Laziness, swift.Personality.Laziness);
         Assert.Equal(CreatureModel.Speed(rules, plain) * 1.4f, CreatureModel.Speed(rules, swift), 3);
-        Assert.Equal(CreatureModel.Strength(rules, plain) * 1.1f, CreatureModel.Strength(rules, swift), 3);
+        Assert.Equal(CreatureModel.Strength(rules, plain) * 1.15f, CreatureModel.Strength(rules, swift), 3);
+
+        // Choosing a rival's animal gives that rival the player's: every god keeps one of its own.
+        var lion = GameSession.CreateNew(TestContent.Small, new WorldSeed(42), species: "Lion");
+        Assert.Equal("Lion", lion.LocalCreature!.Species);
+        Assert.Equal(session.World.Creatures.Count, lion.World.Creatures.Select(c => c.Species).Distinct().Count());
+        Assert.Contains(lion.World.Creatures, c => c.GodId != lion.LocalGodId && c.Species == "Cow");
     }
 
     [Fact]
@@ -101,17 +108,17 @@ public sealed class ExpansionContentTests
             Preferences = [], Memories = [], HomeSettlementId = creature.HomeSettlementId, CombatSkill = 0f, Scars = 0, Relations = [],
         };
 
-        Assert.Equal("Mossback", CreatureModel.SpeciesOf(rules, stranger).Name);
+        Assert.Equal("Cow", CreatureModel.SpeciesOf(rules, stranger).Name);
         Assert.Equal(plain, CreatureModel.Speed(rules, stranger));
     }
 
     [Fact]
     public void LaunchOptions_ReadTheSpeciesRankDomainsAndPanels()
     {
-        var options = LaunchOptions.Parse(["--species=Lumen", "--rank=God", "--domains=Storm, war", "--domains-panel=on", "--settings-page=on", "--focus=site2"]);
+        var options = LaunchOptions.Parse(["--species=Ape", "--rank=God", "--domains=Storm, war", "--domains-panel=on", "--settings-page=on", "--focus=site2"]);
         var broken = LaunchOptions.Parse(["--rank=7", "--domains=Storm,Sky", "--species="]);
 
-        Assert.Equal("Lumen", options.Species);
+        Assert.Equal("Ape", options.Species);
         Assert.Equal(DivineRank.God, options.Rank);
         Assert.Equal([GodDomain.Storm, GodDomain.War], options.Domains);
         Assert.True(options.DomainsPanel);

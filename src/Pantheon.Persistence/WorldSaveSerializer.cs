@@ -44,7 +44,7 @@ public static class WorldSaveSerializer
     /// (part 24) added the land's reshapings by Divine Acts; version 33 (part 27) added the structural
     /// integrity of every settlement's houses.
     /// </summary>
-    public const int CurrentSaveVersion = 33;
+    public const int CurrentSaveVersion = 34;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

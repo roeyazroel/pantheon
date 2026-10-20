@@ -198,13 +198,24 @@ internal sealed class DivineController
     /// <summary>Where the player's Creature hangs from the hand, while the hand holds it.</summary>
     /// <param name="cursor">Ground point under the cursor.</param>
     /// <returns>The point, or <c>null</c> when the hand does not hold it.</returns>
-    public Vector3? HeldCreatureAt(NVector3? cursor) =>
-        _session.LocalGod?.Held?.Kind == Pantheon.Domain.Hand.HeldKind.Creature && cursor is { } point
-            ? point.ToGodot() + new Vector3(_hand.Swing.X * CreatureSwing, 12f, _hand.Swing.Y * CreatureSwing)
-            : null;
+    public Vector3? HeldCreatureAt(NVector3? cursor)
+    {
+        // A held Creature hangs by its scruff from the hand's grip (ADR-061), so the hand rises high
+        // enough that its feet clear the ground; it swings as the hand moves (ADR-057).
+        if (_session.LocalGod?.Held?.Kind != Pantheon.Domain.Hand.HeldKind.Creature || cursor is null || _session.LocalCreature is not { } creature)
+        {
+            _hand.HoldLift = 0f;
+            return null;
+        }
+
+        var height = _creatures.Find(creature.Id)?.HeadHeight ?? 12f;
+        _hand.HoldLift = height + 3f;
+        return _hand.Grip + new Vector3(_hand.Swing.X * height * CreatureSwing, 0f, _hand.Swing.Y * height * CreatureSwing);
+    }
 
     // How far, in metres, a held Creature swings out at the hand's fullest swing (ADR-057).
-    private const float CreatureSwing = 6f;
+    // How far a held Creature's feet swing out, as a share of its height for a full swing of the hand.
+    private const float CreatureSwing = 0.5f;
 
     /// <summary>Shows the next map overlay, or hides it after the last one.</summary>
     public void CycleOverlay()

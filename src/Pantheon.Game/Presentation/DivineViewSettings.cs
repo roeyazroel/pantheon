@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Persistence;
 
 namespace Pantheon.Game.Presentation;
@@ -56,6 +57,11 @@ public sealed record DivineViewSettings
             if (string.IsNullOrWhiteSpace(look.Species) || !(look.Width > 0f) || !(look.Height > 0f) || !(look.Horns >= 0f) || !(look.Glow is >= 0f and <= 1f))
             {
                 throw new ContentFormatException($"{FileName}: the look of '{look.Species}' needs a species, a positive width and height, horns not below 0 and a glow from 0 to 1.");
+            }
+
+            if (!Animals.AnimalPlans.Names.Contains(look.BodyName))
+            {
+                throw new ContentFormatException($"{FileName}: the look of '{look.Species}' has the body '{look.BodyName}', which is not one of {string.Join(", ", Animals.AnimalPlans.Names)}.");
             }
         }
 
@@ -119,10 +125,10 @@ public sealed record MiracleEffectView
 /// <summary>The look of a Creature species (ADR-021): its colours and proportions.</summary>
 public sealed record CreatureLook
 {
-    /// <summary>The look of a Mossback, for content without looks.</summary>
+    /// <summary>The look of a Cow, for content without looks.</summary>
     public static readonly CreatureLook Default = new()
     {
-        Species = "Mossback",
+        Species = "Cow",
         Hide = new RgbColor(0.42f, 0.36f, 0.27f),
         Belly = new RgbColor(0.78f, 0.69f, 0.52f),
         Tufts = new RgbColor(0.3f, 0.5f, 0.22f),
@@ -155,4 +161,31 @@ public sealed record CreatureLook
 
     /// <summary>How much its hide glows (0..1).</summary>
     public required float Glow { get; init; }
+
+    /// <summary>The body it is drawn with (ADR-061), one of the animals' or the Beast's; its species' name when not given.</summary>
+    public string? Body { get; init; }
+
+    /// <summary>The body it is drawn with: <see cref="Body"/>, or its species' name.</summary>
+    public string BodyName => Body ?? Species;
+
+    /// <summary>Colour of its muzzle or face, if not its belly's.</summary>
+    public RgbColor? Muzzle { get; init; }
+
+    /// <summary>Colour of its nose, if not its hide's.</summary>
+    public RgbColor? Nose { get; init; }
+
+    /// <summary>Colour inside its ears, if not its belly's.</summary>
+    public RgbColor? InnerEar { get; init; }
+
+    /// <summary>Colour of its horns, beak and claws, if not its belly's.</summary>
+    public RgbColor? Horn { get; init; }
+
+    /// <summary>Colour of its hooves and soles, if not its hide's.</summary>
+    public RgbColor? Hoof { get; init; }
+
+    /// <summary>Colour of a tortoise's shell.</summary>
+    public RgbColor? Shell { get; init; }
+
+    /// <summary>Colour of its stripes or patches, if not its tufts'.</summary>
+    public RgbColor? Marking { get; init; }
 }

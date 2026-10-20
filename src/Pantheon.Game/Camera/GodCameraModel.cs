@@ -17,6 +17,9 @@ public sealed class GodCameraModel
     // The world extent the settings' maximum distance was chosen for, in metres.
     private const float ReferenceExtent = 2048f;
 
+    // Points between the camera and its focus where the land is checked against the line of sight.
+    private const int SightSamples = 10;
+
     // How far to one side of straight ahead the camera looks at a face from, in radians: a three-quarter view.
     private const float ThreeQuarter = 0.55f;
 
@@ -334,6 +337,22 @@ public sealed class GodCameraModel
         if (position.Y < minimumHeight)
         {
             position.Y = minimumHeight;
+        }
+
+        // The camera rises until its line of sight to the focus clears the land between them, so a
+        // hill or a cliff never fills the view of what it looks at. A focus not yet settled on its
+        // ground (still easing to a new height) is left alone.
+        var settled = groundHeight(target.X, target.Z) <= target.Y + _settings.MinClearance;
+        for (var i = 2; settled && i < SightSamples; i++)
+        {
+            var t = i / (float)SightSamples;
+            var x = target.X + ((position.X - target.X) * t);
+            var z = target.Z + ((position.Z - target.Z) * t);
+            var needed = target.Y + ((groundHeight(x, z) + _settings.MinClearance - target.Y) / t);
+            if (position.Y < needed)
+            {
+                position.Y = needed;
+            }
         }
 
         return new CameraPose(position, target);

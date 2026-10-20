@@ -17,7 +17,7 @@ namespace Pantheon.Simulation.Creatures;
 /// </summary>
 public sealed class CreatureMeetings
 {
-    // Metres between two Creatures that fight or play: room for two grown Mossbacks.
+    // Metres between two Creatures that fight or play: room for two grown Creatures.
     private const float FightGap = 16f;
 
     private readonly CreatureRules _rules;
