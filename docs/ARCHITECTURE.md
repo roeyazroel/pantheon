@@ -633,7 +633,9 @@ keep it in 0..1. A missing,
   `PresentationHash` (SplitMix64) gives presentation variation without consuming a simulation
   random stream. `PresentationContent` bundles the biome palette and the settlement view
   settings.
-- `Hud/HudReadout` builds the player HUD model (spec §57): god and rank, Divine Power and income,
+- `Hud/HudReadout` builds the player HUD model (spec §57), with the numbers behind its gauges
+  (ADR-059: power, followers, the next rank, belief shares, calendar, pause, speed, `RivalChip`s,
+  and the Creature's needs, loyalty and morality): god and rank, Divine Power and income,
   followers and the next rank, the miracle bar (hotkey, cost, cooldown, locked, affordable), the
   target hint and the Creature card (level, activity, needs, loyalty, morality, combat skill,
   scars, its bonds with the Creatures it has met, what feedback would judge), the rival gods with their status towards the player, the race for victory (a bloc's
@@ -811,8 +813,19 @@ keep it in 0..1. A missing,
 - `UI/DebugOverlay`: FPS, tick, seed, terrain backend, camera band, region under cursor,
   settlement readouts, boundary toggle and status messages, plus the F3 region debug map. Hidden
   at the start; F1 shows it.
-- `UI/Hud`: the player HUD, built in code: the top bar, the miracle bar with the target hint and
-  the clickable alerts. It shows `HudModel`s and reports clicks.
+- `UI/UiTheme` writes the interface's look into the engine's default theme before any interface
+  is built (ADR-059): Alegreya Sans for text and Cinzel for titles (`game/Fonts/`, OFL), one
+  palette, and slate panels with a gilded edge for panels, buttons, fields, sliders, popups and
+  tooltips. The display stretches 2D content from a 1600 × 900 design size (`canvas_items`,
+  `expand`); `SettingsApplier.FitWindow` opens a windowed game at nine tenths of its screen, and the
+  interface size setting scales the window's content further.
+- `UI/Hud`: the player HUD, built in code from `UI/HudParts/` (ADR-059): `GodPlaque` (name, rank,
+  power, followers and a `Meter` to the next rank, and a chip per rival), the race for victory with
+  its meter, `TimeControls` (season, pause and speeds), `AlertList`, `StatusToast`, the miracle bar
+  of `MiracleTile`s (a vector glyph from `MiracleGlyphs` by the miracle's look, its key, cost,
+  cooldown sweep and lock) and `CreaturePanel` (meters for health, needs, loyalty and nature, the
+  command buttons, and its paths, attributes and bonds when opened). It shows `HudModel`s and
+  reports clicks.
 - `Presentation/Weather/`: `WeatherPresenter` keeps one `CloudView` per weather cell (soft
   camera-facing puffs that fade near the camera, rain streaks seen nearby, falling white and slow
   when it snows) and plays lightning bolts; it dims the sun under storms over the camera's focus,

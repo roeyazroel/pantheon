@@ -385,8 +385,8 @@ covers:
 | Next region debug map layer, then off | F3 |
 | New world from a random seed (small, won by Divine Ascendancy, with four seasons) | F2 |
 | Quicksave / quickload | F5 / F9 |
-| Pause / resume the simulation | Space |
-| Simulation speed slower / faster (×1, ×4, ×16) | `[` / `]` |
+| Pause / resume the simulation | Space, or the pause button at the top right |
+| Simulation speed slower / faster (×1, ×4, ×16) | `[` / `]`, or the speed buttons at the top right |
 | Pause and step the simulation by one tick | `.` |
 | Pause and run to the next settlement step | `,` |
 | Grant your god 500 Divine Power (debug) | F4 |
@@ -520,9 +520,13 @@ They change nothing the world counts. The numbers are in `settlement_rules.json`
 
 ## Being a god
 
-The bar at the top shows your god and rank, your Divine Power with its income per second, your
-followers and the next rank. The miracle bar at the bottom shows each miracle's key and cost (or
-its cooldown); hover over a button to read what it does.
+The plaque at the top left shows your god and rank, your Divine Power with its income per second,
+and your followers with a meter to the next rank; under it, a chip for each rival god says how it
+stands with you (hover over it for its following). The top centre shows the race for victory with
+a meter, and the top right the season and the pause and speed buttons, with the alerts below them.
+The miracle bar at the bottom shows each miracle as a picture with its key and cost: a sweep while
+it cools down, a padlock while your rank is too low, and a red cost when you cannot afford it;
+hover over one to read what it does. Your Creature's card is at the bottom left (ADR-059).
 
 - **Followers and power.** In every settlement, a share of the people follow you. Followers
   spend part of their working time at the shrine instead of in the fields, and their worship
@@ -615,8 +619,8 @@ its own: Vael the Tyrant (Gristle), Seren the Guardian (Thistle) and Kaio the Tr
 A large world adds Aurel the Zealot (Ember) and Maren the Nature Keeper (Fern), and a huge one
 Thorn the Warlord (Brute) and Ysolde the Isolationist (Wisp) as well (see
 [World sizes](#world-sizes)).
-The line under your HUD shows each rival's followers, its share of all belief and where you stand
-with it. The line below that shows the race: who holds most of the world's belief and how long
+A chip for each rival under your plaque shows where you stand with it, and hovering over it shows
+its followers and share of all belief. The race at the top centre shows who holds most of the world's belief and how long
 until they win. Hold 60% of all followers for ten minutes and you win; let a rival do it and it
 wins. Allies count together (see [Diplomacy](#diplomacy)). The world goes on either way. A world
 may also be made to be won by conquest or culture, or by nobody (see [Winning](#winning)).
@@ -1317,7 +1321,8 @@ the particles (rain, fire, smoke and the miracles' looks), the simulation budget
 of everything, the music, the effects and the wind and rain (spec §105, ADR-056). Citizens,
 vegetation and terrain quality take effect when the game next starts. Three settings shape the
 camera (ADR-058): panning at the window's edge (off unless you turn it on), whether a trackpad's
-two-finger scroll zooms instead of panning, and the camera's speed.
+two-finger scroll zooms instead of panning, and the camera's speed. The interface size (0.75–1.5)
+scales every panel on top of the window's own stretch (ADR-059).
 
 The simulation keeps to its budget, 6 ms a frame unless you choose another (2–16 ms). When a big
 world at ×16 needs more, the ticks still due wait for the next frame, so the game runs a little
@@ -1650,6 +1655,7 @@ game/                 Godot project: scenes, client scripts (Pantheon.Client), d
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
                       history.json, domains.json, holy_sites.json, world_sizes.json, ecology.json,
                       society.json, water.json, settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
+  Fonts/              Cinzel and Alegreya Sans, with their SIL Open Font Licences (ADR-059)
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
   Pantheon.Domain/        World, region, settlement, god, belief, Creature, diplomacy, weather and disaster
@@ -1673,7 +1679,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-36-hand-camera-bridges.md](.docs/milestone-15-part-36-hand-camera-bridges.md).
+[.docs/milestone-15-part-38-interface.md](.docs/milestone-15-part-38-interface.md).
 
 ## Contributing
 

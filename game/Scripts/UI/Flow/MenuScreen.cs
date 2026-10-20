@@ -181,6 +181,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         Slide("Wind and rain", Settings.AmbienceVolume, 0f, value => Settings with { AmbienceVolume = value });
         Toggle("Pan at the window's edge", Settings.EdgeScroll, on => Settings with { EdgeScroll = on });
         Toggle("Trackpad scrolling zooms", Settings.TrackpadScrollZooms, on => Settings with { TrackpadScrollZooms = on });
+        Slide("Interface size", Settings.InterfaceScale, Pantheon.Game.Settings.GameSettings.MinInterfaceScale, value => Settings with { InterfaceScale = value }, Pantheon.Game.Settings.GameSettings.MaxInterfaceScale);
         Slide("Camera speed", Settings.CameraSpeed, Pantheon.Game.Settings.GameSettings.MinCameraSpeed, value => Settings with { CameraSpeed = value }, Pantheon.Game.Settings.GameSettings.MaxCameraSpeed);
         _column.AddChild(UiKit.Button("Back", back));
     }

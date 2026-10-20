@@ -3,23 +3,23 @@ using Godot;
 
 namespace Pantheon.Client.UI.Flow;
 
-/// <summary>The look shared by the menus and the game-flow panels: dark panels with a gold edge, as the HUD's.</summary>
+/// <summary>The look shared by the menus and the game-flow panels: dark panels with a gold edge, in <see cref="UiTheme"/>'s palette.</summary>
 internal static class UiKit
 {
     /// <summary>Body text.</summary>
-    public static readonly Color Ink = new(0.95f, 0.93f, 0.86f);
+    public static readonly Color Ink = UiTheme.Ink;
 
     /// <summary>Titles.</summary>
-    public static readonly Color Gold = new(1f, 0.84f, 0.38f);
+    public static readonly Color Gold = UiTheme.Gold;
 
     /// <summary>Secondary text.</summary>
-    public static readonly Color Muted = new(0.68f, 0.68f, 0.65f);
+    public static readonly Color Muted = UiTheme.Muted;
 
     /// <summary>Good news.</summary>
-    public static readonly Color Good = new(0.6f, 0.95f, 0.6f);
+    public static readonly Color Good = UiTheme.Good;
 
     /// <summary>Bad news.</summary>
-    public static readonly Color Bad = new(1f, 0.55f, 0.45f);
+    public static readonly Color Bad = UiTheme.Bad;
 
     /// <summary>A centred panel with a column inside, added to a layer.</summary>
     /// <param name="layer">The layer.</param>

@@ -66,6 +66,7 @@ public partial class GameRoot : Node3D
     private IReadOnlyList<(StringName Action, Action Run)> _hotkeys = [];
     private string? _status;
     private DebugView _debug = null!;
+    private Hud? _hud;
 
     /// <summary>Absolute path of the quicksave file.</summary>
     private static string GlobalQuickSavePath => ProjectSettings.GlobalizePath(QuickSavePath);
@@ -73,6 +74,7 @@ public partial class GameRoot : Node3D
     /// <summary>Builds the session and the world visuals. Quits with exit code 1 when the content is broken.</summary>
     public override void _Ready()
     {
+        UiTheme.Apply();
         var arguments = PendingLaunch.Take();
         var options = LaunchOptions.Parse(arguments);
         Startup.ReportLaunchWarnings(options);
@@ -107,8 +109,19 @@ public partial class GameRoot : Node3D
         _network.Host(_session, options);
         _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette, () => _disasters.Fires, presentation.SettlementView.Streaming, presentation.SettlementView.GroundCover.Radius);
         _nature = new NatureDebug(_session, _camera, SetStatus);
-        var hud = new Hud { Name = "Hud" };
+        var view = presentation.DivineView;
+        var hud = new Hud
+        {
+            Name = "Hud",
+            MiracleLook = id => (MiracleGlyphs.For(id, view.EffectFor(id).Style), view.EffectFor(id).Color.ToGodot()),
+            CooldownOf = id => (content.Miracles.Find(id)?.CooldownTicks ?? 0) / SimulationScheduler.DefaultTicksPerSecond,
+            GodColor = id => view.GodColor(id).ToGodot(),
+            LocalGod = () => _session.LocalGodId,
+        };
         AddChild(hud);
+        _hud = hud;
+        hud.PauseClicked += () => SetStatus(SessionCommands.TogglePause(_session));
+        hud.SpeedClicked += preset => SetStatus(SessionCommands.SetSpeedPreset(_session, preset));
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
         hud.CreatureLookClicked += FocusCreature;
         _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
@@ -441,6 +454,7 @@ public partial class GameRoot : Node3D
     private void SetStatus(string message)
     {
         _status = message;
+        _hud?.ShowStatus(message);
         GD.Print(message);
     }
 

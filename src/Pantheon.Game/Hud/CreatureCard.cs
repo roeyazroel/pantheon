@@ -35,4 +35,31 @@ public sealed record CreatureCard
 
     /// <summary>Whether the Creature is banished.</summary>
     public required bool Banished { get; init; }
+
+    /// <summary>Its name, for the card's title (ADR-059).</summary>
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>Its species.</summary>
+    public string Species { get; init; } = string.Empty;
+
+    /// <summary>Its level.</summary>
+    public int Level { get; init; }
+
+    /// <summary>Its health (0..1).</summary>
+    public float Health { get; init; }
+
+    /// <summary>Its hunger (0..1).</summary>
+    public float Hunger { get; init; }
+
+    /// <summary>Its tiredness (0..1).</summary>
+    public float Fatigue { get; init; }
+
+    /// <summary>Its boredom (0..1).</summary>
+    public float Boredom { get; init; }
+
+    /// <summary>Its loyalty to its god (0..1).</summary>
+    public float Loyalty { get; init; }
+
+    /// <summary>What its deeds add up to, from cruel (-1) to kind (1).</summary>
+    public float Morality { get; init; }
 }

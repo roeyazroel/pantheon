@@ -108,7 +108,62 @@ public static class HudReadout
             WeatherWarning = warning,
             Domains = DescribeDomains(session, god),
             DomainToChoose = DomainModel.FreeSlots(content.Domains, god) > 0,
+            GodName = god.Name,
+            RankName = DivineText.Rank(god.Rank),
+            Power = god.DivinePower,
+            Income = (float)income,
+            Followers = followers,
+            NextRankName = next is null ? null : DivineText.Rank(next.Rank),
+            NextRankFollowers = next?.Followers ?? 0,
+            BeliefShare = VictorySystem.StandingOf(content.DivineRules, world, god.Id).Share,
+            WinningShare = world.Victory.Ascendancy ? content.DivineRules.VictoryShare : 0f,
+            Calendar = ClimateModel.SeasonOf(content.Weather, world) is { } season
+                ? Format("{0}, year {1}", SeasonText.Name(season), ClimateModel.YearOf(content.Weather, world))
+                : null,
+            Paused = session.Scheduler.IsPaused,
+            SpeedPreset = SpeedPreset(session.Scheduler.TimeScale),
+            RivalChips = BuildRivalChips(content.Diplomacy, world, god.Id, session.Players),
         };
+    }
+
+    /// <summary>The speed preset nearest a time scale.</summary>
+    private static int SpeedPreset(double timeScale)
+    {
+        var nearest = 0;
+        for (var i = 1; i < SessionCommands.SpeedPresets.Count; i++)
+        {
+            if (Math.Abs(SessionCommands.SpeedPresets[i] - timeScale) < Math.Abs(SessionCommands.SpeedPresets[nearest] - timeScale))
+            {
+                nearest = i;
+            }
+        }
+
+        return nearest;
+    }
+
+    /// <summary>One chip per other god: who plays it, its following as far as the player knows, and how they stand.</summary>
+    private static IReadOnlyList<RivalChip> BuildRivalChips(Domain.Diplomacy.DiplomacyRules diplomacy, WorldState world, int localGodId, IReadOnlyDictionary<int, string> players)
+    {
+        var chips = new List<RivalChip>();
+        foreach (var rival in world.Gods)
+        {
+            if (rival.Id == localGodId)
+            {
+                continue;
+            }
+
+            var who = players.TryGetValue(rival.Id, out var player) && rival.Controller != GodController.Ai ? player : DivineText.Personality(rival.Personality);
+            var intel = Simulation.Conflict.IntelModel.Level(diplomacy.Conflict, world, localGodId, rival.Id);
+            var following = Conflict.ConflictText.Following(intel, GodStanding.CountFollowers(world, rival.Id), VictorySystem.ShareOf(world, rival.Id));
+            var met = Simulation.Diplomacy.Acquaintance.Knows(diplomacy.Acquaintance, world, localGodId, rival.Id);
+            chips.Add(new RivalChip(
+                rival.Id,
+                rival.Name,
+                who.Length > 0 ? Format("{0}, {1}", who, following) : following,
+                met ? Simulation.Diplomacy.DiplomacyModel.StatusOf(world, localGodId, rival.Id) : null));
+        }
+
+        return chips;
     }
 
     /// <summary>The god's domains, an invitation to choose one when a slot is free, and the holy sites it keeps (ADR-021).</summary>
@@ -392,6 +447,15 @@ public static class HudReadout
                 : "Nothing to reward or punish right now",
             CanJudge = judged is not null,
             Banished = creature.Activity.Phase == CreaturePhase.Banished,
+            Name = creature.Name,
+            Species = creature.Species.ToString(),
+            Level = creature.Level,
+            Health = creature.Health,
+            Hunger = needs.Hunger,
+            Fatigue = needs.Fatigue,
+            Boredom = needs.Boredom,
+            Loyalty = creature.Loyalty,
+            Morality = creature.Morality,
         };
     }
 

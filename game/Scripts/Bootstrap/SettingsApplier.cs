@@ -32,6 +32,16 @@ internal static class SettingsApplier
             DisplayServer.WindowSetMode(mode);
         }
 
+        if (startup && !settings.Fullscreen && DisplayServer.GetName() != "headless")
+        {
+            FitWindow();
+        }
+
+        if (viewport is Window window && !Mathf.IsEqualApprox(window.ContentScaleFactor, settings.InterfaceScale))
+        {
+            window.ContentScaleFactor = settings.InterfaceScale;
+        }
+
         if (!startup || !settings.VSync)
         {
             DisplayServer.WindowSetVsyncMode(settings.VSync ? DisplayServer.VSyncMode.Enabled : DisplayServer.VSyncMode.Disabled);
@@ -64,5 +74,27 @@ internal static class SettingsApplier
         viewport.Scaling3DMode = settings.RenderScale < 1f ? Viewport.Scaling3DModeEnum.Fsr : Viewport.Scaling3DModeEnum.Bilinear;
         viewport.Scaling3DScale = settings.RenderScale;
         AudioPresenter.ApplyVolumes(settings);
+    }
+
+    /// <summary>
+    /// Opens the window at nine tenths of the screen it is on, at 16:9 and centred (ADR-059). The
+    /// project's 1600 by 900 is in physical pixels, a quarter of a Retina screen; the interface
+    /// stretches with the window.
+    /// </summary>
+    private static void FitWindow()
+    {
+        var screen = DisplayServer.WindowGetCurrentScreen();
+        var usable = DisplayServer.ScreenGetUsableRect(screen);
+        var width = (int)(usable.Size.X * 0.9f);
+        var height = width * 9 / 16;
+        if (height > usable.Size.Y * 0.9f)
+        {
+            height = (int)(usable.Size.Y * 0.9f);
+            width = height * 16 / 9;
+        }
+
+        var size = new Vector2I(width, height);
+        DisplayServer.WindowSetSize(size);
+        DisplayServer.WindowSetPosition(usable.Position + ((usable.Size - size) / 2));
     }
 }

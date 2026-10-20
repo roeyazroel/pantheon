@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using Godot;
 using Pantheon.Domain.Creatures;
 using Pantheon.Domain.World;
@@ -11,53 +9,37 @@ using Pantheon.Game.Hud;
 namespace Pantheon.Client.UI;
 
 /// <summary>
-/// The player HUD (spec §57): Divine Power, income, followers and rank at the top, the miracle
-/// bar and the target hint at the bottom, and the alerts on the right (spec §59). It shows what
+/// The player HUD (spec §57, ADR-059). At the top left the god's plaque and its rivals; at the top
+/// centre the race for victory, the weather and the domains; at the top right the season, the
+/// speed and the alerts (spec §59); at the bottom the miracle bar under the target hint and a
+/// status toast, and the Creature's card at the bottom left. It shows what
 /// <see cref="HudReadout"/> builds and reports clicks; it holds no game state.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
-    private const int Margin = 12;
-    private const int AlertWidth = 380;
+    private const int Margin = 14;
 
-    private static readonly Color Ink = new(0.95f, 0.93f, 0.86f);
-    private static readonly Color Gold = new(1f, 0.84f, 0.38f);
-    private static readonly Color Valid = new(0.6f, 0.95f, 0.6f);
-    private static readonly Color Invalid = new(1f, 0.55f, 0.45f);
-    private static readonly Color Muted = new(0.62f, 0.62f, 0.6f);
-    private static readonly Color Warning = new(1f, 0.78f, 0.45f);
+    // The miracle bar keeps clear of the Creature's card on its left.
+    private const float BarLeft = 372f;
 
-    private readonly List<Button> _slots = [];
-    private readonly List<string> _slotIds = [];
-    private readonly Dictionary<Alert, Button> _alertButtons = [];
-    private Label _god = null!;
-    private Label _power = null!;
-    private Label _income = null!;
-    private Label _followers = null!;
-    private Label _hint = null!;
-    private Label _overlayLegend = null!;
-    private Label _domains = null!;
-    private Label _rivals = null!;
+    private readonly List<MiracleTile> _tiles = [];
+    private readonly List<string> _tileIds = [];
+    private GodPlaque _plaque = null!;
+    private TimeControls _time = null!;
+    private AlertList _alerts = null!;
+    private CreaturePanel _creature = null!;
+    private StatusToast _status = null!;
+    private PanelContainer _contestPanel = null!;
     private Label _contest = null!;
+    private Meter _contestMeter = null!;
     private Label _weather = null!;
+    private Label _domains = null!;
+    private Label _overlayLegend = null!;
+    private PanelContainer _hintPanel = null!;
+    private Label _hint = null!;
     private HBoxContainer _bar = null!;
-    private VBoxContainer _alerts = null!;
-    private StyleBoxFlat _slotStyle = null!;
-    private PanelContainer _creaturePanel = null!;
-    private Label _creatureTitle = null!;
-    private Label _creatureDoing = null!;
-    private Label _creatureCondition = null!;
-    private Label _creatureTemperament = null!;
-    private Label _creatureCharacter = null!;
-    private Label _creaturePaths = null!;
-    private Label _creatureAttributes = null!;
-    private Label _creatureBonds = null!;
-    private Label _creatureJudge = null!;
-    private Button _reward = null!;
-    private Button _punish = null!;
-    private StyleBoxFlat _selectedStyle = null!;
 
-    /// <summary>The player clicked a miracle button; the id is the miracle, or <c>null</c> to deselect it.</summary>
+    /// <summary>The player clicked a miracle; the id is the miracle, or <c>null</c> to put it down.</summary>
     public event Action<string?>? MiracleClicked;
 
     /// <summary>The player clicked an alert that has a place.</summary>
@@ -66,22 +48,45 @@ public partial class Hud : CanvasLayer
     /// <summary>The player clicked Reward or Punish on the Creature card.</summary>
     public event Action<CreatureCommandKind>? CreatureJudged;
 
-    /// <summary>The player clicked Look on the Creature card.</summary>
+    /// <summary>The player clicked Follow on the Creature card.</summary>
     public event Action? CreatureLookClicked;
 
     /// <summary>The player clicked Send on the Creature card: the next click on the ground sends it there.</summary>
     public event Action? CreatureSendClicked;
 
+    /// <summary>The player clicked pause.</summary>
+    public event Action? PauseClicked;
+
+    /// <summary>The player clicked a speed: its index among <see cref="Pantheon.Game.SessionCommands.SpeedPresets"/>.</summary>
+    public event Action<int>? SpeedClicked;
+
+    /// <summary>A miracle's glyph and colour (set before the HUD enters the tree).</summary>
+    internal Func<string, (MiracleGlyph Glyph, Color Tint)> MiracleLook { get; set; } = static _ => (MiracleGlyph.Sparkle, UiTheme.Gold);
+
+    /// <summary>A miracle's whole cooldown in seconds, for the tiles' sweep.</summary>
+    internal Func<string, double> CooldownOf { get; set; } = static _ => 0;
+
+    /// <summary>A god's colour by its id.</summary>
+    internal Func<int, Color> GodColor { get; set; } = static _ => UiTheme.Gold;
+
+    /// <summary>The player's god, for its colour on the plaque.</summary>
+    internal Func<int?> LocalGod { get; set; } = static () => null;
+
     /// <summary>Builds the HUD's controls.</summary>
     public override void _Ready()
     {
         Layer = 2;
-        _slotStyle = Panel(new Color(0.06f, 0.08f, 0.1f, 0.82f), new Color(0.35f, 0.32f, 0.25f), 1);
-        _selectedStyle = Panel(new Color(0.2f, 0.16f, 0.05f, 0.92f), Gold, 2);
-        BuildTopBar();
-        BuildMiracleBar();
-        BuildAlerts();
-        BuildCreatureCard();
+        _plaque = new GodPlaque(GodColor);
+        Place(_plaque, Control.LayoutPreset.TopLeft);
+        BuildTopCentre();
+        BuildTopRight();
+        BuildBottom();
+        _creature = new CreaturePanel { Visible = false };
+        Place(_creature, Control.LayoutPreset.BottomLeft);
+        _creature.GrowVertical = Control.GrowDirection.Begin;
+        _creature.Judged += kind => CreatureJudged?.Invoke(kind);
+        _creature.LookClicked += () => CreatureLookClicked?.Invoke();
+        _creature.SendClicked += () => CreatureSendClicked?.Invoke();
     }
 
     /// <summary>Shows a new HUD model; controls change only where the text or state changed.</summary>
@@ -89,327 +94,164 @@ public partial class Hud : CanvasLayer
     public void ShowModel(HudModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        SetText(_god, model.GodLine);
-        SetText(_power, model.PowerText);
-        SetText(_income, model.IncomeText);
-        SetText(_followers, model.FollowersText);
-        SetText(_hint, model.TargetHint ?? string.Empty);
-        _hint.Modulate = model.TargetValid ? Valid : Invalid;
+        _plaque.Visible = model.HasGod;
+        if (model.HasGod)
+        {
+            _plaque.ShowModel(model, LocalGod());
+        }
+
+        _time.ShowModel(model);
+        Set(_hint, model.TargetHint ?? string.Empty);
+        _hintPanel.Visible = model.TargetHint is not null;
+        _hint.Modulate = model.TargetValid ? UiTheme.Good : UiTheme.Bad;
         ShowSlots(model.Miracles);
-        ShowCreature(model.Creature);
-        SetText(_rivals, string.Join("   ", model.Rivals.Select(r => r.Replace(' ', '\u00A0'))));
-        _rivals.Visible = model.Rivals.Count > 0;
-        SetText(_contest, model.Contest ?? string.Empty);
-        _contest.Visible = model.Contest is not null;
-        _contest.Modulate = model.ContestFavoursPlayer ? Valid : Invalid;
-        SetText(_weather, model.Weather ?? string.Empty);
+        _creature.Visible = model.Creature is not null;
+        if (model.Creature is { } card)
+        {
+            _creature.ShowCard(card);
+        }
+
+        Set(_contest, model.Contest ?? string.Empty);
+        _contestPanel.Visible = model.Contest is not null;
+        _contest.Modulate = model.ContestFavoursPlayer ? new Color(0.85f, 1f, 0.85f) : new Color(1f, 0.8f, 0.75f);
+        _contestMeter.Visible = model.WinningShare > 0f;
+        _contestMeter.Show(model.BeliefShare, model.ContestFavoursPlayer ? UiTheme.Good : UiTheme.Warning, model.WinningShare);
+        Set(_weather, model.Weather ?? string.Empty);
         _weather.Visible = model.Weather is not null;
-        _weather.Modulate = model.WeatherWarning ? Warning : Ink;
-        SetText(_domains, model.Domains ?? string.Empty);
+        _weather.Modulate = model.WeatherWarning ? UiTheme.Warning : Colors.White;
+        Set(_domains, model.Domains ?? string.Empty);
         _domains.Visible = model.Domains is not null;
-        _domains.Modulate = model.DomainToChoose ? Gold : new Color(0.85f, 0.8f, 0.65f);
+        _domains.Modulate = model.DomainToChoose ? UiTheme.Gold : new Color(0.85f, 0.8f, 0.65f);
     }
 
     /// <summary>Shows the legend of the map overlay, or hides it.</summary>
     /// <param name="legend">Legend text, or <c>null</c> when no overlay is shown.</param>
     public void ShowOverlayLegend(string? legend)
     {
-        SetText(_overlayLegend, legend ?? string.Empty);
+        Set(_overlayLegend, legend ?? string.Empty);
         _overlayLegend.Visible = legend is not null;
     }
 
     /// <summary>Shows the alerts, newest first.</summary>
     /// <param name="alerts">Alerts to show.</param>
-    public void ShowAlerts(IReadOnlyList<Alert> alerts)
+    public void ShowAlerts(IReadOnlyList<Alert> alerts) => _alerts.ShowAlerts(alerts);
+
+    /// <summary>Shows a short message above the miracle bar, which fades away.</summary>
+    /// <param name="message">The message.</param>
+    public void ShowStatus(string message) => _status.ShowMessage(message);
+
+    /// <summary>Top centre: the race for victory with its meter, the weather and the domains.</summary>
+    private void BuildTopCentre()
     {
-        ArgumentNullException.ThrowIfNull(alerts);
-        var wanted = new HashSet<Alert>(alerts);
-        foreach (var (alert, button) in new Dictionary<Alert, Button>(_alertButtons))
-        {
-            if (!wanted.Contains(alert))
-            {
-                _alertButtons.Remove(alert);
-                button.QueueFree();
-            }
-        }
-
-        for (var i = 0; i < alerts.Count; i++)
-        {
-            if (!_alertButtons.TryGetValue(alerts[i], out var button))
-            {
-                button = CreateAlertButton(alerts[i]);
-                _alertButtons[alerts[i]] = button;
-                _alerts.AddChild(button);
-            }
-
-            _alerts.MoveChild(button, i);
-        }
-    }
-
-    /// <summary>Top centre: god and rank, Divine Power with income, followers.</summary>
-    private void BuildTopBar()
-    {
-        var panel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-        panel.AddThemeStyleboxOverride("panel", Panel(new Color(0.05f, 0.06f, 0.08f, 0.8f), new Color(0.45f, 0.38f, 0.2f), 1));
-        AddChild(panel);
-        panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop, Control.LayoutPresetMode.Minsize, Margin);
-        panel.GrowHorizontal = Control.GrowDirection.Both;
-
         var column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-        panel.AddChild(column);
-        var row = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-        row.AddThemeConstantOverride("separation", 18);
-        column.AddChild(row);
-        _god = AddLabel(row, 18, Ink);
-        _power = AddLabel(row, 24, Gold);
-        _income = AddLabel(row, 16, Valid);
-        _followers = AddLabel(row, 16, Ink);
-        _domains = AddLabel(column, 14, Ink);
-        _domains.HorizontalAlignment = HorizontalAlignment.Center;
-        _rivals = AddLabel(column, 14, new Color(0.95f, 0.7f, 0.65f));
-        _rivals.HorizontalAlignment = HorizontalAlignment.Center;
-
-        // A large world's six or eight gods do not fit on one line (ADR-027): it breaks between gods.
-        _rivals.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        _rivals.CustomMinimumSize = new Vector2(900f, 0f);
-        _contest = AddLabel(column, 15, Ink);
+        column.AddThemeConstantOverride("separation", 4);
+        Place(column, Control.LayoutPreset.CenterTop);
+        column.GrowHorizontal = Control.GrowDirection.Both;
+        _contestPanel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(520f, 0f) };
+        column.AddChild(_contestPanel);
+        var inner = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+        inner.AddThemeConstantOverride("separation", 4);
+        _contestPanel.AddChild(inner);
+        _contest = UiTheme.Label(inner, UiTheme.SmallSize, UiTheme.Ink);
         _contest.HorizontalAlignment = HorizontalAlignment.Center;
-        _weather = AddLabel(column, 14, Ink);
-        _weather.HorizontalAlignment = HorizontalAlignment.Center;
-        _overlayLegend = AddLabel(column, 14, Muted);
-        _overlayLegend.HorizontalAlignment = HorizontalAlignment.Center;
+        _contestMeter = new Meter(7f);
+        inner.AddChild(_contestMeter);
+        _weather = Caption(column, UiTheme.CaptionSize, UiTheme.Ink);
+        _domains = Caption(column, UiTheme.CaptionSize, UiTheme.Ink);
+        _overlayLegend = Caption(column, UiTheme.CaptionSize, UiTheme.Muted);
         _overlayLegend.Visible = false;
     }
 
-    /// <summary>Bottom centre: the target hint above the miracle buttons.</summary>
-    private void BuildMiracleBar()
+    /// <summary>Top right: the season and speed, and the alerts below.</summary>
+    private void BuildTopRight()
+    {
+        var column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+        column.AddThemeConstantOverride("separation", 8);
+        Place(column, Control.LayoutPreset.TopRight);
+        column.GrowHorizontal = Control.GrowDirection.Begin;
+        _time = new TimeControls(Pantheon.Game.SessionCommands.SpeedPresets) { SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd };
+        _time.PauseClicked += () => PauseClicked?.Invoke();
+        _time.SpeedClicked += preset => SpeedClicked?.Invoke(preset);
+        column.AddChild(_time);
+        _alerts = new AlertList();
+        _alerts.Clicked += position => AlertClicked?.Invoke(position);
+        column.AddChild(_alerts);
+    }
+
+    /// <summary>Bottom: the status toast and the target hint over the miracle bar, clear of the Creature's card.</summary>
+    private void BuildBottom()
     {
         var column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.End };
+        column.AddThemeConstantOverride("separation", 8);
         AddChild(column);
-        column.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterBottom, Control.LayoutPresetMode.Minsize, Margin);
-        column.GrowHorizontal = Control.GrowDirection.Both;
+        column.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomWide, Control.LayoutPresetMode.Minsize, Margin);
+        column.OffsetLeft = BarLeft;
         column.GrowVertical = Control.GrowDirection.Begin;
-        _hint = AddLabel(column, 17, Valid);
+        _status = new StatusToast();
+        column.AddChild(_status);
+        _hintPanel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore, SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter, Visible = false };
+        _hintPanel.AddThemeStyleboxOverride("panel", UiTheme.Panel(new Color(0.03f, 0.04f, 0.05f, 0.85f), UiTheme.Edge with { A = 0.5f }, 1, 14, margin: 8));
+        column.AddChild(_hintPanel);
+        _hint = UiTheme.Label(_hintPanel, UiTheme.BodySize, Colors.White);
         _hint.HorizontalAlignment = HorizontalAlignment.Center;
-        _hint.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
-        _hint.AddThemeConstantOverride("outline_size", 6);
         _bar = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-        _bar.AddThemeConstantOverride("separation", 8);
+        _bar.AddThemeConstantOverride("separation", 6);
         column.AddChild(_bar);
     }
 
-    /// <summary>Right side, below the fallback badge: the alert list.</summary>
-    private void BuildAlerts()
-    {
-        _alerts = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(AlertWidth, 0) };
-        _alerts.AddThemeConstantOverride("separation", 6);
-        AddChild(_alerts);
-        _alerts.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight, Control.LayoutPresetMode.Minsize, Margin);
-        _alerts.GrowHorizontal = Control.GrowDirection.Begin;
-        _alerts.OffsetTop = 56;
-    }
-
-    /// <summary>Left side: the Creature's card with its buttons.</summary>
-    private void BuildCreatureCard()
-    {
-        _creaturePanel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Stop, Visible = false, CustomMinimumSize = new Vector2(330, 0) };
-        _creaturePanel.AddThemeStyleboxOverride("panel", Panel(new Color(0.05f, 0.07f, 0.06f, 0.82f), new Color(0.3f, 0.45f, 0.25f), 1));
-        AddChild(_creaturePanel);
-        _creaturePanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterLeft, Control.LayoutPresetMode.Minsize, Margin);
-        _creaturePanel.GrowVertical = Control.GrowDirection.Both;
-        var column = new VBoxContainer();
-        column.AddThemeConstantOverride("separation", 4);
-        _creaturePanel.AddChild(column);
-        _creatureTitle = AddLabel(column, 17, Gold);
-        _creatureDoing = AddLabel(column, 15, Ink);
-        _creatureCondition = AddLabel(column, 13, Muted);
-        _creatureTemperament = AddLabel(column, 13, Muted);
-        _creatureCharacter = AddLabel(column, 13, new Color(0.95f, 0.8f, 0.6f));
-        _creaturePaths = AddLabel(column, 13, Gold);
-        _creaturePaths.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        _creatureAttributes = AddLabel(column, 12, Muted);
-        _creatureBonds = AddLabel(column, 13, new Color(0.62f, 0.8f, 1f));
-        _creatureBonds.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        _creatureJudge = AddLabel(column, 13, Valid);
-        _creatureJudge.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 6);
-        column.AddChild(row);
-        _reward = AddCardButton(row, "Reward [Z]", () => CreatureJudged?.Invoke(CreatureCommandKind.Reward));
-        _punish = AddCardButton(row, "Punish [X]", () => CreatureJudged?.Invoke(CreatureCommandKind.Punish));
-        AddCardButton(row, "Look [C]", () => CreatureLookClicked?.Invoke());
-        AddCardButton(row, "Send [V]", () => CreatureSendClicked?.Invoke());
-    }
-
-    /// <summary>Shows the Creature card, or hides it without a Creature.</summary>
-    private void ShowCreature(CreatureCard? card)
-    {
-        _creaturePanel.Visible = card is not null;
-        if (card is null)
-        {
-            return;
-        }
-
-        SetText(_creatureTitle, card.Title);
-        SetText(_creatureDoing, card.Doing);
-        SetText(_creatureCondition, card.Condition);
-        SetText(_creatureTemperament, card.Temperament);
-        SetText(_creatureCharacter, card.Character);
-        SetText(_creaturePaths, card.Paths);
-        SetText(_creatureAttributes, card.Attributes);
-        SetText(_creatureBonds, card.Bonds);
-        SetText(_creatureJudge, card.JudgeHint);
-        _creatureJudge.Modulate = card.CanJudge ? Colors.White : new Color(0.7f, 0.7f, 0.7f);
-        _reward.Disabled = !card.CanJudge;
-        _punish.Disabled = !card.CanJudge;
-        _creatureDoing.Modulate = card.Banished ? Invalid : Colors.White;
-    }
-
-    /// <summary>A small button on the Creature card.</summary>
-    private Button AddCardButton(Container parent, string text, Action pressed)
-    {
-        var button = new Button { Text = text, FocusMode = Control.FocusModeEnum.None };
-        button.AddThemeFontSizeOverride("font_size", 13);
-        button.AddThemeStyleboxOverride("normal", _slotStyle);
-        button.Pressed += pressed;
-        parent.AddChild(button);
-        return button;
-    }
-
-    /// <summary>Creates, updates or removes the miracle buttons to match the slots.</summary>
+    /// <summary>Creates, updates or removes the miracle tiles to match the slots.</summary>
     private void ShowSlots(IReadOnlyList<MiracleSlot> slots)
     {
-        while (_slots.Count > slots.Count)
+        while (_tiles.Count > slots.Count)
         {
-            _slots[^1].QueueFree();
-            _slots.RemoveAt(_slots.Count - 1);
-            _slotIds.RemoveAt(_slotIds.Count - 1);
+            _tiles[^1].QueueFree();
+            _tiles.RemoveAt(_tiles.Count - 1);
+            _tileIds.RemoveAt(_tileIds.Count - 1);
         }
 
-        while (_slots.Count < slots.Count)
+        while (_tiles.Count < slots.Count)
         {
-            var index = _slots.Count;
-            var button = new Button { FocusMode = Control.FocusModeEnum.None, CustomMinimumSize = new Vector2(118, 52) };
-            button.AddThemeFontSizeOverride("font_size", 15);
-            button.Pressed += () => MiracleClicked?.Invoke(_slotIds[index].Length > 0 ? _slotIds[index] : null);
-            _bar.AddChild(button);
-            _slots.Add(button);
-            _slotIds.Add(string.Empty);
+            var index = _tiles.Count;
+            var tile = new MiracleTile();
+            tile.Clicked += () => MiracleClicked?.Invoke(_tileIds[index].Length > 0 ? _tileIds[index] : null);
+            _bar.AddChild(tile);
+            _tiles.Add(tile);
+            _tileIds.Add(string.Empty);
         }
 
-        // Twelve buttons fit a 1280-pixel window only when narrower (ADR-021: domains add up to three).
-        // Sizes change only when the count does: a theme override set every frame relayouts the HUD.
-        var size = new Vector2(slots.Count > 9 ? 98 : 118, 52);
         for (var i = 0; i < slots.Count; i++)
         {
-            if (_slots[i].CustomMinimumSize != size)
-            {
-                _slots[i].CustomMinimumSize = size;
-                _slots[i].AddThemeFontSizeOverride("font_size", slots.Count > 9 ? 13 : 15);
-            }
-
-            ShowSlot(_slots[i], slots[i]);
-            _slotIds[i] = slots[i].Selected ? string.Empty : slots[i].MiracleId;
+            var (glyph, tint) = MiracleLook(slots[i].MiracleId);
+            _tiles[i].Show(slots[i], glyph, tint, CooldownOf(slots[i].MiracleId));
+            _tileIds[i] = slots[i].Selected ? string.Empty : slots[i].MiracleId;
         }
     }
 
-    /// <summary>One miracle button: hotkey, name and cost or cooldown, greyed when it cannot be cast.</summary>
-    private void ShowSlot(Button button, MiracleSlot slot)
+    /// <summary>Adds a control at a corner or edge of the screen, inset by the margin.</summary>
+    private void Place(Control control, Control.LayoutPreset preset)
     {
-        var state = slot.Locked ? "locked"
-            : slot.CooldownSeconds > 0 ? string.Create(CultureInfo.InvariantCulture, $"{slot.CooldownSeconds:0.0} s")
-            : string.Create(CultureInfo.InvariantCulture, $"{slot.BaseCost:0}");
-        var key = slot.Hotkey > 10 ? "\u21e7" + (slot.Hotkey - 10).ToString(CultureInfo.InvariantCulture) : (slot.Hotkey % 10).ToString(CultureInfo.InvariantCulture);
-        var text = slot.Hotkey > 0 ? $"{key}  {slot.Name}\n{state}" : $"{slot.Name}\n{state}";
-        SetText(button, text);
-        if (button.TooltipText != slot.Tooltip)
-        {
-            button.TooltipText = slot.Tooltip;
-        }
-
-        var style = slot.Selected ? _selectedStyle : _slotStyle;
-        button.AddThemeStyleboxOverride("normal", style);
-        button.AddThemeStyleboxOverride("hover", style);
-        button.AddThemeStyleboxOverride("pressed", _selectedStyle);
-        var usable = !slot.Locked && slot.CooldownSeconds <= 0 && slot.Affordable;
-        button.Modulate = usable || slot.Selected ? Colors.White : new Color(0.62f, 0.62f, 0.62f, 0.9f);
+        AddChild(control);
+        control.SetAnchorsAndOffsetsPreset(preset, Control.LayoutPresetMode.Minsize, Margin);
     }
 
-    /// <summary>A clickable alert, coloured by severity.</summary>
-    private Button CreateAlertButton(Alert alert)
+    /// <summary>A centred line of text on a soft shadow, for the top centre.</summary>
+    private static Label Caption(Control parent, int size, Color color)
     {
-        var color = alert.Severity switch
-        {
-            AlertSeverity.Info => new Color(0.12f, 0.16f, 0.22f, 0.88f),
-            AlertSeverity.Good => new Color(0.1f, 0.3f, 0.14f, 0.9f),
-            AlertSeverity.Warning => new Color(0.42f, 0.3f, 0.06f, 0.92f),
-            AlertSeverity.Danger => new Color(0.5f, 0.1f, 0.08f, 0.94f),
-        };
-        var button = new Button
-        {
-            Text = alert.Text,
-            FocusMode = Control.FocusModeEnum.None,
-            Alignment = HorizontalAlignment.Left,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            CustomMinimumSize = new Vector2(AlertWidth, 0),
-            TooltipText = alert.Location is null ? string.Empty : "Click to look there",
-        };
-        var style = Panel(color, color.Lightened(0.25f), 1);
-        button.AddThemeStyleboxOverride("normal", style);
-        button.AddThemeStyleboxOverride("hover", Panel(color.Lightened(0.1f), color.Lightened(0.4f), 1));
-        button.AddThemeStyleboxOverride("pressed", style);
-        button.AddThemeFontSizeOverride("font_size", 15);
-        button.AddThemeColorOverride("font_color", Ink);
-        if (alert.Location is { } location)
-        {
-            button.Pressed += () => AlertClicked?.Invoke(location);
-        }
-
-        return button;
-    }
-
-    /// <summary>Adds a label that ignores the mouse.</summary>
-    private static Label AddLabel(Control parent, int size, Color color)
-    {
-        var label = new Label { MouseFilter = Control.MouseFilterEnum.Ignore };
-        label.AddThemeFontSizeOverride("font_size", size);
-        label.AddThemeColorOverride("font_color", color);
-        parent.AddChild(label);
+        var label = UiTheme.Label(parent, size, color);
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        label.CustomMinimumSize = new Vector2(620f, 0f);
+        label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
+        label.AddThemeConstantOverride("outline_size", 5);
         return label;
     }
 
-    /// <summary>A rounded panel style.</summary>
-    private static StyleBoxFlat Panel(Color background, Color border, int borderWidth)
-    {
-        var style = new StyleBoxFlat
-        {
-            BgColor = background,
-            BorderColor = border,
-            ContentMarginLeft = 12,
-            ContentMarginRight = 12,
-            ContentMarginTop = 6,
-            ContentMarginBottom = 6,
-        };
-        style.SetBorderWidthAll(borderWidth);
-        style.SetCornerRadiusAll(6);
-        return style;
-    }
-
     /// <summary>Sets a label's text when it changed.</summary>
-    private static void SetText(Label label, string text)
+    private static void Set(Label label, string text)
     {
         if (label.Text != text)
         {
             label.Text = text;
-        }
-    }
-
-    /// <summary>Sets a button's text when it changed.</summary>
-    private static void SetText(Button button, string text)
-    {
-        if (button.Text != text)
-        {
-            button.Text = text;
         }
     }
 }
