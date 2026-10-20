@@ -77,14 +77,14 @@ faith dented, and its god holds a grudge.
 over the network and each takes over a god the AI was playing. The host's computer runs the only
 real world. Everything a joined player does goes to the host, which checks it and answers.
 
-**Milestone 14 (Complete Vertical Slice)** makes it a game you can play from start to end: a start
-screen, a guide for the first minutes, a pause menu with named saves and an autosave, the world's
-history (H), and an end screen when a god or two allies win.
-
 **Milestone 13 (Multiplayer Simulation)** lets four players share a world. Each part of the world
 travels at its own pace: Creatures near your camera often, settlements and weather once a second,
 diplomacy when something happens. Your own miracles show their cost and effect as soon as the host
 agrees.
+
+**Milestone 14 (Complete Vertical Slice)** makes it a game you can play from start to end: a start
+screen, a guide for the first minutes, a pause menu with named saves and an autosave, the world's
+history (H), and an end screen when a god or two allies win.
 
 **Milestone 15 (Polish and Expansion)** deepens and finishes the game:
 
@@ -336,6 +336,13 @@ covers:
 - the HUD model, alerts, map overlays, the diplomacy panel, the weather's and disasters' looks and
   tools, migration's walkers, overlay and alerts, Creatures' bonds on the card, panel and debug
   panel, and the migration of Milestone 1 to 10 saves;
+- Milestone 15's later parts (16 to 36): known gods and plans, Creature temperament, the new
+  biomes, offerings, the followed villager, the stress scenario and performance tools, reshaping
+  the land, local navigation and bridges, the Creature's state machine and behaviour trees,
+  structures and debris, people and their motions, streaming, the ground, village architecture,
+  trees, ground cover and wildlife, the Creature's face and the miracles' looks, the CPU budget and
+  graphics scaling, regions sent within a tolerance, the hand's swing and the camera above the
+  roofs, and the migration of every later save version;
 - camera maths, picking, content parsing, launch options, the settlement layout and other
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
@@ -1375,8 +1382,9 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   width and the world's victories ("Seed 42   4096 m island   Ascendancy, conquest and cultural
   victory"), terrain renderer,
   camera band, the performance metrics (frame time, the simulation's share of a frame and a tick's
-  time, ticks per second, memory, the engine's objects, nodes and draw calls, the citizens drawn and
-  the last save's times) and the world's load (settlements, people, gods, Creatures, weather cells,
+  time, ticks per second, memory, the engine's objects, nodes and draw calls, the citizens drawn,
+  the last save's times, and the simulation budget: how often it cut a frame short and the ticks
+  waiting and dropped) and the world's load (settlements, people, gods, Creatures, weather cells,
   disasters, groups on the road, notables and followed villagers), one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now and its top candidate actions with their scores and reasons, its plans (the goals it
   holds with their weights and ages, when it plans next, the gods it knows) and the goals it is
@@ -1386,7 +1394,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   and buried regions, and marks on the land), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
   view (level, health, loyalty, morality, attributes, paths and callings, activity, its state and
-  behaviour tree, needs, personality, its best options with
+  behaviour tree, its face (mood, joy, anger, fear, sleep) and nature, needs, personality, its best options with
   their scores, how it would answer the nearest Creature, its combat skill, scars and power, its
   view of every Creature it has met with their latest encounters, its learned preferences by
   situation and its latest memories), every followed villager with what they do and their faith,
@@ -1417,7 +1425,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   lowest value) to bright (the highest), and the legend gives the range. The region under the
   cursor is white and settlement regions are red. The map stays up when F1 hides the panel. After
   vegetation come blessing, your god's influence, the soil's water, fire, scorch, fresh water,
-  flood, snow, wildlife, damage, scar, pollution, blight and rubble, all on a fixed 0 to 1 scale.
+  flood, snow, wildlife, damage, scar, pollution, blight, rubble, timber and stone, all on a fixed 0 to 1 scale.
 - **O** cycles the map overlays: influence, religion, faith, food, weather, danger, migration,
   culture, nature, population, disaster risk, political control, navigation and authority:
   - **Navigation** shows the land walkers may cross, the open roads, the land buried in rubble they
@@ -1474,7 +1482,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
 
   On an Apple M3 Pro it runs at about 100 FPS with 7,000 citizens drawn, a tick takes 1.5 ms,
   and a 10 MB save is written in about 130 ms. A shared game on the stress world sends a player
-  about 144 KB/s.
+  about 60 KB/s (144 KB/s before regions were sent within a tolerance, ADR-056).
 
 ## Command-line options
 
@@ -1594,7 +1602,7 @@ The pause menu saves the world under its god, year and seed in the same folder, 
 written there every five minutes, and the start screen and pause menu list every save, newest
 first. A host's world is saved there as `hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 26`. The scene tree
+Saves are indented JSON of the simulation state, starting with `"SaveVersion": 33`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1621,7 +1629,7 @@ find their beast's lair and set their first anomaly when loaded. In saves from b
 every god has met every other, and the AI gods make their first plans when loaded. Creatures from before part 17
 start with middling courage, protectiveness, jealousy and playfulness. Worlds from before part 18
 keep their four biomes. Hands from before part 19 hold no offering. In saves from before part 22
-no god follows a villager. In saves from before part 24 the land is as the seed made it. Saves from before part 13
+no god follows a villager. In saves from before part 24 the land is as the seed made it. Saves from before part 27 give every village sound houses. Saves from before part 13
 grow each region's forest from its vegetation (without a new world's patches), give each village a
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
@@ -1636,7 +1644,7 @@ game/                 Godot project: scenes, client scripts (Pantheon.Client), d
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
                       history.json, domains.json, holy_sites.json, world_sizes.json, ecology.json,
-                      settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
+                      society.json, water.json, settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
   Pantheon.Domain/        World, region, settlement, god, belief, Creature, diplomacy, weather and disaster
@@ -1658,17 +1666,9 @@ docs/                 The owner's specification (PANTHEON_SPEC.md, the source of
 Start with the specification, [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), and the progress
 summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
-vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in
-[.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md),
-[.docs/milestone-2-living-settlement.md](.docs/milestone-2-living-settlement.md),
-[.docs/milestone-3-first-god.md](.docs/milestone-3-first-god.md),
-[.docs/milestone-4-creature.md](.docs/milestone-4-creature.md),
-[.docs/milestone-5-rival-god.md](.docs/milestone-5-rival-god.md),
-[.docs/milestone-6-diplomacy.md](.docs/milestone-6-diplomacy.md),
-[.docs/milestone-7-weather.md](.docs/milestone-7-weather.md),
-[.docs/milestone-8-disasters.md](.docs/milestone-8-disasters.md),
-[.docs/milestone-9-four-gods.md](.docs/milestone-9-four-gods.md) and
-[.docs/milestone-10-population-movement.md](.docs/milestone-10-population-movement.md).
+vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
+[.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
+[.docs/milestone-15-part-36-hand-camera-bridges.md](.docs/milestone-15-part-36-hand-camera-bridges.md).
 
 ## Contributing
 
@@ -1693,14 +1693,16 @@ and the definition of done.
   since at least part 15 and never with `--verbose`; it is harmless and not yet traced.
 - Four gods crowd the small island: a player who does nothing keeps only a few followers after ten
   minutes, and Seren the Guardian is the strongest AI god (kindness converts better than fear).
-- The whole island is built at once rather than streamed in pieces: a huge world's heightfield
-  takes 1.1 s to build. No world is larger than 12 km or holds more than eight gods.
+- The heightfield is generated whole (1.1 s for a huge world); only its detail, forests and fires
+  stream near the camera (ADR-050). No world is larger than 12 km or holds more than eight gods.
 - A history record names two winners, so a pantheon of three or four is told by its first two.
 - Snow does not slow travel, grass and trees keep their colour through the year, and pollution
   does not depend on a village's technology. Biomes do not change how fast anyone walks.
 - The representative citizens are presentation only: they show what the settlement's numbers
-  say, but nothing can interact with an individual citizen until a later milestone adds full
-  (Tier 3) agents ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)).
+  say ([ADR-008](docs/ADR/ADR-008-settlement-step-and-representative-citizens.md)), and a citizen
+  becomes an individual only when you follow them with / (ADR-043).
+- Frame rates measured while the Mac's screen is locked are not trustworthy: macOS stops taking
+  the window's frames, and each one then waits up to a second (ADR-056).
 
 ## Third-party code
 

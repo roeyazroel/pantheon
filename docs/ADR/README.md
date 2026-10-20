@@ -23,7 +23,7 @@ silently:
 | [ADR-005](ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 |
 | [ADR-006](ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
 | [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md) | Patch Terrain3D's generated shader and report why the fallback is used | Accepted (amends ADR-005) |
-| [ADR-008](ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted (amends ADR-004); amended by ADR-032 |
+| [ADR-008](ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted (amends ADR-004); amended by ADR-032 and ADR-049 |
 | [ADR-009](ADR-009-belief-influence-and-miracles.md) | Belief, influence and miracles | Accepted |
 | [ADR-010](ADR-010-creature-simulation-and-learning.md) | The Creature: core simulation, learned utility AI and the hand | Accepted |
 | [ADR-011](ADR-011-rival-gods-utility-ai-and-victory.md) | Rival gods: utility AI, conversion between gods and victory | Accepted; amended by ADR-015 |
@@ -64,7 +64,7 @@ silently:
 | [ADR-046](ADR-046-local-navigation.md) | Local navigation | Accepted |
 | [ADR-047](ADR-047-creature-state-machine-and-behaviour-trees.md) | The Creature's state machine and behaviour trees | Accepted |
 | [ADR-048](ADR-048-structural-integrity-and-debris.md) | Structural integrity, flood resistance and debris | Accepted |
-| [ADR-049](ADR-049-people-that-look-and-move-like-people.md) | People that look and move like people | Accepted |
+| [ADR-049](ADR-049-people-that-look-and-move-like-people.md) | People that look and move like people | Accepted (amends ADR-008) |
 | [ADR-050](ADR-050-world-streaming.md) | World streaming | Accepted |
 | [ADR-051](ADR-051-ground-textures-and-light.md) | Ground textures and light | Accepted |
 | [ADR-052](ADR-052-village-architecture.md) | Village architecture | Accepted |

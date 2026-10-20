@@ -23,8 +23,8 @@ are recorded in [ADR/](ADR/README.md), and the coding rules every change follows
    assemblies for `System.Random`, clock and tick-count reads and GUIDs.
 6. **Data-driven content** where practical (`game/Data/*.json`), parsed strictly (unknown or
    missing members are errors).
-7. **No speculative infrastructure or optimisation.** Reserved areas (the networking project and
-   the domain's population folder) hold no code until their milestone.
+7. **No speculative infrastructure or optimisation.** Reserved areas (the domain's population folder)
+   hold no code until their milestone.
 8. **Commands go through an authority.** A player's intent (casting a miracle, rewarding,
    punishing or sending the Creature, a diplomatic move, a refugee policy) is a request that
    `MiracleCaster`, `CreatureAuthority`, `DiplomacyAuthority` or `MigrationAuthority` checks
@@ -45,7 +45,8 @@ game/                         Godot 4.7.2 project (res://)
   Scripts/                    Bootstrap, Camera, Network (ENet adapter), Presentation (adapters), UI
   Data/                       worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                               creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json,
-                              migration.json, world_sizes.json (simulation);
+                              migration.json, world_sizes.json, domains.json, ecology.json, history.json,
+                              holy_sites.json, society.json, water.json (simulation);
                               settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
                               (presentation)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
@@ -475,7 +476,7 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
-- Save envelope: `{ "SaveVersion": 20, "World": { ... } }`, indented, enums as strings,
+- Save envelope: `{ "SaveVersion": 33, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
   to `MinimumSupportedSaveVersion` (1), is parsed into a `JsonObject`, upgraded one version at
@@ -749,7 +750,8 @@ keep it in 0..1. A missing,
   frames, the simulation's share of each and a save (ADR-044). With `--stress` GameRoot makes the
   stress world.
 - `Camera/GodCameraController`: maps input (WASD, edge scroll, right-drag grab, wheel, Q/E,
-  middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`.
+  middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`, keeping its clearance above
+  the roofs through `Roofs` (`Rooftops`, ADR-057).
 - The light (`Scenes/Main.tscn`, ADR-051): a procedural sky, the sun with soft shadows, ACES
   tonemapping, screen-space ambient occlusion and a soft glow (both switched by the settings'
   lighting effects), distance fog and a little contrast.
@@ -873,7 +875,8 @@ keep it in 0..1. A missing,
   per action, flashes on feedback, labels its activity) and `CreaturePresenter`.
   `Presentation/Divine/DivineHand`: the god's hand: it follows the cursor, presses when casting or
   sending, pats or swats the Creature, shows the rock, tree or villagers it holds (`HeldThing`) and
-  flings them when it throws; a held Creature hangs under it (ADR-030).
+  flings them when it throws; a held Creature hangs under it (ADR-030). Since ADR-057 its grip swings
+  by `HeldSwing`, and a press raises `Pressed` for `DebrisPresenter.Push`.
 - `UI/BookPanel` shows the Book of the World and `Bootstrap/BookController` opens it (Tab,
   `--book`) and sends a miracle chosen in it to `DivineController.Select` (ADR-031). The camera's
   backtick toggles the strategic overview.
@@ -917,7 +920,7 @@ sequenceDiagram
     Root->>Session: Update(delta)
     Note over Root: NetworkDriver.Update first: a host handles intents and sends events and snapshots, a player takes them
     Session->>Sched: Advance(delta, step)
-    loop whole ticks (10 Hz x time scale, capped)
+    loop whole ticks (10 Hz x time scale, capped, within the CPU budget, ADR-056)
         Sched->>Engine: Step(world)
         Engine->>Settle: Update(tick context)
         opt last tick of each 5-tick interval (2 Hz at x1)
@@ -955,8 +958,8 @@ sequenceDiagram
 The render frame rate never changes simulation results. Only the number of real seconds
 elapsed (× time scale) determines how many ticks run, and the settlement model steps on every
 tenth tick, so its cadence follows simulated time, not frames. The citizens move every frame,
-but their poses are functions of simulation time, so they freeze while paused and speed up
-with the time scale.
+but their poses are functions of the crowds' clock (`CrowdClock`, ADR-049), which stops when
+paused and never runs faster than `PaceCap` times real time.
 
 ## World history and the game's flow
 
@@ -1217,8 +1220,8 @@ flowchart LR
   where only that fits, or hidden. A label faded out by its distance takes no place. A small
   world's village labels rarely overlap, so it looks as before. `GodCameraModel.MaxDistance` and the
   fog scale with the island's width.
-- **Not modelled:** terrain streamed in pieces (a huge or vast world's heightfield is built at
-  once, in 1.1 s), worlds beyond 12 km, more than eight gods, a size chosen on the start screen's
+- **Not modelled:** worlds beyond 12 km (the heightfield is still generated whole, in 1.1 s for a
+  vast world; its detail streams since ADR-050), more than eight gods, a size chosen on the start screen's
   host page (`--host` with `--world-size` hosts any size), victories chosen per player, and history
   records of more than two winners.
 
@@ -1297,15 +1300,15 @@ flowchart LR
     director --> players[Positional and news players]
     mood --> music[Two music players crossfading]
     ambience --> loops[Rain and wind loops]
-    settings[user://settings.json] --> applier[SettingsApplier: window, vsync, shadows, render scale, buses]
+    settings[user://settings.json] --> applier[SettingsApplier: window, vsync, shadows, lighting effects, render scale, particles, simulation budget, buses]
 ```
 
 - Sounds of events play where they happen (`AudioStreamPlayer3D`, heard from far off at a
   low volume); the player's news plays everywhere. The same kind of sound starts at most every
   0.4 s.
 - The music holds a mood at least 20 s and crossfades over 3 s.
-- Settings apply at once from the menus' settings page; fewer citizens apply when the game next
-  starts, since the settlement presenters are built with the count.
+- Settings apply at once from the menus' settings page; citizens, vegetation and terrain quality
+  apply when the game next starts (ADR-056), since the presenters are built with them.
 
 ## Multiplayer
 
@@ -1325,8 +1328,9 @@ has the measured run.
   - gods at 4 Hz;
   - migration at 2 Hz;
   - weather, disasters and the rivers (ADR-022) at 1 Hz;
-  - settlements (with their society and culture, ADR-023 and ADR-024), whole Creatures, changed
-    regions, the history and the holy sites every 2 s;
+  - settlements (with their society and culture, ADR-023 and ADR-024), whole Creatures, regions
+    changed past `RegionTolerance` (0.01) and rounded to thousandths (ADR-056), the history and the
+    holy sites every 2 s;
   - diplomacy when a status, proposal or memory changes.
 
   Secret treaties reach only their parties: while one exists the host strips the others' from the
@@ -2251,13 +2255,15 @@ flowchart LR
   keeps the last 240 frames: frame time, the simulation's share of a frame, a tick's time, ticks
   per second. It reads memory and the engine's objects, nodes and draw calls from Godot's monitors,
   and times a save written and read back without touching the disk.
-- **Reporting.** `PerformanceReadout` turns a `PerformanceSample` into F1's lines and adds a census
+- **Reporting.** `PerformanceReadout` turns a `PerformanceSample` into F1's lines, with the simulation
+  budget's line (ADR-056), and adds a census
   of the world's load; unattended runs print the same lines.
 - **Measured** (Apple M3 Pro, seed 42; numbers in the ADR):
   - 100 FPS with 7,000 citizens drawn, on both renderers;
   - 1.5 ms a tick;
   - a 10 MB save in about 130 ms;
-  - 144 KB/s to a joined player, mostly the regions' small changes.
+  - 60 KB/s to a joined player since regions are sent within a tolerance (ADR-056; 144 KB/s
+    before, mostly the regions' small changes).
 
 ## Debug tools
 
@@ -2301,7 +2307,8 @@ the client.
   each Creature's combat skill, scars and power, its view of every Creature it has met (friendship,
   fear, rivalry, respect, trust and the latest encounters), and how the player's Creature would
   answer the nearest one if they met now. K brings the nearest Creature beside the player's, and
-  `--meet=on|<name>` does so at the start.
+  `--meet=on|<name>` does so at the start. Since ADR-055 a face line gives its mood, joy, anger,
+  fear, sleep and nature (`CreatureExpression`).
 - The F1 panel's god AI view (`GodAiReadout`, §106) shows each AI god's personality, its goal now
   (its best candidate) and its top three candidates with utilities and reasons, followed by its
   diplomatic candidates and the factors behind them.
@@ -2341,7 +2348,8 @@ the client.
   sickness, immunity and shield; `;` starts the next of the plague at the cursor, an eclipse and the
   player's reformation, and `--great-event` one at the start.
 - F4 (`GrantPower`) gives the player's god 500 Divine Power.
-- O cycles the player map overlays (influence, religion, faith, food, weather, danger, migration),
+- O cycles the player map overlays (influence, religion, faith, food, weather, danger, migration,
+  culture, nature, population, risk, politics, navigation, authority),
   which double as debug views.
 - Launch options and `SmokeTestDriver` for reproducible and scripted runs. `--advance-ticks=<n>`
   runs n ticks before the first frame and `--camera-distance=<m>` sets the starting camera
@@ -2424,7 +2432,7 @@ neighbouring land biomes over `BiomeBlendMetres` with a sliding box filter.
   list order, so a run continues identically across a save and load.
 - Presentation never consumes a simulation random stream. The settlement layout and the Tier 2
   roster use `PresentationHash` of the seed, the settlement id and a slot or index, and the
-  routines are functions of simulation time. The same world, tick and camera therefore show the
+  routines are functions of the crowds' clock (ADR-049). The same world, tick and camera therefore show the
   same houses, fields and citizens on both renderers.
 - Guaranteed per platform and runtime. Bit-exact cross-platform determinism is not required,
   because networking will be host-authoritative (ADR-003).
@@ -2491,7 +2499,7 @@ neighbouring land biomes over `BiomeBlendMetres` with a sliding box filter.
   `SaveMigrations` step from the previous version, tested against a save written by the
   previous build.
 - The step, the layout, the tiers and the views iterate over every settlement, and world
-  generation founds eight. Four gods share them since Milestone 9; more gods are more entries in
+  generation founds 8, 20, 40 or 48 by the world's size (ADR-027). Four gods share them since Milestone 9; more gods are more entries in
   `gods.json` (and god colours in `divine_view.json`), as the AI, belief, diplomacy and victory
   rules handle any number.
 - A new Tier 3 individual is state in `WorldState` with its own system, like the notables

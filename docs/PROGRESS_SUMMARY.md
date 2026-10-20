@@ -154,8 +154,7 @@ followed or the target has been measured.
   - the hand (R) lifts villagers out of danger to safety, carries them, plants trees, throws rocks
     and holds the Creature;
   - a Greater God may hallow the land forever, wake the volcano or still every disaster at once.
-- Not built: Steam networking, streaming the terrain in pieces, worlds beyond 12 km, and Divine
-  Acts that reshape the terrain.
+- Not built: Steam networking and worlds beyond 12 km.
 - The Book of the World (Tab) gathers the world, religion, every miracle and the Creature; the map
   overlays add population, disaster risk and political control; backtick shows the whole island;
   and the game exports for Windows, macOS and Linux (part 11).
@@ -563,14 +562,15 @@ Measured:
 | Holy sites | Implemented | The Sacred Peak, the Ancient Grove, the Holy Spring and the Standing Stones. They are claimed by influence, kept for power, influence and a gift, and fought over by Creatures; gods remember who took them. |
 | Advanced politics | Implemented | Eleven treaties, secret agreements, favours and the Divine Council (part 5, ADR-025); holy sites are grounds for grievance, and Sow Discord sets two rivals against each other. War goals and dictated peace, intelligence, proxy wars and mortal holy wars since part 6 (ADR-026); gods who must meet before they deal (ADR-036); and AI gods who absorb their allies near the endgame (ADR-040). |
 | Schisms | Implemented | Doubting followers keep the Old Faith, which cannot be converted, returns when the god is loved again and otherwise fades. Sanctuary prevents a schism for a minute. |
-| Larger worlds | Implemented (part 7) | Small (2 km), Large (4 km), Huge (8 km) and Vast (12 km) islands with 8, 20, 40 or 48 villages and 4, 6 or 8 gods, chosen on the start screen (ADR-027). The terrain is not yet streamed in pieces (§84). |
+| Larger worlds | Implemented (part 7) | Small (2 km), Large (4 km), Huge (8 km) and Vast (12 km) islands with 8, 20, 40 or 48 villages and 4, 6 or 8 gods, chosen on the start screen (ADR-027). Since part 29 the land's detail, forests and fires stream near the camera (§84, ADR-050). |
 | More miracles | Implemented | Thirteen signature miracles, and with the Water miracle (part 2) twenty-three miracles in all. |
 | More Creatures | Implemented | Four species with their own toughness, strength, speed, learning, temperament and look; the player chooses for a new world. |
 | Steam networking | Not started (decision) | Optional; it needs the Steamworks SDK. `INetworkTransport` is the seam for it beside ENet (ADR-021). |
 
 Beyond §130's list, the milestone adds:
 - **Settings (§105):** fullscreen, vertical sync, shadows, render scale, citizens shown and four
-  volumes, kept in `user://settings.json`.
+  volumes, kept in `user://settings.json` (lighting effects came in part 30; vegetation, particles,
+  terrain quality and the simulation budget in part 35).
 - **Audio (§60):** synthesized sounds heard where they happen, and music in three moods.
 
 Measured:
@@ -1206,9 +1206,9 @@ Sections that only state intent are summarised at the end of this part.
 | --- | --- | --- | --- |
 | 29 | Settlements | Implemented | Housing, roads, gathering, job allocation (farm, build, worship, gather), construction, buildings and expansion (founding new villages) are autonomous (ADR-023, ADR-033); a god sets the priorities §29 lists. |
 | 30, 90 | Settlement state | Implemented | Every field §30 tracks: region, population, food, water (ADR-022), housing, health, safety, happiness, education, wealth and political stability (ADR-023), and belief, love, fear, doubt and resentment per god, with dependency (ADR-024). Besides: construction, the doctrines it holds, its plague and immunity (ADR-034), and wood and stone in store (ADR-033). |
-| 31 | Population migration | Implemented | People leave for famine, homelessness, danger (disaster), war, fear and low religious confidence, and go where life is better (opportunity); persecution and poverty count through fear and hunger. Neighbouring gods accept them, reject them or demand conversion (ADR-016). Negotiating their return is not built. |
+| 31 | Population migration | Partial | People leave for famine, homelessness, danger (disaster), war, fear and low religious confidence, and go where life is better (opportunity); persecution and poverty count through fear and hunger. Neighbouring gods accept them, reject them or demand conversion (ADR-016). Negotiating their return is not built. |
 | 33–36 | Culture, schisms, atheism, technology | Implemented | Schisms (§34): doubting followers keep their god's Old Faith, unconvertible, returning when the god is loved again or fading into unbelief; a god that harms people who love it sows the doubt (ADR-021). People who follow no god exist (§35). Technology (§36): eight fields, capped at a fantasy level, that grow with learning and spread (ADR-023). Culture (§33): eight doctrines with their effects; secular societies (§35): agnostic, atheist and anti-divine stages, with less power, resistance to miracles, faster learning and anti-divine movements that spread (ADR-024). |
-| 32 | Religious conversion | Implemented | Gradual conversion between gods and from people who follow none, driven by miracles, prosperity, intimidation, rival doubt, the Creatures' deeds and migration (migrants give up feared or doubted gods, are converted on demand and mix into their new home's beliefs). Several religions coexist. Temples send missionaries to the godless around them (ADR-024), and prophets walk from village to village preaching (ADR-032). Propaganda and military victory are not modelled. |
+| 32 | Religious conversion | Implemented | Gradual conversion between gods and from people who follow none, driven by miracles, prosperity, intimidation, rival doubt, the Creatures' deeds and migration (migrants give up feared or doubted gods, are converted on demand and mix into their new home's beliefs). Several religions coexist. Temples send missionaries to the godless around them (ADR-024), and prophets walk from village to village preaching (ADR-032). Propaganda spreads doubt as a proxy act, and a conquest's dictated peace cedes believers (ADR-026). |
 | 80 | Simulation tiering | Implemented | Tier 1 simulates the economy, demographics, health and belief. Tier 2 shows people walking, sitting, working and praying, at a human pace on the crowds' own clock (presentation only, ADR-049). Tier 3 is the individuals that matter, kept in the world state everywhere with their own behaviour, paths and memory: the Creatures, Creatures in combat, what the hand holds, prophets and elders, the important leaders (ADR-032), and the villager a player selects with /, who eats, works, prays, flees, turns, remembers and dies as an individual (ADR-043). Physics for individuals is §94's. |
 | 81 | Population representation | Implemented | Up to 300 people stand for each settlement's population, each with their own look (skin, hair, height, clothes by work, headwear, dress) and animated motion (ADR-008, ADR-049). |
 | 82 | Migration representation | Implemented | `MigrationGroup` with population, origin, destination, route, health and food; near the camera a few walkers stand for the group. |
@@ -1224,7 +1224,7 @@ Sections that only state intent are summarised at the end of this part.
 | 10 | Divine influence | Implemented | From followers (whose villages' shrines it stands for), temples, the holy sites a god keeps, prophets, the Creature's presence and allied religious access (ADR-021, ADR-025, ADR-032); overlapping; weaker influence costs more, except where the stronger god is an ally. |
 | 11 | God attributes | Implemented | Id, Name, Rank, Divine Power, followers (derived), controller, personality, Creature, domains, holy sites kept (derived), and relationships (in `WorldState.Diplomacy`); the world's history keeps its historical actions. Reputation is the god's remembered conduct, and its traits emerge from it (ADR-024). Known gods: the gods it has met, as neighbours, through shared believers or roads, Creatures, deeds or the council (ADR-036). |
 | 12 | God domains | Implemented | All thirteen. One domain per rank tier up to three; each gives 0.8-cost miracles, a boon that changes a rule of the world and a signature miracle; AI gods choose by personality (ADR-021, ADR-022). |
-| 13 | Divine rank | Implemented (followers only) | Six ranks by followers, never lost, unlocking miracles. Achievements, holy places and the Creature do not count yet. |
+| 13 | Divine rank | Partial (followers only) | Six ranks by followers, never lost, unlocking miracles. Achievements, holy places and the Creature do not count yet. |
 | 14 | Miracles | Implemented | Twenty-seven: Food, Heal, Bless Crops, Lightning, Rain, Fire, Shield, Mass Healing, Earthquake, Water and Anoint a Prophet (ADR-032), thirteen domain miracles (Regrowth, Gift of Life, Redirect Storm, Firestorm, Spear of Heaven, Dread, Abundance, Sanctuary, Enlighten, Sow Discord, Upheaval, Tidal Wave, Judgement), and six Divine Acts for a Greater God, which enter the history: Hallow the Land, Wake the Volcano and Still the World (ADR-030), and Raise an Island, Split the Mountain and Turn the River, which reshape the land for good, its rivers, biomes and regions following (ADR-045). |
 | 15 | Systemic consequences | Implemented | Both of §15's chains run. Rain calls a cloud that waters the land as it drifts on and raises the rivers until they flood downstream (ADR-022). A god's lightning sets dry woods alight (ADR-041); the fire scorches the land and drives off its wildlife, the villages around lose their hunting, food falls and people leave (ADR-028, ADR-016). Bless Crops raises the yield of the land; Food and Heal change hunger and health, which drive doubt and love; Fire spreads across dry land; Earthquake starts fires and ruins; repeated harm scars the land, which a god of Nature or Regrowth heals. |
 | 47 | AI gods | Implemented | All eight of §47's personalities, with risk, aggression, cooperation, treachery and grudge as profile weights, diplomatic memory, preferred domains taken up in order, and holy sites claimed and held by their Creatures (ADR-021). Short-term goals are the utility AI's choices each evaluation. Long-term goals come from the major plan: protect the home, convert a village, befriend or weaken a god, prepare, slay the beast or win back doubters (ADR-036). |
@@ -1255,11 +1255,11 @@ Sections that only state intent are summarised at the end of this part.
 | --- | --- | --- | --- |
 | 16 | Weather | Implemented | Cells with §16's fields that move across regions at 2 Hz; clear, rain, snow, thunderstorm, windstorm, fog and hurricanes, and heat and cold waves as spells (ADR-028). Snow lies on the land until it melts into the soil; hurricanes tear houses down. |
 | 17 | Seasons | Implemented (optional) | A ten-minute year of four seasons, chosen with the world (ADR-028). They change temperature, rainfall, the harvest, fire risk, snow, the wish to leave, sickness (§17's disease) and stores spoiling, and bring heat waves, cold waves and hurricanes. Dry, wet and normal spells go on within them. |
-| 18 | Ecology | Implemented | Regions carry temperature (shifted by the season), moisture, fertility (soil quality), vegetation, soil water, water availability from rivers and lakes, scorch and harm from fires (fire damage), wildlife, pollution and scars; biodiversity is derived (ADR-028). Fire, flood, quakes and lightning harm the land; repeated harm scars it for good; a god of Nature heals scars and Regrowth heals harm. Villages hunt the wildlife, and crowded villages pollute. Vegetation itself is fixed. |
+| 18 | Ecology | Implemented | Regions carry temperature (shifted by the season), moisture, fertility (soil quality), vegetation, soil water, water availability from rivers and lakes, scorch and harm from fires (fire damage), wildlife, pollution and scars; biodiversity is derived (ADR-028). Fire, flood, quakes and lightning harm the land; repeated harm scars it for good; a god of Nature heals scars and Regrowth heals harm. Villages hunt the wildlife, and crowded villages pollute. Vegetation itself is fixed, except where a Divine Act reshapes the land (ADR-045). |
 | 19 | Natural disasters | Implemented | All thirteen, as processes: earthquakes, wildfires and floods (ADR-014, ADR-022); drought (Milestone 7); hurricanes and extreme winters as cold waves (ADR-028); and tsunamis, tornadoes, the volcano's eruptions, landslides, meteors, crop disease (blight) and locust swarms (ADR-029). |
 | 20 | Earthquake example | Implemented | Shaking, structural checks, collapse, landslides whose rubble blocks the way (ADR-029), fire, panic (fear and doubt), religious interpretation in its simplest form, god intervention, and survivors leaving their ruins (migration). |
 | 21 | Disaster preparation | Implemented | Granaries, cisterns (the reservoirs), firebreaks, shelters, levees, hospitals (ADR-023), and dams, sea walls, irrigation and evacuation routes (ADR-029), raised under a village's priorities where they help, and architecture and engineering, spare a village part of a disaster. |
-| 94 | Physics and disasters | Implemented | Each village's houses have structural integrity, cracked by every blow that leaves them standing and mended over minutes, and earthquake, fire and flood resistance; the simulation decides what falls. Fallen houses and strikes throw planks, stones and thatch as Jolt rigid bodies onto the terrain, shown only (ADR-014, ADR-048). |
+| 94 | Physics and disasters | Implemented | Each village's houses have structural integrity, cracked by every blow that leaves them standing and mended over minutes, and earthquake, fire and flood resistance; the simulation decides what falls. Fallen houses and strikes throw planks, stones and thatch as Jolt rigid bodies onto the terrain, shown only (ADR-014, ADR-048). The hand's press knocks the debris about it away (ADR-057). |
 | 114 | MVP nature | Implemented | Rain, storm, drought, wildfire and earthquake, and floods since part 2. |
 
 ### Politics and history
@@ -1272,12 +1272,12 @@ Sections that only state intent are summarised at the end of this part.
 | 40 | Betrayal | Implemented | Any alliance or treaty can be broken; it costs the victim's trust, every knowing god's trust and the breaker's word in future treaties, and is long remembered; secret plots against an ally count as betrayal. |
 | 41 | Favours | Implemented | Rescuing another god's followers in great need makes it owe a favour, called in for Divine Power, war support, political backing, territory or miracle assistance (a promise to keep); refusals and broken promises are remembered (ADR-025). |
 | 42 | Divine Council | Implemented | Summoned by betrayals, dominance and disasters, and every five minutes on a tabled motion; votes to condemn, protect sacred land, prohibit a practice, coordinate disaster response, declare pantheon-wide war or establish neutral territory, in public or secret ballots, traded through backing promises (ADR-025). |
-| 43 | Information and deception | Implemented | What a god knows of another comes from allies, treaties, its followers among the other's people (spies and defectors), its Creature's scouting and the Knowledge domain; players see rivals' followings, power and plotted betrayal only as far as they know, secret treaties stay hidden, and knowledge traces covert acts (ADR-025, ADR-026). Prophets and the map's fog are not modelled. |
+| 43 | Information and deception | Implemented | What a god knows of another comes from allies, treaties, its followers among the other's people (spies and defectors), its Creature's scouting and the Knowledge domain; players see rivals' followings, power and plotted betrayal only as far as they know, secret treaties stay hidden, and knowledge traces covert acts (ADR-025, ADR-026). Prophets as a source of intelligence and the map's fog are not modelled. |
 | 45 | Proxy wars | Implemented | Veiled miracles (secret disasters and anonymous gifts), inciting rebels and spreading propaganda, each traceable by the wronged god (ADR-026). |
 | 46 | Mortal holy wars | Implemented | Militarist villages declare holy war on neighbours of another faith of their own will; raids kill and convert; their god may encourage, discourage (at a cost in love) or ignore (ADR-026). |
 | 44 | War between gods | Implemented | Declared war makes the enemy's followers resist conversion and draws Creatures and AI miracles to it. Wars have goals (conquest, holy site, tribute, humiliation) and scores from conversions, Creature defeats, sites taken, holy war raids, refugees and (least) strikes, and end in peace dictated by the goal (ADR-026). |
 | 113 | MVP diplomacy | Implemented | The five statuses and the four actions, plus accepting and declining; the AI remembers betrayal. |
-| 50 | World history | Implemented | The world records its significant moments as "Year 12 — The Shaking of Elar" (ADR-020); a year is a simulated minute. Civilizations do not refer to them yet. |
+| 50 | World history | Partial | The world records its significant moments as "Year 12 — The Shaking of Elar" (ADR-020); a year is a simulated minute. Civilizations do not refer to them yet. |
 | 51–52 | Sacred locations, world events | Implemented | Four holy sites found in every world (a peak, a grove, a spring, standing stones): kept by influence, giving power, influence and a gift, fought over and remembered (ADR-021); the sacred peak stands on the volcano when the island has one (ADR-038). Every world event of §52: the plague, global drought, the ancient beast, the volcano, meteors, mass migration, religious reformation, world war, eclipses and the magical anomaly, from the world's state and the seed (ADR-029, ADR-034, ADR-035), with the plague and droughts bringing the gods to cooperate. |
 | 53 | Victory conditions | Implemented | Divine Ascendancy (§115's MVP form, at 60% rather than about 70%) and Pantheon Victory: a god counts its strongest direct allies' followers with its own and wins with them, at most `PantheonMaxGods` gods: two on a small island, three on a large one, four on a huge or vast one (ADR-015, ADR-020, ADR-027). Conquest (every rival outside its alliances below 5% of all followers), cultural victory (leading three villages in four while a rival keeps 5%) and a sandbox, chosen with the world on the start screen or with `--victory` (ADR-027). |
 | 54 | Alliance endgame | Implemented | Near a joint victory each AI ally weighs staying loyal to share the win against breaking away to seek personal ascendancy, by its `Treachery` and its lead over its ally. Absorbing an ally's believers is a betrayal that turns a share of the ally's followers where the god leads (ADR-025); players and, since part 20, AI gods take it, the AI when it would betray anyway and absorbing gains at least 0.5% of all believers (ADR-040). |
@@ -1289,7 +1289,7 @@ Sections that only state intent are summarised at the end of this part.
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
 | 55 | Player interaction | Implemented | Miracles are cast with a click (ADR-009). The Divine Hand picks up villagers, rocks, trees and the Creature, carries villagers and rescues them from danger, plants trees and throws (ADR-030), pats or swats the Creature and presses when casting (ADR-010), and takes offerings from its villages' stores and gives them to villages in need or the Creature (ADR-039). A thrown rock or tree lands and rolls as a rigid body among the debris it throws up (ADR-048). What the hand holds swings below it as it moves, and its press knocks the debris about it away (ADR-057). |
-| 56 | Camera | Implemented | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands that reach further over a larger island (ADR-027), and a strategic overview of the whole island on backtick (ADR-031). |
+| 56 | Camera | Implemented | WASD, edge movement, drag, zoom, rotate, focus on each settlement in turn and on the Creature, three zoom bands that reach further over a larger island (ADR-027), and a strategic overview of the whole island on backtick (ADR-031). The camera keeps above the roofs as well as the ground (ADR-057), and looking at the Creature turns it to its face (ADR-055). |
 | 57 | User interface | Implemented | HUD with Divine Power, income, followers, rank, the rivals with their status, the race for victory, the miracle bar and hint, the Creature card (with its bonds, paths and attributes) and alerts; panels for Settlements (N), Diplomacy (P), History (H) and Domains with the Divine Acts (G), and the Book of the World (Tab) with the World, Religion, Miracles and Creature pages (ADR-031); a start screen, pause menu, settings page and end screen. One book for four pages keeps the screen clear, as §57 asks. |
 | 58 | Map overlays | Implemented | Influence, religion, faith, population, food, the land's life (ecology), weather, danger, disaster risk (fire, flood, landslide, the volcano), migration, culture and political control (blocs, wars darkened), cycled with O (ADR-031); the F3 debug map adds every region statistic. |
 | 59 | Alert system | Implemented | Every example of §59: starving followers, proposals, the Creature's deeds (attacks on villages included), a hurricane approaching a coast (ADR-041) and rivals converting the player's followers. Besides: settlements gained or lost, ranks, dominance and victory, diplomacy, weather and disasters, hazards, great events, migration, Creatures' meetings and fights, gods met, offerings and more. Alerts are filtered to what concerns the player, not repeated within 30 simulated seconds, and the most urgent are kept. |
@@ -1303,10 +1303,10 @@ Sections that only state intent are summarised at the end of this part.
 | 62 | Supported platforms | Partial | Export presets for Windows x64, macOS (one universal app for Apple Silicon and Intel) and Linux x64 (ADR-031). The macOS build was exported and played (114 FPS); the Windows and Linux builds export but have not been run, and Windows has never been run. Release signing and notarization need the owner's Apple account. |
 | 63 | Core technology stack | Partial | In use: Godot .NET 4.7.2, C#, Terrain3D, FastNoiseLite and MultiMesh. Jolt runs the debris (ADR-048). Navigation is a region graph in the core rather than Godot's navigation meshes (ADR-010). LimboAI is not used. Utility AI drives the Creature and the gods. No Blender assets. |
 | 64 | Terrain destruction | Implemented | As §64 asks for the initial game: earthquakes leave visible cracks and shake the camera, destroy buildings, set off landslides whose rubble blocks the way, and harm the land; meteors leave craters (ADR-029). The terrain is not remeshed. |
-| 88 | Threading model | Followed | Everything runs on the main thread. |
-| 85 | Navigation | Implemented | Strategic: A* over land regions, smoothed (the Creature, migration groups, prophets and followed villagers). Local: each village shown up close bakes a navigation grid from its layout (huts, ruins, the building site, the shrine, the temple and water blocked), and its figures walk round them on A* ways pulled taut (ADR-046). The core grid stands in for Recast, as ADR-010 chose core navigation. The followed villager, prophets and the Creature still walk straight within villages. |
-| 89 | Update frequencies | Implemented | Weather and the seasons step at 2 Hz (§89: 1–2 Hz); settlements, belief and diplomacy at 1 Hz (1 Hz, 0.5–1 Hz); the god AI evaluates every 3 s (0.2–0.5 Hz) and plans every 30 s; the Creature decides at 5 Hz (5–10 Hz) and moves every tick; history is event-driven. Ecology steps at 1 Hz, above §89's 0.1–0.5 Hz, and citizens' poses follow the frame from simulation time, both cheap enough not to matter. |
-| 104 | Performance testing | Implemented | A repeatable stress scenario (`--stress=on`, ADR-044): the vast island with 50 villages of 2,000 people (100,000), 8 gods and their 8 Creatures, 20 weather cells and an earthquake, a fire and a flood at once, with up to 1,000 figures a village drawn (7,000 seen). F1 and unattended runs report frame time, the simulation's share of a frame and a tick's time, ticks per second, memory, the engine's objects, nodes and draw calls, the citizens drawn and a save's write and read times; the host's F1 shows bandwidth. Measured on an M3 Pro: 100 FPS, 1.5 ms a tick, 1.3 GB resident at most, a 10 MB save in 130 ms, 144 KB/s to a joined player. Headless probes measure ticks, traffic, saves and loads. |
+| 88 | Threading model | Followed | The simulation and presentation run on the main thread; only the synthesized sounds and music are made once on a worker thread at start (ADR-021). |
+| 85 | Navigation | Implemented | Strategic: A* over land regions, smoothed (the Creature, migration groups, prophets and followed villagers). Local: each village shown up close bakes a navigation grid from its layout (huts, ruins, the building site, the shrine, the temple and water blocked), and its figures walk round them on A* ways pulled taut (ADR-046). The core grid stands in for Recast, as ADR-010 chose core navigation. A village's grid opens the water under its roads' bridges, so its walkers cross rivers on them (ADR-057); migrants still walk through rivers. The followed villager, prophets and the Creature still walk straight within villages. |
+| 89 | Update frequencies | Implemented | Weather and the seasons step at 2 Hz (§89: 1–2 Hz); settlements, belief and diplomacy at 1 Hz (1 Hz, 0.5–1 Hz); the god AI evaluates every 3 s (0.2–0.5 Hz) and plans every 30 s; the Creature decides at 5 Hz (5–10 Hz) and moves every tick; history is event-driven. Ecology steps at 1 Hz, above §89's 0.1–0.5 Hz, and citizens' poses follow the crowds' own clock, never faster than real time (ADR-049), both cheap enough not to matter. |
+| 104 | Performance testing | Implemented | A repeatable stress scenario (`--stress=on`, ADR-044): the vast island with 50 villages of 2,000 people (100,000), 8 gods and their 8 Creatures, 20 weather cells and an earthquake, a fire and a flood at once, with up to 1,000 figures a village drawn (7,000 seen). F1 and unattended runs report frame time, the simulation's share of a frame and a tick's time, ticks per second, memory, the engine's objects, nodes and draw calls, the citizens drawn and a save's write and read times; the host's F1 shows bandwidth. Measured on an M3 Pro: 100 FPS, 1.5 ms a tick, 1.3 GB resident at most, a 10 MB save in 130 ms, 60 KB/s to a joined player (144 before ADR-056). Headless probes measure ticks, traffic, saves and loads. |
 | 105 | Target performance | Measured (Mac) | 1080p on an Apple M3 Pro: 150 FPS uncapped (6.7 ms) at x16 thirty minutes into a game, Terrain3D or fallback. At 1600 × 900 (vsync), a Huge world holds about 120 FPS from 2.6 km up ten minutes in (part 7). The stress world holds 100 FPS on the Mac (ADR-044). The simulation keeps to a CPU budget a frame that the player sets (6 ms by default; ADR-056): the stress world at x16 spent 30 ms a frame on ticks before. Graphics options scale everything §105 lists: shadows, vegetation, particles, visible population (citizens shown) and terrain quality, besides render scale with FSR and the lighting effects. Not measured on Windows or Linux. |
 
 ### Architecture, saves and process
@@ -1326,12 +1326,12 @@ Sections that only state intent are summarised at the end of this part.
 | 98 | Cheating model | Implemented (as specified) | The host is trusted; no anti-cheat. |
 | 70 | No required server infrastructure | Implemented | |
 | 75 | Save architecture | Implemented | A save is versioned JSON of `WorldState` on the host: the seed and generation settings, the tick (the game's time, its years and seasons derived from it), the random state, regions with the land's life (ecology), settlements with their population, society and technology, gods, beliefs, Creatures, diplomacy, weather, disasters, migration, the great events (world events), the history and the holy sites (sacred locations). Named slots, an autosave and the quicksave. |
-| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 20 and migrations from versions 1 to 19, each tested against a save written by the previous build. |
+| 76, 99 | Save principle, persistence format | Implemented | `WorldState` is serialized as human-readable JSON with `SaveVersion` 33 and migrations from versions 1 to 32, each tested against a save written by the previous build. |
 | 77–78 | Core rule, layered architecture | Implemented | The core projects never reference Godot (tested). |
 | 79 | Simulation systems | Implemented | Weather, seasons, water, disasters, hazards, great events (world events), the beast, ecology (region), settlements and population, resources and roads, society and technology, culture, belief and notables, victory, diplomacy and politics, conflict, migration, Creatures, holy sites, domains and the god AI, with the history recorded from their events, and the miracle, Creature, diplomacy, migration, society, council, conflict and hand authorities. |
 | 90 | Core data models | Implemented | `GodState` (rank, power, domains, personality, Creature, conduct and traits for reputation, known gods; followers derived), `SettlementState` (population, food, water, wealth, health, safety and belief, love, fear and doubt per god), `CreatureState` (species, level, experience, health, loyalty, morality, eight traits, relationships and learned preferences; strength and intelligence derived), `RegionState` (biome, elevation, temperature, moisture, fertility, vegetation, wildlife, pollution; weather from the cells), `GodRelation` and `GodStance` with treaties and memory for §90's DiplomacyRelation, and `GreatEventState` for §90's WorldEvent (kind, place, peak, start and end, the god concerned). |
 | 100 | Repository structure | Implemented, with differences | As recommended, plus `World/` and `Miracles/` in `Pantheon.Domain`, `game/Data/`, `game/addons/`, `.docs/` and `AGENTS.md`. |
-| 101 | Architecture decision records | Implemented | ADR-001 to ADR-028. |
+| 101 | Architecture decision records | Implemented | ADR-001 to ADR-057. |
 | 102–103 | Testing, deterministic testing | Implemented | Every rule has tests, including §102's "Fear decreases after prolonged safety" and "God cannot cast miracle without enough power". Randomness is seeded and checked. |
 | 106 | Debug tools | Implemented | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons, and relationship reasoning: the diplomatic moves weighed with their factors), weather cells (spell, wind, the strongest cells, soil and rain under the cursor, a settlement's water), disasters (earthquakes, the fiercest fires, a settlement's dangers), migration routes (groups on the road, refugee policies with the AI's reasons, a settlement's pressure to leave, the Migration overlay), and Creatures' relationships (views, encounters, combat skill, scars, power and how the player's Creature would meet the nearest one; K and `--meet` bring two together). The navmesh as the Navigation overlay (walkable land, roads, rubble and every walker's way), network authority as the Authority overlay and F1's lines on who decides and how fresh each section is, and performance metrics in F1 (ADR-044). |
 | 107 | Content data | Implemented | Every balance value is a data file parsed strictly: world generation and biomes, settlement, divine and society rules, miracles (with §107's id, name, domain, cost, cooldown, radius, influence and effects), the gods, Creatures and their species and temperament, the AI's personalities and planning, diplomacy, weather, disasters and great events, migration, history, domains and holy sites, water, ecology and world sizes, and the presentation's colours and views. |
@@ -1365,14 +1365,14 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-005](ADR/ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 |
 | [ADR-006](ADR/ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
 | [ADR-007](ADR/ADR-007-terrain3d-shader-patch-and-fallback-reason.md) | Patch Terrain3D's generated shader and report why the fallback is used | Accepted; amends ADR-005 |
-| [ADR-008](ADR/ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted; amends ADR-004; amended by ADR-032 |
+| [ADR-008](ADR/ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted; amends ADR-004; amended by ADR-032 and ADR-049 |
 | [ADR-009](ADR/ADR-009-belief-influence-and-miracles.md) | Belief, influence and miracles (Milestone 3) | Accepted |
 | [ADR-010](ADR/ADR-010-creature-simulation-and-learning.md) | The Creature: core simulation, learned utility AI and the hand (Milestone 4) | Accepted |
 | [ADR-011](ADR/ADR-011-rival-gods-utility-ai-and-victory.md) | Rival gods: utility AI, conversion between gods and victory (Milestone 5) | Accepted; amended by ADR-015 |
 | [ADR-012](ADR/ADR-012-diplomacy-relations-status-and-memory.md) | Diplomacy: directional relations, shared status and remembered acts (Milestone 6) | Accepted |
 | [ADR-013](ADR/ADR-013-weather-cells-and-soil-water.md) | Weather: moving cells, spells and the water in the soil (Milestone 7) | Accepted |
 | [ADR-014](ADR/ADR-014-disasters-as-processes.md) | Disasters as processes: wildfires in regions, earthquakes that shake, ruins to rebuild (Milestone 8) | Accepted |
-| [ADR-015](ADR/ADR-015-four-gods-coalitions-and-pantheon-victory.md) | Four gods: coalitions, allies' memory and pantheon victory (Milestone 9) | Accepted; amends ADR-011 |
+| [ADR-015](ADR/ADR-015-four-gods-coalitions-and-pantheon-victory.md) | Four gods: coalitions, allies' memory and pantheon victory (Milestone 9) | Accepted; amends ADR-011; amended by ADR-020 |
 | [ADR-016](ADR/ADR-016-migration-groups-and-refugee-policies.md) | Migration as groups on the road, and gods' refugee policies (Milestone 10) | Accepted |
 | [ADR-017](ADR/ADR-017-creature-relationships-and-combat.md) | Creature relationships, meetings and combat (Milestone 11) | Accepted |
 | [ADR-018](ADR/ADR-018-multiplayer-host-snapshots-and-intents.md) | Multiplayer sessions: a host's world, players' intents and replicas kept by snapshots (Milestone 12) | Accepted; amended by ADR-019 |
@@ -1406,7 +1406,7 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-046](ADR/ADR-046-local-navigation.md) | Local navigation (Milestone 15, part 25) | Accepted |
 | [ADR-047](ADR/ADR-047-creature-state-machine-and-behaviour-trees.md) | The Creature's state machine and behaviour trees (Milestone 15, part 26) | Accepted |
 | [ADR-048](ADR/ADR-048-structural-integrity-and-debris.md) | Structural integrity, flood resistance and debris (Milestone 15, part 27) | Accepted |
-| [ADR-049](ADR/ADR-049-people-that-look-and-move-like-people.md) | People that look and move like people (Milestone 15, part 28) | Accepted |
+| [ADR-049](ADR/ADR-049-people-that-look-and-move-like-people.md) | People that look and move like people (Milestone 15, part 28) | Accepted (amends ADR-008) |
 | [ADR-050](ADR/ADR-050-world-streaming.md) | World streaming (Milestone 15, part 29) | Accepted |
 | [ADR-051](ADR/ADR-051-ground-textures-and-light.md) | Ground textures and light (Milestone 15, part 30) | Accepted |
 | [ADR-052](ADR/ADR-052-village-architecture.md) | Village architecture (Milestone 15, part 31) | Accepted |
@@ -1520,14 +1520,15 @@ The [README](../README.md) lists every control and option.
 - **Large worlds are long.** The largest island is 12 km across (§6 asks 10–20 km), with eight
   gods and forty-eight villages (ADR-027). Six or eight gods hold each other in check: in ten
   hour-long games with a passive player, four large worlds and one huge one found a winner. The
-  terrain is built whole rather than streamed (§84), in 1.1 s for the 8 and 12 km islands. No
-  trees or other vegetation are drawn.
+  heightfield is still generated whole, as the simulation needs it (1.1 s for the 8 and 12 km
+  islands); its detail, forests and fires stream near the camera (§84, ADR-050).
 - **Miracles.** All nine of §110's kinds (Rain since Milestone 7; Fire, Earthquake and Shield
   since Milestone 8; Water since Milestone 15, part 2) and thirteen domain miracles.
 - **Domains.** All thirteen are offered, and a schism keeps the Old Faith rather than founding a
   new god.
-- **Rivers.** On the 2 km island they run 200–800 m. River valleys are not a biome of their own,
-  migrants walk through rivers, and thirst is rare (it needs a long drought away from water).
+- **Rivers.** On the 2 km island they run 200–800 m. River valleys are a biome since part 18
+  (ADR-038). Migrants still walk through rivers (only a village's walkers keep to bridges,
+  ADR-057), and thirst is rare (it needs a long drought away from water).
 
 ### Belief and power
 
@@ -1551,7 +1552,8 @@ The [README](../README.md) lists every control and option.
 ### The population tiers
 
 - Tier 2 citizens are presentation only (ADR-008). Worshippers are shown as villagers, and
-  citizens walk in straight lines (no navigation, §85).
+  citizens walk round huts, the shrine, the temple and water on the village's grid (ADR-046) and
+  cross rivers on their roads' bridges (ADR-057); they do not steer round each other.
 
 ### Saves
 
@@ -1564,8 +1566,10 @@ The [README](../README.md) lists every control and option.
   build has.
 - The macOS build is signed ad hoc: it runs where it was built, and Gatekeeper blocks it elsewhere
   until it is signed with a developer identity and notarized.
-- No scripted stress scenarios beyond the headless probes (§104). Graphics options exist since
-  Milestone 15.
+- One scripted stress world (`--stress`, ADR-044) besides the headless probes. Graphics options
+  scale shadows, vegetation, particles, citizens and terrain quality (ADR-056).
+- Frame rates measured while the Mac's screen is locked are not trustworthy: macOS stops taking
+  the window's frames (ADR-056).
 - Frame times on the Mac were noisy during Milestone 15: Milestone 14's own build showed the same
   periodic 140 ms frames on the same day, so its 6.7 ms could not be reproduced for comparison.
 - The Terrain3D shader patch (ADR-007) is still needed, and every start logs a harmless
@@ -1578,11 +1582,13 @@ The [README](../README.md) lists every control and option.
   chosen Creature; the player sends it and teaches it.
 - The player's untaught Creature, never sent away by a god, levels fastest and wins most of its
   fights. The Tyrant's Creature, nearly always at war, collects 6–7 scars an hour.
-- The hand lifts, carries and throws through the simulation; the flight of what it throws is drawn,
-  not simulated by physics. Jolt is chosen but no physics gameplay exists.
+- The hand lifts, carries and throws through the simulation; the flight of what it throws is drawn
+  on an arc. Where it lands it rolls as a Jolt rigid body among the debris, which the hand's press
+  knocks away (ADR-048, ADR-057), and what the hand holds swings as a pendulum. The physics is
+  shown only and changes nothing in the simulation.
 - The Creature walks through houses and people: there is no local avoidance, and paths follow
   64 m regions.
-- Four personality traits (§26); four species differ in toughness, strength, speed, learning and
+- Eight personality traits, named in §26's twelve words (ADR-037); four species differ in toughness, strength, speed, learning and
   temperament; eight paths (§24) set by deeds and rewards.
 
 ### Weather
@@ -1597,8 +1603,8 @@ The [README](../README.md) lists every control and option.
 ### Disasters
 
 - Every disaster of §19 is modelled, but lava is drawn as the fire it leaves rather than its own
-  flow, landslides do not change the terrain's height, and people do not catch diseases beyond the
-  cold's and the ash's sickness.
+  flow, landslides do not change the terrain's height, and people catch no disease beyond the plague
+  (ADR-034) and the cold's and the ash's sickness.
 - Fire spread is sensitive to dryness: the shipped numbers sit between runs where nothing spread
   and runs where the island burned (see the plan).
 - Smoke is faint and fires read mostly as flames and glow.
@@ -1639,8 +1645,8 @@ The [README](../README.md) lists every control and option.
 ### Interface
 
 - Panels for diplomacy, history and domains, a start screen, a pause menu, a settings page and an
-  end screen, and the Settlements panel since part 3; no World, Religion or Miracles panels
-  (§57).
+  end screen, the Settlements panel since part 3, and the Book of the World's World, Religion,
+  Miracles, Creature and Villager pages (ADR-031, ADR-043).
 - The sound is synthesized: plain next to recorded or composed audio. The music has three moods.
 - Joining a shared world from the menu reloads the game's scene with the host's address.
 - With four active gods, about half of hour-long games end without a winner; the contest is close.
@@ -1661,10 +1667,8 @@ order of the validation priorities (§132) and what playing showed:
    with the owner's developer identity.
 2. **Playtest with people.** The balance with active players depends on the domains they choose;
    the probes only cover bots.
-3. **World streaming (§84)**: build the terrain in pieces near the camera, so islands of 10–20 km
-   (§6) load quickly; offer the size on the host page.
-4. **A followed villager (§80)**: the last of Tier 3's examples, which would need camera-driven
-   promotion of a representative citizen (ADR-032 leaves it out).
-5. **Steam networking (§69)** as a second `INetworkTransport`, only if the game ships on Steam.
-6. **Recorded or composed audio** in place of the synthesized sounds, through the same director.
-7. Report the Terrain3D shader defects upstream.
+3. **Worlds of 10–20 km (§6)**, and the size offered on the host page.
+4. **Steam networking (§69)** as a second `INetworkTransport`, only if the game ships on Steam.
+5. **Recorded or composed audio** in place of the synthesized sounds, through the same director.
+6. Report the Terrain3D shader defects upstream.
+7. Re-measure the frame rates on the Mac with its screen unlocked (ADR-056).

@@ -1,6 +1,6 @@
 # ADR-049: People that look and move like people
 
-- Status: Accepted
+- Status: Accepted (amends ADR-008)
 - Date: 2026-10-20
 - Amends: [ADR-008](ADR-008-settlement-step-and-representative-citizens.md) (the representatives'
   routines in simulation time)
