@@ -84,6 +84,7 @@ silently:
 | [ADR-066](ADR-066-talking-to-the-gods.md) | Talking to the gods | Accepted |
 | [ADR-067](ADR-067-openai-and-gemini-minds.md) | OpenAI and Gemini as the gods' minds | Accepted (amends ADR-065) |
 | [ADR-068](ADR-068-every-command-in-view.md) | Every command in view: the god's bar, the key map, and the debug tools behind a setting | Accepted (amends ADR-059) |
+| [ADR-069](ADR-069-feet-dialogs-and-territory.md) | Feet on uneven ground, the world still under dialogs, and the gods' territories on the land | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

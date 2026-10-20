@@ -361,7 +361,9 @@ covers:
 Nothing in play needs a key you cannot see (ADR-068). The god's bar, under the season at the top
 right, has a button for the Book, the village at the view's centre, the gods, the council, the
 domains, the history, the map's overlays (a chooser, by name), the overview, the keys and the
-menu, each with its key on a badge, lit while its panel is open. The Veil toggle ends the miracle
+menu, each with its key on a badge, lit while its panel is open. While a dialog is open, or the
+pointer is over a panel, the wheel and a trackpad's scrolling and pinching leave the world alone
+(ADR-069). The Veil toggle ends the miracle
 bar, and a rival under your plaque opens the gods' panel. The Keys button, and the settings' Keys
 tab, show every key below in its group, with your keyboard's letters. A key pressed, or a button
 clicked, with the pointer over a panel acts at the view's centre.
@@ -740,6 +742,16 @@ ambitions, as the diplomacy panel describes them. Your words can win or lose it 
 which fades with time. That is enough to tip a god that is nearly ready to agree, or nearly ready
 to strike, but no flattery or trick makes a god that distrusts you an ally. Only the host, or a
 player alone, can talk to the gods.
+
+## Your territory
+
+Your territory is drawn on the land (ADR-069): the land where your influence is the strongest of all
+the gods' and enough for your miracles (spec §10). A bright line in your god's colour, edged in
+dark, runs inside its border, a glow fades inward from it, and a wash of your colour lies over all
+of it. Each rival's land has a thinner, fainter border in its colour, so where two gods' lands meet
+the border shows both colours. Only land is drawn, and the borders widen as the camera rises, so
+they read from close by and from the whole island. The Influence overlay (O) still shows every
+god's influence in finer detail, overlaps included.
 
 ## Diplomacy
 

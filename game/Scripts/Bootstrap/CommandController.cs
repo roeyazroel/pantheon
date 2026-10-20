@@ -12,11 +12,14 @@ namespace Pantheon.Client.Bootstrap;
 /// <summary>
 /// Every command in view (ADR-068): the god's bar, its map chooser, the key map, the debug palette,
 /// the Veil toggle and the rivals under the plaque. A button presses its input action, so it runs
-/// through the very handlers its key does; the bar lights the buttons whose panels are open.
+/// through the very handlers its key does; the bar lights the buttons whose panels are open. While a
+/// dialog is open, or the pointer is over the interface, the wheel and the trackpad's scrolling and
+/// pinching do not move the world (ADR-069): the interface does not stop gestures as it stops clicks.
 /// </summary>
 internal sealed partial class CommandController : Node
 {
     private readonly List<(BarCommand Command, Func<bool> Shown)> _panels = [];
+    private readonly List<Func<bool>> _dialogs = [];
     private Hud _hud = null!;
     private DivineController _divine = null!;
     private GodCameraController _camera = null!;
@@ -75,11 +78,25 @@ internal sealed partial class CommandController : Node
         _hud.Bar.Light(BarCommand.Debug, _palette.PanelVisible);
     }
 
-    /// <summary>Esc puts away the key map, the palette or the map's chooser before anything else.</summary>
+    /// <summary>
+    /// Keeps scrolling off the world under a dialog or the interface, then lets Esc put away the key map,
+    /// the palette or the map's chooser before anything else.
+    /// </summary>
     /// <param name="event">Input event not consumed by the interface.</param>
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_hud is null || !@event.IsActionPressed(InputActions.GameMenu) || _divine.Aiming)
+        if (_hud is null)
+        {
+            return;
+        }
+
+        if (Scrolls(@event) && (DialogOpen || GetViewport().GuiGetHoveredControl() is not null))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (!@event.IsActionPressed(InputActions.GameMenu) || _divine.Aiming)
         {
             return;
         }
@@ -96,6 +113,14 @@ internal sealed partial class CommandController : Node
             GetViewport().SetInputAsHandled();
         }
     }
+
+    /// <summary>Whether a dialog is open: a panel, the key map, a talk with a god or the menu.</summary>
+    private bool DialogOpen => _keys.PanelVisible || _panels.Exists(p => p.Shown()) || _dialogs.Exists(shown => shown());
+
+    /// <summary>Whether an event scrolls or zooms: the wheel, or a trackpad's two-finger scroll or pinch.</summary>
+    private static bool Scrolls(InputEvent @event) =>
+        @event is InputEventPanGesture or InputEventMagnifyGesture
+        || @event is InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown or MouseButton.WheelLeft or MouseButton.WheelRight };
 
     /// <summary>Presses an input action, as its key would.</summary>
     /// <param name="action">The action.</param>
@@ -146,6 +171,14 @@ internal sealed partial class CommandController : Node
             if (Shown(node) is { } panel)
             {
                 _panels.Add(panel);
+            }
+            else if (node is TalkPanel talk)
+            {
+                _dialogs.Add(() => talk.PanelVisible);
+            }
+            else if (node is MenuScreen menu)
+            {
+                _dialogs.Add(() => menu.IsOpen);
             }
 
             foreach (var child in node.GetChildren())

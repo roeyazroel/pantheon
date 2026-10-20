@@ -12,7 +12,7 @@ namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
 /// Domains and holy sites in the client (ADR-021): the Domains panel (G), the holy sites in the
-/// world, and the launch options that try them out (<c>--rank</c>, <c>--domains</c>,
+/// world, the gods' territories on the land (ADR-069), and the launch options that try them out (<c>--rank</c>, <c>--domains</c>,
 /// <c>--domains-panel</c>). It reads the session and sends the player's choices to it.
 /// </summary>
 internal sealed partial class FaithController : Node
@@ -24,6 +24,7 @@ internal sealed partial class FaithController : Node
     private Action<string> _setStatus = null!;
     private DomainPanel _panel = null!;
     private HolySitePresenter _sites = null!;
+    private Presentation.Divine.TerritoryPresenter _territories = null!;
 
     /// <summary>Raised with a Divine Act chosen in the panel, to aim it like a miracle (ADR-030).</summary>
     public event Action<string>? ActChosen;
@@ -50,6 +51,7 @@ internal sealed partial class FaithController : Node
             ActChosen?.Invoke(act);
         };
         _sites = new HolySitePresenter(layer, view);
+        _territories = new Presentation.Divine.TerritoryPresenter(Presentation.NodeExtensions.AddLayer(layer.GetParent<Node3D>(), "Territories"), view);
         session.WorldReplaced += Rebuild;
         Rebuild();
         if (options.Rank is { } rank && session.LocalGod is { } god && !session.IsReplica && rank > god.Rank)
@@ -78,6 +80,7 @@ internal sealed partial class FaithController : Node
         }
 
         _sites.Sync(_session.World);
+        _territories.Sync(_session, _camera.Model.Distance, delta);
         if (_panel.PanelVisible)
         {
             _panel.ShowModel(DomainReadout.Build(_session));
@@ -108,5 +111,9 @@ internal sealed partial class FaithController : Node
     }
 
     /// <summary>Rebuilds the sites for a new or loaded world.</summary>
-    private void Rebuild() => _sites.Rebuild(_session.World, _session.Terrain);
+    private void Rebuild()
+    {
+        _sites.Rebuild(_session.World, _session.Terrain);
+        _territories?.Reset();
+    }
 }

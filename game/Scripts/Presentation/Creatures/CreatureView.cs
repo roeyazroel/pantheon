@@ -11,8 +11,9 @@ namespace Pantheon.Client.Presentation.Creatures;
 /// <summary>
 /// One Creature on screen (presentation only, ADR-010, ADR-061): an upright animal of its species.
 /// It is drawn between the simulation's last two places by how far the clock has run towards the next
-/// tick, so it moves at an even pace rather than in tenths of a second. It walks with its feet planted
-/// on the ground under each (the stride follows its speed), leans gently with the slope, runs when it
+/// tick, so it moves at an even pace rather than in tenths of a second. Whatever it does, each foot is
+/// planted on the ground under it and laid along its slope, the hips dropping or rising where a leg
+/// cannot reach (ADR-069); the stride follows its speed, it leans gently into the slope, runs when it
 /// flees, and poses for what it does: sitting to rest, working with its hands, boxing in a fight,
 /// raking in an attack, hopping in play, and dangling from its god's hand. Its face shows how it feels;
 /// a label above it says what it is doing, with its health while it fights.
@@ -25,6 +26,9 @@ internal sealed class CreatureView
 
     // Body units a second below which it stands rather than walks.
     private const float StillSpeed = 0.25f;
+
+    // Half a foot's length, in body units: the ground is sampled this far behind and ahead of the ankle for its slope.
+    private const float FootSpan = 0.35f;
 
     // A jump in the simulation's place, in metres, that is drawn as one: the hand set it down, or a fight drew it in.
     private const float JumpDistance = 25f;
@@ -41,7 +45,7 @@ internal sealed class CreatureView
     private const float FallSeconds = 2.5f;
 
     private readonly Node3D _root;
-    private readonly Node3D _slope;
+    private readonly Node3D _frame;
     private readonly FightEffects _fight;
     private readonly DeclutteredLabel _label;
     private readonly Color _godColor;
@@ -65,6 +69,8 @@ internal sealed class CreatureView
     private CreatureFeedback _judged;
     private float _judgedSeconds;
     private float _fallen = float.MaxValue;
+    private float _hipShift;
+    private float _slopeLean;
 
     /// <summary>Creates the Creature's nodes under a parent; its body appears once its species' meshes are made.</summary>
     /// <param name="parent">Node that holds the Creatures.</param>
@@ -81,8 +87,8 @@ internal sealed class CreatureView
         _meshes = AnimalMeshes.For(look);
         _root = new Node3D { Name = "Creature_" + creatureId };
         parent.AddChild(_root);
-        _slope = new Node3D { Name = "Slope" };
-        _root.AddChild(_slope);
+        _frame = new Node3D { Name = "Frame" };
+        _root.AddChild(_frame);
         _label = new DeclutteredLabel
         {
             // A Creature's label gives way to every village's (ADR-027).
@@ -160,7 +166,7 @@ internal sealed class CreatureView
 
         if (_body is null && _meshes.IsCompletedSuccessfully)
         {
-            _body = new AnimalBody(_slope, _meshes.Result, _godColor, _glow);
+            _body = new AnimalBody(_frame, _meshes.Result, _godColor, _glow);
         }
 
         var delta = frame.Delta;
@@ -253,7 +259,7 @@ internal sealed class CreatureView
         else if (speed > StillSpeed)
         {
             _phase += moved / AnimalMotion.Stride(plan, pace);
-            target = AnimalMotion.Walk(plan, _phase, pace, FootGround(terrain, plan, pace));
+            target = AnimalMotion.Walk(plan, _phase, pace);
         }
         else
         {
@@ -263,8 +269,23 @@ internal sealed class CreatureView
         // Walking follows the stride closely, so planted feet stay planted; other poses ease in.
         var rate = speed > StillSpeed && !held ? PoseRate * 2.5f : PoseRate;
         _pose = _pose is null ? target : BodyPose.Lerp(_pose, target, 1f - Mathf.Exp(-rate * delta));
-        body.Apply(_pose);
         Lean(terrain, plan, held, delta);
+        body.Apply(held ? _pose : OnGround(terrain, plan, _pose, Resting(creature), delta));
+    }
+
+    /// <summary>
+    /// The pose with its feet on the ground under each (ADR-069), leaning a little into the slope. The hips
+    /// rise at once when a foot needs room, so it never sinks, and drop smoothly. A sitting Creature
+    /// rises over the higher ground under its legs.
+    /// </summary>
+    private BodyPose OnGround(TerrainField terrain, AnimalProportions plan, BodyPose pose, bool sitting, float delta)
+    {
+        var left = GroundUnder(terrain, plan, pose.LeftLeg, 1f);
+        var right = GroundUnder(terrain, plan, pose.RightLeg, -1f);
+        var leaning = pose with { Lean = pose.Lean + _slopeLean };
+        var wanted = sitting ? Mathf.Max(0f, Mathf.Max(left.Height, right.Height)) : AnimalFooting.HipShift(pose, plan, left, right);
+        _hipShift = wanted > _hipShift ? wanted : Mathf.Lerp(_hipShift, wanted, 1f - Mathf.Exp(-10f * delta));
+        return sitting ? leaning with { HipHeight = leaning.HipHeight + _hipShift } : AnimalFooting.Plant(leaning, plan, left, right, _hipShift);
     }
 
     /// <summary>The pose for what the Creature does while it stands in one place.</summary>
@@ -288,37 +309,36 @@ internal sealed class CreatureView
         };
     }
 
-    /// <summary>How far the ground under each foot lies above the ground under the body, in body units.</summary>
-    private (float Left, float Right) FootGround(TerrainField terrain, AnimalProportions plan, float pace)
+    /// <summary>The ground under a foot, from where its leg puts it: its height above the ground under the body and its rise ahead, in body units.</summary>
+    private FootGround GroundUnder(TerrainField terrain, AnimalProportions plan, LimbAngles leg, float side)
     {
         var (sin, cos) = Mathf.SinCos(_heading);
-        float Under(float side, float phase)
+        var (reach, _) = AnimalFooting.Ankle(plan, leg);
+        float At(float forward)
         {
-            var forward = AnimalMotion.Foot(plan, phase, pace).Forward * _scale;
-            var x = _shown.X + (cos * side * plan.HipWidth * _scale) + (sin * forward);
-            var z = _shown.Z - (sin * side * plan.HipWidth * _scale) + (cos * forward);
-            return Mathf.Clamp((Ground(terrain, x, z).Y - _shown.Y) / _scale, -0.5f, 0.5f);
+            var x = _shown.X + (cos * side * plan.HipWidth * _scale) + (sin * forward * _scale);
+            var z = _shown.Z - (sin * side * plan.HipWidth * _scale) + (cos * forward * _scale);
+            return (Ground(terrain, x, z).Y - _shown.Y) / _scale;
         }
 
-        return (Under(1f, _phase), Under(-1f, _phase + 0.5f));
+        var (behind, ahead) = (At(reach - FootSpan), At(reach + FootSpan));
+        return new FootGround(At(reach), Mathf.Atan2(ahead - behind, 2f * FootSpan));
     }
 
-    /// <summary>Leans the body a little with the ground's slope under it; a held Creature hangs straight.</summary>
+    /// <summary>Leans the torso a little into the slope ahead (ADR-069); the legs stay upright and find the ground themselves.</summary>
     private void Lean(TerrainField terrain, AnimalProportions plan, bool held, float delta)
     {
-        var target = Vector3.Zero;
+        var target = 0f;
         if (!held)
         {
             var (sin, cos) = Mathf.SinCos(_heading);
             var reach = (plan.Thigh + plan.Shin) * 0.6f * _scale;
             var front = Ground(terrain, _shown.X + (sin * reach), _shown.Z + (cos * reach)).Y;
             var back = Ground(terrain, _shown.X - (sin * reach), _shown.Z - (cos * reach)).Y;
-            var left = Ground(terrain, _shown.X + (cos * reach), _shown.Z - (sin * reach)).Y;
-            var right = Ground(terrain, _shown.X - (cos * reach), _shown.Z + (sin * reach)).Y;
-            target = new Vector3(Mathf.Atan2(back - front, 2f * reach) * 0.4f, 0f, Mathf.Atan2(right - left, 2f * reach) * 0.25f);
+            target = Mathf.Atan2(front - back, 2f * reach) * 0.35f;
         }
 
-        _slope.Rotation = _slope.Rotation.Lerp(target, 1f - Mathf.Exp(-6f * delta));
+        _slopeLean = Mathf.Lerp(_slopeLean, target, 1f - Mathf.Exp(-6f * delta));
     }
 
     /// <summary>How high its scruff lies above its feet, in body units, as it dangles.</summary>

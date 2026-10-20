@@ -872,7 +872,8 @@ and a Lumen an Ape. A missing,
   `GodBar` (ADR-068): a `CommandButton` per `CommandBar` button, drawn by `CommandGlyphs` with its
   key on a badge (`KeyText`), and the map's chooser of overlays by name. The miracle bar ends with
   the Veil toggle, and a rival's chip is a button. It shows `HudModel`s and reports clicks.
-- `Bootstrap/CommandController` (ADR-068) runs the god's bar. A button presses its input action
+- `Bootstrap/CommandController` (ADR-068) runs the god's bar, and keeps scrolling off the world under
+  dialogs (ADR-069). A button presses its input action
   (`Input.ParseInputEvent`), so it runs the same handler as the key; the Map, Keys and Debug
   buttons open the chooser, `UI/Flow/KeysPanel` (the key map, `KeysPage`, also the settings' Keys
   tab) and `UI/DebugPalette`. It lights the buttons whose panels are open, and Esc puts its
@@ -1902,6 +1903,31 @@ ADR-066 records the decisions, and the plan is
   Without a model, `Choose` takes a suggestion as the asking of one act, and `TalkScribe` answers.
 - **The client.** `TalkController` (created by `GameFlow`) opens `TalkPanel` from Speak on a
   diplomacy card, pauses the world while it is open, and lets only the host talk.
+
+## Feet, dialogs and territory
+
+ADR-069 records the decisions, and the plan is
+[.docs/milestone-15-part-48-feet-dialogs-and-territory.md](../.docs/milestone-15-part-48-feet-dialogs-and-territory.md).
+
+- **Feet** (`Presentation/Animals/AnimalFooting`): a last pass over any pose made for flat ground.
+  - `Ankle` reads where each ankle is from its leg.
+  - `HipShift` finds how far the hips must drop or rise for the ground under each foot (a
+    `FootGround`), a rise winning so no foot sinks.
+  - `Plant` moves each ankle by its ground, keeping its lift, bends the hip and knee to reach it and
+    lays the foot along the slope.
+  - `CreatureView` samples the ground under each foot and its slope, raises the hips at once and
+    lowers them smoothly, and leans only the torso.
+- **Territories** (`Presentation/Territories`, `TerritoryImage`):
+  - each god's lead (its influence less the greatest of 0.1 and every other god's) is sampled over
+    a grid of at most 160 cells a side; a god's land is where its lead is above nothing, and a
+    point's distance inside the border is its lead over the lead's slope;
+  - `TerritoryImage` paints the borders, the glow and the player's wash, land only, with widths by
+    island and zoom band (`TerritoryLook`);
+  - `TerritoryPresenter` lays the picture over the island as a decal, painted on a worker thread when
+    influence moves or the zoom band changes.
+- **Dialogs:** `CommandController` keeps the wheel, pan gestures and pinches from the camera while a
+  dialog is open or the pointer is over the interface. Godot's interface stops mouse buttons but not
+  gestures.
 
 ## Every command in view
 
