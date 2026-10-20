@@ -64,7 +64,7 @@ internal sealed partial class GameFlow : Node
         _menu.Settings = settings;
         _menu.SettingsChanged += changed =>
         {
-            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session);
+            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, GetParent().GetNodeOrNull<Pantheon.Client.Camera.GodCameraController>("GodCamera"));
             Startup.SaveSettings(changed);
         };
         _history = new HistoryPanel { Name = "History" };

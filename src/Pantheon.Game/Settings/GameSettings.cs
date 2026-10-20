@@ -35,6 +35,12 @@ public sealed record GameSettings
     /// <summary>The simulation budget unless the player chooses another, in milliseconds a frame.</summary>
     public const float DefaultSimulationBudget = 6f;
 
+    /// <summary>Slowest camera speed offered.</summary>
+    public const float MinCameraSpeed = 0.5f;
+
+    /// <summary>Fastest camera speed offered.</summary>
+    public const float MaxCameraSpeed = 2f;
+
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true, PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
 
     /// <summary>Whether the game fills the screen.</summary>
@@ -76,6 +82,15 @@ public sealed record GameSettings
     /// </summary>
     public float SimulationBudget { get; init; } = DefaultSimulationBudget;
 
+    /// <summary>Whether a mouse resting at the window's edge pans the view (ADR-058; off by default).</summary>
+    public bool EdgeScroll { get; init; }
+
+    /// <summary>Whether a trackpad's two-finger scroll zooms the view rather than moving it (ADR-058).</summary>
+    public bool TrackpadScrollZooms { get; init; }
+
+    /// <summary>How fast the keys, the window's edge and trackpad gestures move and turn the view (0.5..2).</summary>
+    public float CameraSpeed { get; init; } = 1f;
+
     /// <summary>Loudness of everything (0..1).</summary>
     public float MasterVolume { get; init; } = 0.8f;
 
@@ -98,6 +113,7 @@ public sealed record GameSettings
         Particles = Range(Particles, MinParticles, 1f, 1f),
         TerrainQuality = Range(TerrainQuality, MinTerrainQuality, 1f, 1f),
         SimulationBudget = Range(SimulationBudget, MinSimulationBudget, MaxSimulationBudget, DefaultSimulationBudget),
+        CameraSpeed = Range(CameraSpeed, MinCameraSpeed, MaxCameraSpeed, 1f),
         MasterVolume = Range(MasterVolume, 0f, 1f, 0.8f),
         MusicVolume = Range(MusicVolume, 0f, 1f, 0.55f),
         EffectsVolume = Range(EffectsVolume, 0f, 1f, 0.8f),

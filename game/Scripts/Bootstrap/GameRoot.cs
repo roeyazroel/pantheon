@@ -34,8 +34,9 @@ public partial class GameRoot : Node3D
     private const string QuickSavePath = "user://saves/quicksave.json";
     private const float FocusDistance = 220f;
 
-    // C brings the camera this close to the Creature.
-    private const float CreatureFocusDistance = 90f;
+    // C brings the camera this close to the Creature, and aims at this share of its height (ADR-058).
+    private const float CreatureFocusDistance = 60f;
+    private const float CreatureAimShare = 0.5f;
 
     // How far from where the hand presses debris is knocked away, in metres (ADR-057).
     private const float PushReach = 12f;
@@ -100,6 +101,7 @@ public partial class GameRoot : Node3D
         worldNode.AddChild(hand);
         hand.Pressed += point => _presenter.PushDebris(point, PushReach);
         _camera.Roofs = _presenter.RoofAt;
+        _camera.FollowEnded += () => SetStatus("The camera is free again");
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
         _session = _network.Join(content, options) ?? CreateSession(content, options);
         _network.Host(_session, options);
@@ -110,6 +112,7 @@ public partial class GameRoot : Node3D
         hud.AlertClicked += position => _camera.FocusOn(position, FocusDistance, snap: false);
         hud.CreatureLookClicked += FocusCreature;
         _divine = new DivineController(_session, hud, _divinePresenter, presentation.DivineView, SetStatus, _creatures, hand);
+        _camera.LeftGrabAllowed = () => _divine.SelectedMiracle is null && !_divine.SendMode;
         _diplomacy = new DiplomacyPanel { Name = "Diplomacy" };
         AddChild(_diplomacy);
         _diplomacy.CommandClicked += (god, kind) => SetStatus(SessionCommands.CommandDiplomacy(_session, god, kind));
@@ -123,7 +126,7 @@ public partial class GameRoot : Node3D
         audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
         _divine.EventsHandled += audio.Hear;
         _divine.EventsHandled += _presenter.React;
-        SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true, GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session);
+        SettingsApplier.Apply(settings, GetViewport(), GetNodeOrNull<DirectionalLight3D>("Sun"), startup: true, GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);
         var faith = new FaithController { Name = "Faith" };
         AddChild(faith);
         faith.Setup(_session, worldNode.AddLayer("HolySites"), presentation.DivineView, _camera, SetStatus, options);
@@ -158,6 +161,7 @@ public partial class GameRoot : Node3D
         {
             _camera.Model.FaceFront(creature.Heading);
             _camera.FocusOn(creature.Position, options.CameraDistance ?? CreatureFocusDistance, snap: true);
+            FollowCreature(creature);
         }
         else if (options.CameraDistance is { } distance)
         {
@@ -179,6 +183,7 @@ public partial class GameRoot : Node3D
         if (options.QuitAfterFrames is { } frames)
         {
             _camera.EdgeScrollEnabled = false;
+            _camera.LeftGrabAllowed = static () => false;
             _camera.CenterCursorWhenAway = true;
             AddChild(SmokeTestDriver.Create(frames, options.ScreenshotPath, DescribeWorld));
         }
@@ -388,15 +393,24 @@ public partial class GameRoot : Node3D
     /// <param name="visible">Whether to show it.</param>
     private void ShowDiplomacyAtStart(bool visible) => _diplomacy.PanelVisible = visible;
 
-    /// <summary>Glides to the player's Creature (spec §56: focus Creature).</summary>
+    /// <summary>Glides to the player's Creature and follows it until the player pans away (spec §56: focus Creature; ADR-058).</summary>
     private void FocusCreature()
     {
         if (_session.LocalCreature is { } creature)
         {
             _camera.Model.FaceFront(creature.Heading);
             _camera.FocusOn(creature.Position, CreatureFocusDistance, snap: false);
-            SetStatus($"Looking at {creature.Name}");
+            FollowCreature(creature);
+            SetStatus($"Following {creature.Name}: move the view to let go");
         }
+    }
+
+    /// <summary>Keeps the camera on a Creature as it is drawn, aiming at its body.</summary>
+    private void FollowCreature(CreatureState creature)
+    {
+        var id = creature.Id;
+        var height = _creatures.Find(id)?.HeadHeight ?? 12f;
+        _camera.Follow(() => _creatures.Find(id)?.Position, height * CreatureAimShare);
     }
 
     /// <summary>Glides to the next settlement in turn, starting with the player's home.</summary>
@@ -409,6 +423,7 @@ public partial class GameRoot : Node3D
         }
 
         _focusIndex = (_focusIndex + 1) % settlements.Count;
+        _camera.StopFollowing();
         _camera.FocusOn(settlements[_focusIndex].Position, FocusDistance, snap: false);
         SetStatus($"Looking at {settlements[_focusIndex].Name}");
     }

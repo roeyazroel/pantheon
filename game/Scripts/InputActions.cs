@@ -30,11 +30,17 @@ public static class InputActions
     /// <summary>Zoom out (wheel down, -, keypad -).</summary>
     public static readonly StringName CameraZoomOut = "camera_zoom_out";
 
-    /// <summary>Hold to grab and drag the ground (right mouse button).</summary>
+    /// <summary>Hold to grab and drag the land, and let go to fling it (left mouse button, ADR-058).</summary>
     public static readonly StringName CameraDragPan = "camera_drag_pan";
 
-    /// <summary>Hold to rotate by dragging (middle mouse button).</summary>
+    /// <summary>Hold to turn and tilt the view by dragging (right or middle mouse button, ADR-058).</summary>
     public static readonly StringName CameraDragRotate = "camera_drag_rotate";
+
+    /// <summary>Tilt the view towards the horizon (Page Up, ADR-058).</summary>
+    public static readonly StringName CameraTiltUp = "camera_tilt_up";
+
+    /// <summary>Tilt the view to look more steeply down (Page Down, ADR-058).</summary>
+    public static readonly StringName CameraTiltDown = "camera_tilt_down";
 
     /// <summary>Glide to the next settlement (F, Home).</summary>
     public static readonly StringName CameraFocusSettlement = "camera_focus_settlement";
@@ -178,7 +184,7 @@ public static class InputActions
     public static readonly IReadOnlyList<StringName> All =
     [
         CameraPanForward, CameraPanBack, CameraPanLeft, CameraPanRight, CameraRotateLeft, CameraRotateRight,
-        CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraFocusSettlement,
+        CameraZoomIn, CameraZoomOut, CameraDragPan, CameraDragRotate, CameraTiltUp, CameraTiltDown, CameraFocusSettlement,
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
         SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, DebugGreatEvent, HandGrab, ToggleBook, CameraOverview, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil, VillagerFollow,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,

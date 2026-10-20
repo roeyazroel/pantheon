@@ -28,6 +28,8 @@ public sealed class GodCameraModel
     private Vector2 _boundsMax = new(float.PositiveInfinity);
     private (Vector2 Focus, float Distance)? _beforeOverview;
     private bool _hasFocusHeight;
+    private float _targetTilt;
+    private Vector2 _fling;
 
     /// <summary>Creates a camera at the initial distance, looking at the origin.</summary>
     /// <param name="settings">Validated camera tuning.</param>
@@ -68,8 +70,26 @@ public sealed class GodCameraModel
     /// <summary>Smoothed ground height under the focus point.</summary>
     public float FocusHeight { get; private set; }
 
-    /// <summary>Current pitch below the horizon, in radians.</summary>
-    public float Pitch => ComputePitch(Distance);
+    /// <summary>Current tilt the player has added to the pitch the zoom gives, in radians (positive looks more steeply down).</summary>
+    public float Tilt { get; private set; }
+
+    /// <summary>Tilt the camera is easing towards.</summary>
+    public float TargetTilt => _targetTilt;
+
+    /// <summary>Current pitch below the horizon, in radians: the zoom's pitch and the player's tilt, within the limits.</summary>
+    public float Pitch => Math.Clamp(ComputePitch(Distance) + Tilt, Radians(_settings.LowestPitchDegrees), Radians(_settings.SteepestPitchDegrees));
+
+    /// <summary>
+    /// How far above the ground under the focus the camera aims, in metres: a followed Creature's
+    /// body rather than its feet. The aim eases towards it.
+    /// </summary>
+    public float AimAbove { get; set; }
+
+    /// <summary>The eased height above the ground the camera aims at now.</summary>
+    public float Aim { get; private set; }
+
+    /// <summary>Ground velocity, in metres per second, of a view flung as the land was let go; zero when still.</summary>
+    public Vector2 FlingVelocity => _fling;
 
     /// <summary>Zoom band of the current distance.</summary>
     public CameraZoomBand Band => ClassifyBand(_settings, Distance);
@@ -120,7 +140,44 @@ public sealed class GodCameraModel
         }
 
         var speed = _settings.PanSpeedPerDistance * _targetDistance;
+        _fling = Vector2.Zero;
         _targetFocus = ClampToBounds(_targetFocus + (ViewToGround(axes) * (speed * deltaSeconds)));
+    }
+
+    /// <summary>
+    /// Pans by a share of the view, at once: a trackpad's two-finger scroll. (1, 0) moves the focus a
+    /// view's height to the right, (0, 1) a view's height forward.
+    /// </summary>
+    /// <param name="views">X = right, Y = forward, in view heights.</param>
+    /// <param name="verticalFovRadians">The camera's vertical field of view.</param>
+    public void PanViews(Vector2 views, float verticalFovRadians)
+    {
+        var span = 2f * Distance * MathF.Tan(Math.Clamp(verticalFovRadians, 0.01f, 3f) / 2f);
+        _fling = Vector2.Zero;
+        PanWorld(ViewToGround(views) * span);
+    }
+
+    /// <summary>
+    /// Lets the view glide on after the land is let go mid-drag, slowing at
+    /// <see cref="GodCameraSettings.FlingDamping"/>; any other pan or focus stops it.
+    /// </summary>
+    /// <param name="velocity">Ground velocity in metres per second, capped by the distance.</param>
+    public void Fling(Vector2 velocity)
+    {
+        var most = _settings.MaxFlingSpeedPerDistance * Distance;
+        var speed = velocity.Length();
+        _fling = !float.IsFinite(speed) || speed < 0.01f ? Vector2.Zero : speed > most ? velocity * (most / speed) : velocity;
+    }
+
+    /// <summary>Stops a flung view where it is.</summary>
+    public void StopFling() => _fling = Vector2.Zero;
+
+    /// <summary>Tilts the view: positive looks more steeply down, within <see cref="GodCameraSettings.MaxTiltDegrees"/> either way.</summary>
+    /// <param name="radians">Tilt change.</param>
+    public void TiltBy(float radians)
+    {
+        var limit = Radians(_settings.MaxTiltDegrees);
+        _targetTilt = Math.Clamp(_targetTilt + radians, -limit, limit);
     }
 
     /// <summary>
@@ -151,6 +208,27 @@ public sealed class GodCameraModel
     public void Zoom(float steps) =>
         _targetDistance = Math.Clamp(_targetDistance * MathF.Pow(_settings.ZoomStepFactor, steps), _settings.MinDistance, MaxDistance);
 
+    /// <summary>Zooms by a factor, as a trackpad's pinch does: 2 brings the camera twice as close.</summary>
+    /// <param name="factor">How much closer; below 1 pulls back. Not a positive number does nothing.</param>
+    /// <param name="groundPoint">World (X, Z) point to zoom about, or <c>null</c> for the focus.</param>
+    public void ZoomByFactor(float factor, Vector2? groundPoint = null)
+    {
+        if (!(factor > 0f) || !float.IsFinite(factor))
+        {
+            return;
+        }
+
+        var steps = MathF.Log(factor) / -MathF.Log(_settings.ZoomStepFactor);
+        if (groundPoint is { } point)
+        {
+            ZoomAt(steps, point);
+        }
+        else
+        {
+            Zoom(steps);
+        }
+    }
+
     /// <summary>Zooms towards (or away from) a ground point, keeping it roughly under the cursor.</summary>
     /// <param name="steps">Zoom steps; positive zooms in.</param>
     /// <param name="groundPoint">World (X, Z) point under the cursor.</param>
@@ -169,6 +247,7 @@ public sealed class GodCameraModel
     /// <param name="distance">New distance, or <c>null</c> to keep the current one.</param>
     public void FocusOn(Vector2 point, float? distance = null)
     {
+        _fling = Vector2.Zero;
         _targetFocus = ClampToBounds(point);
         if (distance is { } value)
         {
@@ -202,6 +281,7 @@ public sealed class GodCameraModel
         Focus = _targetFocus;
         Yaw = _targetYaw;
         Distance = _targetDistance;
+        Tilt = _targetTilt;
         _hasFocusHeight = false;
     }
 
@@ -213,8 +293,21 @@ public sealed class GodCameraModel
         ArgumentNullException.ThrowIfNull(groundHeight);
         var blend = 1f - MathF.Exp(-_settings.Smoothing * MathF.Max(0f, deltaSeconds));
 
+        if (_fling != Vector2.Zero)
+        {
+            var seconds = MathF.Max(0f, deltaSeconds);
+            PanWorld(_fling * seconds);
+            _fling *= MathF.Exp(-_settings.FlingDamping * seconds);
+            if (_fling.LengthSquared() < 0.25f)
+            {
+                _fling = Vector2.Zero;
+            }
+        }
+
         Focus = Vector2.Lerp(Focus, _targetFocus, blend);
         Yaw += (_targetYaw - Yaw) * blend;
+        Tilt += (_targetTilt - Tilt) * blend;
+        Aim += (MathF.Max(0f, AimAbove) - Aim) * blend;
 
         // Easing in log space gives the same feel at every zoom level.
         Distance = MathF.Exp(MathF.Log(Distance) + ((MathF.Log(_targetDistance) - MathF.Log(Distance)) * blend));
@@ -234,7 +327,7 @@ public sealed class GodCameraModel
         ArgumentNullException.ThrowIfNull(groundHeight);
         var pitch = Pitch;
         var horizontal = Distance * MathF.Cos(pitch);
-        var target = new Vector3(Focus.X, FocusHeight, Focus.Y);
+        var target = new Vector3(Focus.X, FocusHeight + Aim, Focus.Y);
         var position = target + new Vector3(MathF.Sin(Yaw) * horizontal, Distance * MathF.Sin(pitch), MathF.Cos(Yaw) * horizontal);
 
         var minimumHeight = groundHeight(position.X, position.Z) + _settings.MinClearance;
@@ -262,8 +355,11 @@ public sealed class GodCameraModel
         t = Math.Clamp(t, 0f, 1f);
         var eased = t * t * (3f - (2f * t));
         var degrees = _settings.MinPitchDegrees + ((_settings.MaxPitchDegrees - _settings.MinPitchDegrees) * eased);
-        return degrees * (MathF.PI / 180f);
+        return Radians(degrees);
     }
+
+    /// <summary>Degrees in radians.</summary>
+    private static float Radians(float degrees) => degrees * (MathF.PI / 180f);
 
     /// <summary>Clamps a ground point into the focus bounds.</summary>
     private Vector2 ClampToBounds(Vector2 point) => Vector2.Clamp(point, _boundsMin, _boundsMax);

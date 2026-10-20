@@ -606,6 +606,9 @@ keep it in 0..1. A missing,
   with exponential smoothing, pitch from zoom, bounds, terrain clearance, and the zoom bands
   Close (≤ 120 m), Regional (≤ 700 m) and Strategic (≤ 2600 m). `MaxDistance` grows with the
   island's width beyond 2 km (ADR-027).
+  The player tilts the view within 30° of the zoom's pitch (`TiltBy`); a trackpad pans by a share
+  of the view (`PanViews`) and pinches (`ZoomByFactor`); a let-go grab flings the view on (`Fling`),
+  and `AimAbove` frames a followed Creature by its body (ADR-058).
 - `Diagnostics/DebugReadout`: formats the debug overlay model from state (pure), with
   `SettlementReadout` for the settlement lines. `Diagnostics/RegionDebugMap` builds the F3
   region debug map image (pure). `Diagnostics/PerformanceReadout` words the client's
@@ -749,9 +752,13 @@ keep it in 0..1. A missing,
   F3 region map; its `Bootstrap/PerformanceMonitor`, the only code that reads the clock, times the
   frames, the simulation's share of each and a save (ADR-044). With `--stress` GameRoot makes the
   stress world.
-- `Camera/GodCameraController`: maps input (WASD, edge scroll, right-drag grab, wheel, Q/E,
-  middle-drag) to `GodCameraModel` and applies the pose to `Camera3D`, keeping its clearance above
-  the roofs through `Roofs` (`Rooftops`, ADR-057).
+- `Camera/GodCameraController`: maps input to `GodCameraModel` and applies the pose to `Camera3D`,
+  keeping its clearance above the roofs through `Roofs` (`Rooftops`, ADR-057). The left button grabs
+  and flings the land (`LandGrab`), the right or middle button orbits, the wheel zooms towards the
+  cursor, a double click flies there, WASD pans, Q/E turn and Page Up/Down tilt; a trackpad's two
+  fingers pan (or zoom), Option with two fingers orbits and a pinch zooms, each gesture taken once
+  though the engine delivers it twice; the window's edge pans when the settings say so. `Follow`
+  keeps the focus on a moving thing, such as the Creature, until the player pans away (ADR-058).
 - The light (`Scenes/Main.tscn`, ADR-051): a procedural sky, the sun with soft shadows, ACES
   tonemapping, screen-space ambient occlusion and a soft glow (both switched by the settings'
   lighting effects), distance fog and a little contrast.

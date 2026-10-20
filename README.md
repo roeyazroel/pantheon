@@ -354,10 +354,13 @@ covers:
 
 | Action | Input |
 | --- | --- |
-| Pan | W A S D, arrow keys, or move the mouse to a screen edge |
-| Grab and drag the ground | Hold the right mouse button and drag |
-| Zoom (towards the cursor) | Mouse wheel, `=` / `-`, keypad `+` / `-` |
-| Rotate | Q / E, or hold the middle mouse button and drag |
+| Pan | W A S D or the arrow keys; on a trackpad, two fingers; at the window's edge if the settings say so |
+| Grab the land and drag it (let go mid-drag to fling it) | Hold the left mouse button and drag (when no miracle is aimed) |
+| Fly to a place and close in | Double-click the land |
+| Zoom (towards the cursor) | Mouse wheel, a trackpad pinch, `=` / `-`, keypad `+` / `-` |
+| Turn and tilt the view | Hold the right or middle mouse button and drag; on a trackpad, Option (or Shift) with two fingers |
+| Rotate | Q / E |
+| Tilt | Page Up / Page Down (fn+↑ / fn+↓ on Mac laptops) |
 | Select a miracle (again to deselect) | 1–9 and 0, or click it in the miracle bar |
 | Select Anoint a Prophet, then your domains' miracles, after the tenth | Shift+1, then Shift+2, Shift+3, Shift+4 |
 | Show or hide the Domains panel: your domains, what each gives, the holy sites | G |
@@ -370,7 +373,7 @@ covers:
 | Let the villager you follow go | Shift+/ |
 | The whole island from afar, and back | ` (backtick) |
 | Look at the next settlement | F or Home |
-| Look at your Creature (the camera turns to its face) | C, or Look on its card |
+| Look at your Creature and follow it (the camera turns to its face; move the view to let go) | C, or Look on its card |
 | Reward / punish your Creature for what it is doing (or just did) | Z / X, or the buttons on its card |
 | Send your Creature to the cursor | V (or Send on its card, then click the ground) |
 | Your hand picks up what is at the cursor, or sets it down there; with Shift it throws it | R / Shift+R |
@@ -1312,7 +1315,9 @@ effects (ambient occlusion and a soft glow), the render scale, the citizens show
 vegetation (how far the grass and flowers reach and the forests are planted), the terrain quality,
 the particles (rain, fire, smoke and the miracles' looks), the simulation budget, and the loudness
 of everything, the music, the effects and the wind and rain (spec §105, ADR-056). Citizens,
-vegetation and terrain quality take effect when the game next starts.
+vegetation and terrain quality take effect when the game next starts. Three settings shape the
+camera (ADR-058): panning at the window's edge (off unless you turn it on), whether a trackpad's
+two-finger scroll zooms instead of panning, and the camera's speed.
 
 The simulation keeps to its budget, 6 ms a frame unless you choose another (2–16 ms). When a big
 world at ×16 needs more, the ticks still due wait for the next frame, so the game runs a little
@@ -1494,7 +1499,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--load=<path>` | Load a save at startup, for example `user://saves/quicksave.json`. If it fails, a new world is generated. |
 | `--terrain=auto\|terrain3d\|fallback` | Terrain renderer. `auto` (the default) and `terrain3d` use Terrain3D when it is available; `fallback` forces the built-in mesh renderer. |
 | `--advance-ticks=<n>` | Run `n` simulation ticks (10 per simulated second) before the first frame, for example `--advance-ticks=9000` for a settlement of about 425 people. |
-| `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 25–2600, or further over a larger island). |
+| `--camera-distance=<m>` | Starting camera distance in metres (default 380, clamped to 12–2600, or further over a larger island). |
 | `--quit-after-frames=<n>` | Quit after `n` frames (smoke tests). The run prints its frame times, the performance lines with a save timed, and the world's load. |
 | `--stress=on\|off` | Start the stress scenario of spec §104 (ADR-044): the vast island with 50 villages of 2,000 people, 8 gods and their Creatures, 20 weather cells and an earthquake, a fire and a flood, the crowd drawn in thousands. |
 | `--wildlife=on\|off` | Take the camera to the herd of deer nearest the focused settlement at the start (ADR-054). |

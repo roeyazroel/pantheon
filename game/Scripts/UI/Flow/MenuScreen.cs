@@ -179,6 +179,9 @@ internal sealed partial class MenuScreen : CanvasLayer
         Slide("Music", Settings.MusicVolume, 0f, value => Settings with { MusicVolume = value });
         Slide("Effects", Settings.EffectsVolume, 0f, value => Settings with { EffectsVolume = value });
         Slide("Wind and rain", Settings.AmbienceVolume, 0f, value => Settings with { AmbienceVolume = value });
+        Toggle("Pan at the window's edge", Settings.EdgeScroll, on => Settings with { EdgeScroll = on });
+        Toggle("Trackpad scrolling zooms", Settings.TrackpadScrollZooms, on => Settings with { TrackpadScrollZooms = on });
+        Slide("Camera speed", Settings.CameraSpeed, Pantheon.Game.Settings.GameSettings.MinCameraSpeed, value => Settings with { CameraSpeed = value }, Pantheon.Game.Settings.GameSettings.MaxCameraSpeed);
         _column.AddChild(UiKit.Button("Back", back));
     }
 
