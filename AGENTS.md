@@ -69,7 +69,9 @@ rule is followed by the conventions that meet it in this repository.
 - Use cross-platform APIs (`Path.Combine`, `user://` for saves) and avoid OS-specific code.
 - A native dependency must ship debug and release libraries for Windows, macOS and Linux, and
   must sit behind an adapter with a fallback, as Terrain3D does
-  ([ADR-005](docs/ADR/ADR-005-terrain3d-for-terrain.md)). `ArchitectureRulesTests` checks every
+  ([ADR-005](docs/ADR/ADR-005-terrain3d-for-terrain.md)) and the player's SQLite profile does
+  ([ADR-060](docs/ADR/ADR-060-main-menu-and-local-sqlite-profile.md): `FileProfileStore` when the
+  library cannot be loaded). `ArchitectureRulesTests` checks every
   `.gdextension` manifest under `game/addons`.
 - Development scripts are bash. On Windows, run them from Git Bash or WSL.
 
@@ -149,7 +151,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--reshape`, `--wildlife`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--title-page`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a
@@ -161,7 +163,7 @@ rule is followed by the conventions that meet it in this repository.
 | --- | --- |
 | State and content contracts | `src/Pantheon.Domain` |
 | World generation and tick systems | `src/Pantheon.Simulation`, registered in `SimulationEngine` |
-| Saves and content parsing | `src/Pantheon.Persistence` |
+| Saves, content parsing and the player's profile | `src/Pantheon.Persistence` |
 | Multiplayer protocol, codecs and transport contract | `src/Pantheon.Networking` (the host and player logic in `src/Pantheon.Game/Multiplayer`, ENet in `game/Scripts/Network`) |
 | Session, commands, scheduler, camera maths, debug readouts, presentation data, Tier 2 citizens | `src/Pantheon.Game` |
 | Nodes, input, UI | `game/Scripts`, with scenes in `game/Scenes` and actions in `game/project.godot` |

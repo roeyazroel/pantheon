@@ -31,7 +31,6 @@ namespace Pantheon.Client.Bootstrap;
 /// </summary>
 public partial class GameRoot : Node3D
 {
-    private const string QuickSavePath = "user://saves/quicksave.json";
     private const float FocusDistance = 220f;
 
     // C brings the camera this close to the Creature, and aims at this share of its height (ADR-058).
@@ -41,8 +40,6 @@ public partial class GameRoot : Node3D
     // How far from where the hand presses debris is knocked away, in metres (ADR-057).
     private const float PushReach = 12f;
 
-    // F2 seeds stay short enough to read off the overlay and pass back with --seed.
-    private const long MaxRandomSeed = 1_000_000_000;
 
     // The island the fog was tuned for, in metres across.
     private const float FogReferenceExtent = 2048f;
@@ -67,9 +64,8 @@ public partial class GameRoot : Node3D
     private string? _status;
     private DebugView _debug = null!;
     private Hud? _hud;
+    private GameFlow _flow = null!;
 
-    /// <summary>Absolute path of the quicksave file.</summary>
-    private static string GlobalQuickSavePath => ProjectSettings.GlobalizePath(QuickSavePath);
 
     /// <summary>Builds the session and the world visuals. Quits with exit code 1 when the content is broken.</summary>
     public override void _Ready()
@@ -80,6 +76,7 @@ public partial class GameRoot : Node3D
         Startup.ReportLaunchWarnings(options);
         Startup.CheckInputMap();
         var settings = Startup.LoadSettings();
+        GD.Print($"Profile kept in {Startup.Profile.Kind}");
         var loaded = Startup.TryLoadContent(settings);
         if (loaded is null)
         {
@@ -133,7 +130,8 @@ public partial class GameRoot : Node3D
         CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
         var flow = new GameFlow { Name = "GameFlow" };
         AddChild(flow);
-        flow.Setup(_session, _network, _divine, _diplomacy, SetStatus, options, settings);
+        flow.Setup(_session, _network, _divine, (_diplomacy, hud), _camera, SetStatus, options, settings);
+        _flow = flow;
         var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };
         AddChild(audio);
         audio.Setup(_session, () => new GroundPosition(_camera.Model.Focus.X, _camera.Model.Focus.Y), point => _session.Terrain.SampleHeight(point.X, point.Z), settings);
@@ -267,9 +265,9 @@ public partial class GameRoot : Node3D
         (InputActions.ToggleDebugOverlay, () => _overlay.PanelVisible = !_overlay.PanelVisible),
         (InputActions.ToggleRegionMap, () => SetStatus(_debug.CycleRegionMap())),
         (InputActions.CameraFocusSettlement, FocusNextSettlement),
-        (InputActions.WorldNew, () => SetStatus(SessionCommands.NewWorld(_session, CreateRandomSeed()))),
-        (InputActions.WorldQuickSave, () => SetStatus(SessionCommands.QuickSave(_session, GlobalQuickSavePath))),
-        (InputActions.WorldQuickLoad, () => SetStatus(SessionCommands.QuickLoad(_session, GlobalQuickSavePath))),
+        (InputActions.WorldNew, () => _flow.NewRandomWorld()),
+        (InputActions.WorldQuickSave, () => _flow.QuickSave()),
+        (InputActions.WorldQuickLoad, () => _flow.QuickLoad()),
         (InputActions.SimTogglePause, () => SetStatus(SessionCommands.TogglePause(_session))),
         (InputActions.SimSpeedDown, () => SetStatus(SessionCommands.ChangeSpeed(_session, -1))),
         (InputActions.SimSpeedUp, () => SetStatus(SessionCommands.ChangeSpeed(_session, 1))),
@@ -458,6 +456,4 @@ public partial class GameRoot : Node3D
         GD.Print(message);
     }
 
-    /// <summary>A fresh seed for F2. Only the shell picks random seeds; the simulation never does.</summary>
-    private static WorldSeed CreateRandomSeed() => new((ulong)Random.Shared.NextInt64(1, MaxRandomSeed));
 }

@@ -1,0 +1,99 @@
+using System;
+using Godot;
+using Pantheon.Game.Settings;
+
+namespace Pantheon.Client.UI.Flow;
+
+/// <summary>
+/// The settings (spec §105, ADR-021, ADR-056, ADR-058, ADR-059) in four tabs: graphics, sound,
+/// controls and the interface. Each change is kept in the profile and most apply at once.
+/// </summary>
+internal static class SettingsPage
+{
+    /// <summary>Builds the page.</summary>
+    /// <param name="menu">The menu, holding the settings and reporting changes.</param>
+    /// <returns>The page.</returns>
+    public static Control Build(MenuScreen menu)
+    {
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 8);
+        column.AddChild(UiKit.Heading("Settings"));
+        var tabs = new TabContainer { CustomMinimumSize = new Vector2(600, 430) };
+        column.AddChild(tabs);
+
+        var graphics = Tab(tabs, "Graphics");
+        Toggle(menu, graphics, "Fullscreen", s => s.Fullscreen, (s, on) => s with { Fullscreen = on });
+        Toggle(menu, graphics, "Vertical sync", s => s.VSync, (s, on) => s with { VSync = on });
+        Toggle(menu, graphics, "Shadows", s => s.Shadows, (s, on) => s with { Shadows = on });
+        Toggle(menu, graphics, "Lighting effects", s => s.LightingEffects, (s, on) => s with { LightingEffects = on });
+        Slide(menu, graphics, "Render scale", s => s.RenderScale, (s, v) => s with { RenderScale = v }, GameSettings.MinRenderScale, 1f);
+        Slide(menu, graphics, "Particles", s => s.Particles, (s, v) => s with { Particles = v }, GameSettings.MinParticles, 1f);
+        Slide(menu, graphics, "Citizens shown", s => s.Citizens, (s, v) => s with { Citizens = v }, GameSettings.MinCitizens, 1f);
+        Slide(menu, graphics, "Vegetation", s => s.Vegetation, (s, v) => s with { Vegetation = v }, GameSettings.MinVegetation, 1f);
+        Slide(menu, graphics, "Terrain quality", s => s.TerrainQuality, (s, v) => s with { TerrainQuality = v }, GameSettings.MinTerrainQuality, 1f);
+        graphics.AddChild(UiKit.Text("Citizens, vegetation and terrain quality take effect when the game next starts. A lower render scale draws faster on a large screen.", UiTheme.CaptionSize, UiKit.Muted));
+        Slide(menu, graphics, "Simulation budget (ms)", s => s.SimulationBudget, (s, v) => s with { SimulationBudget = v }, GameSettings.MinSimulationBudget, GameSettings.MaxSimulationBudget, 1.0);
+
+        var sound = Tab(tabs, "Sound");
+        Slide(menu, sound, "Volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }, 0f, 1f);
+        Slide(menu, sound, "Music", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }, 0f, 1f);
+        Slide(menu, sound, "Effects", s => s.EffectsVolume, (s, v) => s with { EffectsVolume = v }, 0f, 1f);
+        Slide(menu, sound, "Wind and rain", s => s.AmbienceVolume, (s, v) => s with { AmbienceVolume = v }, 0f, 1f);
+
+        var controls = Tab(tabs, "Controls");
+        Toggle(menu, controls, "Pan at the window's edge", s => s.EdgeScroll, (s, on) => s with { EdgeScroll = on });
+        Toggle(menu, controls, "Trackpad scrolling zooms", s => s.TrackpadScrollZooms, (s, on) => s with { TrackpadScrollZooms = on });
+        Slide(menu, controls, "Camera speed", s => s.CameraSpeed, (s, v) => s with { CameraSpeed = v }, GameSettings.MinCameraSpeed, GameSettings.MaxCameraSpeed);
+        controls.AddChild(UiKit.Text("Drag the land with the left button to move, the right button to turn and tilt, and the wheel or a pinch to zoom. On a trackpad two fingers move the view, and Option with two fingers turns it.", UiTheme.CaptionSize, UiKit.Muted));
+
+        var view = Tab(tabs, "Interface");
+        Slide(menu, view, "Interface size", s => s.InterfaceScale, (s, v) => s with { InterfaceScale = v }, GameSettings.MinInterfaceScale, GameSettings.MaxInterfaceScale);
+        return column;
+    }
+
+    /// <summary>A tab with a column of rows.</summary>
+    private static VBoxContainer Tab(TabContainer tabs, string name)
+    {
+        var margin = new MarginContainer { Name = name };
+        margin.AddThemeConstantOverride("margin_left", 10);
+        margin.AddThemeConstantOverride("margin_right", 10);
+        margin.AddThemeConstantOverride("margin_top", 12);
+        tabs.AddChild(margin);
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 8);
+        margin.AddChild(column);
+        return column;
+    }
+
+    /// <summary>A check box that changes a setting.</summary>
+    private static void Toggle(MenuScreen menu, Container parent, string caption, Func<GameSettings, bool> read, Func<GameSettings, bool, GameSettings> change)
+    {
+        var box = new CheckBox { ButtonPressed = read(menu.Settings), FocusMode = Control.FocusModeEnum.None };
+        box.Toggled += on => menu.ChangeSettings(change(menu.Settings, on));
+        parent.AddChild(UiKit.Row(caption, box));
+    }
+
+    /// <summary>A slider that changes a setting, with its value beside it.</summary>
+    private static void Slide(MenuScreen menu, Container parent, string caption, Func<GameSettings, float> read, Func<GameSettings, float, GameSettings> change, float least, float most, double step = 0.05)
+    {
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 10);
+        var slider = new HSlider { MinValue = least, MaxValue = most, Step = step, Value = read(menu.Settings), CustomMinimumSize = new Vector2(280, 28), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter, FocusMode = Control.FocusModeEnum.None };
+        var value = UiKit.Text(Show(read(menu.Settings), step), UiTheme.SmallSize, UiTheme.Ink);
+        value.AutowrapMode = TextServer.AutowrapMode.Off;
+        value.CustomMinimumSize = new Vector2(52, 0);
+        slider.ValueChanged += changed =>
+        {
+            value.Text = Show((float)changed, step);
+            menu.ChangeSettings(change(menu.Settings, (float)changed));
+        };
+        row.AddChild(slider);
+        row.AddChild(value);
+        parent.AddChild(UiKit.Row(caption, row));
+    }
+
+    /// <summary>A setting's value in words: a percentage, or a whole number for whole steps.</summary>
+    private static string Show(float value, double step) => step >= 1.0
+        ? value.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+        : (value * 100f).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "%";
+}

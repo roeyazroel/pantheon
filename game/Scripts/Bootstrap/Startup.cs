@@ -6,14 +6,43 @@ using Pantheon.Game.Launch;
 using Pantheon.Game.Presentation;
 using Pantheon.Game.Settings;
 using Pantheon.Persistence;
+using Pantheon.Persistence.Profile;
 
 namespace Pantheon.Client.Bootstrap;
 
 /// <summary>What the client does before the world is shown: content, settings, and checks of the options and the input map.</summary>
 internal static class Startup
 {
-    /// <summary>Where the player's settings are kept.</summary>
+    /// <summary>Where the player's settings were kept before the profile (ADR-060); read once to bring them in.</summary>
     public const string SettingsPath = "user://settings.json";
+
+    // The profile's key for the settings.
+    private const string SettingsKey = "settings";
+
+    private static IProfileStore? _profile;
+
+    /// <summary>
+    /// The player's profile (ADR-060): one SQLite file in the game's user directory, or plain files
+    /// beside it when SQLite cannot be loaded. It is opened once for the process and closed as it ends.
+    /// </summary>
+    public static IProfileStore Profile
+    {
+        get
+        {
+            if (_profile is null)
+            {
+                _profile = ProfileStores.Open(ProjectSettings.GlobalizePath("user://"), out var problem);
+                if (problem is not null)
+                {
+                    GD.PushWarning($"The profile is kept in files, as SQLite could not be opened: {problem}");
+                }
+
+                AppDomain.CurrentDomain.ProcessExit += (_, _) => _profile?.Dispose();
+            }
+
+            return _profile;
+        }
+    }
 
     /// <summary>
     /// Loads the simulation and presentation content, logging the reason on failure; the settings'
@@ -36,14 +65,21 @@ internal static class Startup
         }
     }
 
-    /// <summary>The player's settings, or the defaults when there are none.</summary>
+    /// <summary>The player's settings from the profile, brought in from the old settings file the first time; the defaults when there are none.</summary>
     /// <returns>The settings.</returns>
     public static GameSettings LoadSettings()
     {
+        if (Profile.ReadValue(SettingsKey) is { } kept)
+        {
+            return GameSettings.Parse(kept);
+        }
+
         var path = ProjectSettings.GlobalizePath(SettingsPath);
         try
         {
-            return GameSettings.Parse(File.Exists(path) ? File.ReadAllText(path) : null);
+            var settings = GameSettings.Parse(File.Exists(path) ? File.ReadAllText(path) : null);
+            SaveSettings(settings);
+            return settings;
         }
         catch (IOException exception)
         {
@@ -52,16 +88,16 @@ internal static class Startup
         }
     }
 
-    /// <summary>Keeps the player's settings for the next run.</summary>
+    /// <summary>Keeps the player's settings for the next run, in the profile.</summary>
     /// <param name="settings">The settings.</param>
     public static void SaveSettings(GameSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
         try
         {
-            File.WriteAllText(ProjectSettings.GlobalizePath(SettingsPath), settings.Serialize());
+            Profile.WriteValue(SettingsKey, settings.Serialize());
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
         {
             GD.PushWarning($"Settings could not be saved: {exception.Message}");
         }

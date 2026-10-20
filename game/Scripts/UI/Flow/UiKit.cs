@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 namespace Pantheon.Client.UI.Flow;
@@ -70,17 +71,47 @@ internal static class UiKit
     /// <returns>The button.</returns>
     public static Button Button(string text, Action pressed)
     {
-        var button = new Button { Text = text, CustomMinimumSize = new Vector2(0, 34) };
-        button.AddThemeFontSizeOverride("font_size", 16);
+        var button = new Button { Text = text, CustomMinimumSize = new Vector2(0, 40), FocusMode = Control.FocusModeEnum.None };
         button.Pressed += pressed;
         return button;
+    }
+
+    /// <summary>A heading in the titles' font.</summary>
+    /// <param name="text">Its text.</param>
+    /// <param name="size">Its size.</param>
+    /// <returns>The label.</returns>
+    public static Label Heading(string text, int size = 30)
+    {
+        var label = Text(text, size, Gold);
+        label.AddThemeFontOverride("font", UiTheme.Title);
+        return label;
+    }
+
+    /// <summary>A choice among named items, with a line under it saying what sets the chosen one apart.</summary>
+    /// <param name="items">The items, the default first.</param>
+    /// <param name="about">The line that describes the chosen item.</param>
+    /// <returns>The choice.</returns>
+    public static OptionButton Choice(IReadOnlyList<(string Name, string Description)> items, out Label about)
+    {
+        var choice = new OptionButton { CustomMinimumSize = new Vector2(320, 38), FocusMode = Control.FocusModeEnum.None };
+        var description = Text(string.Empty, UiTheme.CaptionSize, Muted);
+        foreach (var (name, _) in items)
+        {
+            choice.AddItem(name);
+        }
+
+        void Describe(long index) => description.Text = index >= 0 && index < items.Count ? items[(int)index].Description : string.Empty;
+        choice.ItemSelected += Describe;
+        Describe(0);
+        about = description;
+        return choice;
     }
 
     /// <summary>A one-line text field.</summary>
     /// <param name="value">Its text.</param>
     /// <param name="placeholder">Shown while empty.</param>
     /// <returns>The field.</returns>
-    public static LineEdit Field(string value, string placeholder) => new() { Text = value, PlaceholderText = placeholder, CustomMinimumSize = new Vector2(260, 32) };
+    public static LineEdit Field(string value, string placeholder) => new() { Text = value, PlaceholderText = placeholder, CustomMinimumSize = new Vector2(320, 38) };
 
     /// <summary>A labelled row: a caption, then a control.</summary>
     /// <param name="caption">The caption.</param>
@@ -90,8 +121,9 @@ internal static class UiKit
     {
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", 10);
-        var label = Text(caption, 15, Muted);
-        label.CustomMinimumSize = new Vector2(110, 0);
+        var label = Text(caption, UiTheme.SmallSize, Muted);
+        label.CustomMinimumSize = new Vector2(170, 0);
+        label.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         label.AutowrapMode = TextServer.AutowrapMode.Off;
         row.AddChild(label);
         row.AddChild(control);

@@ -102,6 +102,13 @@ internal static class UiTheme
         theme.SetStylebox("fill", "ProgressBar", Panel(Gold, Gold, 0, 4, margin: 0));
         theme.SetColor("font_color", "CheckBox", Ink);
         theme.SetColor("font_hover_color", "CheckBox", Gold);
+        theme.SetStylebox("panel", "TabContainer", Panel(new Color(0.04f, 0.05f, 0.07f, 0.7f), Edge with { A = 0.4f }, 1, 8, margin: 6));
+        theme.SetStylebox("tab_selected", "TabContainer", Panel(new Color(0.3f, 0.23f, 0.09f, 0.95f), Gold, 1, 6, margin: 8));
+        theme.SetStylebox("tab_unselected", "TabContainer", Panel(new Color(0.08f, 0.09f, 0.12f, 0.9f), Edge with { A = 0.35f }, 1, 6, margin: 8));
+        theme.SetStylebox("tab_hovered", "TabContainer", Panel(new Color(0.14f, 0.13f, 0.12f, 0.95f), Gold with { A = 0.7f }, 1, 6, margin: 8));
+        theme.SetColor("font_selected_color", "TabContainer", Gold);
+        theme.SetColor("font_unselected_color", "TabContainer", Muted);
+        theme.SetColor("font_hovered_color", "TabContainer", Ink);
         theme.SetConstant("separation", "VBoxContainer", 6);
         theme.SetConstant("separation", "HBoxContainer", 8);
     }

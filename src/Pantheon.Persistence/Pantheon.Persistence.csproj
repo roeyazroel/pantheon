@@ -8,4 +8,8 @@
     <ProjectReference Include="..\Pantheon.Domain\Pantheon.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+  </ItemGroup>
+
 </Project>

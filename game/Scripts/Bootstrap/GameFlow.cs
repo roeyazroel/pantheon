@@ -1,30 +1,34 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using Pantheon.Client.Camera;
 using Pantheon.Client.Network;
 using Pantheon.Client.UI;
 using Pantheon.Client.UI.Flow;
-using Pantheon.Domain.Events;
 using Pantheon.Domain.World;
 using Pantheon.Game;
 using Pantheon.Game.Flow;
 using Pantheon.Game.History;
-using Pantheon.Persistence;
+using Pantheon.Persistence.Profile;
 
 namespace Pantheon.Client.Bootstrap;
 
 /// <summary>
-/// The game as a game (ADR-020): the start screen, the pause menu (Esc), saving and loading named
-/// worlds and an autosave, hosting and joining from the menu, the history panel (H), the
-/// first-minutes guide, and the end of a game. Joining another host starts the game over in place
-/// with its address, since a joined world replaces the whole session.
+/// The game as a game (ADR-020, ADR-060): the title screen over the living island, the pause menu
+/// (Esc), the player's worlds and their saves in the profile, the autosave, quicksave and quickload,
+/// hosting and joining, the history panel (H), the first-minutes guide, and the end of a game.
+/// Joining another host starts the game over in place with its address, since a joined world
+/// replaces the whole session.
 /// </summary>
 internal sealed partial class GameFlow : Node
 {
-    // Real seconds between autosaves of a world this game owns.
+    // Real seconds between autosaves of a world in the library.
     private const double AutosaveSeconds = 300.0;
+
+    // How fast the title screen's camera circles the island, in radians a second, and how much lower it looks.
+    private const float TitleOrbit = 0.035f;
+    private const float TitleTilt = -0.35f;
 
     // F2 seeds stay short enough to read and type.
     private const long MaxRandomSeed = 1_000_000_000;
@@ -34,7 +38,10 @@ internal sealed partial class GameFlow : Node
     private NetworkDriver _network = null!;
     private DivineController _divine = null!;
     private DiplomacyPanel _diplomacy = null!;
+    private Hud _hud = null!;
+    private GodCameraController _camera = null!;
     private Action<string> _setStatus = null!;
+    private WorldLibrary _library = null!;
     private MenuScreen _menu = null!;
     private HistoryPanel _history = null!;
     private GuidePanel _guidePanel = null!;
@@ -42,29 +49,36 @@ internal sealed partial class GameFlow : Node
     private bool _ended;
     private double _sinceAutosave;
 
-    /// <summary>Where saves live.</summary>
+    /// <summary>Where saves lay before the profile; they are brought into it once (ADR-060).</summary>
     public static string SaveDirectory => ProjectSettings.GlobalizePath("user://saves");
 
-    /// <summary>Connects the flow to the game and shows the start screen or the guide as asked.</summary>
+    /// <summary>Connects the flow to the game and shows the title screen or the guide as asked.</summary>
     /// <param name="session">The session.</param>
     /// <param name="network">The network driver.</param>
     /// <param name="divine">The player's divine interface, for its events and selection.</param>
-    /// <param name="diplomacy">The diplomacy panel, for the guide.</param>
+    /// <param name="ui">The diplomacy panel (for the guide) and the HUD (hidden on the title screen).</param>
+    /// <param name="camera">The camera, which circles the island on the title screen.</param>
     /// <param name="setStatus">Shows a status line.</param>
-    /// <param name="options">Launch options: the start screen (by default when there are no options), the guide, and the history panel or pause menu open from the start.</param>
+    /// <param name="options">Launch options: the title screen (by default when there are no options), the guide, and the history panel or pause menu open from the start.</param>
     /// <param name="settings">The player's settings, for the settings page.</param>
-    public void Setup(GameSession session, NetworkDriver network, DivineController divine, DiplomacyPanel diplomacy, Action<string> setStatus, Game.Launch.LaunchOptions options, Game.Settings.GameSettings settings)
+    public void Setup(GameSession session, NetworkDriver network, DivineController divine, (DiplomacyPanel Diplomacy, Hud Hud) ui, GodCameraController camera, Action<string> setStatus, Game.Launch.LaunchOptions options, Game.Settings.GameSettings settings)
     {
         ArgumentNullException.ThrowIfNull(options);
-        var showStart = options.Menu ?? (options.Seed is null && options.LoadPath is null && options.Join is null && options.HostPort is null && options.QuitAfterFrames is null);
-        (_session, _network, _divine, _diplomacy, _setStatus) = (session, network, divine, diplomacy, setStatus);
+        var showTitle = options.Menu ?? (options.Seed is null && options.LoadPath is null && options.Join is null && options.HostPort is null && options.QuitAfterFrames is null);
+        (_session, _network, _divine, _diplomacy, _hud, _camera, _setStatus) = (session, network, divine, ui.Diplomacy, ui.Hud, camera, setStatus);
+        _library = new WorldLibrary(Startup.Profile, session.Content);
+        if (_library.ImportFiles(SaveDirectory, DateTime.UtcNow) is var imported and > 0)
+        {
+            setStatus($"Brought {imported} saved worlds into your profile");
+        }
+
         _menu = new MenuScreen { Name = "Menus" };
         _menu.Species = session.Content.Creatures.Species.Select(s => (s.Name, s.Description)).ToList();
         _menu.Sizes = session.Content.Sizes.Sizes.Select(s => (s.Name, WorldMaker.Describe(s))).ToList();
         _menu.Settings = settings;
         _menu.SettingsChanged += changed =>
         {
-            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, GetParent().GetNodeOrNull<Pantheon.Client.Camera.GodCameraController>("GodCamera"));
+            SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);
             Startup.SaveSettings(changed);
         };
         _history = new HistoryPanel { Name = "History" };
@@ -82,24 +96,41 @@ internal sealed partial class GameFlow : Node
             _guide.Hide();
         }
 
-        CallDeferred(nameof(Open), showStart, options.HistoryPanel, options.PauseMenu);
+        CallDeferred(nameof(Open), showTitle, options.HistoryPanel, options.PauseMenu, options.TitlePage ?? string.Empty);
         if (options.SettingsPage)
         {
             CallDeferred(nameof(OpenSettings));
         }
     }
 
-    /// <summary>Opens what the options ask for, once the panels are ready.</summary>
-    private void Open(bool start, bool history, bool pause)
+    /// <summary>Saves the world to its quicksave slot (F5).</summary>
+    public void QuickSave() => _setStatus(_library.Save(_session, SaveKind.Quick, DateTime.UtcNow));
+
+    /// <summary>Loads the world's newest quicksave (F9).</summary>
+    public void QuickLoad() =>
+        _setStatus(_library.LatestQuick() is { } save ? _library.Load(_session, save.Id) : "No quicksave of this world yet (F5 makes one)");
+
+    /// <summary>A new world from a random seed (F2), started in the library.</summary>
+    public void NewRandomWorld()
     {
-        if (start)
+        _setStatus(SessionCommands.NewWorld(_session, RandomSeed()));
+        _library.Begin(_session, null, DateTime.UtcNow);
+    }
+
+    /// <summary>Opens what the options ask for, once the panels are ready.</summary>
+    private void Open(bool title, bool history, bool pause, string page)
+    {
+        if (title)
         {
-            ShowStart();
+            ShowTitle();
+            if (page.Length > 0)
+            {
+                _menu.OpenTitlePage(page);
+            }
         }
         else if (pause)
         {
-            Pause();
-            _menu.ShowPause(!_session.IsReplica, SaveCatalog.List(SaveDirectory), Year);
+            ShowPause();
         }
 
         _history.PanelVisible = history;
@@ -120,6 +151,16 @@ internal sealed partial class GameFlow : Node
             return;
         }
 
+        _hud.Visible = !_menu.TitleOpen;
+
+        // The island's labels would show through the title's shade; the view is lower there, as a picture.
+        _camera.ViewCamera.SetCullMaskValue(2, !_menu.TitleOpen);
+        if (_menu.TitleOpen)
+        {
+            _camera.Model.Rotate(TitleOrbit * (float)delta);
+            return;
+        }
+
         _guide.Observe([], _session.LocalGodId, _session.LocalCreature?.Id, _diplomacy.PanelVisible);
         _guidePanel.ShowStep(_guide.IsVisible && !_menu.IsOpen ? _guide.Text(_session.LocalGod?.Name ?? "a god", _session.LocalCreature?.Name ?? "Your Creature") : string.Empty, _guide.CanSkipStep);
         if (_history.PanelVisible)
@@ -130,30 +171,35 @@ internal sealed partial class GameFlow : Node
         if (!_ended && !_menu.IsOpen && EndSummaryBuilder.Build(_session) is { } summary)
         {
             _ended = true;
+            _library.End(summary.Won);
             Pause();
             _menu.ShowEnd(summary, RandomSeed());
         }
 
+        if (!_menu.IsOpen && !_session.Scheduler.IsPaused)
+        {
+            _library.AddPlayTime(delta);
+        }
+
         _sinceAutosave += delta;
-        if (_sinceAutosave >= AutosaveSeconds && !_session.IsReplica && !_menu.IsOpen)
+        if (_sinceAutosave >= AutosaveSeconds && !_session.IsReplica && !_menu.IsOpen && _library.Current is not null)
         {
             _sinceAutosave = 0.0;
-            _setStatus(SessionCommands.QuickSave(_session, SavePath("autosave")));
+            _setStatus(_library.Save(_session, SaveKind.Auto, DateTime.UtcNow));
         }
     }
 
     /// <inheritdoc />
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_session is null)
+        if (_session is null || _menu.TitleOpen)
         {
             return;
         }
 
         if (@event.IsActionPressed(InputActions.GameMenu) && _divine.SelectedMiracle is null && !_menu.IsOpen)
         {
-            Pause();
-            _menu.ShowPause(!_session.IsReplica, SaveCatalog.List(SaveDirectory), Year);
+            ShowPause();
             GetViewport().SetInputAsHandled();
         }
         else if (@event.IsActionPressed(InputActions.GameMenu) && _menu.IsOpen && !_ended)
@@ -171,19 +217,27 @@ internal sealed partial class GameFlow : Node
     /// <summary>What each menu choice does.</summary>
     private void WireMenu()
     {
-        _menu.NewWorldChosen += (seed, world) =>
+        _menu.NewWorldChosen += (seed, world, name) =>
         {
             _setStatus(SessionCommands.NewWorld(_session, seed, world));
+            var record = _library.Begin(_session, name, DateTime.UtcNow);
+            _setStatus($"{record.Name}: your world begins");
             Begin(guide: true);
         };
-        _menu.LoadChosen += path =>
+        _menu.LoadChosen += saveId =>
         {
-            _setStatus(SessionCommands.QuickLoad(_session, path));
+            _setStatus(_library.Load(_session, saveId));
             Begin(guide: false);
+        };
+        _menu.DeleteWorldChosen += worldId =>
+        {
+            _library.Delete(worldId);
+            _menu.ShowWorlds(TitleData());
         };
         _menu.HostChosen += (seed, name, port) =>
         {
             _setStatus(SessionCommands.NewWorld(_session, seed));
+            _library.Begin(_session, "A shared world", DateTime.UtcNow);
             _network.Host(_session, port, name, upnp: false);
             Begin(guide: true);
         };
@@ -192,37 +246,69 @@ internal sealed partial class GameFlow : Node
         _menu.ResumeChosen += Resume;
         _menu.SaveChosen += () =>
         {
-            _setStatus(SessionCommands.QuickSave(_session, SavePath(SaveName())));
+            _setStatus(_library.Save(_session, SaveKind.Manual, DateTime.UtcNow));
             Resume();
         };
         _menu.MainMenuChosen += () =>
         {
+            SaveBeforeLeaving();
             if (_session.IsReplica || _network.IsHosting)
             {
                 Restart(["--menu=on"]);
                 return;
             }
 
-            ShowStart();
+            _library.Leave();
+            ShowTitle();
         };
-        _menu.QuitChosen += () => GetTree().Quit();
+        _menu.QuitChosen += () =>
+        {
+            SaveBeforeLeaving();
+            GetTree().Quit();
+        };
     }
 
-    /// <summary>The start screen over a paused world.</summary>
-    private void ShowStart()
+    /// <summary>The title screen: the island lives on behind it, and the camera circles it.</summary>
+    private void ShowTitle()
+    {
+        _menu.ShowTitle(TitleData());
+        _camera.StopFollowing();
+        _camera.Model.TiltBy(TitleTilt - _camera.Model.TargetTilt);
+        if (!_session.IsReplica)
+        {
+            _session.Scheduler.IsPaused = false;
+        }
+    }
+
+    /// <summary>The pause menu, with the world's line when it is in the library.</summary>
+    private void ShowPause()
     {
         Pause();
-        var saves = SaveCatalog.List(SaveDirectory);
-        _menu.ShowStart(RandomSeed(), saves.FirstOrDefault(), saves, Year);
+        var world = _library.Current is { } current ? $"{current.Name} · {current.God}" : null;
+        _menu.ShowPause(!_session.IsReplica, world, TitleData());
+    }
+
+    /// <summary>What the title screen offers now.</summary>
+    private TitleData TitleData() => new(RandomSeed(), _library.Cards(), _library.Latest(), _library.Store.Kind);
+
+    /// <summary>An autosave of a world in the library before the player leaves it.</summary>
+    private void SaveBeforeLeaving()
+    {
+        if (_library.Current is not null && !_session.IsReplica && !_menu.TitleOpen)
+        {
+            _setStatus(_library.Save(_session, SaveKind.Auto, DateTime.UtcNow));
+        }
     }
 
     /// <summary>Play begins: the menu closes and the clock runs.</summary>
     private void Begin(bool guide)
     {
         _menu.Close();
+        _camera.Model.TiltBy(-_camera.Model.TargetTilt);
         _session.Scheduler.IsPaused = false;
         _wasPaused = false;
         _ended = false;
+        _sinceAutosave = 0.0;
         if (guide)
         {
             _guide.Restart();
@@ -261,16 +347,6 @@ internal sealed partial class GameFlow : Node
         PendingLaunch.Arguments = userArgs;
         GetTree().ReloadCurrentScene();
     }
-
-    /// <summary>The year a tick falls in.</summary>
-    private int Year(long tick) => HistoryText.Year(tick, _session.Content.History);
-
-    /// <summary>A save's name: the god, the year and the seed.</summary>
-    private string SaveName() =>
-        string.Create(CultureInfo.InvariantCulture, $"{_session.LocalGod?.Name ?? "world"}-year{Year(_session.World.Tick)}-seed{_session.World.Seed.Value}");
-
-    /// <summary>The path of a named save.</summary>
-    private static string SavePath(string name) => System.IO.Path.Combine(SaveDirectory, name + ".json");
 
     /// <summary>A fresh seed for a new world; only the shell picks random seeds.</summary>
     private static WorldSeed RandomSeed() => new((ulong)Random.Shared.NextInt64(1, MaxRandomSeed));

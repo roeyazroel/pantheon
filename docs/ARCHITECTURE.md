@@ -59,7 +59,7 @@ src/
   Pantheon.Simulation/        Randomness, Noise (FastNoiseLite), Terrain, WorldGen, Settlements, Belief, Miracles,
                               Creatures, Notables, Resources, Roads, GreatEvents, Navigation, Gods (AI), Diplomacy,
                               Weather, Ecology, Disasters, Systems, SimulationEngine
-  Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing
+  Pantheon.Persistence/       Versioned JSON saves with migrations, content parsing, the player's profile
   Pantheon.Game/              Engine-agnostic application layer: GameSession, scheduler, camera model,
                               diagnostics, HUD model, alerts, overlays, settlement layout,
                               Tier 2 representative citizens (Population), Multiplayer (host and player)
@@ -476,6 +476,15 @@ files and compiled assemblies and fails when either rule is broken.
 
 ### Persistence (`Pantheon.Persistence`)
 
+- The player's profile (ADR-060): `Profile/IProfileStore` keeps values (the settings, progress),
+  the worlds started (`WorldRecord`: name, god, seed, size, victory, seasons, species, created,
+  last played, time played, tick, followers, rank, outcome) and their saves (`SaveRecord`: kind,
+  name, tick, time, save version and the save's gzipped compact JSON). `SqliteProfileStore` keeps
+  them in one SQLite file (Microsoft.Data.Sqlite, WAL, cascading deletes, a schema version);
+  `ProfileStores.Open` falls back to `FileProfileStore` (an index and one file per save) when
+  SQLite's native library or the file cannot be opened. A world keeps every manual save and only
+  its newest autosave and quicksave. The core never reads the clock: times come from the client.
+
 - Save envelope: `{ "SaveVersion": 33, "World": { ... } }`, indented, enums as strings,
   property names exactly as in C#, strict members.
 - Loading reads `SaveVersion` first. A current save deserializes directly. An older save, back
@@ -711,7 +720,12 @@ keep it in 0..1. A missing,
   host, for the players.
 - `History/HistoryText` and `HistoryReadout` word the chronicle ("Year 12 — The Shaking of Elar");
   `Flow/EndSummary` builds the end screen, `Flow/Guide` the first-minutes guide (ADR-020).
-  `Persistence/SaveCatalog` lists the saves for the load page. `Flow/VictoryText` words how a world
+  `Flow/WorldLibrary` keeps the player's worlds in the profile (ADR-060): `Begin` records a new
+  world (named by the player or after its first village), `Save` writes a save and brings the
+  world's record up to date with the time played, `Load` takes a save back through
+  `GameSession.LoadWorld` (`SessionStore.Prepare` readies a saved world as a file load does),
+  `Cards` and `Latest` feed the menus, and `ImportFiles` brings the save files from before the
+  profile in once. `Flow/VictoryText` words how a world
   may be and was won, for the alerts, the history's titles, the end screen, the start screen's
   choices and F1 (ADR-027).
 - `Presentation/LabelDeclutter` (ADR-027) decides, from labels' screen boxes and priorities, which
@@ -871,10 +885,15 @@ keep it in 0..1. A missing,
   launch options.
 - `Presentation/Creatures/CreatureView` poses fights (blows traded face to face), games and
   flight, shows a fighter's health on its label, and `CreatureBody` draws scars on the flanks.
-- `Bootstrap/GameFlow` is the game's flow (ADR-020): the start screen, the pause menu (Esc), named
-  saves and the autosave, hosting and joining from the menu (joining reloads the main scene, whose
-  next start reads the host's address from `PendingLaunch`), the end screen, the guide and the history panel (H), drawn by `UI/Flow/`
-  (`MenuScreen`, `HistoryPanel`, `GuidePanel`, `UiKit`).
+- `Bootstrap/GameFlow` is the game's flow (ADR-020, ADR-060): the title screen over the living
+  island (the camera circling lower, the HUD and labels hidden), the pause menu (Esc), saves through
+  `WorldLibrary` (manual, the autosave every five minutes and on leaving or quitting, F5 and F9),
+  hosting and joining from the menu (joining reloads the main scene, whose next start reads the
+  host's address from `PendingLaunch`), the end screen, the guide and the history panel (H), drawn
+  by `UI/Flow/`: `MenuScreen` (the title with its choices and pages, the pause menu, the end),
+  `NewWorldPage`, `WorldsPage`, `MultiplayerPage`, `SettingsPage` (four tabs), `HistoryPanel`,
+  `GuidePanel` and `UiKit`. `Bootstrap/Startup.Profile` opens the profile once a run and keeps
+  the settings in it.
 - `Network/EnetTransport` puts Godot's `ENetMultiplayerPeer` behind `INetworkTransport` (reliable and
   unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
   (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
@@ -994,8 +1013,8 @@ with their shipped values and the measurements.
   `HistoryText` and shown in the History panel and on the end screen.
 - **Victory** (amending ADR-015): a god counts with its strongest direct allies only, up to
   `PantheonMaxGods`, or the world's own number when its size sets one (ADR-027).
-- **Flow**: `GameFlow` puts menus over the running world. The start screen shows when the game starts
-  without options; the pause menu pauses a world the player owns (a joined player's keeps running);
+- **Flow**: `GameFlow` puts menus over the running world. The title screen shows when the game starts
+  without options, over the island running on; the pause menu pauses a world the player owns (a joined player's keeps running);
   the end screen opens once per world when it has winners. The guide's steps advance on the events
   the divine controller hands it.
 
@@ -1320,7 +1339,7 @@ flowchart LR
     director --> players[Positional and news players]
     mood --> music[Two music players crossfading]
     ambience --> loops[Rain and wind loops]
-    settings[user://settings.json] --> applier[SettingsApplier: window, vsync, shadows, lighting effects, render scale, particles, simulation budget, buses]
+    settings[Settings in the profile] --> applier[SettingsApplier: window, vsync, shadows, lighting effects, render scale, particles, simulation budget, buses]
 ```
 
 - Sounds of events play where they happen (`AudioStreamPlayer3D`, heard from far off at a

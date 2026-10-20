@@ -10,6 +10,9 @@ public sealed partial record LaunchOptions
     /// <summary>A priority the player's god asks of the focused settlement at the start (ADR-023).</summary>
     public Domain.Society.SettlementPriority? Priority { get; init; }
 
+    /// <summary>A page of the title screen open from the start (ADR-060): new, worlds, together or settings; for captures.</summary>
+    public string? TitlePage { get; init; }
+
     /// <summary>Whether the Settlements panel is open at the start, on the focused settlement.</summary>
     public bool SettlementPanel { get; init; }
 
@@ -99,7 +102,7 @@ public sealed partial record LaunchOptions
     }
 
     /// <summary>The names this part adds to <see cref="KnownOptions"/>.</summary>
-    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife"];
+    private static string[] ExpansionOptions() => ["priority", "settlement-panel", "doctrine", "council-panel", "summon-council", "treaty", "war-goal", "holy-war", "veil", "world-size", "victory", "seasons", "season", "hand", "book", "overview", "prophet", "roads", "stores", "great-event", "gods-met", "temperament", "villager", "stress", "reshape", "wildlife", "title-page"];
 
     /// <summary>
     /// Victories from <c>all</c>, <c>sandbox</c> or a list of <c>ascendancy</c>, <c>conquest</c> and
@@ -148,6 +151,10 @@ public sealed partial record LaunchOptions
         var trimmed = value.Trim();
         switch (name)
         {
+            case "title-page":
+                return value is "new" or "worlds" or "together" or "settings"
+                    ? options with { TitlePage = value, Menu = true }
+                    : Warn(options, warnings, $"Unknown title page '{value}'; expected new, worlds, together or settings.");
             case "priority":
                 return Enum.TryParse<Domain.Society.SettlementPriority>(trimmed, ignoreCase: true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(trimmed, out _)
                     ? options with { Priority = priority }

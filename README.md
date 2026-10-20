@@ -207,10 +207,11 @@ godot --path game
 ```
 
 `godot` stands for the Godot 4.7.2 .NET executable. You can also open `game/project.godot` in the
-Godot .NET editor and press F5. Started without options, the game opens on its start screen: begin
-a new world (its seed is shown, so you can share it, and you choose its size, how it may be won,
-its climate and your Creature's species), continue your newest save, load a world, or
-host or join a shared world (joining reloads the game with the host's address). A short guide
+Godot .NET editor and press F5. Started without options, the game opens on its title screen, over
+the living island: Continue your newest save, begin a New World (name it, choose its seed, your
+Creature's species, its size, how it may be won and its climate), open Your Worlds to load or
+forget a world, Play Together (host or join a shared world; joining reloads the game with the
+host's address), or change the Settings. No command line is needed to play (ADR-060). A short guide
 walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
 
@@ -1561,6 +1562,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains=<domain>[,<domain>...]` | Take up these domains at the start, as your rank allows. |
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
+| `--title-page=new\|worlds\|together\|settings` | Open the title screen on a page (for captures, ADR-060). |
 
 Unknown options and invalid values produce a warning and are otherwise ignored.
 
@@ -1601,18 +1603,23 @@ something happens, and the whole world every 20 seconds. That is about 13 KB/s p
 
 ## Saves
 
-F5 writes the world to `user://saves/quicksave.json` and F9 loads it back. In a project run
-(not an export), `user://` is:
+Your worlds, their saves and your settings are kept in your profile, one SQLite file,
+`user://pantheon.db` (ADR-060). If SQLite's library cannot be loaded, the profile is kept in plain
+files in `user://profile/` instead. In a project run (not an export), `user://` is:
 
 - Linux: `~/.local/share/godot/app_userdata/PANTHEON/`
 - Windows: `%APPDATA%\Godot\app_userdata\PANTHEON\`
 - macOS: `~/Library/Application Support/Godot/app_userdata/PANTHEON/`
 
-The pause menu saves the world under its god, year and seed in the same folder, an autosave is
-written there every five minutes, and the start screen and pause menu list every save, newest
-first. A host's world is saved there as `hosted.json` when it ends a shared session.
+Each world you begin is recorded with its god, size, seed, rank, followers and the time you have
+played it. Your Worlds on the title screen lists them, the most recently played first; each can
+be continued from its newest save, loaded from any of its saves, or forgotten. A world keeps every
+save you make from the pause menu, its newest autosave (every five minutes, and when you leave or
+quit) and its newest quicksave (F5; F9 loads it back). Save files from before the profile are
+brought into it the first time the game starts, each as a world, and so are the old settings. A
+host's world is still written to `user://saves/hosted.json` when it ends a shared session.
 
-Saves are indented JSON of the simulation state, starting with `"SaveVersion": 33`. The scene tree
+Saves are JSON of the simulation state, compressed in the profile, starting with `"SaveVersion": 33`. The scene tree
 is never saved. The terrain is regenerated from the seed and loading rebuilds every visual
 ([ADR-006](docs/ADR/ADR-006-simulation-state-separate-from-scenes.md)). The representative
 citizens are not saved either; they are derived again after a load. Saves from Milestone 1
@@ -1644,8 +1651,8 @@ grow each region's forest from its vegetation (without a new world's patches), g
 new world's stores of wood and stone, and have no roads yet. A save keeps its world's
 size, how it may be won and its seasons.
 
-Your settings are kept in `user://settings.json`; the start screen and the pause menu have a
-settings page.
+Your settings are kept in the profile too; the title screen and the pause menu have a settings
+page in four tabs: graphics, sound, controls and the interface.
 
 ## Repository layout
 
@@ -1663,7 +1670,8 @@ src/
   Pantheon.Simulation/    Seeded RNG, noise, terrain and world generation, the settlement and belief models,
                           influence, miracles, the Creature, navigation, the god AI, victory, diplomacy,
                           weather, disasters, tick systems
-  Pantheon.Persistence/   Versioned JSON saves with migrations, and content parsing
+  Pantheon.Persistence/   Versioned JSON saves with migrations, content parsing, and the player's profile
+                          (SQLite, or files when it cannot load: ADR-060)
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
   Pantheon.Networking/    The multiplayer protocol, its codecs and the transport contract (ADR-003, ADR-018)
@@ -1679,7 +1687,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-38-interface.md](.docs/milestone-15-part-38-interface.md).
+[.docs/milestone-15-part-39-menu-and-profile.md](.docs/milestone-15-part-39-menu-and-profile.md).
 
 ## Contributing
 

@@ -429,6 +429,16 @@ public sealed class GameSession
         Replace(world, terrain);
     }
 
+    /// <summary>Replaces the current world with one read from a save kept elsewhere, such as the player's profile (ADR-060).</summary>
+    /// <param name="world">The saved world, already migrated to the current save version.</param>
+    /// <exception cref="SaveFormatException">The save's generation settings are invalid.</exception>
+    public void LoadWorld(WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        var (prepared, terrain) = SessionStore.Prepare(Content, world);
+        Replace(prepared, terrain);
+    }
+
     /// <summary>Swaps in a new world and notifies listeners.</summary>
     private void Replace(WorldState world, TerrainField terrain)
     {

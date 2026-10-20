@@ -75,6 +75,7 @@ silently:
 | [ADR-057](ADR-057-tactile-hand-camera-above-roofs-and-bridges.md) | A tactile hand, the camera above the roofs, and walkers on bridges | Accepted |
 | [ADR-058](ADR-058-camera-controls-for-mouse-and-trackpad.md) | Camera controls for the mouse and the trackpad | Accepted |
 | [ADR-059](ADR-059-interface-look-scaling-and-hud.md) | The interface's look, its scaling, and a HUD of gauges | Accepted |
+| [ADR-060](ADR-060-main-menu-and-local-sqlite-profile.md) | A main menu and the player's profile in local SQLite | Accepted (amends ADR-020) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

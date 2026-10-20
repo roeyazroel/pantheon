@@ -13,9 +13,15 @@ internal static class SessionStore
     /// Reads a save and regenerates its terrain from the saved seed and generation settings. Gods that
     /// connected players played go back to the AI, and a world from before holy sites finds its own (ADR-021).
     /// </summary>
-    internal static (WorldState World, TerrainField Terrain) LoadWorld(GameContent content, string path)
+    internal static (WorldState World, TerrainField Terrain) LoadWorld(GameContent content, string path) =>
+        Prepare(content, WorldSaveSerializer.LoadFromFile(path));
+
+    /// <summary>
+    /// Readies a world read from a save, wherever it was kept (a file or the profile, ADR-060): its
+    /// terrain is made again from its seed and generation settings, and remote gods go back to the AI.
+    /// </summary>
+    internal static (WorldState World, TerrainField Terrain) Prepare(GameContent content, WorldState world)
     {
-        var world = WorldSaveSerializer.LoadFromFile(path);
         Simulation.HolySites.HolySitePlacer.EnsurePlaced(content.HolySites, world);
         foreach (var god in world.Gods)
         {
