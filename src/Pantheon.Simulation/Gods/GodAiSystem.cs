@@ -61,7 +61,7 @@ public sealed class GodAiSystem : ISimulationSystem
             if (god.Controller == GodController.Ai && IsTurn(context.World.Tick, turn++, thinkers, _interval))
             {
                 _ai.Act(context.World, god, context.Random, context.Events);
-                if (_ai.ProfileOf(god.Personality) is { } profile)
+                if (_ai.ProfileOf(god) is { } profile)
                 {
                     _refugees?.Act(context.World, god, profile, context.Events);
                     _priorities?.Act(context.World, god, profile, context.Events);

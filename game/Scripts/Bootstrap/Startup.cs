@@ -19,6 +19,9 @@ internal static class Startup
     // The profile's key for the settings.
     private const string SettingsKey = "settings";
 
+    // The profile's key for the player's Anthropic key (ADR-065), kept apart from the settings so it is never written with them.
+    private const string AnthropicKeyKey = "anthropic_key";
+
     private static IProfileStore? _profile;
 
     /// <summary>
@@ -100,6 +103,41 @@ internal static class Startup
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
         {
             GD.PushWarning($"Settings could not be saved: {exception.Message}");
+        }
+    }
+
+    /// <summary>
+    /// The player's own Anthropic key (ADR-065), kept in the profile on this computer only, apart from
+    /// the settings; empty when they gave none. It goes nowhere but to Anthropic, with Claude's questions.
+    /// </summary>
+    public static string AnthropicKey
+    {
+        get => Profile.ReadValue(AnthropicKeyKey) ?? string.Empty;
+        set
+        {
+            try
+            {
+                Profile.WriteValue(AnthropicKeyKey, value.Trim());
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
+            {
+                GD.PushWarning($"The Anthropic key could not be kept: {exception.Message}");
+            }
+        }
+    }
+
+    /// <summary>The gods' minds' content (ADR-065), logging the reason when it is broken.</summary>
+    /// <returns>The content, or <c>null</c> when it is broken: worlds are then made with the content's gods.</returns>
+    public static Pantheon.Game.Minds.MindContent? TryLoadMinds()
+    {
+        try
+        {
+            return GodotContentLoader.LoadMindContent();
+        }
+        catch (Exception exception) when (exception is ContentFormatException or IOException)
+        {
+            GD.PushError($"The gods' minds could not be loaded: {exception.Message}");
+            return null;
         }
     }
 

@@ -32,6 +32,12 @@ public sealed record GodAiRules
 
     /// <summary>How the gods make their major plans (ADR-036); none when absent.</summary>
     public PlanningRules Planning { get; init; } = PlanningRules.None;
+
+    /// <summary>
+    /// How far a god's temper (ADR-065) moves a weight of its personality's profile: a leaning of 1
+    /// adds this much, -1 takes it away (0..0.5; none when absent).
+    /// </summary>
+    public float TemperReach { get; init; }
 }
 
 /// <summary>The weights of one personality's goals (each 0..1, except where noted).</summary>

@@ -67,6 +67,9 @@ internal sealed partial class MenuScreen : CanvasLayer
     /// <summary>The settings the settings page shows and changes.</summary>
     public Pantheon.Game.Settings.GameSettings Settings { get; set; } = new();
 
+    /// <summary>The gods' minds (ADR-065), for the settings' Claude models; none when the content did not load.</summary>
+    public Pantheon.Game.Minds.MindContent? Minds { get; set; }
+
     /// <summary>Whether any menu is shown.</summary>
     public bool IsOpen => _title.Visible || _panel.Visible;
 
@@ -128,15 +131,44 @@ internal sealed partial class MenuScreen : CanvasLayer
         _page.Visible = false;
     }
 
-    /// <summary>Opens a page of the title screen by name (new, worlds, together or settings), for captures.</summary>
+    /// <summary>Opens a page of the title screen by name (new, worlds, together, settings or minds), for captures.</summary>
     /// <param name="page">The page.</param>
     public void OpenTitlePage(string page) => OpenPage(page switch
     {
         "worlds" => WorldsPage.Build(this, _data.Worlds),
         "together" => MultiplayerPage.Build(this, _data.Seed),
         "settings" => SettingsPage.Build(this),
+        "minds" => SettingsPage.Build(this, "Minds"),
         _ => NewWorldPage.Build(this, _data.Seed),
     });
+
+    /// <summary>The gods waking (ADR-065) on the title screen, while a model writes them.</summary>
+    /// <param name="modelName">The model writing them.</param>
+    /// <param name="skip">Lets the scribes write them instead.</param>
+    public void ShowBirth(string modelName, Action skip)
+    {
+        if (!_title.Visible)
+        {
+            ShowTitle(_data);
+        }
+
+        OpenPage(PantheonPages.Birth(modelName, skip));
+    }
+
+    /// <summary>The gods of a world (ADR-065) on the title screen, before the player enters it.</summary>
+    /// <param name="world">The world.</param>
+    /// <param name="localGodId">The player's god.</param>
+    /// <param name="note">Why the scribes wrote some gods, if they did.</param>
+    /// <param name="enter">Enters the world.</param>
+    public void ShowPantheon(WorldState world, int? localGodId, string? note, Action enter)
+    {
+        if (!_title.Visible)
+        {
+            ShowTitle(_data);
+        }
+
+        OpenPage(PantheonPages.Gods(world, localGodId, note, enter));
+    }
 
     /// <summary>Opens the worlds page on the title screen, after a world was forgotten.</summary>
     /// <param name="data">The title's data, with the worlds as they are now.</param>

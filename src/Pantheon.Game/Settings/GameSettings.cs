@@ -47,6 +47,15 @@ public sealed record GameSettings
     /// <summary>Largest interface offered.</summary>
     public const float MaxInterfaceScale = 1.5f;
 
+    /// <summary>The Claude model asked unless the player chooses another.</summary>
+    public const string DefaultClaudeModel = "claude-opus-5-5";
+
+    /// <summary>Where a local model is served unless the player says otherwise.</summary>
+    public const string DefaultLocalUrl = "http://localhost:11434";
+
+    /// <summary>The local model asked unless the player names another.</summary>
+    public const string DefaultLocalModel = "llama3.2";
+
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true, PropertyNameCaseInsensitive = true, NumberHandling = JsonNumberHandling.AllowReadingFromString };
 
     /// <summary>Whether the game fills the screen.</summary>
@@ -115,6 +124,21 @@ public sealed record GameSettings
     /// <summary>Loudness of the wind and the rain (0..1).</summary>
     public float AmbienceVolume { get; init; } = 0.6f;
 
+    /// <summary>
+    /// Who gives the rival gods their minds (ADR-065): the scribes (offline, the default), Claude or a
+    /// local model. The Anthropic key is not kept here but on its own in the profile.
+    /// </summary>
+    public Minds.MindProvider Minds { get; init; } = Pantheon.Game.Minds.MindProvider.Scribes;
+
+    /// <summary>The Claude model asked, one of <c>minds.json</c>'s.</summary>
+    public string ClaudeModel { get; init; } = DefaultClaudeModel;
+
+    /// <summary>Where the local model is served.</summary>
+    public string LocalUrl { get; init; } = DefaultLocalUrl;
+
+    /// <summary>The local model asked.</summary>
+    public string LocalModel { get; init; } = DefaultLocalModel;
+
     /// <summary>The same settings with every value in range.</summary>
     /// <returns>The settings.</returns>
     public GameSettings Clamped() => this with
@@ -131,6 +155,10 @@ public sealed record GameSettings
         MusicVolume = Range(MusicVolume, 0f, 1f, 0.55f),
         EffectsVolume = Range(EffectsVolume, 0f, 1f, 0.8f),
         AmbienceVolume = Range(AmbienceVolume, 0f, 1f, 0.6f),
+        Minds = Enum.IsDefined(Minds) ? Minds : Pantheon.Game.Minds.MindProvider.Scribes,
+        ClaudeModel = string.IsNullOrWhiteSpace(ClaudeModel) ? DefaultClaudeModel : ClaudeModel.Trim(),
+        LocalUrl = Uri.TryCreate(LocalUrl?.Trim(), UriKind.Absolute, out var url) && (url.Scheme == Uri.UriSchemeHttp || url.Scheme == Uri.UriSchemeHttps) ? LocalUrl.Trim() : DefaultLocalUrl,
+        LocalModel = string.IsNullOrWhiteSpace(LocalModel) ? DefaultLocalModel : LocalModel.Trim(),
     };
 
     /// <summary>Reads settings from a file's text: the defaults when it is missing or broken, every value in range.</summary>

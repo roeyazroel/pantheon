@@ -14,6 +14,7 @@
     <ProjectReference Include="..\src\Pantheon.Persistence\Pantheon.Persistence.csproj" />
     <ProjectReference Include="..\src\Pantheon.Game\Pantheon.Game.csproj" />
     <ProjectReference Include="..\src\Pantheon.Networking\Pantheon.Networking.csproj" />
+    <ProjectReference Include="..\src\Pantheon.Oracle\Pantheon.Oracle.csproj" />
   </ItemGroup>
 
 </Project>

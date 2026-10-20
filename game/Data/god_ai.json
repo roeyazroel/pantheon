@@ -12,6 +12,11 @@
   // RainDrought; its value grows from there to parched land.
   "RainDrought": 0.3,
 
+  // A god's temper (ADR-065) leans from its personality's profile, each leaning from -1 to 1: a leaning
+  // of 1 adds TemperReach to the profile's Aggression, Cooperation, Treachery, Grudge, Protect, Convert
+  // or Intimidate, -1 takes it away. Gods made before tempers, and players' gods, lean nowhere.
+  "TemperReach": 0.15,
+
   // Protect: help own followers in need. Convert: win others with kind miracles. Intimidate: frighten,
   // rivals' followers first. Bless: bless the land. Opportunism: extra appeal of targets in hardship or
   // doubt. Thrift: utility falls by Thrift x cost / power. SendCreature: send the Creature to court a

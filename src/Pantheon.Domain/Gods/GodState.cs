@@ -65,4 +65,7 @@ public sealed class GodState
 
     /// <summary>When an AI god next makes its major plan (spec §87, ADR-036).</summary>
     public long NextPlanTick { get; set; }
+
+    /// <summary>Who the god is (ADR-065): its epithet, history, voice and temper; none for a player's god or a world made before personas.</summary>
+    public GodPersona? Persona { get; set; }
 }

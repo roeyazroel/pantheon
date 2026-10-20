@@ -46,6 +46,7 @@ internal sealed partial class GameFlow : Node
     private HistoryPanel _history = null!;
     private TutorialController _tutorial = null!;
     private GuidePanel _guidePanel = null!;
+    private Births _births = null!;
     private bool _wasPaused;
     private bool _ended;
     private double _sinceAutosave;
@@ -61,9 +62,10 @@ internal sealed partial class GameFlow : Node
     /// <param name="camera">The camera, which circles the island on the title screen.</param>
     /// <param name="setStatus">Shows a status line.</param>
     /// <param name="options">Launch options: the title screen (by default when there are no options), the guide, and the history panel or pause menu open from the start.</param>
-    /// <param name="settings">The player's settings, for the settings page.</param>
-    public void Setup(GameSession session, NetworkDriver network, DivineController divine, (DiplomacyPanel Diplomacy, Hud Hud) ui, GodCameraController camera, Action<string> setStatus, Game.Launch.LaunchOptions options, Game.Settings.GameSettings settings)
+    /// <param name="choices">The player's settings, for the settings page, and the gods' minds (ADR-065), for new worlds' gods.</param>
+    public void Setup(GameSession session, NetworkDriver network, DivineController divine, (DiplomacyPanel Diplomacy, Hud Hud) ui, GodCameraController camera, Action<string> setStatus, Game.Launch.LaunchOptions options, (Game.Settings.GameSettings Settings, Game.Minds.MindContent? Minds) choices)
     {
+        var settings = choices.Settings;
         ArgumentNullException.ThrowIfNull(options);
         var showTitle = options.Menu ?? (options.Seed is null && options.LoadPath is null && options.Join is null && options.HostPort is null && options.QuitAfterFrames is null);
         (_session, _network, _divine, _diplomacy, _hud, _camera, _setStatus) = (session, network, divine, ui.Diplomacy, ui.Hud, camera, setStatus);
@@ -77,6 +79,8 @@ internal sealed partial class GameFlow : Node
         _menu.Species = session.Content.Creatures.Species.Select(s => (s.Name, s.Description)).ToList();
         _menu.Sizes = session.Content.Sizes.Sizes.Select(s => (s.Name, WorldMaker.Describe(s))).ToList();
         _menu.Settings = settings;
+        _menu.Minds = choices.Minds;
+        _births = new Births(session.Content, choices.Minds, _menu, () => _menu.Settings, options.Minds);
         _menu.SettingsChanged += changed =>
         {
             SettingsApplier.Apply(changed, GetViewport(), GetParent().GetNodeOrNull<DirectionalLight3D>("Sun"), startup: false, GetParent().GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment, _session, _camera);
@@ -109,6 +113,41 @@ internal sealed partial class GameFlow : Node
         {
             CallDeferred(nameof(OpenSettings));
         }
+
+        if (options.PantheonPage)
+        {
+            // The world's gods are born anew, by the minds chosen, as a new world's are (ADR-065).
+            var seed = options.Seed ?? Game.Launch.LaunchOptions.DefaultSeed;
+            var world = options.NewWorld(session.Content);
+            Callable.From(ShowTitle).CallDeferred();
+            Callable.From(() => _births.Bear(seed, world, (born, note) =>
+            {
+                _setStatus(SessionCommands.NewWorld(_session, seed, born));
+                GD.Print($"Pantheon born by {born.Born?.Author ?? "the content"}: {string.Join(", ", _session.World.Gods.Select(Game.Minds.PersonaText.Title))}{(note is null ? string.Empty : "; " + note)}");
+                ShowGods(note ?? string.Empty);
+            })).CallDeferred();
+        }
+
+        if (options.MindCheck)
+        {
+            _births.Check(text =>
+            {
+                GD.Print(text);
+                _setStatus(text);
+            });
+        }
+    }
+
+    /// <summary>The gods of the world (ADR-065) on the title screen, and play begins when the player enters.</summary>
+    /// <param name="note">Why the scribes wrote some of them, if they did.</param>
+    private void ShowGods(string note)
+    {
+        if (!_menu.TitleOpen)
+        {
+            ShowTitle();
+        }
+
+        _menu.ShowPantheon(_session.World, _session.LocalGodId, note.Length > 0 ? note : null, () => Begin(guide: true));
     }
 
     /// <summary>Saves the world to its quicksave slot (F5).</summary>
@@ -121,7 +160,8 @@ internal sealed partial class GameFlow : Node
     /// <summary>A new world from a random seed (F2), started in the library.</summary>
     public void NewRandomWorld()
     {
-        _setStatus(SessionCommands.NewWorld(_session, RandomSeed()));
+        var seed = RandomSeed();
+        _setStatus(SessionCommands.NewWorld(_session, seed, _births.Scribed(seed, new NewWorldOptions())));
         _library.Begin(_session, null, DateTime.UtcNow);
     }
 
@@ -225,13 +265,13 @@ internal sealed partial class GameFlow : Node
     /// <summary>What each menu choice does.</summary>
     private void WireMenu()
     {
-        _menu.NewWorldChosen += (seed, world, name) =>
+        _menu.NewWorldChosen += (seed, world, name) => _births.Bear(seed, world, (born, note) =>
         {
-            _setStatus(SessionCommands.NewWorld(_session, seed, world));
+            _setStatus(SessionCommands.NewWorld(_session, seed, born));
             var record = _library.Begin(_session, name, DateTime.UtcNow);
-            _setStatus($"{record.Name}: your world begins");
-            Begin(guide: true);
-        };
+            _setStatus(note ?? $"{record.Name}: your world begins");
+            ShowGods(note ?? string.Empty);
+        });
         _menu.TutorialChosen += () => StartTutorial(1);
         _menu.LoadChosen += saveId =>
         {
@@ -243,13 +283,14 @@ internal sealed partial class GameFlow : Node
             _library.Delete(worldId);
             _menu.ShowWorlds(TitleData());
         };
-        _menu.HostChosen += (seed, name, port) =>
+        _menu.HostChosen += (seed, name, port) => _births.Bear(seed, new NewWorldOptions(), (born, note) =>
         {
-            _setStatus(SessionCommands.NewWorld(_session, seed));
+            _setStatus(SessionCommands.NewWorld(_session, seed, born));
             _library.Begin(_session, "A shared world", DateTime.UtcNow);
             _network.Host(_session, port, name, upnp: false);
-            Begin(guide: true);
-        };
+            _setStatus(note ?? "Your shared world begins");
+            ShowGods(note ?? string.Empty);
+        });
         _menu.JoinChosen += (address, port, name, god) =>
             Restart([$"--join={address}:{port.ToString(CultureInfo.InvariantCulture)}", $"--name={(name.Length > 0 ? name : "Player")}", .. god is null ? Array.Empty<string>() : [$"--god={god}"]]);
         _menu.ResumeChosen += Resume;
@@ -312,7 +353,8 @@ internal sealed partial class GameFlow : Node
             return;
         }
 
-        _setStatus(SessionCommands.NewWorld(_session, Game.Launch.LaunchOptions.DefaultSeed, new NewWorldOptions(Victory: Domain.World.VictorySettings.Sandbox)));
+        var seed = Game.Launch.LaunchOptions.DefaultSeed;
+        _setStatus(SessionCommands.NewWorld(_session, seed, _births.Scribed(seed, new NewWorldOptions(Victory: Domain.World.VictorySettings.Sandbox))));
         _library.Leave();
         Begin(guide: false);
         _guide.Hide();

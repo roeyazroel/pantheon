@@ -48,7 +48,7 @@ public static class SessionPreviews
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(god);
         var ai = session.Engine.Gods!.Ai;
-        return god.Controller == GodController.Ai && ai.ProfileOf(god.Personality) is { } profile ? ai.Planner.Options(session.World, god, profile) : [];
+        return god.Controller == GodController.Ai && ai.ProfileOf(god) is { } profile ? ai.Planner.Options(session.World, god, profile) : [];
     }
 
     /// <summary>The pressure on a settlement's people to leave now (ADR-016).</summary>
@@ -70,7 +70,7 @@ public static class SessionPreviews
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(god);
         var gods = session.Engine.Gods!;
-        return god.Controller == GodController.Ai && gods.Ai.ProfileOf(god.Personality) is { } profile && gods.Refugees is { } advisor
+        return god.Controller == GodController.Ai && gods.Ai.ProfileOf(god) is { } profile && gods.Refugees is { } advisor
             ? advisor.Choose(session.World, god, profile)
             : null;
     }

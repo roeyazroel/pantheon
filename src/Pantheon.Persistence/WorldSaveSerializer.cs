@@ -42,9 +42,10 @@ public static class WorldSaveSerializer
     /// (part 18) added the generation's landforms; version 30 (part 19) added the stores of an
     /// offering in a god's hand; version 31 (part 22) added the villagers the gods follow; version 32
     /// (part 24) added the land's reshapings by Divine Acts; version 33 (part 27) added the structural
-    /// integrity of every settlement's houses.
+    /// integrity of every settlement's houses; version 34 (part 40) made the Creatures animals;
+    /// version 35 (part 44) added the gods' personas.
     /// </summary>
-    public const int CurrentSaveVersion = 34;
+    public const int CurrentSaveVersion = 35;
 
     /// <summary>Oldest format version this build can read.</summary>
     public const int MinimumSupportedSaveVersion = 1;

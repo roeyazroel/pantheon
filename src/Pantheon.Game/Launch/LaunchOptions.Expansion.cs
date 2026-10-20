@@ -19,7 +19,7 @@ public sealed partial record LaunchOptions
     /// <summary>Whether the player's Creature is set on the rival nearest it at the start (ADR-062), for captures; with <c>--meet</c> the rival is brought beside it.</summary>
     public bool Fight { get; init; }
 
-    /// <summary>A page of the title screen open from the start (ADR-060): new, worlds, together or settings; for captures.</summary>
+    /// <summary>A page of the title screen open from the start (ADR-060): new, worlds, together, settings or minds (the settings' Minds tab, ADR-065); for captures.</summary>
     public string? TitlePage { get; init; }
 
     /// <summary>Whether the Settlements panel is open at the start, on the focused settlement.</summary>
@@ -169,9 +169,9 @@ public sealed partial record LaunchOptions
             case "fight":
                 return OnOff(value) is { } fight ? options with { Fight = fight } : Warn(options, warnings, $"'--fight' needs on or off, got '{value}'.");
             case "title-page":
-                return value is "new" or "worlds" or "together" or "settings"
+                return value is "new" or "worlds" or "together" or "settings" or "minds"
                     ? options with { TitlePage = value, Menu = true }
-                    : Warn(options, warnings, $"Unknown title page '{value}'; expected new, worlds, together or settings.");
+                    : Warn(options, warnings, $"Unknown title page '{value}'; expected new, worlds, together, settings or minds.");
             case "priority":
                 return Enum.TryParse<Domain.Society.SettlementPriority>(trimmed, ignoreCase: true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(trimmed, out _)
                     ? options with { Priority = priority }

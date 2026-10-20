@@ -12,7 +12,8 @@ namespace Pantheon.Game;
 /// <param name="Size">The world size's name; the first (the world <c>worldgen.json</c> describes) when <c>null</c>.</param>
 /// <param name="Victory">How it may be won; ascendancy only when <c>null</c>.</param>
 /// <param name="Seasons">Whether the year turns through four seasons (spec §17, ADR-028).</param>
-public sealed record NewWorldOptions(string? Species = null, string? Size = null, VictorySettings? Victory = null, bool Seasons = true);
+/// <param name="Born">The rival gods as they were born (ADR-065): their names, Creatures, personalities and personas; the content's gods when <c>null</c>.</param>
+public sealed record NewWorldOptions(string? Species = null, string? Size = null, VictorySettings? Victory = null, bool Seasons = true, Minds.BornPantheon? Born = null);
 
 /// <summary>Makes new worlds at a size, with their gods and victories (spec §6, §53, ADR-027).</summary>
 public static class WorldMaker
@@ -26,30 +27,56 @@ public static class WorldMaker
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(options);
-        var (worldGen, pantheon) = AtSize(content, options.Size);
-        if (options.Species is { } species && pantheon.Gods.ToList().FindIndex(g => g.Controller == GodController.Human) is var player and >= 0)
+        var (worldGen, _) = AtSize(content, options.Size);
+        var pantheon = PantheonFor(content, options);
+        var born = options.Born is { } given && given.Gods.Count == pantheon.Gods.Count ? given : null;
+        var generated = WorldGenerator.Generate(seed, worldGen, born?.Apply(pantheon) ?? pantheon, content.Creatures, content.HolySites);
+        if (born is not null)
         {
-            // Every god keeps an animal of its own (ADR-061): a rival with the animal the player chose takes the player's.
-            var gods = pantheon.Gods.ToList();
-            var given = gods[player].CreatureSpecies;
-            for (var i = 0; i < gods.Count; i++)
+            // The founder makes the gods in the slots' order, from id 1 (ADR-065).
+            foreach (var god in generated.State.Gods)
             {
-                if (i != player && string.Equals(gods[i].CreatureSpecies, species, StringComparison.Ordinal))
-                {
-                    gods[i] = gods[i] with { CreatureSpecies = given };
-                }
+                god.Persona = god.Id >= 1 && god.Id <= born.Gods.Count ? born.Gods[god.Id - 1].Persona : null;
             }
-
-            gods[player] = gods[player] with { CreatureSpecies = species };
-            pantheon = pantheon with { Gods = gods };
         }
 
-        var generated = WorldGenerator.Generate(seed, worldGen, pantheon, content.Creatures, content.HolySites);
         var victory = options.Victory ?? VictorySettings.Default;
         var preset = Find(content, options.Size) ?? (content.Sizes.Sizes.Count > 0 ? content.Sizes.Sizes[0] : null);
         generated.State.Victory = victory with { PantheonMaxGods = victory.PantheonMaxGods ?? preset?.PantheonMaxGods };
         generated.State.Seasons = options.Seasons ? new Domain.Weather.SeasonState { OriginTick = 0 } : null;
         return generated;
+    }
+
+    /// <summary>
+    /// The gods of a world as the content gives them: at its size, and with the player's Creature of
+    /// the species chosen (a rival with that animal takes the player's, so every god keeps an animal
+    /// of its own, ADR-061).
+    /// </summary>
+    /// <param name="content">Validated content.</param>
+    /// <param name="options">How the world is made.</param>
+    /// <returns>The gods, one slot each.</returns>
+    public static PantheonSetup PantheonFor(GameContent content, NewWorldOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(options);
+        var (_, pantheon) = AtSize(content, options.Size);
+        if (options.Species is not { } species || pantheon.Gods.ToList().FindIndex(g => g.Controller == GodController.Human) is not (var player and >= 0))
+        {
+            return pantheon;
+        }
+
+        var gods = pantheon.Gods.ToList();
+        var given = gods[player].CreatureSpecies;
+        for (var i = 0; i < gods.Count; i++)
+        {
+            if (i != player && string.Equals(gods[i].CreatureSpecies, species, StringComparison.Ordinal))
+            {
+                gods[i] = gods[i] with { CreatureSpecies = given };
+            }
+        }
+
+        gods[player] = gods[player] with { CreatureSpecies = species };
+        return pantheon with { Gods = gods };
     }
 
     /// <summary>A world size in words.</summary>

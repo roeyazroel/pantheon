@@ -17,6 +17,7 @@
     <ProjectReference Include="..\Pantheon.Simulation\Pantheon.Simulation.csproj" />
     <ProjectReference Include="..\Pantheon.Persistence\Pantheon.Persistence.csproj" />
     <ProjectReference Include="..\Pantheon.Game\Pantheon.Game.csproj" />
+    <ProjectReference Include="..\Pantheon.Oracle\Pantheon.Oracle.csproj" />
   </ItemGroup>
 
   <!-- Tests run against the shipped content files, not copies. -->

@@ -30,6 +30,8 @@ rule is followed by the conventions that meet it in this repository.
   (namespace `Pantheon.Client`).
 - References point down the layers only: Domain has no references; Simulation, Persistence and
   Networking use Domain; and Game uses all four. `ArchitectureRulesTests` enforces this.
+- `src/Pantheon.Oracle` holds the language-model adapters (ADR-065). It sits above Game, as the
+  client's ENet adapter does: only the client and the tests reference it.
 - Simulation behaviour is tested headless with xUnit in `src/Pantheon.Tests`.
 
 ### `WorldState` is authoritative; SceneTree nodes are never canonical domain objects
@@ -61,6 +63,12 @@ rule is followed by the conventions that meet it in this repository.
 ### No infrastructure without need; no cloud dependency
 
 - The game runs fully offline: no backend, accounts, telemetry or downloads at runtime.
+- The one exception is the owner's choice of ADR-065: the player may give the rival gods' minds to
+  Claude, with their own Anthropic key, or to a model on their own computer. It is off by default,
+  and every failure falls back to the offline scribes. Keep it that way:
+  - a model's answer is an input to the world, taken in between ticks and kept in it;
+  - nothing in play waits on a network;
+  - the key stays in the profile, and goes only to its provider.
 - Add services, CI, package feeds or build tooling only when a task needs them. The one tool
   script, `tools/vendor-terrain3d.sh`, reproduces vendored code.
 
@@ -117,7 +125,7 @@ rule is followed by the conventions that meet it in this repository.
 - Every new system ships with a way to see and drive it: a debug overlay readout, a layer on the
   F3 region debug map, a hotkey or a launch option. Build readouts as pure functions in
   `Pantheon.Game.Diagnostics`, with tests, and keep the client to displaying them.
-- Current tools: the F1 debug panel (the performance metrics and the simulation's CPU budget, the debris, what streams near the camera with the ground cover and the wildlife, and the world's load, gods, the god AI's goal and top candidates with reasons,
+- Current tools: the F1 debug panel (the performance metrics and the simulation's CPU budget, the debris, what streams near the camera with the ground cover and the wildlife, and the world's load, gods, the god AI's goal, persona and temper and top candidates with reasons,
   its plans, the goals it is weighing and the gods it knows, and its diplomatic moves with their factors, influence, the Creature's behaviour, its state and behaviour tree, face, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
   others, and how yours would meet the nearest one, its attributes, paths and callings, the climate (the season and what it and a heat
@@ -133,7 +141,7 @@ rule is followed by the conventions that meet it in this repository.
   the forest standing and the roads, with the selected village's stores, land and roads, and the
   great events, the next eclipse, the sick villages, the beast and each faith's doubt, with the
   selected village's plague),
-  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the P
+  the H history panel (the world's chronicle), the start screen and pause menu (Esc), the settings' Minds tab (who writes the gods, the Anthropic key, the models, and Test), the P
   diplomacy panel (whether you have met each god, status, how the world sees each god, its war's goal and score and what you know of it, treaties with Break, favours, every treaty and request it would accept, each god's alliances, wars and refugee policy, how your Creature
   and its Creature regard each other, attitude, memories, grievances, every diplomatic move and
   your refugee policy), the G Domains panel (slots, every domain's boon and signature miracle, the
@@ -151,7 +159,7 @@ rule is followed by the conventions that meet it in this repository.
   `--cast`, `--select`, `--overlay`, `--focus` (a settlement, `creature` or `siteN`), `--judge`,
   `--debug-panel`, `--diplomacy-panel`, `--weather`, `--disaster`, `--migrate`, `--refugees`,
   `--meet`, `--hand`, `--book`, `--overview`, `--prophet`, `--villager`, `--stress`, `--reshape`, `--wildlife`, `--roads`, `--stores`, `--great-event`, `--menu`, `--guide`, `--history-panel`, `--pause-menu`, `--speed`, `--species`, `--temperament`,
-  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--title-page`, `--tutorial`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
+  `--rank`, `--domains`, `--domains-panel`, `--settings-page`, `--minds`, `--pantheon`, `--mind-check`, `--title-page`, `--tutorial`, `--fight`, `--work`, `--priority`, `--settlement-panel`, `--doctrine`, `--treaty`, `--council-panel`, `--summon-council`, `--gods-met`, `--war-goal`, `--holy-war`, `--veil`, `--world-size`, `--victory`, `--seasons`, `--season`, and for shared
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a
@@ -165,6 +173,7 @@ rule is followed by the conventions that meet it in this repository.
 | World generation and tick systems | `src/Pantheon.Simulation`, registered in `SimulationEngine` |
 | Saves, content parsing and the player's profile | `src/Pantheon.Persistence` |
 | Multiplayer protocol, codecs and transport contract | `src/Pantheon.Networking` (the host and player logic in `src/Pantheon.Game/Multiplayer`, ENet in `game/Scripts/Network`) |
+| The gods' minds: the language-model contract, prompts and the scribes, and the adapters | `src/Pantheon.Game/Minds`; Claude and Ollama in `src/Pantheon.Oracle` |
 | Session, commands, scheduler, camera maths, debug readouts, presentation data, Tier 2 citizens | `src/Pantheon.Game` |
 | Nodes, input, UI | `game/Scripts`, with scenes in `game/Scenes` and actions in `game/project.godot` |
 | Content | `game/Data/*.json` |

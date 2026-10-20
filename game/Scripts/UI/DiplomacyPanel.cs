@@ -132,6 +132,15 @@ public partial class DiplomacyPanel : CanvasLayer
         header.AddChild(Text(entry.Title, 18, Ink));
         header.AddChild(entry.Met ? Text(DiplomacyText.Status(entry.Status), 16, _statusColors[entry.Status]) : Text("Not yet met", 16, Muted));
         card.AddChild(header);
+        if (entry.Lore.Length > 0)
+        {
+            // Who it is (ADR-065): the tale the island tells of it, and its nature.
+            var lore = Text(entry.Lore, 13, new Color(0.82f, 0.76f, 0.62f));
+            lore.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            lore.CustomMinimumSize = new Vector2(480, 0);
+            card.AddChild(lore);
+        }
+
         if (!entry.Met)
         {
             card.AddChild(Text(DiplomacyText.Unmet, 13, Muted));

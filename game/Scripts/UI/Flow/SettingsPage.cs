@@ -5,15 +5,17 @@ using Pantheon.Game.Settings;
 namespace Pantheon.Client.UI.Flow;
 
 /// <summary>
-/// The settings (spec §105, ADR-021, ADR-056, ADR-058, ADR-059) in four tabs: graphics, sound,
-/// controls and the interface. Each change is kept in the profile and most apply at once.
+/// The settings (spec §105, ADR-021, ADR-056, ADR-058, ADR-059, ADR-065) in five tabs: graphics,
+/// sound, controls, the interface and the gods' minds. Each change is kept in the profile and most
+/// apply at once.
 /// </summary>
 internal static class SettingsPage
 {
     /// <summary>Builds the page.</summary>
     /// <param name="menu">The menu, holding the settings and reporting changes.</param>
+    /// <param name="tab">The tab shown first, by name; the first when <c>null</c>.</param>
     /// <returns>The page.</returns>
-    public static Control Build(MenuScreen menu)
+    public static Control Build(MenuScreen menu, string? tab = null)
     {
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", 8);
@@ -48,6 +50,16 @@ internal static class SettingsPage
 
         var view = Tab(tabs, "Interface");
         Slide(menu, view, "Interface size", s => s.InterfaceScale, (s, v) => s with { InterfaceScale = v }, GameSettings.MinInterfaceScale, GameSettings.MaxInterfaceScale);
+
+        MindsSettings.Fill(menu, Tab(tabs, "Minds"));
+        for (var i = 0; i < tabs.GetTabCount(); i++)
+        {
+            if (tabs.GetTabTitle(i) == tab)
+            {
+                tabs.CurrentTab = i;
+            }
+        }
+
         return column;
     }
 

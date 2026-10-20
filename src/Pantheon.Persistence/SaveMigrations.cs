@@ -166,6 +166,9 @@ internal static class SaveMigrations
             case 33:
                 AnimalSaveMigration.UpgradeFrom33(root);
                 break;
+            case 34:
+                PersonaSaveMigration.UpgradeFrom34(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

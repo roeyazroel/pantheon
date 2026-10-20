@@ -48,7 +48,8 @@ game/                         Godot 4.7.2 project (res://)
                               migration.json, world_sizes.json, domains.json, ecology.json, history.json,
                               holy_sites.json, society.json, water.json (simulation);
                               settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
-                              (presentation)
+                              (presentation); minds.json (the gods' minds: Claude models and the
+                              scribes' lore, ADR-065)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
   addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
@@ -65,6 +66,9 @@ src/
                               Tier 2 representative citizens (Population), Multiplayer (host and player)
   Pantheon.Networking/        Host-authoritative protocol (ADR-003, ADR-018): messages, codecs, transport
                               contract, in-memory loopback
+  Pantheon.Oracle/            The language models behind the gods' minds (ADR-065): Claude through
+                              Anthropic's SDK, a local model through Ollama's API, and the factory
+                              that opens the one the settings choose
   Pantheon.Tests/             xUnit tests (headless)
 tools/                        Maintenance scripts (vendor-terrain3d.sh)
 docs/                         PANTHEON_SPEC.md (the owner's specification), PROGRESS_SUMMARY.md,
@@ -91,6 +95,7 @@ graph TD
     Persist["Pantheon.Persistence"]
     Domain["Pantheon.Domain"]
     Net["Pantheon.Networking"]
+    Oracle["Pantheon.Oracle<br/>(Anthropic SDK, Ollama HTTP)"]
     Tests["Pantheon.Tests"]
     T3D["Terrain3D GDExtension (optional at runtime)"]
 
@@ -99,6 +104,8 @@ graph TD
     Client --> Persist
     Client --> Domain
     Client --> Net
+    Client --> Oracle
+    Oracle --> Game
     Client -. "ClassDB dynamic calls" .-> T3D
     Game --> Sim
     Game --> Persist
@@ -111,9 +118,13 @@ graph TD
     Tests --> Sim
     Tests --> Persist
     Tests --> Domain
+    Tests --> Oracle
 ```
 
 Allowed references point down the graph only. `Pantheon.Domain` references nothing.
+`Pantheon.Oracle` sits beside the client, above `Pantheon.Game`: it implements the game's
+language-model contract with the `Anthropic` package and `HttpClient`, as the client's ENet
+adapter implements the networking's transport contract. No core project references it.
 Only `game/Pantheon.csproj` references Godot. `ArchitectureRulesTests` reads the core project
 files and compiled assemblies and fails when either rule is broken.
 
@@ -908,9 +919,11 @@ and a Lumen an Ape. A missing,
   hosting and joining from the menu (joining reloads the main scene, whose next start reads the
   host's address from `PendingLaunch`), the end screen, the guide and the history panel (H), drawn
   by `UI/Flow/`: `MenuScreen` (the title with its choices and pages, the pause menu, the end),
-  `NewWorldPage`, `WorldsPage`, `MultiplayerPage`, `SettingsPage` (four tabs), `HistoryPanel`,
+  `NewWorldPage`, `WorldsPage`, `MultiplayerPage`, `SettingsPage` (five tabs, the fifth
+  `MindsSettings`, ADR-065), `PantheonPages` (the gods waking and the gods of a world), `HistoryPanel`,
   `GuidePanel` and `UiKit`. `Bootstrap/Startup.Profile` opens the profile once a run and keeps
-  the settings in it.
+  the settings in it, and the Anthropic key apart from them. `Bootstrap/Births` bears a new
+  world's gods (ADR-065): by the scribes, or by the chosen model off the main thread.
 - `Network/EnetTransport` puts Godot's `ENetMultiplayerPeer` behind `INetworkTransport` (reliable and
   unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
   (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
@@ -1793,6 +1806,49 @@ the measured contests.
   also, or instead, be won by conquest or culture, or by nobody (see
   [World sizes and victories](#world-sizes-and-victories)).
 
+## The gods' minds
+
+ADR-065 records the decisions, and the plan is
+[.docs/milestone-15-part-44-the-gods-minds.md](../.docs/milestone-15-part-44-the-gods-minds.md).
+
+```mermaid
+flowchart LR
+    menu[New world / host] --> births[Births: client]
+    births -->|Scribes, or no key| scribe[PersonaScribe: seed + minds.json lore]
+    births -->|Claude / Local| model[ILanguageModel: AnthropicLanguageModel / LocalLanguageModel]
+    model -->|"PantheonPrompt: JSON of the schema"| read[PantheonPrompt.Read: strict, per god]
+    scribe --> born[BornPantheon: a god per slot]
+    read -->|"bad gods: the scribes'"| born
+    born --> maker[WorldMaker.Generate: slots renamed, personalities, GodState.Persona]
+    maker --> world[(WorldState, saved)]
+    world --> ai[GodAi.ProfileOf god: profile + temper × TemperReach]
+    world --> text[PersonaText: Book, diplomacy, pantheon page, F1]
+```
+
+- **The contract.** `ILanguageModel.Ask(ModelQuestion)` returns a `ModelAnswer`: JSON that
+  follows the question's schema, or `Refused`, `CutShort` or `Failed` with the reason in words.
+  The adapters, in `Pantheon.Oracle`, never throw for a model's or the network's failure:
+  - `AnthropicLanguageModel` uses the beta Messages API with structured output at the question's
+    effort, cached instructions and the server-side fallback;
+  - `LocalLanguageModel` uses Ollama's `/api/chat` with `format` set to the schema.
+- **The choice.** `GameSettings.Minds` (Scribes, Claude or Local), `ClaudeModel`, `LocalUrl` and
+  `LocalModel`. The Anthropic key is kept apart in the profile (`anthropic_key`); without it,
+  `ANTHROPIC_API_KEY` is used. `MindFactory.Open` makes the model, or none.
+- **The birth.** A new world from the menu, or a hosted one, is born first:
+  - by the scribes at once;
+  - or by the model, asked off the main thread while the title screen shows the gods waking.
+
+  The world is made on the main thread from `NewWorldOptions.Born`. Every god a model did not
+  write well is the scribes'.
+- **In the world.** `GodState.Persona` (save version 35) holds the epithet, history, voice,
+  desire, dread, temper and author. The temper's seven leanings lean the god's profile
+  (`GodTempers.Apply`), and every reader of a god's profile reads `GodAi.ProfileOf(GodState)`.
+  A god with no persona plays exactly as before.
+- **Determinism.** A model's answer is an input: it enters only between ticks, when a world is
+  made, and is kept in the world.
+  - A scribes' world is reproduced by its seed; a model's world by its save.
+  - Players of a shared world receive the host's gods with the world.
+
 ## Diplomacy
 
 ADR-012 records the decisions, and the Milestone 6 plan
@@ -2464,11 +2520,11 @@ sequenceDiagram
     Cmd->>Session: LoadFrom(path)
     Session->>Save: LoadFromFile(path)
     Save->>Save: ReadSaveVersion(json)
-    alt version 34 (current)
+    alt version 35 (current)
         Save->>Save: deserialize (strict)
-    else versions 1 to 33
+    else versions 1 to 34
         Save->>Mig: Upgrade(json, version)
-        Mig-->>Save: JsonObject at version 34, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings, 32→33: the houses' integrity, 33→34: the Creatures' animals)
+        Mig-->>Save: JsonObject at version 35, one step at a time (1→2: health, construction, 2→3: player god, beliefs, blessings, 3→4: Creatures, 4→5: personalities, dominance, winner, 5→6: diplomacy, 6→7: weather, soil water, 7→8: disasters, fire, scorch, ruins, shields, 8→9: winners, 9→10: migration, refugee policies, 10→11: Creatures' skill, scars and views, 11→12: history, 12→13 to 17→18: see Persistence, 18→19: victories, 19→20: seasons, the land's life, 20→21: hazards, 21→22: paths and hands, 22→23: notables, 23→24: forests, stores and roads, 24→25: plague and great events, 25→26: the beast and the anomaly, 26→27: known gods and goals, 27→28: Creatures' temperament, 28→29: landforms, 29→30: offerings, 30→31: followed villagers, 31→32: the land's reshapings, 32→33: the houses' integrity, 33→34: the Creatures' animals, 34→35: the gods' personas)
         Save->>Save: deserialize (strict)
     else missing, unsupported or newer
         Save-->>Session: SaveFormatException

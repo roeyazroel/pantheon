@@ -102,7 +102,8 @@ public partial class GameRoot : Node3D
         _camera.Roofs = _presenter.RoofAt;
         _camera.FollowEnded += () => SetStatus("The camera is free again");
         _network = new Pantheon.Client.Network.NetworkDriver(SetStatus);
-        _session = _network.Join(content, options) ?? CreateSession(content, options);
+        var minds = Startup.TryLoadMinds();
+        _session = _network.Join(content, options) ?? CreateSession(content, minds, options);
         _network.Host(_session, options);
         _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette, () => _disasters.Fires, presentation.SettlementView.Streaming, presentation.SettlementView.GroundCover.Radius);
         _nature = new NatureDebug(_session, _camera, SetStatus);
@@ -130,7 +131,7 @@ public partial class GameRoot : Node3D
         CallDeferred(nameof(ShowDiplomacyAtStart), options.DiplomacyPanel);
         var flow = new GameFlow { Name = "GameFlow" };
         AddChild(flow);
-        flow.Setup(_session, _network, _divine, (_diplomacy, hud), _camera, SetStatus, options, settings);
+        flow.Setup(_session, _network, _divine, (_diplomacy, hud), _camera, SetStatus, options, (settings, minds));
         _flow = flow;
         var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };
         AddChild(audio);
@@ -310,8 +311,8 @@ public partial class GameRoot : Node3D
         }
     }
 
-    /// <summary>Loads the save given by <c>--load</c>, or generates a world from <c>--seed</c> (or the default seed).</summary>
-    private GameSession CreateSession(GameContent content, LaunchOptions options)
+    /// <summary>Loads the save given by <c>--load</c>, or generates a world from <c>--seed</c> (or the default seed), its rivals written by the scribes (ADR-065).</summary>
+    private GameSession CreateSession(GameContent content, Pantheon.Game.Minds.MindContent? minds, LaunchOptions options)
     {
         string? loadFailure = null;
         if (options.LoadPath is { } loadPath)
@@ -331,6 +332,7 @@ public partial class GameRoot : Node3D
 
         var seed = options.Seed ?? LaunchOptions.DefaultSeed;
         var world = options.NewWorld(content);
+        world = minds is null ? world : world with { Born = Pantheon.Game.Minds.PantheonBirth.Write(content, minds, seed, world) };
         var session = GameSession.CreateNew(content, seed, world);
         SetStatus(loadFailure ?? SessionCommands.Describe(content, seed, world));
         return session;

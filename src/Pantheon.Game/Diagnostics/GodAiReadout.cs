@@ -28,6 +28,12 @@ internal static class GodAiReadout
             }
 
             lines.Add(Format("AI {0} ({1}): goal now: {2}", god.Name, DivineText.Personality(god.Personality), Describe(candidates[0], snapshot.World)));
+            if (god.Persona is { } persona)
+            {
+                // Its mind (ADR-065): who wrote it, and how its temper leans from its personality's.
+                lines.Add(Format("  persona: {0}, by {1}; temper: {2}", persona.Epithet, persona.Author, Minds.PersonaText.Numbers(persona.Temper)));
+            }
+
             AppendPlan(lines, snapshot, god);
             for (var i = 0; i < candidates.Count && i < CandidatesShown; i++)
             {

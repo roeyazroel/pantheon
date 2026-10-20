@@ -1,0 +1,116 @@
+{
+  // The gods' minds (ADR-065). The rival gods may be given their minds by a language model: Claude
+  // (with the player's own Anthropic key) or a model on the player's own computer (Ollama). Without
+  // one the scribes write them from the seed, and the game plays the same in every other way.
+
+  // The Claude models the settings offer, the default first.
+  "ClaudeModels": [
+    { "Id": "claude-opus-5-5", "Name": "Claude Opus 5.5", "About": "The default: thoughtful, characterful gods." },
+    { "Id": "claude-sonnet-5-5", "Name": "Claude Sonnet 5.5", "About": "Quicker replies, a little less depth." },
+    { "Id": "claude-haiku-5-5", "Name": "Claude Haiku 5.5", "About": "The quickest and cheapest." },
+    { "Id": "claude-fable-5-1", "Name": "Claude Fable 5.1", "About": "The most capable, and the slowest and dearest." }
+  ],
+
+  // Where a local model is served (Ollama's address) and which model, unless the player says otherwise.
+  "LocalUrl": "http://localhost:11434",
+  "LocalModel": "llama3.2",
+
+  // The pantheon is asked for once, when a world is made: how hard the model thinks, the longest answer
+  // in tokens, and how long the game waits before the scribes write the gods instead.
+  "BirthEffort": "Medium",
+  "BirthMaxTokens": 16000,
+  "TimeoutSeconds": 180.0,
+
+  // The scribes' lore: gods written from the seed. {name}, {creature} and {animal} become the god's
+  // name, its Creature's name and its Creature's animal.
+  "Lore": {
+    "NameStarts": ["Ae", "Ash", "Bel", "Cor", "Dra", "Esh", "Fen", "Gal", "Hes", "Ith", "Kae", "Lor", "Mor", "Nyx", "Or", "Pyr", "Quel", "Ruv", "Sab", "Tor", "Ul", "Vex", "Wyn", "Xan", "Yr", "Zar"],
+    "NameMiddles": ["", "", "", "a", "e", "i", "o", "ra", "ve", "li", "dra", "mo", "the", "sa"],
+    "NameEnds": ["th", "ra", "on", "ys", "el", "ar", "ix", "una", "ash", "is", "or", "eth", "ion", "a", "us", "ka"],
+    "CreatureNames": ["Cinder", "Gnarl", "Hollow", "Rook", "Sable", "Tumble", "Brindle", "Ashjaw", "Moss", "Shale", "Marrow", "Pip", "Thunderfoot", "Sorrel", "Grumble", "Nettle", "Briar", "Clod", "Wick", "Bastion"],
+    "Origins": [
+      "{name} was born of the first storm that broke over the island.",
+      "{name} woke in the dark beneath the mountain, where the old fires sleep.",
+      "{name} was a mortal once, a priestess the sea gave back changed.",
+      "{name} rose from the prayers of a village that had forgotten whom it prayed to.",
+      "{name} came ashore on a raft of bones, and nobody knows from where.",
+      "{name} was carved from the island's oldest tree by hands no one remembers.",
+      "{name} is the echo of a god who died before the villages were built.",
+      "{name} fell with a star, and the crater still smokes where it landed."
+    ],
+    "Turns": [
+      "Now {name} counts the island's villages the way a miser counts coins.",
+      "Since then {name} has watched the younger gods with a patience that frightens them.",
+      "The villages still leave bread at the crossroads in {name}'s name, just in case.",
+      "Some say {name} weeps when a village forgets it; others that it only waits.",
+      "Every god on the island has a story about {name}, and none of them agree.",
+      "{name} has never forgiven the island for the years it went unworshipped."
+    ],
+    "Personalities": [
+      {
+        "Personality": "Guardian",
+        "Epithets": ["the Watchful", "the Hearth-Keeper", "Shield of the Shore", "the Lantern"],
+        "Voices": ["warm and grave, speaks as an elder to a promising child", "measured and kind, never raises its voice", "plain-spoken, protective, slow to threaten and quick to reassure"],
+        "Desires": ["that no village it shelters goes hungry", "peace on the island, kept by strength", "to be thanked rather than feared"],
+        "Dreads": ["a famine it could not stop", "the cruelty of younger gods", "being needed and absent"],
+        "Deeds": ["When the great flood came, {name} and {creature} the {animal} carried a village's children to the high ground.", "{name} once stood {creature} the {animal} at a village's gate for a whole winter against the wolves."]
+      },
+      {
+        "Personality": "Tyrant",
+        "Epithets": ["the Ash-Crowned", "the Iron Hand", "Lord of the Long Night", "the Unbowed"],
+        "Voices": ["cold and imperious, speaks of itself as we", "clipped, contemptuous, every courtesy a threat", "slow and heavy, as if each word were a favour"],
+        "Desires": ["every village on its knees", "to be the only god the island fears", "obedience, freely given or not"],
+        "Dreads": ["being laughed at", "a rival grown strong behind its back", "the day its followers stop fearing it"],
+        "Deeds": ["{name} burned a village's granary to teach it whom to pray to, and {creature} the {animal} stood guard over the ashes.", "{name} broke an oath to a lesser god and calls it the wisest thing it ever did."]
+      },
+      {
+        "Personality": "Opportunist",
+        "Epithets": ["the Gilded", "Friend of Whoever Wins", "the Merchant of Prayers", "the Weathervane"],
+        "Voices": ["charming and quick, always bargaining", "smooth, flattering, never quite answers a question", "cheerful and calculating, talks of deals and debts"],
+        "Desires": ["to come out ahead, whoever falls", "a bargain the other side regrets", "the richest villages, whatever they believe"],
+        "Dreads": ["being on the losing side", "owing a debt it cannot dodge", "a rival who cannot be bought"],
+        "Deeds": ["{name} sold the same alliance to two gods at once and kept both payments.", "{name} sent {creature} the {animal} to rescue a drowning village, then sent it the bill."]
+      },
+      {
+        "Personality": "Zealot",
+        "Epithets": ["the Burning Word", "the One True Flame", "Voice of the Altar", "the Unquenched"],
+        "Voices": ["fervent and absolute, speaks in commandments", "intense, preaching, sure of every word", "solemn and fiery, quotes its own scripture"],
+        "Desires": ["one faith across the whole island", "to see every false shrine fall", "converts, as many as there are souls"],
+        "Dreads": ["doubt among its faithful", "heresy that spreads faster than its word", "a world that does not need it"],
+        "Deeds": ["{name} lit a fire on the mountaintop that its priests swear has never gone out.", "{name} sent {creature} the {animal} to stand in a rival's temple until its villagers knelt."]
+      },
+      {
+        "Personality": "NatureKeeper",
+        "Epithets": ["of the Green Deep", "the Rootmother", "Keeper of the Wild", "the Rain-Bringer"],
+        "Voices": ["soft and unhurried, speaks of seasons and roots", "patient and strange, like wind through leaves", "gentle until the forest is threatened, then thunderous"],
+        "Desires": ["the island's forests whole again", "villages that take only what they need", "the old balance restored"],
+        "Dreads": ["the axe", "a god who burns the land for worship", "a drought that does not end"],
+        "Deeds": ["{name} made a desert bloom in a single spring, and {creature} the {animal} still sleeps under the first tree.", "{name} drowned a logging camp and replanted the hill by morning."]
+      },
+      {
+        "Personality": "Trickster",
+        "Epithets": ["the Grinning", "of the Thousand Masks", "the Riddle-Speaker", "Lord of Crossroads"],
+        "Voices": ["playful and sly, answers questions with questions", "mischievous, fond of riddles and half-truths", "light and mocking, never wholly serious"],
+        "Desires": ["a good joke at a proud god's expense", "to be needed by everyone and trusted by no one", "chaos it can profit from"],
+        "Dreads": ["being boring", "a rival who sees through every trick", "rules it cannot bend"],
+        "Deeds": ["{name} once swapped two villages' gods overnight, and neither noticed for a year.", "{name} taught {creature} the {animal} to dance, then sold tickets to the other gods."]
+      },
+      {
+        "Personality": "Isolationist",
+        "Epithets": ["the Hermit of the Peaks", "the Closed Gate", "the Silent", "of the Far Shore"],
+        "Voices": ["terse and wary, says little and means all of it", "distant and formal, wants the conversation over", "dry and suspicious of every offer"],
+        "Desires": ["to be left alone with its own", "borders no god crosses", "a quiet corner of the island, forever"],
+        "Dreads": ["entanglements", "a rival at its gate", "being dragged into other gods' wars"],
+        "Deeds": ["{name} raised a wall of storms around its valley and has not lowered it since.", "{name} turned away a dying god who came to beg for help, and has never said why."]
+      },
+      {
+        "Personality": "Warlord",
+        "Epithets": ["the Red Spear", "Breaker of Shrines", "the War-Born", "of the Hundred Battles"],
+        "Voices": ["blunt and loud, talks of strength and spoils", "martial and direct, respects only courage", "boastful, battle-hungry, scornful of the weak"],
+        "Desires": ["a war worth fighting", "rivals' holy sites under its banner", "to be remembered as the island's conqueror"],
+        "Dreads": ["peace that lasts too long", "dying unremembered", "a rival that will not fight"],
+        "Deeds": ["{name} and {creature} the {animal} once fought three gods' Creatures in a single afternoon, and won.", "{name} keeps the broken idols of every god it beat in a hall of trophies."]
+      }
+    ]
+  }
+}

@@ -28,13 +28,13 @@ public sealed class TreatyAdvisor
 
     private readonly DiplomacyRules _rules;
     private readonly DiplomacyAuthority _authority;
-    private readonly Func<GodPersonality, GodProfile?>? _profiles;
+    private readonly Func<GodState, GodProfile?>? _profiles;
 
     /// <summary>Creates the advisor.</summary>
     /// <param name="rules">Diplomacy rules.</param>
     /// <param name="authority">The diplomacy authority it acts through.</param>
-    /// <param name="profiles">The profile of each personality, to judge what another AI god would accept; <c>null</c> to assume it might.</param>
-    public TreatyAdvisor(DiplomacyRules rules, DiplomacyAuthority authority, Func<GodPersonality, GodProfile?>? profiles = null)
+    /// <param name="profiles">Each god's own profile, to judge what another AI god would accept; <c>null</c> to assume it might.</param>
+    public TreatyAdvisor(DiplomacyRules rules, DiplomacyAuthority authority, Func<GodState, GodProfile?>? profiles = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(authority);
@@ -165,7 +165,7 @@ public sealed class TreatyAdvisor
     /// </summary>
     private bool Plausible(WorldState world, GodState god, GodState other, TreatyTerms terms, Followings followings)
     {
-        if (other.Controller != GodController.Ai || _profiles?.Invoke(other.Personality) is not { } theirs)
+        if (other.Controller != GodController.Ai || _profiles?.Invoke(other) is not { } theirs)
         {
             return true;
         }

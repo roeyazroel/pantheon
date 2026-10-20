@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Pantheon.Domain.Belief;
 using Pantheon.Domain.Settlements;
 using Pantheon.Domain.World;
@@ -177,9 +178,32 @@ internal static class SaveIntegrity
             {
                 errors.Add($"God {god.Id} has no domain list, an unknown domain or a domain twice.");
             }
+
+            ValidatePersona(god, errors);
         }
 
         return ids;
+    }
+
+    /// <summary>A god's persona (ADR-065): every line written and every leaning from -1 to 1.</summary>
+    private static void ValidatePersona(Domain.Gods.GodState god, List<string> errors)
+    {
+        if (god.Persona is not { } persona)
+        {
+            return;
+        }
+
+        if (persona.Temper is not { } temper
+            || new[] { persona.Epithet, persona.History, persona.Voice, persona.Desire, persona.Dread, persona.Author }.Any(string.IsNullOrWhiteSpace))
+        {
+            errors.Add($"God {god.Id}'s persona lacks a line or its temper.");
+            return;
+        }
+
+        if (new[] { temper.Aggression, temper.Cooperation, temper.Treachery, temper.Grudge, temper.Protect, temper.Convert, temper.Intimidate }.Any(t => !(t is >= -1f and <= 1f)))
+        {
+            errors.Add($"God {god.Id}'s temper leans outside -1..1.");
+        }
     }
 
     /// <summary>

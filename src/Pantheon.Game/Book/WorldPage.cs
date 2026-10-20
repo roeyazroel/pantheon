@@ -75,10 +75,16 @@ public static class WorldPage
         var followers = GodStanding.CountFollowers(world, god.Id);
         var domains = god.Domains.Count == 0 ? "no domain" : string.Join(", ", god.Domains.Select(DomainText.Name));
         var seen = god.Traits.Count == 0 ? string.Empty : "; seen as " + string.Join(", ", god.Traits.Select(CultureText.Name));
-        var name = DivineText.Personality(god.Personality) is { Length: > 0 } personality ? god.Name + " the " + personality : god.Name;
+        var name = Minds.PersonaText.Title(god);
         yield return new(
             Format("{0}{1}: {2}, {3} follower{4} ({5:0%} of all), {6:0} power; {7}{8}", name, mine ? " (you)" : string.Empty, DivineText.Rank(god.Rank), followers, followers == 1 ? string.Empty : "s", people > 0 ? followers / (float)people : 0f, god.DivinePower, domains, seen),
             mine ? BookTone.Good : BookTone.Plain);
+        if (god.Persona is { } persona)
+        {
+            // Who it is (ADR-065): the tale the island tells, and its nature.
+            yield return new("   " + persona.History, BookTone.Muted);
+            yield return new("   " + Minds.PersonaText.Nature(god), BookTone.Muted);
+        }
         var allies = world.Gods.Where(o => DiplomacyModel.AreAllied(world, god.Id, o.Id)).Select(o => o.Name).ToList();
         var wars = world.Gods.Where(o => DiplomacyModel.AreAtWar(world, god.Id, o.Id)).Select(o => o.Name).ToList();
         if (allies.Count + wars.Count > 0)

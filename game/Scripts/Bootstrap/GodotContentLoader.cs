@@ -24,6 +24,12 @@ public static class GodotContentLoader
     public static PresentationContent LoadPresentationContent() =>
         PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName), ReadText(WeatherViewSettings.FileName));
 
+    /// <summary>Loads and validates the gods' minds (ADR-065): the Claude models offered and the scribes' lore.</summary>
+    /// <returns>The minds' content.</returns>
+    /// <exception cref="ContentFormatException">The file is malformed or out of range.</exception>
+    /// <exception cref="IOException">The file cannot be read.</exception>
+    public static Pantheon.Game.Minds.MindContent LoadMindContent() => Pantheon.Game.Minds.MindContent.Parse(ReadText(Pantheon.Game.Minds.MindContent.FileName));
+
     /// <summary>Reads a whole content file as text.</summary>
     private static string ReadText(string fileName)
     {

@@ -211,7 +211,8 @@ Godot .NET editor and press F5. Started without options, the game opens on its t
 the living island: Continue your newest save, learn to play with the Tutorial (fifteen steps that
 teach the camera, miracles, your Creature, the hand, time, diplomacy and winning by doing each,
 on a sandbox island; ADR-064), begin a New World (name it, choose its seed, your
-Creature's species, its size, how it may be won and its climate), open Your Worlds to load or
+Creature's species, its size, how it may be won and its climate, then meet the rival gods born
+with it), open Your Worlds to load or
 forget a world, Play Together (host or join a shared world; joining reloads the game with the
 host's address), or change the Settings. No command line is needed to play (ADR-060). A short guide
 walks you through your first minutes; Esc pauses. If you skip the import step, the first run cannot load
@@ -620,10 +621,12 @@ alight, and a forest fire drives off the game the villages hunt (ADR-041).
 ## Your rivals
 
 Three gods share the island with you, each with a village far from the others and a Creature of
-its own: Vael the Tyrant (Gristle), Seren the Guardian (Thistle) and Kaio the Trickster (Quill).
-A large world adds Aurel the Zealot (Ember) and Maren the Nature Keeper (Fern), and a huge one
-Thorn the Warlord (Brute) and Ysolde the Isolationist (Wisp) as well (see
-[World sizes](#world-sizes)).
+its own. A large world has five rivals and a huge one seven (see [World sizes](#world-sizes)).
+Every world's rivals are born with it (see [The gods' minds](#the-gods-minds)): each has its own
+name, epithet, personality, Creature, history and temper. Worlds made without a pantheon of their
+own, such as old saves, have the content's gods: Vael the Tyrant (Gristle), Seren the Guardian
+(Thistle) and Kaio the Trickster (Quill), and in larger worlds Aurel the Zealot (Ember), Maren the
+Nature Keeper (Fern), Thorn the Warlord (Brute) and Ysolde the Isolationist (Wisp).
 A chip for each rival under your plaque shows where you stand with it, and hovering over it shows
 its followers and share of all belief. The race at the top centre shows who holds most of the world's belief and how long
 until they win. Hold 60% of all followers for ten minutes and you win; let a rival do it and it
@@ -645,6 +648,49 @@ The examples below use Vael.
   influence is strongest where, and the Religion overlay shows which god each village follows.
   Alerts warn you when Vael works a miracle on your followers, when its Creature attacks them, and
   when anyone starts to dominate.
+
+## The gods' minds
+
+Every new world's rival gods are born with it (ADR-065). Before you enter, a page shows each
+god's name and epithet ("Morrakh the Ash-Crowned"), its personality and Creature, the history the
+island tells of it, and its nature: how it speaks, what it wants and dreads, and how its temper
+leans. The same lines are in the Book of the World (Tab) and the diplomacy panel (P).
+
+**How a temper changes play.** A god's temper leans from its personality's, each leaning from -1
+to 1:
+
+- aggression, cooperation, treachery and grudge;
+- protect, convert and intimidate.
+
+A leaning of 1 adds 0.15 to the god AI's weight for it (`god_ai.json`'s `TemperReach`), so one
+Tyrant may be quicker to war than most and another slower to forgive.
+
+**Who writes the gods** is chosen in Settings, on the Minds tab:
+
+- **The scribes** (the default). They write the gods from the world's seed, with no network: the
+  same seed always gives the same gods.
+- **Claude, by Anthropic.**
+  - Enter your own Anthropic key, from console.anthropic.com, or set `ANTHROPIC_API_KEY` in your
+    environment.
+  - Choose the model: Claude Opus 5.5 (the default), Sonnet 5.5, Haiku 5.5 or Fable 5.1.
+  - The key is kept on this computer only, in your profile, apart from your other settings, and
+    is sent only to Anthropic, with the gods' questions. The questions are billed to your
+    Anthropic account: one for each world made.
+- **A model on this computer**, served by [Ollama](https://ollama.com). Install it, pull a model
+  (for example `ollama pull llama3.2`), and give its address (`http://localhost:11434`) and the
+  model's name. Find lists the models your server has. Nothing leaves your computer.
+
+**Testing a model.** Test asks the chosen model for a greeting, and shows its answer or why there
+is none.
+
+**While a model writes,** the title screen shows the gods waking. "Let the scribes write them"
+stops waiting.
+
+**If it fails.** A model that fails, refuses, takes longer than three minutes, or writes a god
+badly leaves that god (or all of them) to the scribes, and you are told why.
+
+**Saves and shared worlds.** A world keeps its gods in its saves. In a shared world the host's
+gods are everyone's.
 
 ## Diplomacy
 
@@ -1355,7 +1401,9 @@ of everything, the music, the effects and the wind and rain (spec §105, ADR-056
 vegetation and terrain quality take effect when the game next starts. Three settings shape the
 camera (ADR-058): panning at the window's edge (off unless you turn it on), whether a trackpad's
 two-finger scroll zooms instead of panning, and the camera's speed. The interface size (0.75–1.5)
-scales every panel on top of the window's own stretch (ADR-059).
+scales every panel on top of the window's own stretch (ADR-059). The Minds tab chooses who writes
+each new world's rival gods: the scribes, Claude or a model on this computer (see
+[The gods' minds](#the-gods-minds), ADR-065).
 
 The simulation keeps to its budget, 6 ms a frame unless you choose another (2–16 ms). When a big
 world at ×16 needs more, the ticks still due wait for the next frame, so the game runs a little
@@ -1429,7 +1477,7 @@ The shares and the time are in `game/Data/divine_rules.json` (`VictoryShare`, `C
   the last save's times, and the simulation budget: how often it cut a frame short and the ticks
   waiting and dropped) and the world's load (settlements, people, gods, Creatures, weather cells,
   disasters, groups on the road, notables and followed villagers), one line per god (power and income, rank, followers, the next rank), each AI god's
-  goal now and its top candidate actions with their scores and reasons, its plans (the goals it
+  goal now, its persona (who wrote it, and its temper in numbers, ADR-065) and its top candidate actions with their scores and reasons, its plans (the goals it
   holds with their weights and ages, when it plans next, the gods it knows) and the goals it is
   weighing, its diplomatic moves with the factors behind them, the climate (the season and what it and a heat or cold wave
   change), the weather (the spell, the wind and the strongest cells),
@@ -1595,7 +1643,10 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
 | `--tutorial=on\|<step>` | Start the tutorial, or at a step from 1 to 15 (for captures, ADR-064). |
-| `--title-page=new\|worlds\|together\|settings` | Open the title screen on a page (for captures, ADR-060). |
+| `--title-page=new\|worlds\|together\|settings\|minds` | Open the title screen on a page; `minds` is the settings' Minds tab (for captures, ADR-060, ADR-065). |
+| `--minds=scribes\|claude\|local` | Who writes the gods of new worlds in this run, over the settings' choice (ADR-065). |
+| `--pantheon=on\|off` | Bear the world's gods anew at the start, by the minds chosen, and show their page (ADR-065). |
+| `--mind-check=on\|off` | Ask the chosen model for a greeting at the start and print its answer (ADR-065). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
 | `--fight=on\|off` | Set your Creature on the rival nearest it at the start (with `--meet` to bring one beside it, ADR-062). |
 
@@ -1696,7 +1747,8 @@ game/                 Godot project: scenes, client scripts (Pantheon.Client), d
   Data/               worldgen.json, settlement_rules.json, divine_rules.json, miracles.json, gods.json,
                       creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json, migration.json,
                       history.json, domains.json, holy_sites.json, world_sizes.json, ecology.json,
-                      society.json, water.json, settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
+                      society.json, water.json, settlement_view.json, biome_palette.json, divine_view.json, weather_view.json,
+                      minds.json (the Claude models and the scribes' lore, ADR-065)
   Fonts/              Cinzel and Alegreya Sans, with their SIL Open Font Licences (ADR-059)
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/
@@ -1710,6 +1762,8 @@ src/
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
   Pantheon.Networking/    The multiplayer protocol, its codecs and the transport contract (ADR-003, ADR-018)
+  Pantheon.Oracle/        The language models behind the gods' minds: Claude through Anthropic's SDK, and a
+                          local model through Ollama's API (ADR-065)
   Pantheon.Tests/         xUnit tests
 docs/                 The owner's specification (PANTHEON_SPEC.md, the source of truth), the progress
                       summary (PROGRESS_SUMMARY.md), the vision summary (GAME_SPEC.md), architecture
@@ -1722,7 +1776,7 @@ summary, [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md), then
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GAME_SPEC.md](docs/GAME_SPEC.md) (a short
 vision summary) and the [ADRs](docs/ADR/README.md). The milestone plans and their status are in `.docs/`, from
 [.docs/milestone-1-foundation.md](.docs/milestone-1-foundation.md) to
-[.docs/milestone-15-part-43-tutorial.md](.docs/milestone-15-part-43-tutorial.md).
+[.docs/milestone-15-part-44-the-gods-minds.md](.docs/milestone-15-part-44-the-gods-minds.md).
 
 ## Contributing
 

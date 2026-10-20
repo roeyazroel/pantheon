@@ -15,12 +15,16 @@ internal static class TestContent
 {
     private static readonly Lazy<GameContent> ShippedContent = new(LoadShipped);
     private static readonly Lazy<PresentationContent> ShippedPresentationContent = new(LoadPresentation);
+    private static readonly Lazy<Pantheon.Game.Minds.MindContent> ShippedMinds = new(() => Pantheon.Game.Minds.MindContent.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", Pantheon.Game.Minds.MindContent.FileName))));
 
     /// <summary>Directory holding the copied content files.</summary>
     public static string DataDirectory { get; } = Path.Combine(AppContext.BaseDirectory, "Data");
 
     /// <summary>The shipped, validated content.</summary>
     public static GameContent Shipped => ShippedContent.Value;
+
+    /// <summary>The shipped gods' minds (ADR-065): the Claude models and the scribes' lore.</summary>
+    public static Pantheon.Game.Minds.MindContent Minds => ShippedMinds.Value;
 
     /// <summary>The shipped palette.</summary>
     public static BiomePalette Palette => ShippedPresentationContent.Value.Palette;

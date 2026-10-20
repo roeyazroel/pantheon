@@ -13,8 +13,11 @@ public sealed record DiplomacyEntry
     /// <summary>The god.</summary>
     public required int GodId { get; init; }
 
-    /// <summary>Name, personality and how the world sees it.</summary>
+    /// <summary>Name, epithet or personality, and how the world sees it.</summary>
     public required string Title { get; init; }
+
+    /// <summary>Who it is (ADR-065): its history and nature; empty for a god without a persona.</summary>
+    public string Lore { get; init; } = string.Empty;
 
     /// <summary>Your status with it.</summary>
     public required DiplomaticStatus Status { get; init; }
@@ -101,11 +104,11 @@ public static class DiplomacyReadout
                 }
             }
 
-            var personality = DivineText.Personality(god.Personality);
             entries.Add(new DiplomacyEntry
             {
                 GodId = god.Id,
-                Title = (personality.Length > 0 ? $"{god.Name} the {personality}" : god.Name) + Traits(god),
+                Title = Minds.PersonaText.Title(god) + Traits(god),
+                Lore = god.Persona is { } persona ? persona.History + " " + Minds.PersonaText.Nature(god) : string.Empty,
                 Status = DiplomacyModel.StatusOf(world, me, god.Id),
                 Met = Acquaintance.Knows(session.Content.Diplomacy.Acquaintance, world, me, god.Id),
                 Attitude = DiplomacyText.Attitude(view),

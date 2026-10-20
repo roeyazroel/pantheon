@@ -82,6 +82,15 @@ public sealed class GodAi
     /// <returns>Its profile, or <c>null</c> when the rules have none.</returns>
     public GodProfile? ProfileOf(GodPersonality personality) => _rules.Profiles is { } profiles ? FindProfile(profiles, personality) : null;
 
+    /// <summary>A god's own profile (ADR-065): its personality's, leaning as its temper leans.</summary>
+    /// <param name="god">The god.</param>
+    /// <returns>Its profile, or <c>null</c> when the rules have none for its personality.</returns>
+    public GodProfile? ProfileOf(GodState god)
+    {
+        ArgumentNullException.ThrowIfNull(god);
+        return ProfileOf(god.Personality) is { } profile ? GodTempers.Apply(profile, god.Persona?.Temper, _rules.TemperReach) : null;
+    }
+
     /// <summary>Every action the god could take now, best first, without jitter.</summary>
     /// <param name="world">World state.</param>
     /// <param name="god">The god.</param>
@@ -91,7 +100,7 @@ public sealed class GodAi
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(god);
         var candidates = new List<AiCandidate> { new(AiActionKind.Wait, null, null, default, _rules.Patience, 0f, _rules.Patience, "save power") };
-        if (ProfileOf(god.Personality) is not { } profile)
+        if (ProfileOf(god) is not { } profile)
         {
             return candidates;
         }
@@ -133,7 +142,7 @@ public sealed class GodAi
     public AiCandidate Act(WorldState world, GodState god, SimulationRandom random, List<WorldEvent> events)
     {
         ArgumentNullException.ThrowIfNull(random);
-        if (ProfileOf(god.Personality) is { } planned)
+        if (ProfileOf(god) is { } planned)
         {
             _planner.PlanIfDue(world, god, planned, events);
         }
@@ -154,7 +163,7 @@ public sealed class GodAi
         Execute(world, god, best, events);
         TeachCreature(world, god, events);
         ChooseDomain(world, god, events);
-        if (_diplomat is not null && ProfileOf(god.Personality) is { } profile)
+        if (_diplomat is not null && ProfileOf(god) is { } profile)
         {
             _diplomat.Act(world, god, profile, events);
         }
@@ -167,12 +176,12 @@ public sealed class GodAi
     /// <param name="god">The god.</param>
     /// <returns>The candidates; none without diplomacy or a profile.</returns>
     public List<DiplomacyCandidate> EvaluateDiplomacy(WorldState world, GodState god) =>
-        _diplomat is not null && ProfileOf(god.Personality) is { } profile ? _diplomat.Evaluate(world, god, profile) : [];
+        _diplomat is not null && ProfileOf(god) is { } profile ? _diplomat.Evaluate(world, god, profile) : [];
 
     /// <summary>Whether a treacherous god veils a harsh miracle on a people it is not openly at war with.</summary>
     private bool Veils(WorldState world, GodState god, AiCandidate candidate)
     {
-        if (ProfileOf(god.Personality) is not { Treachery: >= 0.8f } || _book.Find(candidate.MiracleId!) is not { } miracle || !Culture.CultureModel.Harms(miracle)
+        if (ProfileOf(god) is not { Treachery: >= 0.8f } || _book.Find(candidate.MiracleId!) is not { } miracle || !Culture.CultureModel.Harms(miracle)
             || candidate.SettlementId is not { } id || world.Settlements.Find(s => s.Id == id) is not { } settlement)
         {
             return false;
@@ -220,7 +229,7 @@ public sealed class GodAi
             return null;
         }
 
-        foreach (var domain in ProfileOf(god.Personality)?.Domains ?? [])
+        foreach (var domain in ProfileOf(god)?.Domains ?? [])
         {
             if (!god.Domains.Contains(domain) && DomainModel.Find(_domains.Rules, domain) is not null)
             {
@@ -251,7 +260,7 @@ public sealed class GodAi
     /// <summary>Rewards or punishes the Creature's latest unjudged deed by how its kindness suits the god's personality.</summary>
     private void TeachCreature(WorldState world, GodState god, List<WorldEvent> events)
     {
-        if (_creatures is null || _creatureRules is null || god.CreatureId is not { } id || ProfileOf(god.Personality) is not { } profile
+        if (_creatures is null || _creatureRules is null || god.CreatureId is not { } id || ProfileOf(god) is not { } profile
             || world.Creatures.Find(c => c.Id == id) is not { } creature || _creatures.FindJudged(world, creature) is not { Memory: { Feedback: CreatureFeedback.None } } judged)
         {
             return;

@@ -115,6 +115,12 @@ public sealed class RivalPresentationTests
         Assert.Contains(lines, line => line.StartsWith($"AI {rival.Name} ({DivineText.Personality(rival.Personality)}): goal now: ", StringComparison.Ordinal));
         Assert.Contains(lines, line => line.Contains("[save power]", StringComparison.Ordinal) || line.Contains("cost ", StringComparison.Ordinal) || line.Contains("[claim ", StringComparison.Ordinal));
         Assert.Empty(_session.PreviewGodAi(_session.LocalGod!));
+        Assert.DoesNotContain(lines, line => line.StartsWith("  persona: ", StringComparison.Ordinal));
+
+        // A god with a persona (ADR-065) shows who wrote its mind and how its temper leans.
+        rival.Persona = new GodPersona { Epithet = "the Ash-Crowned", History = "A tale.", Voice = "cold", Desire = "all", Dread = "nothing", Temper = new GodTemper { Aggression = 0.8f }, Author = "the scribes" };
+        Assert.Contains("  persona: the Ash-Crowned, by the scribes; temper: aggression +0.8", DebugReadout.Build(snapshot).Lines);
+        rival.Persona = null;
     }
 
     [Fact]

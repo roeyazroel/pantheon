@@ -25,6 +25,11 @@ public static class GodAiRulesValidator
         }
 
         errors.RequireNonNegative(rules.CreatureSendDistance, nameof(rules.CreatureSendDistance));
+        if (!(rules.TemperReach is >= 0f and <= 0.5f))
+        {
+            errors.Add($"{nameof(rules.TemperReach)} must lie from 0 to 0.5.");
+        }
+
         var seen = new HashSet<GodPersonality>();
         foreach (var profile in rules.Profiles)
         {
