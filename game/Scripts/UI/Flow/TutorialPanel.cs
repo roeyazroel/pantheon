@@ -24,6 +24,12 @@ internal sealed partial class TutorialPanel : CanvasLayer
     /// <summary>The player left the tutorial.</summary>
     public event Action? LeaveClicked;
 
+    /// <summary>Who speaks the tutorial: the player's angel by name (ADR-074), else the tutorial itself.</summary>
+    public string Speaker { get; set; } = "Tutorial";
+
+    /// <summary>Where the card is on the screen while it shows, for the angel to stand beside it.</summary>
+    public Rect2? CardRect => _card is { Visible: true } ? _card.GetGlobalRect() : null;
+
     /// <inheritdoc />
     public override void _Ready()
     {
@@ -73,7 +79,7 @@ internal sealed partial class TutorialPanel : CanvasLayer
         }
 
         var number = (int)tutorial.Step + 1;
-        Set(_counter, $"Tutorial · step {number} of {Tutorial.StepCount}");
+        Set(_counter, $"{Speaker} · step {number} of {Tutorial.StepCount}");
         Set(_title, tutorial.Title());
         Set(_text, text);
         _progress.Show(number / (float)Tutorial.StepCount, UiTheme.Gold);

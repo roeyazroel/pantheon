@@ -1996,6 +1996,93 @@ flowchart LR
   - Save version 36 adds the journals, and protocol version 22 carries them.
 - **Debugging.** `AgentReadout` gives the F1 lines, and the log's "Mind:" lines show each turn.
 
+## The player's angel
+
+ADR-074 records the decisions, and the plan is
+[.docs/milestone-15-part-53-angel.md](../.docs/milestone-15-part-53-angel.md).
+
+```mermaid
+flowchart LR
+    conduct[GodConduct and traits] --> look[AngelLooks: stage, lean, conflict, marks]
+    events[World events] --> hooks[AngelHooks: the god's moments]
+    call[A call or a question] --> director
+    look --> director[AngelDirector: gather, turn, hourly limit, rest]
+    hooks --> director
+    director --> choices[AngelChoices: the god AI as a kind and a harsh heart]
+    director -->|model| prompt[AngelPrompt off the main thread]
+    director -->|no model| scribe[AngelScribe: angel.json Lines]
+    prompt --> words[AngelWords]
+    scribe --> words
+    words --> card[AngelCard beside the hand]
+    look --> figure[AngelFigure: a SubViewport, angel.gdshader]
+    card -->|Show me| act[Camera, chosen miracle, Creature order, gods' panel]
+```
+
+- **Its look** (`Angel/AngelLooks`):
+  - **What it reads.** The player's god's `GodConduct`, weighed by `angel.json`'s `Weights`, gives a
+    kindness and a harm. The lean is their balance times how formed the angel is (half at
+    `Softness`), and the conflict is high when both are large.
+  - **Stages:** Radiant, Kind, Unformed, Torn (at `TornConflict`), Stern and Fallen.
+  - **Marks.** `GodState.Traits` give `AngelMarks`.
+  - **Never a rule.** Nothing in the simulation reads the look, and nothing of it is saved. `--angel=<stage>`
+    holds it (`AngelDirector.ForcedStage`).
+- **Moments** (`Angel/AngelHooks`):
+  - **From the frame's events:** the god's own deeds, kind or harsh, and what happens to it.
+  - **From the `AngelDirector`:**
+    - its greeting in a world;
+    - the god's call (`Call`);
+    - a change of its own stage;
+    - the god's Creature growing hungry or tired;
+    - a quiet of `QuietSeconds`.
+- **Deeds it may urge** (`Angel/AngelChoices`):
+  - **Miracles.** `GodAi.Evaluate(world, god, profile)` weighs the god's choices with the Guardian's
+    profile (kind) and the Tyrant's (harsh), through `SessionPreviews.PreviewGodAiAs`. Only miracles
+    the caster's check allows come back.
+  - **For its moments:** help for a village, the Creature at work or set on a visitor, and an answer to
+    a god.
+  - **Each deed** has an id, a text, a kindness and its reasons.
+- **Turns** (`AngelDirector`, driven each frame by the client's `AngelController`):
+  - **Gathering.** Moments gather for `GatherSeconds`. Words come at most every `WordsSeconds` of real
+    time, by `AngelTerms.Chatter`, or a third of that for urgent moments.
+  - **Calls.** A call (and the greeting) is answered after `CallSeconds`, even paused or while the
+    tutorial hushes it.
+  - **With a model**, `AngelPrompt` asks the model off the main thread:
+    - what moved it;
+    - `GodView.Describe` for the god;
+    - its last `Remembered` words;
+    - the deeds offered.
+
+    The answer is its words and up to two deed ids, taken in a later frame and dropped if the world
+    was replaced.
+  - **Without one**, after three failures (for `RestSeconds`), or when `TurnsPerHour` is spent,
+    `AngelScribe` speaks the weightiest moment's line in its tone (Light, Silver, Torn or Dark) and
+    picks deeds by its nature.
+- **The figure** (`Presentation/Angel/AngelMesh`):
+  - a robed body, a head and hair, open hands and a sash;
+  - two wings of three layers of feathers;
+  - a halo with thorns;
+  - a blade, a veil, chains and a crown.
+
+  UV2 is each vertex's part and side.
+- **The client.**
+  - `AngelFigure` draws the figure in a `SubViewport` of its own world (lights, motes or embers), so
+    the island's terrain never cuts it. `angel.gdshader` colours each part by the lean, its side and
+    the conflict, beats the wings and drops a dark angel's, breaks the halo and grows its thorns, and
+    shows only the god's marks.
+  - `AngelCard` shows the picture and its card beside the hand, over the cursor's ground point, and
+    holds still under the pointer. The figure's view stops updating when the angel is away.
+  - `AngelController` wires it all:
+    - the key (`angel_call`, ') and the bar's first button;
+    - Show me: the camera, `DivineController.Select`, `BeginWork`, `BeginFight` and the diplomacy
+      panel;
+    - Ask;
+    - the tutorial: `TutorialController.CardRect` and `Speaker`.
+- **The model** (`Births.OpenAgentModel` with `GameSettings.AngelThinks`): the chosen provider, its
+  quick model with `AgentsQuick`. `GameSettings.Angel` keeps the angel at all, and `--angel=off`
+  overrides it.
+- **No save or protocol change.** Joined players have their own angel.
+- **Debugging.** `AngelReadout` adds the F1 lines, and the log's "Angel:" lines show its words.
+
 ## Gods answering Creatures, the hand and fights
 
 ADR-070 records the decisions, and the plan is

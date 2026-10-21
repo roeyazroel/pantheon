@@ -39,6 +39,18 @@ public static class SessionPreviews
         return god.Controller == GodController.Ai ? session.Engine.Gods!.Ai.Evaluate(session.World, god) : [];
     }
 
+    /// <summary>What a god could do now, best first, as a god of another personality would weigh it (ADR-074).</summary>
+    /// <param name="session">The session.</param>
+    /// <param name="god">The god, a player's or an AI's.</param>
+    /// <param name="heart">The personality that weighs its choices.</param>
+    /// <returns>The candidate actions; none where there are no AI rules.</returns>
+    public static IReadOnlyList<Simulation.Gods.AiCandidate> PreviewGodAiAs(this GameSession session, GodState god, GodPersonality heart)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(god);
+        return session.Engine.Gods?.Ai is { } ai && ai.ProfileOf(heart) is { } profile ? ai.Evaluate(session.World, god, profile) : [];
+    }
+
     /// <summary>The goals an AI god could set itself in its next plan, weightiest first (ADR-036).</summary>
     /// <param name="session">The session.</param>
     /// <param name="god">The god.</param>

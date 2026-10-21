@@ -158,6 +158,21 @@ internal static class Startup
         }
     }
 
+    /// <summary>The player's angel (ADR-074), or <c>null</c> when it cannot be read: the game then plays without it.</summary>
+    /// <returns>The angel's content, or <c>null</c>.</returns>
+    public static Pantheon.Game.Angel.AngelContent? TryLoadAngel()
+    {
+        try
+        {
+            return GodotContentLoader.LoadAngelContent();
+        }
+        catch (Exception exception) when (exception is ContentFormatException or IOException)
+        {
+            GD.PushError($"The angel could not be loaded: {exception.Message}");
+            return null;
+        }
+    }
+
     /// <summary>The orchestra's music (ADR-071), or <c>null</c> when it cannot be read: the game then plays without music.</summary>
     /// <returns>The music, or <c>null</c>.</returns>
     public static Pantheon.Game.Audio.Orchestra.MusicContent? TryLoadMusic()

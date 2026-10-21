@@ -5,6 +5,9 @@ namespace Pantheon.Game.Controls;
 /// <summary>A button of the god's bar (ADR-068).</summary>
 public enum BarCommand
 {
+    /// <summary>The player's angel: its counsel (ADR-074).</summary>
+    Angel,
+
     /// <summary>The Book of the World.</summary>
     Book,
 
@@ -58,6 +61,7 @@ public static class CommandBar
     {
         var buttons = new List<BarButton>
         {
+            new(BarCommand.Angel, "Your angel: its counsel", "angel_call"),
             new(BarCommand.Book, "The Book of the World", "toggle_book"),
             new(BarCommand.Villages, "The village at the view's centre", "toggle_settlements"),
             new(BarCommand.Gods, "The gods: meeting, treaties, war and talk", "toggle_diplomacy"),

@@ -16,6 +16,7 @@ internal static class TestContent
     private static readonly Lazy<GameContent> ShippedContent = new(LoadShipped);
     private static readonly Lazy<PresentationContent> ShippedPresentationContent = new(LoadPresentation);
     private static readonly Lazy<Pantheon.Game.Audio.Orchestra.MusicContent> ShippedMusic = new(() => Pantheon.Game.Audio.Orchestra.MusicContent.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", Pantheon.Game.Audio.Orchestra.MusicContent.FileName))));
+    private static readonly Lazy<Pantheon.Game.Angel.AngelContent> ShippedAngel = new(() => Pantheon.Game.Angel.AngelContent.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", Pantheon.Game.Angel.AngelContent.FileName))));
     private static readonly Lazy<Pantheon.Game.Minds.MindContent> ShippedMinds = new(() => Pantheon.Game.Minds.MindContent.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", Pantheon.Game.Minds.MindContent.FileName))));
 
     /// <summary>Directory holding the copied content files.</summary>
@@ -26,6 +27,9 @@ internal static class TestContent
 
     /// <summary>The shipped music (ADR-071).</summary>
     public static Pantheon.Game.Audio.Orchestra.MusicContent Music => ShippedMusic.Value;
+
+    /// <summary>The shipped player's angel (ADR-074).</summary>
+    public static Pantheon.Game.Angel.AngelContent Angel => ShippedAngel.Value;
 
     /// <summary>The shipped gods' minds (ADR-065): the Claude models and the scribes' lore.</summary>
     public static Pantheon.Game.Minds.MindContent Minds => ShippedMinds.Value;

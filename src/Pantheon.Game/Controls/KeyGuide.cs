@@ -83,6 +83,7 @@ public static class KeyGuide
         new(KeyGroup.Hand, "Take an offering from a village that follows you", ["hand_grab"], KeyModifier.Ctrl),
         new(KeyGroup.Hand, "Follow the villager you point at", ["villager_follow"]),
         new(KeyGroup.Hand, "Let the villager you follow go", ["villager_follow"], KeyModifier.Shift),
+        new(KeyGroup.Panels, "Call your angel, for its counsel", ["angel_call"]),
         new(KeyGroup.Panels, "The Book of the World", ["toggle_book"]),
         new(KeyGroup.Panels, "The village you point at: its people, stores and priority", ["toggle_settlements"]),
         new(KeyGroup.Panels, "The gods: meeting, treaties, war and talk", ["toggle_diplomacy"]),

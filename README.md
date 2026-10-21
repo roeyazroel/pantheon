@@ -359,9 +359,9 @@ covers:
 ## Controls
 
 Nothing in play needs a key you cannot see (ADR-068). The god's bar, under the season at the top
-right, has a button for the Book, the village at the view's centre, the gods, the council, the
-domains, the history, the map's overlays (a chooser, by name), the overview, the keys and the
-menu, each with its key on a badge, lit while its panel is open. While a dialog is open, or the
+right, has a button for your angel, the Book, the village at the view's centre, the gods, the
+council, the domains, the history, the map's overlays (a chooser, by name), the overview, the keys
+and the menu, each with its key on a badge, lit while its panel is open. While a dialog is open, or the
 pointer is over a panel, the wheel and a trackpad's scrolling and pinching leave the world alone
 (ADR-069). The Veil toggle ends the miracle
 bar, and a rival under your plaque opens the gods' panel. The Keys button, and the settings' Keys
@@ -430,6 +430,7 @@ the council panel offers Summon now (J), and an unmet god's card offers Bring it
 | Cast your miracles veiled (dearer, and unattributed unless traced), or in the open | T, or Veil at the end of the miracle bar |
 | Pause menu: resume, save, load, main menu, quit (when no miracle is chosen and no order waits; it first puts away the key map, the debug palette and the map's chooser) | Esc |
 | The world's history | H |
+| Call your angel for its counsel, or send it away (ADR-074) | ' (apostrophe), or the angel, first on the god's bar |
 
 The camera has three zoom bands, by distance from the point it looks at: **Close** (up to
 120 m), **Regional** (up to 700 m) and **Strategic** (up to 2600 m, and further over a larger
@@ -831,6 +832,73 @@ Between turns, the god AI and the Creatures' brains go on as their instincts.
 **What it costs.** A god's turn is about 1,500 tokens asked and a few hundred answered, and a
 Creature's about 600. No mind thinks while the title screen is open. A model that fails three times
 in a row rests the agents for two minutes, and the scribes speak meanwhile.
+
+## Your angel
+
+At your hand hovers an angel (ADR-074): your conscience and your guide. It has a name of its own in
+every world, and **it becomes what you do**. It reads the world's memory of your deeds, never a
+score:
+
+| It looks | When |
+| --- | --- |
+| Radiant: white and gold, its halo whole, motes of light about it | your kindness far outweighs your harm |
+| Kind: white | you have done more good than harm |
+| Unformed: pale silver | you have done little yet |
+| Torn: one wing gold and one ash, its halo broken | you have done great good and great harm |
+| Stern: ash-grey, thorns breaking from its halo | you have done more harm than good |
+| Fallen: black, its wings rimmed with embers, a burning crown, eyes of fire | your harm far outweighs your kindness |
+
+Your traits mark it too:
+
+| Trait | Mark |
+| --- | --- |
+| Vengeful | a burning blade |
+| Deceptive | a veil |
+| Cruel | chains |
+| Ambitious | a crown of thorns |
+| Chaotic | cracks of fire in its skin |
+| Generous | threads of gold in its robe |
+| Merciful | light in its open hands |
+| Honest | clear, shining eyes |
+
+**When it speaks.** It comes when something happens to you:
+
+- your own deeds, kind and harsh: miracles, rescues, offerings, the people your hand kills, war and
+  peace;
+- your villages hungry, struck, won and lost;
+- a rival's Creature in your lands, a war, an offer, a meeting;
+- your Creature's fights and needs;
+- a trait the world sees in you, a new rank;
+- a change in itself;
+- a long quiet, when you might not know what to do next.
+
+It speaks in the voice of what you have made it:
+
+- a radiant angel urges mercy;
+- a fallen one urges fear;
+- a torn one sets both ways before you.
+
+**What it suggests.** It suggests a deed or two you can do now:
+
+- a miracle where it can be cast;
+- your Creature at work or set on a visitor;
+- an answer to a god.
+
+**Show me** flies the view there and gets the deed ready: the miracle chosen, the Creature's order
+armed, or the gods' panel open. **Thank you** sends it away. **Ask** puts any question to it.
+Press ' (or its button, first on the god's bar) to call it.
+
+**The tutorial.** During the tutorial it stands beside the tutorial's card, and speaks it.
+
+**With a model**, the one chosen on the Minds tab (its quickest when you prefer it), it answers in its
+own words about what has just happened and how things stand for you. It asks at most 60 questions
+an hour, each billed to you. **Without one**, the scribes give it lines in each of its voices.
+
+**Settings** (Minds tab, Your angel):
+
+- an angel at your hand, or none;
+- whether it thinks with the model;
+- how often it speaks unasked: rarely, sometimes or often.
 
 ## Your territory
 
@@ -1693,6 +1761,15 @@ below that change the world.
   - its migration: the pressure to leave and its cause, the people wanting to go and those on
     their way there;
   - warnings when the settlement starves, construction waits for food, or births are blocked.
+
+  F1 also shows your angel (ADR-074):
+  - its name and stage, its lean, how formed and how torn it is, the kindness and harm behind it,
+    and its marks;
+  - who speaks for it, with the questions this hour and the tokens;
+  - the moments waiting;
+  - its last words and the deeds it urged.
+
+  Its log lines begin "Angel:".
 - **B** draws the region grid and outlines the region under the cursor.
 - **F3** shows the region debug map in the bottom-left corner, one pixel per region, oriented
   like the camera's starting view. Each press shows the next layer: biome, elevation,
@@ -1834,6 +1911,8 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--mind-check=on\|off` | Ask the chosen model for a greeting at the start and print its answer (ADR-065). |
 | `--agents=on\|off` | Let the gods' and Creatures' agents think through the chosen model for the run, or not (ADR-072). |
 | `--wake=<god>` | Wake an AI god (by its number, 2 or more), or every one with 0, to look about it at the start (ADR-072). |
+| `--angel=on\|off\|<stage>` | Keep your angel for the run, or not; a stage (radiant, kind, unformed, torn, stern, fallen) holds its look and calls it at the start (ADR-074). |
+| `--angel-ask=<words>` | Ask your angel something at the start (ADR-074). |
 | `--talk=<god>` | Talk with a rival god (by its number, 2 or more) at the start (ADR-066). |
 | `--talk-say=<words>` | Say this to that god's model at the start (ADR-066). |
 | `--work=village\|forest` | Set your Creature to work at the start: for the focused village, or in the forest richest in timber near it (ADR-063). |
@@ -1941,6 +2020,7 @@ game/                 Godot project: scenes, client scripts (Pantheon.Client), d
                       history.json, domains.json, holy_sites.json, world_sizes.json, ecology.json,
                       society.json, water.json, settlement_view.json, biome_palette.json, divine_view.json, weather_view.json,
                       minds.json (the Claude models and the scribes' lore, ADR-065; the agents' rules and voices, ADR-072)
+                      angel.json (the player's angel: its names, looks, timing and lines, ADR-074)
   Fonts/              Cinzel and Alegreya Sans, with their SIL Open Font Licences (ADR-059)
   addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
 src/

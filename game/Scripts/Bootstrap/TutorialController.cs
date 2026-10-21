@@ -34,6 +34,21 @@ internal sealed partial class TutorialController : Node
     /// <summary>Whether the tutorial is under way.</summary>
     public bool IsActive => _tutorial.IsActive;
 
+    /// <summary>Where the tutorial's card is on the screen while it shows, for the angel to stand beside it (ADR-074).</summary>
+    public Rect2? CardRect => _panel?.CardRect;
+
+    /// <summary>Who speaks the tutorial: the player's angel by name (ADR-074).</summary>
+    public string Speaker
+    {
+        set
+        {
+            if (_panel is not null)
+            {
+                _panel.Speaker = value;
+            }
+        }
+    }
+
     /// <summary>Connects the tutorial to the game.</summary>
     /// <param name="session">The session.</param>
     /// <param name="camera">The camera.</param>

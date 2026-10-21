@@ -34,6 +34,10 @@ public static class GodotContentLoader
     /// <returns>The validated music.</returns>
     public static Pantheon.Game.Audio.Orchestra.MusicContent LoadMusicContent() => Pantheon.Game.Audio.Orchestra.MusicContent.Parse(ReadText(Pantheon.Game.Audio.Orchestra.MusicContent.FileName));
 
+    /// <summary>Loads the player's angel (ADR-074).</summary>
+    /// <returns>The validated angel's content.</returns>
+    public static Pantheon.Game.Angel.AngelContent LoadAngelContent() => Pantheon.Game.Angel.AngelContent.Parse(ReadText(Pantheon.Game.Angel.AngelContent.FileName));
+
     /// <summary>Reads a whole content file as text.</summary>
     private static string ReadText(string fileName)
     {

@@ -49,6 +49,7 @@ internal sealed partial class GameFlow : Node
     private GuidePanel _guidePanel = null!;
     private Births _births = null!;
     private AgentController? _agents;
+    private AngelController? _angel;
     private bool _wasPaused;
     private bool _ended;
     private double _sinceAutosave;
@@ -103,6 +104,9 @@ internal sealed partial class GameFlow : Node
         _tutorial = new TutorialController { Name = "Tutorial" };
         AddChild(_tutorial);
         _tutorial.Setup(session, camera, divine, ui, GetParent().GetNode<Node3D>("World"), setStatus);
+        _angel = new AngelController { Name = "Angel" };
+        AddChild(_angel);
+        _angel.Setup(session, _births, divine, camera, (ui.Diplomacy, _tutorial), options, () => _menu.Settings, () => TitleOpen || _menu.IsOpen, setStatus);
         divine.EventsHandled += events => _guide.Observe(events, _session.LocalGodId, _session.LocalCreature?.Id, _diplomacy.PanelVisible);
         session.WorldReplaced += () => _ended = false;
         WireMenu();
@@ -159,9 +163,9 @@ internal sealed partial class GameFlow : Node
         _menu.ShowPantheon(_session.World, _session.LocalGodId, note.Length > 0 ? note : null, () => Begin(guide: true));
     }
 
-    /// <summary>The gods' and Creatures' agents' lines for the debug panel (ADR-072).</summary>
+    /// <summary>The gods' and Creatures' agents' lines (ADR-072) and the player's angel's (ADR-074) for the debug panel.</summary>
     /// <returns>The lines.</returns>
-    public IReadOnlyList<string> AgentLines() => _agents?.Lines() ?? [];
+    public IReadOnlyList<string> AgentLines() => [.. _angel?.Lines() ?? [], .. _agents?.Lines() ?? []];
 
     /// <summary>Whether the title screen is open, when the orchestra plays the Theme (ADR-071).</summary>
     public bool TitleOpen => _menu?.TitleOpen ?? false;

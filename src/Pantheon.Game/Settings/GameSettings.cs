@@ -189,6 +189,15 @@ public sealed record GameSettings
     /// <summary>Whether the gods send the player words and the Creatures speak aloud (ADR-072).</summary>
     public bool Voices { get; init; } = true;
 
+    /// <summary>Whether the player keeps an angel (ADR-074): the god's conscience and guide, shaped by its deeds.</summary>
+    public bool Angel { get; init; } = true;
+
+    /// <summary>Whether the angel thinks with the chosen model; the scribes speak for it otherwise.</summary>
+    public bool AngelThinks { get; init; } = true;
+
+    /// <summary>How often the angel speaks unasked: 0 rarely, 1 sometimes, 2 often.</summary>
+    public int AngelChatter { get; init; } = 1;
+
     /// <summary>The same settings with every value in range.</summary>
     /// <returns>The settings.</returns>
     public GameSettings Clamped() => this with
@@ -212,6 +221,7 @@ public sealed record GameSettings
         LocalUrl = Uri.TryCreate(LocalUrl?.Trim(), UriKind.Absolute, out var url) && (url.Scheme == Uri.UriSchemeHttp || url.Scheme == Uri.UriSchemeHttps) ? LocalUrl.Trim() : DefaultLocalUrl,
         LocalModel = string.IsNullOrWhiteSpace(LocalModel) ? DefaultLocalModel : LocalModel.Trim(),
         AgentTurnsPerHour = Math.Clamp(AgentTurnsPerHour, MinAgentTurns, MaxAgentTurns),
+        AngelChatter = Math.Clamp(AngelChatter, 0, 2),
     };
 
     /// <summary>Reads settings from a file's text: the defaults when it is missing or broken, every value in range.</summary>

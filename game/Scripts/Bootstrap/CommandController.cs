@@ -144,7 +144,7 @@ internal sealed partial class CommandController : Node
             case BarCommand.Debug:
                 _palette.PanelVisible = !_palette.PanelVisible;
                 break;
-            case BarCommand.Book or BarCommand.Villages or BarCommand.Gods or BarCommand.Council or BarCommand.Domains or BarCommand.History or BarCommand.Overview or BarCommand.Menu:
+            case BarCommand.Angel or BarCommand.Book or BarCommand.Villages or BarCommand.Gods or BarCommand.Council or BarCommand.Domains or BarCommand.History or BarCommand.Overview or BarCommand.Menu:
                 if (System.Linq.Enumerable.FirstOrDefault(CommandBar.Buttons(DebugTools.On), b => b.Command == command)?.Action is { } action)
                 {
                     Press(action);

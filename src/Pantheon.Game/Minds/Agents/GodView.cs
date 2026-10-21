@@ -33,14 +33,24 @@ public static class GodView
     /// <returns>The text.</returns>
     public static string Describe(GameSession session, GodState god, AgentRules rules)
     {
+        ArgumentNullException.ThrowIfNull(rules);
+        return Describe(session, god, rules.VillagesShown);
+    }
+
+    /// <summary>How things stand, from the god's side, telling of so many villages: for its own mind, or its angel's (ADR-074).</summary>
+    /// <param name="session">The session.</param>
+    /// <param name="god">The god.</param>
+    /// <param name="villagesShown">How many villages to tell of, those that concern it most.</param>
+    /// <returns>The text.</returns>
+    public static string Describe(GameSession session, GodState god, int villagesShown)
+    {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(god);
-        ArgumentNullException.ThrowIfNull(rules);
         var world = session.World;
         var text = new StringBuilder();
         Self(text, world, god);
         Gods(text, session, god);
-        Villages(text, session, god, rules.VillagesShown);
+        Villages(text, session, god, villagesShown);
         Sites(text, world);
         Waiting(text, world, god);
         Aims(text, world, god);

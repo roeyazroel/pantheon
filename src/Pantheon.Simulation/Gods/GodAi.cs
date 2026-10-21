@@ -97,10 +97,24 @@ public sealed class GodAi
     /// <returns>The candidates; always including waiting.</returns>
     public List<AiCandidate> Evaluate(WorldState world, GodState god)
     {
+        ArgumentNullException.ThrowIfNull(god);
+        return Evaluate(world, god, ProfileOf(god));
+    }
+
+    /// <summary>
+    /// Every action a god could take now, best first, as a god of another profile would weigh them: the
+    /// player's angel weighs a player's god's choices with a kind heart and a harsh one (ADR-074).
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="god">The god.</param>
+    /// <param name="profile">The profile that weighs them; none weighs nothing.</param>
+    /// <returns>The candidates; always including waiting.</returns>
+    public List<AiCandidate> Evaluate(WorldState world, GodState god, GodProfile? profile)
+    {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(god);
         var candidates = new List<AiCandidate> { new(AiActionKind.Wait, null, null, default, _rules.Patience, 0f, _rules.Patience, "save power") };
-        if (ProfileOf(god) is not { } profile)
+        if (profile is null)
         {
             return candidates;
         }

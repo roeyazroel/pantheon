@@ -165,6 +165,9 @@ public static class InputActions
     /// <summary>Show or hide the world's history (H).</summary>
     public static readonly StringName ToggleHistory = "toggle_history";
 
+    /// <summary>Call the player's angel for its counsel (').</summary>
+    public static readonly StringName AngelCall = "angel_call";
+
     /// <summary>Show or hide the Domains panel with the holy sites (G, ADR-021).</summary>
     public static readonly StringName ToggleDomains = "toggle_domains";
 
@@ -191,6 +194,6 @@ public static class InputActions
         ToggleRegionBoundaries, ToggleDebugOverlay, ToggleRegionMap, WorldNew, WorldQuickSave, WorldQuickLoad, SimTogglePause,
         SimSpeedDown, SimSpeedUp, SimStepTick, SimStepSettlement, DebugSpoilFood, DebugAddSettlers, DebugWeatherSpell, DebugStorm, DebugQuake, DebugFire, DebugFlood, DebugMigrate, DebugMeet, DebugSeason, DebugHazard, DebugGreatEvent, HandGrab, ToggleBook, CameraOverview, GameMenu, ToggleHistory, ToggleDomains, ToggleSettlements, ToggleCouncil, DebugCouncil, ToggleVeil, VillagerFollow,
         .. MiracleSlots, MiracleCast, MiracleCancel, ToggleMapOverlay, DebugGrantPower,
-        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, CreatureWork, ToggleDiplomacy,
+        CreatureFocus, CreatureReward, CreaturePunish, CreatureSend, CreatureWork, ToggleDiplomacy, AngelCall,
     ];
 }

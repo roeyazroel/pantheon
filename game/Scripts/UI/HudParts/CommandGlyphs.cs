@@ -7,6 +7,9 @@ namespace Pantheon.Client.UI;
 /// <summary>The pictures of the god's bar and the Veil toggle (ADR-068), drawn in lines.</summary>
 internal enum CommandGlyph
 {
+    /// <summary>A winged figure under a halo: the player's angel.</summary>
+    Angel,
+
     /// <summary>An open book.</summary>
     Book,
 
@@ -52,6 +55,7 @@ internal static class CommandGlyphs
     /// <returns>Its picture.</returns>
     public static CommandGlyph For(BarCommand command) => command switch
     {
+        BarCommand.Angel => CommandGlyph.Angel,
         BarCommand.Book => CommandGlyph.Book,
         BarCommand.Villages => CommandGlyph.House,
         BarCommand.Gods => CommandGlyph.Gods,
@@ -76,6 +80,18 @@ internal static class CommandGlyphs
         var pen = new Pen(canvas, centre, size / 2f, color);
         switch (glyph)
         {
+            case CommandGlyph.Angel:
+                pen.Oval(0.3f, 0.09f, (0f, -0.84f));
+                pen.Ring((0f, -0.44f), 0.17f);
+                pen.Shape(false, (-0.2f, -0.18f), (-0.34f, 0.86f), (0.34f, 0.86f), (0.2f, -0.18f));
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    pen.Shape(false, (side * 0.22f, -0.1f), (side * 0.6f, -0.64f), (side * 0.96f, -0.5f), (side * 0.88f, -0.02f), (side * 0.58f, 0.3f), (side * 0.3f, 0.22f));
+                    pen.Line((side * 0.36f, -0.06f), (side * 0.78f, -0.36f));
+                    pen.Line((side * 0.36f, 0.1f), (side * 0.72f, -0.06f));
+                }
+
+                break;
             case CommandGlyph.Book:
                 pen.Shape(true, (-0.9f, -0.6f), (-0.04f, -0.42f), (-0.04f, 0.72f), (-0.9f, 0.55f));
                 pen.Shape(true, (0.9f, -0.6f), (0.04f, -0.42f), (0.04f, 0.72f), (0.9f, 0.55f));

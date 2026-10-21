@@ -55,6 +55,7 @@ internal static class MindsSettings
         tab.AddChild(status);
         tab.AddChild(UiKit.Text("Your choice gives minds to the gods of new worlds; a world already made keeps the gods it was born with.", UiTheme.CaptionSize, UiTheme.Muted));
         Agents(menu, tab);
+        Angel(menu, tab);
 
         void Show(MindProvider provider)
         {
@@ -85,6 +86,18 @@ internal static class MindsSettings
         SettingsPage.Slide(menu, tab, "Questions an hour, at most", s => s.AgentTurnsPerHour, (s, value) => s with { AgentTurnsPerHour = (int)value }, GameSettings.MinAgentTurns, 1000, 10);
         SettingsPage.Toggle(menu, tab, "Gods and Creatures speak", s => s.Voices, (s, on) => s with { Voices = on });
         var about = UiKit.Text("With a model, the rival gods and every Creature are woken by what happens: a Creature in a god's lands, a war, a treaty, a fight, a reward. A god then acts within the island's laws, sets its aims, keeps a journal of what it remembers and sends you words; a Creature speaks and chooses what to do next. Each turn is a question to your provider, billed to you. Without a model, their instincts act and the scribes give them words.", UiTheme.CaptionSize, UiTheme.Muted);
+        about.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        tab.AddChild(about);
+    }
+
+    /// <summary>The angel's rows (ADR-074): whether the player keeps one, whether it thinks with the model, and how often it speaks unasked.</summary>
+    private static void Angel(MenuScreen menu, VBoxContainer tab)
+    {
+        tab.AddChild(UiKit.Heading("Your angel", 22));
+        SettingsPage.Toggle(menu, tab, "An angel at your hand", s => s.Angel, (s, on) => s with { Angel = on });
+        SettingsPage.Toggle(menu, tab, "It thinks with the model", s => s.AngelThinks, (s, on) => s with { AngelThinks = on });
+        SettingsPage.Slide(menu, tab, "It speaks unasked: rarely to often", s => s.AngelChatter, (s, value) => s with { AngelChatter = (int)value }, 0, 2, 1);
+        var about = UiKit.Text("Your angel is your conscience and your guide. What you do makes it what it is: kind deeds make it radiant, cruel ones darken it, and great good and great harm together tear it in two. It speaks when something happens to you, and suggests what to do next; press ' or its button on the bar to call it, and Ask to ask it anything. With a model, each of its answers is a question to your provider, billed to you; without one, the scribes speak for it.", UiTheme.CaptionSize, UiTheme.Muted);
         about.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         tab.AddChild(about);
     }

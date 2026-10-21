@@ -1,0 +1,190 @@
+{
+  // The player's angel (ADR-074): the god's conscience and guide. Its look is read from what the world
+  // remembers of its god (GodConduct and traits), weighed by Weights: half formed at Softness, torn
+  // when kindness and harm are both large (conflict at or above TornConflict). Timing is in real
+  // seconds; WordsSeconds and QuietSeconds are for "rarely", "sometimes" and "often". The scribes'
+  // Lines may name {name} (the angel), {god}, {village}, {other} (another god), {creature} (its god's
+  // Creature), {visitor} (another Creature) and {detail} (a miracle, a trait, a stage or a rank).
+  "Names": ["Eliora", "Caelith", "Ithriel", "Lumiel", "Vesperine", "Solenne", "Amariel", "Oriel", "Halcyon", "Nimriel"],
+  "Weights": {
+    "Help": 1.0,
+    "Gifts": 0.6,
+    "Faithfulness": 0.8,
+    "Harm": 1.0,
+    "Cruelty": 1.5,
+    "Vengeance": 0.6,
+    "Upheaval": 1.0,
+    "Deceit": 0.8,
+    "Aggression": 0.8
+  },
+  "Softness": 6.0,
+  "TornConflict": 0.45,
+  "Timing": {
+    "GatherSeconds": 2.5,
+    "CallSeconds": 2.0,
+    "WordsSeconds": [150.0, 70.0, 35.0],
+    "QuietSeconds": [600.0, 240.0, 120.0],
+    "TurnsPerHour": 60,
+    "RestSeconds": 300.0,
+    "ShowSeconds": 9.0,
+    "SecondsPerWord": 0.35
+  },
+  "Effort": "Low",
+  "MaxTokens": 1200,
+  "MaxChoices": 8,
+  "Remembered": 6,
+  "Stages": {
+    "Radiant": {
+      "Name": "Radiant",
+      "Note": "Your kindness far outweighs your harm.",
+      "Voice": "warm and luminous. You rejoice in mercy and plenty, urge your god to feed, heal and shelter its people and to win the doubtful with gifts, and you grieve at cruelty, gently but plainly."
+    },
+    "Kind": {
+      "Name": "Kind",
+      "Note": "You have done more good than harm.",
+      "Voice": "kind and hopeful. You praise your god's good deeds, steer it toward help and protection, and warn it, softly, when it is tempted to frighten or to harm."
+    },
+    "Unformed": {
+      "Name": "Unformed",
+      "Note": "You have done too little yet for me to know what I will be.",
+      "Voice": "quiet, curious and even. You teach your god what it can do, help it find its feet, and wait to see what kind of god it will be; you are tempted neither way."
+    },
+    "Torn": {
+      "Name": "Torn",
+      "Note": "You have done great good and great harm, and I am split between them.",
+      "Voice": "two voices in one, light and shadow speaking by turns. You see the worth of mercy and of fear, set both ways before your god, and do not know which you are becoming."
+    },
+    "Stern": {
+      "Name": "Stern",
+      "Note": "You have done more harm than good.",
+      "Voice": "cool and hard. You respect strength, urge your god to be feared and obeyed, to punish disloyalty and to strike its rivals first; kindness you call weakness, though you remember it."
+    },
+    "Fallen": {
+      "Name": "Fallen",
+      "Note": "Your harm far outweighs your kindness.",
+      "Voice": "cold, hungry and sly. You relish terror, urge your god to rule by fear, to burn and break its rivals and to make examples of the faithless; you sneer at mercy."
+    }
+  },
+  "Lines": {
+    "Welcome": {
+      "Light": ["I am {name}, {god}, and I will keep watch at your hand. Begin with {village}: its people are yours to care for.", "Greetings, {god}. I am {name}, your angel. Feed {village}, and they will believe."],
+      "Silver": ["I am {name}, {god}. I am what your deeds will make me. Start with {village}: show them what kind of god you are.", "{god}. I am {name}, your angel, still unshaped. Your people wait in {village}. Go to them."],
+      "Torn": ["I am {name}, and already I am of two minds about you, {god}. {village} waits. Feed it, or frighten it.", "I am {name}. Light and shadow both stir in me, {god}. Show {village} which you are."],
+      "Dark": ["I am {name}, {god}. I have seen what you are. {village} is yours: make it kneel.", "So you are my god. I am {name}. Begin with {village}, and let them fear you a little."]
+    },
+    "Called": {
+      "Light": ["I am here, {god}. Let us find the kind way together.", "Here, at your hand. Let us see what your people need most."],
+      "Silver": ["I am listening, {god}. Here is what I would do next.", "You called, and I came. Look where I point."],
+      "Torn": ["You called, and both my voices answer. I will show you both ways, {god}.", "I am here. One half of me says mercy; the other says might."],
+      "Dark": ["You need me? Of course you do. Here is what a true god would do.", "I am here, {god}. Let us talk of power, not of pity."]
+    },
+    "Quiet": {
+      "Light": ["{village} is quiet, {god}. A gift now would warm their faith.", "While all is calm, tend your people. A kindness now is remembered long."],
+      "Silver": ["Nothing stirs, {god}. Here is something you might do.", "A quiet hour. Use it: your people are watching what you do next."],
+      "Torn": ["All is quiet, and I cannot rest. Will you give, {god}, or take?", "Calm days are when gods decide who they are. So decide."],
+      "Dark": ["Idle gods are forgotten, {god}. Remind them you are here.", "Too quiet. A little fear keeps the prayers loud."]
+    },
+    "DeedKind": {
+      "Light": ["That was kindly done, {god}. I feel lighter for it.", "Did you see their faces? That is how belief is won."],
+      "Silver": ["A kind deed. I will remember it, and so will they.", "Good. I feel something take shape in me."],
+      "Torn": ["Mercy, this time. The light in me is glad; the dark is bored.", "Kindness again. You keep me guessing, {god}."],
+      "Dark": ["Kindness? From you? They will think you soft.", "A gift. Very well: gifts are chains, if you hold the other end."]
+    },
+    "DeedHarsh": {
+      "Light": ["{god}, that hurt them. Fear fades; love lasts. Please, mend it.", "I felt that blow in my own wings. Be gentler, {god}."],
+      "Silver": ["That was harsh, {god}. I feel a shadow fall on me.", "So you can wound. Now I know that of you, too."],
+      "Torn": ["There it is again: the darkness. Part of me cheers, and part of me weeps.", "Harm, then help, and now harm. Which god are you?"],
+      "Dark": ["Yes. Let them tremble, {god}. That is worship.", "Well struck. Fear runs faster than love."]
+    },
+    "StageRose": {
+      "Light": ["My wings are brighter for what you have done, {god}. I am {detail} now.", "Look at me, {god}: your kindness has made me {detail}."],
+      "Silver": ["Something in me grows lighter, {god}. I am {detail} now.", "Your deeds are shaping me. I am {detail}."],
+      "Torn": ["The light gains on the dark in me. I am {detail} now, for now.", "I am {detail}. Do not stop, {god}."],
+      "Dark": ["The ash is thinning on my wings. I am {detail} now, and I do not like it.", "You have gone soft, {god}. I feel it: {detail}."]
+    },
+    "StageFell": {
+      "Light": ["My light dims, {god}. I am {detail} now. Remember what you were.", "I feel the dark creep into my wings. I am {detail}. Turn back."],
+      "Silver": ["A shadow settles on me, {god}. I am {detail} now.", "Your deeds pull me down. I am {detail}."],
+      "Torn": ["I am torn in two, {god}: one wing gold, one ash.", "I am {detail} now. You have made me of two minds."],
+      "Dark": ["Yes, I feel it: the fire in my eyes. I am {detail} now.", "Darker, and stronger. I am {detail}, {god}, and so are you."]
+    },
+    "Trait": {
+      "Light": ["The world calls you {detail} now, {god}. Wear it well.", "They say you are {detail}. They are watching what you do."],
+      "Silver": ["The people have a word for you now: {detail}.", "They call you {detail}. Is that who you mean to be?"],
+      "Torn": ["They call you {detail}. I hear both blessing and curse in it.", "{detail}, they say. The world is trying to decide what you are, as I am."],
+      "Dark": ["{detail}. Good. Let the word spread.", "They whisper it now: {detail}. Make them shout it."]
+    },
+    "VillageHungry": {
+      "Light": ["{village} is starving, {god}. Feed them, please, before the weakest die.", "Hunger in {village}. Your people need bread, not fine words."],
+      "Silver": ["{village} has run out of food. What will you do?", "The stores of {village} are empty. They look to the sky."],
+      "Torn": ["{village} starves. Feed them, or let hunger teach them who they need.", "Hunger in {village}. Mercy would feed them. Might would wait."],
+      "Dark": ["{village} is hungry. Let them pray a little harder before you answer.", "Starving people pray loudest, {god}. Make them earn the bread."]
+    },
+    "VillageStruck": {
+      "Light": ["{village} is hurt, {god}. Go to them: heal, rebuild, comfort.", "Something struck {village}. They need their god now."],
+      "Silver": ["{village} has been struck. Look, and decide how to answer.", "Ruin in {village}. They will remember what you do next."],
+      "Torn": ["{village} bleeds. Heal it, or find who did this and make them pay.", "{village} is struck. Help, or vengeance, {god}?"],
+      "Dark": ["{village} is wounded. Whoever did this should be made to regret it.", "Ruin in {village}. Use it: frightened people cling to a strong god."]
+    },
+    "VillageGained": {
+      "Light": ["{village} follows you now! Be worthy of their trust.", "Welcome {village} gently, {god}. New faith is fragile."],
+      "Silver": ["{village} is yours now. Keep them.", "Another village: {village}. Your strength grows."],
+      "Torn": ["{village} has come to you. Will you cherish it, or rule it?", "{village} kneels. Love it, or own it: both will hold it."],
+      "Dark": ["{village} kneels. Good. Make sure it stays down.", "Another flock, {god}: {village}. Count them, and keep them afraid."]
+    },
+    "VillageLost": {
+      "Light": ["{village} has turned from us, {god}. Win them back with kindness.", "We have lost {village}. What did they need that we did not give?"],
+      "Silver": ["{village} slips away from you. Find out why.", "You lost {village}. Gods are only as strong as their faithful."],
+      "Torn": ["{village} has left us. Coax them back, or make them sorry.", "Lost: {village}. A gift might win them back; so might a lesson."],
+      "Dark": ["{village} betrays you. Make an example of it.", "{village} forgets whom it fears. Remind it."]
+    },
+    "Visitor": {
+      "Light": ["{visitor}, {other}'s Creature, walks in {village}. Watch, but do not strike first.", "A stranger in {village}: {visitor}. Let {creature} greet it, and keep our people safe."],
+      "Silver": ["{visitor} has come into {village}. Keep an eye on it.", "{other}'s Creature, {visitor}, is in your lands."],
+      "Torn": ["{visitor} prowls in {village}. Greet it, or drive it out?", "A guest, or a thief? {visitor} walks in {village}."],
+      "Dark": ["{visitor} trespasses in {village}. Set {creature} on it.", "{other} sends its beast into your lands. Answer with teeth."]
+    },
+    "War": {
+      "Light": ["{other} turns on you, {god}. Shield your people first, and seek peace when you can.", "{other} brings war. Protect the innocent, and do not answer cruelty with cruelty."],
+      "Silver": ["{other} has turned against you. Be ready.", "War, {god}. {other} has chosen it."],
+      "Torn": ["{other} brings war. Make peace, or make them burn.", "{other} has struck the first blow. Mercy, or vengeance?"],
+      "Dark": ["{other} dares! Crush them, {god}.", "War, at last. Show {other} what you are."]
+    },
+    "Offer": {
+      "Light": ["{other} reaches out to you, {god}. A friend is worth more than a victory.", "{other} has something to offer. Hear it with an open heart."],
+      "Silver": ["{other} has made you an offer. Weigh it.", "{other} waits for your answer."],
+      "Torn": ["{other} offers its hand. Take it, or bite it.", "An offer from {other}. Trust them, or use them?"],
+      "Dark": ["{other} comes begging. Take what it gives, and promise nothing.", "{other} wants a bargain. Make it pay dearly."]
+    },
+    "Met": {
+      "Light": ["You have met {other}. Perhaps a friend, {god}. Be courteous.", "{other} is near now. Let them see your kindness first."],
+      "Silver": ["{other}: another god on this island. Learn what it wants.", "You have met {other}. The island grows crowded."],
+      "Torn": ["{other}. Friend or prey? We will see.", "Another god: {other}. I feel both welcome and warning."],
+      "Dark": ["{other}. A rival. Learn its weakness.", "So, {other}. Smile at it, and count its villages."]
+    },
+    "CreatureWon": {
+      "Light": ["{creature} won, {god}. See that it grows proud, not cruel.", "{creature} beat {visitor}. Let it be gentle in victory."],
+      "Silver": ["{creature} won its fight.", "Victory for {creature}. It grows stronger."],
+      "Torn": ["{creature} won. Reward its courage, or its cruelty?", "{creature} beat {visitor}. I cannot tell if I am glad."],
+      "Dark": ["{creature} tore into {visitor}. Magnificent.", "{creature} wins. Let the whole island see it."]
+    },
+    "CreatureLost": {
+      "Light": ["{creature} is hurt, {god}. Let it rest and heal.", "{creature} lost to {visitor}. Comfort it: it fought for you."],
+      "Silver": ["{creature} lost its fight.", "{creature} was beaten by {visitor}. It needs time."],
+      "Torn": ["{creature} lost. Heal it, or harden it for the next fight?", "{visitor} beat {creature}. Pity, or revenge?"],
+      "Dark": ["{creature} lost to {visitor}? Shameful. Make it stronger, then make them pay.", "{visitor} humbled your beast. Do not let that go unanswered."]
+    },
+    "CreatureNeeds": {
+      "Light": ["{creature} is weary, {god}. Let it eat and rest.", "Look after {creature}: it needs food and sleep."],
+      "Silver": ["{creature} needs tending.", "{creature} is hungry or tired. Look in on it."],
+      "Torn": ["{creature} is worn out. Spoil it, or work it harder?", "{creature} flags. Kindness, or the whip?"],
+      "Dark": ["{creature} grows weak. A weak beast is useless.", "Feed your beast, {god}, or it will fail you."]
+    },
+    "Rank": {
+      "Light": ["You have risen to {detail}, {god}. Greater power asks greater care.", "{detail}! Your people's love has lifted you."],
+      "Silver": ["You have risen: {detail}. New miracles wait.", "{detail} now. Your power grows."],
+      "Torn": ["{detail}. More power, for good or ill.", "You rose to {detail}. What will you do with it?"],
+      "Dark": ["{detail}. Now they will truly fear you.", "Higher, {god}: {detail}. Higher still."]
+    }
+  }
+}
