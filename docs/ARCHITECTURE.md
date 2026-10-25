@@ -2976,6 +2976,10 @@ flowchart LR
     `export_presets.cfg` (ADR-031);
   - it packages the result (a zip, Godot's zip of the signed app, or a tarball that keeps the
     executable bit) and uploads it as it is.
+  - Godot 4.7.2 sometimes crashes as it shuts down after finishing, so the import and the export
+    are tried up to three times. MSBuild leaves no nodes or compiler server running, which on
+    Windows kept the export waiting for them.
+  - The .NET SDK is pinned (8.0.426): the "latest 8.0" link was broken for macOS.
 - **Publish the release** attaches the three packages to a GitHub release when the run was started
   by a `v*` tag.
 - The repository commits no binaries. `build/` is ignored, and so is

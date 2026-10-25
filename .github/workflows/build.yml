@@ -25,6 +25,11 @@ env:
   # An exact SDK, not 8.0.x: "the latest 8.0" resolves through aka.ms links, and on 2026-10-25 the
   # macOS one pointed at an unpublished 8.0.427 that could not be downloaded.
   DOTNET_SDK_VERSION: "8.0.426"
+  # No MSBuild nodes or compiler server left running after a build: on Windows they keep the
+  # console's handles open, and Godot's export then waited 15 minutes for them to time out.
+  MSBUILDDISABLENODEREUSE: "1"
+  DOTNET_CLI_USE_MSBUILD_SERVER: "0"
+  UseSharedCompilation: "false"
 
 jobs:
   test:
@@ -97,31 +102,16 @@ jobs:
       - name: Fetch Terrain3D's libraries
         run: tools/vendor-terrain3d.sh
 
-      # TEMPORARY: the Linux import crashed at exit (139) on the runner only. On a failure there,
-      # trace-godot.sh runs the same command again under gdb, to show where it crashes.
-      - name: Prepare a crash trace (Linux, temporary)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq gdb > /dev/null
-          # .NET signals its threads with SIGRTMIN and up; let them pass.
-          printf '%s\n' 'set pagination off' 'handle SIGPIPE SIGUSR1 SIGUSR2 nostop noprint pass' \
-            'handle SIG34 SIG35 SIG36 SIG37 nostop noprint pass' 'run' 'bt' > "${RUNNER_TEMP}/gdb-commands"
-          cat > "${RUNNER_TEMP}/trace-godot.sh" <<EOF
-          #!/usr/bin/env bash
-          gdb -q -batch -x "${RUNNER_TEMP}/gdb-commands" --args "\$@" || true
-          EOF
-          chmod +x "${RUNNER_TEMP}/trace-godot.sh"
-
+      # Godot 4.7.2 sometimes crashes as it shuts down, after an import or export has finished
+      # (SIGSEGV in its cleanup; seen on the Linux and macOS runners, never on the owner's Mac).
+      # A run that fails is tried again, up to three times in all.
       - name: Import the project
         run: |
-          status=0
-          "${GODOT}" --headless --verbose --path game --import || status=$?
-          if [[ "${status}" != 0 && -x "${RUNNER_TEMP}/trace-godot.sh" ]]; then
-            echo "::warning::The import exited with ${status}; running it again under gdb"
-            rm -rf game/.godot
-            "${RUNNER_TEMP}/trace-godot.sh" "${GODOT}" --headless --verbose --path game --import
-          fi
-          exit "${status}"
+          for attempt in 1 2 3; do
+            if "${GODOT}" --headless --path game --import; then exit 0; fi
+            echo "::warning::Godot's import failed (attempt ${attempt} of 3)"
+          done
+          exit 1
 
       - name: Export
         env:
@@ -129,13 +119,15 @@ jobs:
           OUTPUT: ${{ matrix.output }}
         run: |
           mkdir -p "build/$(dirname "${OUTPUT}")"
-          status=0
-          "${GODOT}" --headless --verbose --path game --export-release "${PRESET}" "../build/${OUTPUT}" || status=$?
-          if [[ "${status}" != 0 && -x "${RUNNER_TEMP}/trace-godot.sh" ]]; then
-            echo "::warning::The export exited with ${status}; running it again under gdb"
-            "${RUNNER_TEMP}/trace-godot.sh" "${GODOT}" --headless --verbose --path game --export-release "${PRESET}" "../build/${OUTPUT}"
-          fi
-          [[ "${status}" == 0 ]] || exit "${status}"
+          exported=false
+          for attempt in 1 2 3; do
+            if "${GODOT}" --headless --path game --export-release "${PRESET}" "../build/${OUTPUT}"; then
+              exported=true
+              break
+            fi
+            echo "::warning::Godot's export failed (attempt ${attempt} of 3)"
+          done
+          [[ "${exported}" == true ]]
           test -f "build/${OUTPUT}"
           ls -la "build/$(dirname "${OUTPUT}")"
 

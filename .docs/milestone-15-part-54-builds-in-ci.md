@@ -76,6 +76,7 @@ flowchart LR
   libraries.
 - [x] The libraries out of the index and ignored; the test's message.
 - [x] ADR-075; ADR-005 and ADR-031 amended; README, ARCHITECTURE, AGENTS and PROGRESS_SUMMARY.
+- [x] The first runs on GitHub, and their fixes (below).
 
 ### Verification results
 
@@ -91,3 +92,19 @@ flowchart LR
   universal (x86_64 and arm64), signed ad hoc without the hardened runtime, and its smoke run
   (`--seed=1234 --quit-after-frames=90 --screenshot`) drew the island on Terrain3D 1.0.2 and exited
   cleanly.
+
+### The first runs on GitHub
+
+The tests passed on the runner at once. The exports needed four fixes:
+
+| Seen | Cause | Fix |
+| --- | --- | --- |
+| Windows: the Terrain3D script found no libraries | unzip on the runner extracted nothing for the script's `addons/terrain_3d/*` pattern | the script extracts the whole archive, as `install-godot.sh` does |
+| macOS: `setup-dotnet` failed with HTTP 409 | "the latest 8.0" goes through an aka.ms link, which pointed at an unpublished 8.0.427 SDK | the SDK is pinned, `DOTNET_SDK_VERSION` 8.0.426 |
+| Linux (exit 139), then macOS (exit 134): Godot crashed after its import | a crash in Godot 4.7.2's own shutdown (SIGSEGV in its cleanup), after the work was done; it comes and goes, and never happened on the Mac or in an Ubuntu container | the import and the export are tried up to three times |
+| Windows: the export took 16 minutes | the export ended in a minute, but MSBuild's reused nodes held the console's handles until their 15-minute idle timeout | `MSBUILDDISABLENODEREUSE=1`, `UseSharedCompilation=false` and no MSBuild server |
+
+- `setup-dotnet` also warns that it could not install the latest .NET runtime, through the same
+  broken aka.ms links. The pinned SDK installs, and the warning does no harm.
+- Godot builds with the newest SDK on the runner, as on the Mac (.NET 10 for the `net8.0`
+  project). The pinned 8.0 SDK keeps the .NET 8 runtime there once the runner images drop it.
