@@ -101,10 +101,21 @@ The tests passed on the runner at once. The exports needed four fixes:
 | --- | --- | --- |
 | Windows: the Terrain3D script found no libraries | unzip on the runner extracted nothing for the script's `addons/terrain_3d/*` pattern | the script extracts the whole archive, as `install-godot.sh` does |
 | macOS: `setup-dotnet` failed with HTTP 409 | "the latest 8.0" goes through an aka.ms link, which pointed at an unpublished 8.0.427 SDK | the SDK is pinned, `DOTNET_SDK_VERSION` 8.0.426 |
-| Linux (exit 139), then macOS (exit 134): Godot crashed after its import | a crash in Godot 4.7.2's own shutdown (SIGSEGV in its cleanup), after the work was done; it comes and goes, and never happened on the Mac or in an Ubuntu container | the import and the export are tried up to three times |
+| Linux (exit 139), then macOS (exit 134), then all three: Godot crashed after its import | a crash in Godot 4.7.2's own shutdown (SIGSEGV in its cleanup) after the first import of a fresh checkout, once the import is done; the second import runs clean. It did not happen on the Mac or in an Ubuntu container, and `--verbose` sometimes hid it | the import and the export are tried up to three times |
 | Windows: the export took 16 minutes | the export ended in a minute, but MSBuild's reused nodes held the console's handles until their 15-minute idle timeout | `MSBUILDDISABLENODEREUSE=1`, `UseSharedCompilation=false` and no MSBuild server |
 
 - `setup-dotnet` also warns that it could not install the latest .NET runtime, through the same
   broken aka.ms links. The pinned SDK installs, and the warning does no harm.
+- The third run passed on every system. Each first import crashed and its second passed. The
+  exports took 36 s (macOS), 60 s (Linux) and 2 min 43 s (Windows), and the jobs 2 to 4 minutes
+  with Godot cached.
+- The Linux package, run headless in an Ubuntu 24.04 container (`--seed=1234
+  --quit-after-frames=30`), kept its profile in SQLite, built the world on Terrain3D 1.0.2 and
+  exited cleanly: the first Linux build ever run. The macOS package, downloaded and run on the Mac
+  the same way, is universal, signed ad hoc without the hardened runtime, and played as the local
+  build does. The Windows package holds `Pantheon.exe`, its
+  `.pck`, Terrain3D's library and the .NET assemblies with SQLite's native library; it is not run.
+- `gh run download` (2.97) cannot read packages uploaded as they are: it unpacks the Windows zip
+  and fails on the tarball. The run's page and `actions/download-artifact` fetch them whole.
 - Godot builds with the newest SDK on the runner, as on the Mac (.NET 10 for the `net8.0`
   project). The pinned 8.0 SDK keeps the .NET 8 runtime there once the runner images drop it.

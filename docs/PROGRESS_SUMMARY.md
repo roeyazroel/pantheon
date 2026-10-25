@@ -1568,8 +1568,12 @@ system, and for the artifacts to leave the repository (ADR-075).
   templates, checked against Godot's SHA-512 sums. CI caches them.
 - **No native libraries in git.** `build/` was already ignored. Terrain3D's six libraries (about
   20 MB) are now fetched by `tools/vendor-terrain3d.sh` after cloning and in CI, and ignored.
-- The tests passed on Linux (1921) as on macOS. The macOS job, rehearsed on the Mac in a fresh tree,
-  exported a universal app signed ad hoc that ran on Terrain3D.
+- The tests pass on Linux (1921) as on macOS. On GitHub, all three systems export, in 2 to 4
+  minutes a job, after fixes for the runners: unzip on Windows, a broken .NET download link, MSBuild
+  nodes holding the Windows export, and Godot 4.7.2 crashing as it exits after a fresh checkout's
+  first import (it is run again).
+- The Linux build was run for the first time, headless in a container, on Terrain3D with its SQLite
+  profile.
 
 The plan is [.docs/milestone-15-part-54-builds-in-ci.md](../.docs/milestone-15-part-54-builds-in-ci.md).
 

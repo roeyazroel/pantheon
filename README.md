@@ -2096,6 +2096,9 @@ and the definition of done.
   Terrain3D's platform documentation.
 - The game reads `res://Data/*.json` at startup, so every export must include those files (the
   presets in `game/export_presets.cfg` do).
+- On a fresh checkout, the first `godot --headless --path game --import` may crash as Godot shuts
+  down (a segmentation fault), after the import has finished. Run it again; the second runs clean.
+  CI does the same (ADR-075).
 - About one run in four, Godot warns at exit that a few ObjectDB instances were leaked. It happens
   since at least part 15 and never with `--verbose`; it is harmless and not yet traced.
 - Four gods crowd the small island: a player who does nothing keeps only a few followers after ten
