@@ -198,7 +198,8 @@ main() {
   [[ -f "${archive}" ]] || fail "archive not found: ${archive}"
   verify_archive "${archive}"
 
-  unzip -q "${archive}" "${ADDON_PATH_IN_ARCHIVE}/*" -d "${work_dir}/extracted"
+  # The whole archive, not a pattern: unzip on the Windows runners matched nothing with one.
+  unzip -q "${archive}" -d "${work_dir}/extracted"
   local addon_dir="${work_dir}/extracted/${ADDON_PATH_IN_ARCHIVE}"
   check_files "${addon_dir}" "${LIBRARY_FILES[@]}"
 
