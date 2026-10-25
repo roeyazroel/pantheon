@@ -260,6 +260,9 @@ followed or the target has been measured.
   something happens to them, urges deeds they can do now (Show me readies them), answers when called
   or asked, and speaks the tutorial. It thinks with the chosen model, or the scribes give it its
   voices (part 53).
+- GitHub Actions tests every push on Linux, and exports Windows, macOS and Linux each on its own
+  system, by hand or on a version tag, which also publishes a release. Terrain3D's native libraries
+  are no longer committed: a pinned, checksummed script fetches them (part 54).
 - 1921 xUnit tests pass headless (1874 at the end of part 52, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
@@ -1552,6 +1555,24 @@ the hand.
 
 The plan is [.docs/milestone-15-part-53-angel.md](../.docs/milestone-15-part-53-angel.md).
 
+### Milestone 15, part 54: Release builds in CI, and no binaries in git
+
+The owner asked for the builds, made until now on their Mac, to be made in GitHub CI on every
+system, and for the artifacts to leave the repository (ADR-075).
+
+- **The Build workflow** (`.github/workflows/build.yml`):
+  - builds and tests on Linux on every push to `main` and every pull request;
+  - exports Windows, macOS and Linux, each on its own runner, when run by hand or by a `v*` tag;
+  - publishes the three packages as a GitHub release on a tag.
+- **`tools/install-godot.sh`** installs the pinned Godot .NET editor and its platform's export
+  templates, checked against Godot's SHA-512 sums. CI caches them.
+- **No native libraries in git.** `build/` was already ignored. Terrain3D's six libraries (about
+  20 MB) are now fetched by `tools/vendor-terrain3d.sh` after cloning and in CI, and ignored.
+- The tests passed on Linux (1921) as on macOS. The macOS job, rehearsed on the Mac in a fresh tree,
+  exported a universal app signed ad hoc that ran on Terrain3D.
+
+The plan is [.docs/milestone-15-part-54-builds-in-ci.md](../.docs/milestone-15-part-54-builds-in-ci.md).
+
 ## Coverage by specification section
 
 Sections that only state intent are summarised at the end of this part.
@@ -1665,7 +1686,7 @@ Sections that only state intent are summarised at the end of this part.
 
 | § | Topic | Status | Notes |
 | --- | --- | --- | --- |
-| 62 | Supported platforms | Partial | Export presets for Windows x64, macOS (one universal app for Apple Silicon and Intel) and Linux x64 (ADR-031). The macOS build was exported and played (114 FPS); the Windows and Linux builds export but have not been run, and Windows has never been run. Release signing and notarization need the owner's Apple account. |
+| 62 | Supported platforms | Partial | Export presets for Windows x64, macOS (one universal app for Apple Silicon and Intel) and Linux x64 (ADR-031). GitHub Actions exports each on its own system, by hand or on a version tag, which publishes a release (ADR-075). The macOS build was exported and played (114 FPS); the Windows and Linux builds export but have not been run, and Windows has never been run. Release signing and notarization need the owner's Apple account. |
 | 63 | Core technology stack | Partial | In use: Godot .NET 4.7.2, C#, Terrain3D, FastNoiseLite and MultiMesh. Jolt runs the debris (ADR-048). Navigation is a region graph in the core rather than Godot's navigation meshes (ADR-010). LimboAI is not used. Utility AI drives the Creature and the gods. No Blender assets. |
 | 64 | Terrain destruction | Implemented | As §64 asks for the initial game: earthquakes leave visible cracks and shake the camera, destroy buildings, set off landslides whose rubble blocks the way, and harm the land; meteors leave craters (ADR-029). The terrain is not remeshed. |
 | 88 | Threading model | Followed | The simulation and presentation run on the main thread; only the synthesized sounds and music are made once on a worker thread at start (ADR-021). |
@@ -1696,7 +1717,7 @@ Sections that only state intent are summarised at the end of this part.
 | 79 | Simulation systems | Implemented | Weather, seasons, water, disasters, hazards, great events (world events), the beast, ecology (region), settlements and population, resources and roads, society and technology, culture, belief and notables, victory, diplomacy and politics, conflict, migration, Creatures, holy sites, domains and the god AI, with the history recorded from their events, and the miracle, Creature, diplomacy, migration, society, council, conflict and hand authorities. |
 | 90 | Core data models | Implemented | `GodState` (rank, power, domains, personality, Creature, conduct and traits for reputation, known gods; followers derived), `SettlementState` (population, food, water, wealth, health, safety and belief, love, fear and doubt per god), `CreatureState` (species, level, experience, health, loyalty, morality, eight traits, relationships and learned preferences; strength and intelligence derived), `RegionState` (biome, elevation, temperature, moisture, fertility, vegetation, wildlife, pollution; weather from the cells), `GodRelation` and `GodStance` with treaties and memory for §90's DiplomacyRelation, and `GreatEventState` for §90's WorldEvent (kind, place, peak, start and end, the god concerned). |
 | 100 | Repository structure | Implemented, with differences | As recommended, plus `World/` and `Miracles/` in `Pantheon.Domain`, `game/Data/`, `game/addons/`, `.docs/` and `AGENTS.md`. |
-| 101 | Architecture decision records | Implemented | ADR-001 to ADR-074. |
+| 101 | Architecture decision records | Implemented | ADR-001 to ADR-075. |
 | 102–103 | Testing, deterministic testing | Implemented | Every rule has tests, including §102's "Fear decreases after prolonged safety" and "God cannot cast miracle without enough power". Randomness is seeded and checked. |
 | 106 | Debug tools | Implemented | Influence, belief, population, region boundaries, simulation tier, the frame rate, the Creature view (current behaviour, personality, needs, learned weights, memories and its options with their scores), and the god AI view (current goal, top candidate actions, utility scores and their reasons, and relationship reasoning: the diplomatic moves weighed with their factors), weather cells (spell, wind, the strongest cells, soil and rain under the cursor, a settlement's water), disasters (earthquakes, the fiercest fires, a settlement's dangers), migration routes (groups on the road, refugee policies with the AI's reasons, a settlement's pressure to leave, the Migration overlay), and Creatures' relationships (views, encounters, combat skill, scars, power and how the player's Creature would meet the nearest one; K and `--meet` bring two together). The navmesh as the Navigation overlay (walkable land, roads, rubble and every walker's way), network authority as the Authority overlay and F1's lines on who decides and how fresh each section is, and performance metrics in F1 (ADR-044). The player's angel in F1: its stage, lean, the kindness and harm behind it, its marks, who speaks for it, the moments waiting and its last words, with `--angel=<stage>` to hold its look and `--angel-ask` to ask it (ADR-074). |
 | 107 | Content data | Implemented | Every balance value is a data file parsed strictly: world generation and biomes, settlement, divine and society rules, miracles (with §107's id, name, domain, cost, cooldown, radius, influence and effects), the gods, Creatures and their species and temperament, the AI's personalities and planning, diplomacy, weather, disasters and great events, migration, history, domains and holy sites, water, ecology and world sizes, and the presentation's colours and views. |
@@ -1727,7 +1748,7 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-002](ADR/ADR-002-csharp-primary-language.md) | C# as the primary language | Accepted |
 | [ADR-003](ADR/ADR-003-host-authoritative-enet-networking.md) | Host-authoritative networking over ENet, no lockstep | Accepted; implemented from Milestone 12 (ADR-018) |
 | [ADR-004](ADR/ADR-004-statistical-population-simulation-with-tiering.md) | Statistical population simulation with tiering | Accepted; amended by ADR-008 and ADR-032 |
-| [ADR-005](ADR/ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 |
+| [ADR-005](ADR/ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 and ADR-075 |
 | [ADR-006](ADR/ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
 | [ADR-007](ADR/ADR-007-terrain3d-shader-patch-and-fallback-reason.md) | Patch Terrain3D's generated shader and report why the fallback is used | Accepted; amends ADR-005 |
 | [ADR-008](ADR/ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted; amends ADR-004; amended by ADR-032 and ADR-049 |
@@ -1753,7 +1774,7 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-028](ADR/ADR-028-seasons-extremes-and-ecology.md) | Seasons, weather extremes and the land's life (Milestone 15, part 8) | Accepted |
 | [ADR-029](ADR/ADR-029-hazards-preparation-and-marks-on-the-land.md) | Hazards, disaster preparation and marks on the land (Milestone 15, part 9) | Accepted |
 | [ADR-030](ADR/ADR-030-creature-paths-divine-hand-and-divine-acts.md) | Creatures' paths, the Divine Hand and the Divine Acts (Milestone 15, part 10) | Accepted |
-| [ADR-031](ADR/ADR-031-book-of-the-world-overlays-overview-and-exports.md) | The Book of the World, the last overlays, the strategic overview and export presets (Milestone 15, part 11) | Accepted |
+| [ADR-031](ADR/ADR-031-book-of-the-world-overlays-overview-and-exports.md) | The Book of the World, the last overlays, the strategic overview and export presets (Milestone 15, part 11) | Accepted; amended by ADR-075 |
 | [ADR-032](ADR/ADR-032-prophets-elders-and-temple-influence.md) | Prophets and elders as Tier 3 individuals, and temples and prophets as sources of influence (Milestone 15, part 12) | Accepted (amends ADR-004 and ADR-008) |
 | [ADR-033](ADR/ADR-033-resources-gathering-forests-and-roads.md) | Wood and stone, gathering, forests and roads (Milestone 15, part 13) | Accepted |
 | [ADR-034](ADR/ADR-034-great-events-plague-eclipses-reformations-and-world-wars.md) | Great events: the plague, eclipses, reformations, world wars, great droughts and great migrations (Milestone 15, part 14) | Accepted |
@@ -1797,6 +1818,7 @@ Sections that only state intent are summarised at the end of this part.
 | [ADR-072](ADR/ADR-072-gods-and-creatures-as-agents.md) | Gods and Creatures as agents, woken by what happens (Milestone 15, part 51) | Accepted |
 | [ADR-073](ADR/ADR-073-natural-trees-roads-and-land.md) | Natural trees, roads and land, grown in code (Milestone 15, part 52) | Accepted (amends ADR-053 and ADR-033) |
 | [ADR-074](ADR/ADR-074-the-players-angel.md) | The player's angel, a conscience and a guide shaped by the god's deeds (Milestone 15, part 53) | Accepted |
+| [ADR-075](ADR/ADR-075-builds-in-ci-and-fetched-libraries.md) | Release builds in CI, and Terrain3D's libraries fetched rather than committed (Milestone 15, part 54) | Accepted; amends ADR-005 and ADR-031 |
 
 No decision has been reversed.
 
@@ -1866,6 +1888,7 @@ support or Metal on macOS. On macOS, `brew install --cask dotnet-sdk@8 godot-mon
 and the Godot executable is `godot-mono`.
 
 ```bash
+tools/vendor-terrain3d.sh                # once after cloning: fetches Terrain3D's libraries
 godot --headless --path game --import    # once after cloning: registers Terrain3D
 dotnet build Pantheon.sln                # warnings are errors
 dotnet test Pantheon.sln                 # headless, no Godot needed
@@ -1949,10 +1972,12 @@ The [README](../README.md) lists every control and option.
 
 ### Platforms, performance and tooling
 
-- Not run on Windows. The Windows and Linux builds export (ADR-031) but have not been run; the macOS
-  build has.
-- The macOS build is signed ad hoc: it runs where it was built, and Gatekeeper blocks it elsewhere
-  until it is signed with a developer identity and notarized.
+- Not run on Windows. The Windows and Linux builds export, each on its own system in CI (ADR-075),
+  but have not been run; the macOS build has.
+- The macOS build is signed ad hoc: downloaded, it is quarantined, and Gatekeeper blocks it until the
+  quarantine is cleared (`xattr -dr com.apple.quarantine Pantheon.app`) or it is signed with a
+  developer identity and notarized.
+- The packages are archives, not installers (ADR-075).
 - One scripted stress world (`--stress`, ADR-044) besides the headless probes. Graphics options
   scale shadows, vegetation, particles, citizens and terrain quality (ADR-056).
 - Frame rates measured while the Mac's screen is locked are not trustworthy: macOS stops taking

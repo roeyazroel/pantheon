@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 #
-# Reproduces the vendored Terrain3D runtime subset in game/addons/terrain_3d from the pinned
-# upstream release archive (see docs/ADR/ADR-005-terrain3d-for-terrain.md).
+# Fetches the Terrain3D native libraries into game/addons/terrain_3d/bin from the pinned upstream
+# release archive (see docs/ADR/ADR-005-terrain3d-for-terrain.md and ADR-075). Run it once after
+# cloning: the libraries are not committed; the rest of the addon is.
 #
 # Only what the game needs at runtime on desktop is kept: the licence, the readme, the extension
 # manifest (trimmed to the shipped binaries), the node icon and the Windows/Linux x86_64 and
 # macOS debug/release libraries. The editor plugin, brushes, extras and mobile/web binaries are
-# left out because PANTHEON generates its terrain at runtime.
+# left out because PANTHEON generates its terrain at runtime. With --all, the committed files are
+# re-created too, for an upgrade of Terrain3D.
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -20,13 +22,19 @@ readonly DESTINATION_RELATIVE_PATH="game/addons/terrain_3d"
 readonly MANIFEST_NAME="terrain.gdextension"
 readonly EXIT_USAGE=2
 
-# Files copied verbatim, relative to the addon directory.
-readonly -a RUNTIME_FILES=(
+readonly LIBRARY_DIRECTORY="bin"
+
+# Committed files copied verbatim with --all, relative to the addon directory.
+readonly -a COMMITTED_FILES=(
   "LICENSE.txt"
   "README.md"
   "terrain.gdextension.uid"
   "icons/terrain3d.svg"
   "icons/terrain3d.svg.import"
+)
+
+# Native libraries copied verbatim on every run, relative to the addon directory. Not committed.
+readonly -a LIBRARY_FILES=(
   "bin/libterrain.linux.debug.x86_64.so"
   "bin/libterrain.linux.release.x86_64.so"
   "bin/libterrain.windows.debug.x86_64.dll"
@@ -38,11 +46,13 @@ readonly -a RUNTIME_FILES=(
 # Prints usage information.
 print_usage() {
   cat <<EOF
-Usage: tools/vendor-terrain3d.sh [--archive <path>] [--help]
+Usage: tools/vendor-terrain3d.sh [--all] [--archive <path>] [--help]
 
-Re-creates ${DESTINATION_RELATIVE_PATH} with the Terrain3D ${TERRAIN3D_VERSION} runtime subset.
+Fetches the Terrain3D ${TERRAIN3D_VERSION} native libraries into ${DESTINATION_RELATIVE_PATH}/${LIBRARY_DIRECTORY}.
 
 Options:
+  --all             Re-create all of ${DESTINATION_RELATIVE_PATH}, the committed licence, readme,
+                    manifest and icon too (to upgrade Terrain3D).
   --archive <path>  Use a local copy of ${ARCHIVE_NAME} instead of downloading it.
   --help            Show this help and exit.
 
@@ -95,21 +105,23 @@ verify_archive() {
   printf 'Verified SHA-256 %s\n' "${actual}"
 }
 
-# Fails when any runtime file is missing from the extracted addon directory.
-check_runtime_files() {
+# Fails when any of the given files is missing from the extracted addon directory.
+check_files() {
   local addon_dir="$1"
+  shift
   local file
-  for file in "${RUNTIME_FILES[@]}"; do
+  for file in "$@"; do
     [[ -f "${addon_dir}/${file}" ]] || fail "archive is missing ${ADDON_PATH_IN_ARCHIVE}/${file}"
   done
 }
 
-# Copies the runtime files into the destination, keeping their relative paths.
-copy_runtime_files() {
+# Copies the given files into the destination, keeping their relative paths.
+copy_files() {
   local addon_dir="$1"
   local destination="$2"
+  shift 2
   local file
-  for file in "${RUNTIME_FILES[@]}"; do
+  for file in "$@"; do
     mkdir -p "$(dirname "${destination}/${file}")"
     cp "${addon_dir}/${file}" "${destination}/${file}"
   done
@@ -144,11 +156,16 @@ EOF
 # Parses arguments, then downloads (or reuses), verifies, extracts and copies the subset.
 main() {
   local archive=""
+  local everything=false
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --help | -h)
         print_usage
         return 0
+        ;;
+      --all)
+        everything=true
+        shift
         ;;
       --archive)
         [[ $# -ge 2 && -n "$2" ]] || { print_usage >&2; fail "--archive needs a path" "${EXIT_USAGE}"; }
@@ -183,12 +200,18 @@ main() {
 
   unzip -q "${archive}" "${ADDON_PATH_IN_ARCHIVE}/*" -d "${work_dir}/extracted"
   local addon_dir="${work_dir}/extracted/${ADDON_PATH_IN_ARCHIVE}"
-  check_runtime_files "${addon_dir}"
+  check_files "${addon_dir}" "${LIBRARY_FILES[@]}"
 
-  rm -rf "${destination}"
-  mkdir -p "${destination}"
-  copy_runtime_files "${addon_dir}" "${destination}"
-  write_manifest "${destination}"
+  if [[ "${everything}" == true ]]; then
+    check_files "${addon_dir}" "${COMMITTED_FILES[@]}"
+    rm -rf "${destination}"
+    mkdir -p "${destination}"
+    copy_files "${addon_dir}" "${destination}" "${COMMITTED_FILES[@]}"
+    write_manifest "${destination}"
+  else
+    rm -rf "${destination:?}/${LIBRARY_DIRECTORY}"
+  fi
+  copy_files "${addon_dir}" "${destination}" "${LIBRARY_FILES[@]}"
   printf 'Vendored Terrain3D %s into %s\n' "${TERRAIN3D_VERSION}" "${destination}"
 }
 

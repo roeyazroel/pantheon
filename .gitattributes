@@ -7,4 +7,3 @@
 *.jpg binary
 *.exr binary
 *.wasm binary
-game/addons/terrain_3d/bin/** binary

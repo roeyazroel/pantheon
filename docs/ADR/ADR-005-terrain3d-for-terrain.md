@@ -1,6 +1,6 @@
 # ADR-005: Terrain3D for terrain rendering
 
-- Status: Accepted; amended by [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md)
+- Status: Accepted; amended by [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md) and [ADR-075](ADR-075-builds-in-ci-and-fetched-libraries.md)
 - Date: 2026-10-18
 
 ## Context

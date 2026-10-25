@@ -193,13 +193,16 @@ alliance and war:
 On macOS with Homebrew: `brew install --cask dotnet-sdk@8 godot-mono` installs both; the Godot
 executable is then `godot-mono`.
 
-The Terrain3D GDExtension is vendored in `game/addons/terrain_3d`; nothing else needs to be
+The Terrain3D GDExtension lives in `game/addons/terrain_3d`, but its native libraries are not
+committed: `tools/vendor-terrain3d.sh` fetches them from the pinned, checksummed release
+([ADR-075](docs/ADR/ADR-075-builds-in-ci-and-fetched-libraries.md)). Nothing else needs to be
 installed.
 
 ## Getting started
 
 ```bash
-# Once after cloning: imports assets and registers the Terrain3D extension.
+# Once after cloning: fetches Terrain3D's libraries, imports assets and registers the extension.
+tools/vendor-terrain3d.sh
 godot --headless --path game --import
 
 dotnet build Pantheon.sln
@@ -217,16 +220,37 @@ forget a world, Play Together (host or join a shared world; joining reloads the 
 host's address), or change the Settings. No command line is needed to play (ADR-060). A short guide
 walks you through your first minutes; Esc pauses. In play, the god's bar under the season (top
 right) opens every panel, the map's overlays, the overview, the key map and the menu, each button
-showing its key (ADR-068). If you skip the import step, the first run cannot load
+showing its key (ADR-068). If you skip either step, the first run cannot load
 Terrain3D. In that case it uses the fallback terrain renderer and labels it in the debug overlay.
 
 ### Building releases
 
-`game/export_presets.cfg` builds Windows x64, macOS (one universal app for Apple Silicon and Intel)
-and Linux x64 into `build/`. It needs the Godot 4.7.2 .NET export templates: in the editor, Editor >
-Manage Export Templates > Download, or unpack the official
-`Godot_v4.7.2-stable_mono_export_templates.tpz` into Godot's `export_templates/4.7.2.stable.mono`
-folder. Then:
+GitHub Actions builds the releases ([ADR-075](docs/ADR/ADR-075-builds-in-ci-and-fetched-libraries.md)).
+The Build workflow (`.github/workflows/build.yml`) builds and tests every push to `main` on Linux.
+To export the game, run it by hand (Actions > Build > Run workflow) or push a version tag:
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+Each platform is exported on its own system, and its package is on the run's page:
+
+| Package | Contents |
+| --- | --- |
+| `Pantheon-windows-x86_64.zip` | `Pantheon.exe`, its `.pck`, the .NET assemblies and Terrain3D's library |
+| `Pantheon-macos-universal.zip` | `Pantheon.app`, one app for Apple Silicon and Intel, signed ad hoc |
+| `Pantheon-linux-x86_64.tar.gz` | `Pantheon.x86_64`, its `.pck`, the .NET assemblies and Terrain3D's library |
+
+A tag also publishes the three as a GitHub release. The macOS app is signed ad hoc, so macOS
+quarantines it when it is downloaded. Before the first launch, clear the quarantine with
+`xattr -dr com.apple.quarantine Pantheon.app`, or use Privacy & Security > Open Anyway. To sign it
+properly, use a developer identity and notarize it (the preset's `codesign` and `notarization`
+options, with the owner's Apple account as CI secrets).
+
+To export locally, `game/export_presets.cfg` builds Windows x64, macOS and Linux x64 into `build/`.
+It needs the Godot 4.7.2 .NET export templates: in the editor, Editor > Manage Export Templates >
+Download, or run `tools/install-godot.sh --dest <directory>`, which installs the editor and the
+templates for the system it runs on. Then:
 
 ```bash
 godot --headless --path game --export-release "Windows Desktop" ../build/windows/Pantheon.exe
@@ -234,8 +258,7 @@ godot --headless --path game --export-release "macOS" ../build/macos/Pantheon.zi
 godot --headless --path game --export-release "Linux" ../build/linux/Pantheon.x86_64
 ```
 
-The macOS app is signed ad hoc, so it runs on the machine that built it. To share it, sign it with a
-developer identity and notarize it (the preset's `codesign` and `notarization` options).
+The macOS export must run on a Mac, since Apple's `codesign` signs it.
 
 ## Tests
 
@@ -353,8 +376,8 @@ covers:
   presentation helpers;
 - the debug panel readouts and the F3 region debug map;
 - the architecture rules: each core library references only the layers below it and never
-  Godot, core code uses no unseeded randomness or clock, and every vendored GDExtension ships
-  Windows, macOS and Linux libraries.
+  Godot, core code uses no unseeded randomness or clock, and every vendored GDExtension has
+  Windows, macOS and Linux libraries (run `tools/vendor-terrain3d.sh` first).
 
 ## Controls
 
@@ -2022,7 +2045,7 @@ game/                 Godot project: scenes, client scripts (Pantheon.Client), d
                       minds.json (the Claude models and the scribes' lore, ADR-065; the agents' rules and voices, ADR-072)
                       angel.json (the player's angel: its names, looks, timing and lines, ADR-074)
   Fonts/              Cinzel and Alegreya Sans, with their SIL Open Font Licences (ADR-059)
-  addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime (reproduce with tools/vendor-terrain3d.sh)
+  addons/terrain_3d/  Vendored Terrain3D 1.0.2 runtime; tools/vendor-terrain3d.sh fetches its libraries
 src/
   Pantheon.Domain/        World, region, settlement, god, belief, Creature, diplomacy, weather and disaster
                           state, events, and content contracts
@@ -2042,6 +2065,9 @@ docs/                 The owner's specification (PANTHEON_SPEC.md, the source of
                       summary (PROGRESS_SUMMARY.md), the vision summary (GAME_SPEC.md), architecture
                       and ADRs
 .docs/                Milestone plans
+tools/                vendor-terrain3d.sh (Terrain3D's libraries) and install-godot.sh (Godot and its
+                      export templates)
+.github/workflows/    build.yml: tests on every push, and exports for Windows, macOS and Linux (ADR-075)
 ```
 
 Start with the specification, [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), and the progress

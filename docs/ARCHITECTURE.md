@@ -52,7 +52,8 @@ game/                         Godot 4.7.2 project (res://)
                               scribes' lore, ADR-065)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
   Assets/ Audio/              Original art and audio (none yet; created with the first asset)
-  addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005)
+  addons/terrain_3d/          Vendored Terrain3D 1.0.2 runtime subset (ADR-005); its libraries are
+                              fetched by tools/vendor-terrain3d.sh, not committed (ADR-075)
 src/
   Pantheon.Domain/            State and content contracts: World, Ecology (biomes, EcologyRules), Settlements, Gods, Belief, Miracles,
                               Creatures, Notables, Roads, GreatEvents, Diplomacy, Weather, Disasters, Events
@@ -72,7 +73,9 @@ src/
                               through generateContent, a local model through Ollama's API, and the
                               factory that opens the one the settings choose
   Pantheon.Tests/             xUnit tests (headless)
-tools/                        Maintenance scripts (vendor-terrain3d.sh)
+tools/                        Maintenance scripts: vendor-terrain3d.sh (Terrain3D's libraries) and
+                              install-godot.sh (Godot .NET and its export templates, ADR-075)
+.github/workflows/            build.yml: tests on every push; exports on each platform's own runner
 docs/                         PANTHEON_SPEC.md (the owner's specification), PROGRESS_SUMMARY.md,
                               GAME_SPEC.md, ARCHITECTURE.md, ADR/
 .docs/                        Milestone task files (plan / progress contracts)
@@ -986,7 +989,7 @@ and a Lumen an Ape. A missing,
   `--book`) and sends a miracle chosen in it to `DivineController.Select` (ADR-031). The camera's
   backtick toggles the strategic overview.
 - `export_presets.cfg` builds Windows x64, macOS (universal, ad-hoc signed with Apple's `codesign`)
-  and Linux x64 into `build/` (ADR-031).
+  and Linux x64 into `build/` (ADR-031). CI exports each on its own system (ADR-075).
 - `Presentation/Divine/DivinePresenter`: the targeting ring (a decal with a procedural ring
   texture), the map overlay (one decal over the world with one pixel per region) and miracle
   effects (`MiracleEffect`: falling or rising motes, a spreading ring or a lightning bolt with a
@@ -2940,10 +2943,44 @@ neighbouring land biomes over `BiomeBlendMetres` with a sliding box filter.
 - `ArchitectureRulesTests` checks the rules that can be checked mechanically: the layering
   above, no Godot reference in core projects, no unseeded randomness or clock in core
   assemblies, and Windows, macOS and Linux libraries (debug and release) in every vendored
-  GDExtension.
+  GDExtension. The libraries are fetched by `tools/vendor-terrain3d.sh` (ADR-075), which CI runs
+  before the tests.
 - The Godot client is verified by building the solution and running the main scene, headless
   and windowed. `--quit-after-frames=<n> --screenshot=<file>` gives a scripted smoke run that
   saves a frame capture.
+
+## Builds and releases
+
+`.github/workflows/build.yml` makes the builds, and the owner's Mac no longer has to (ADR-075).
+
+```mermaid
+flowchart LR
+    push[Push to main or a pull request] --> test[Build and test on Ubuntu]
+    manual[Run workflow by hand] --> test
+    tag[Tag v*] --> test
+    test -->|by hand or a tag| win[Export on Windows]
+    test -->|by hand or a tag| mac[Export on macOS, codesign]
+    test -->|by hand or a tag| lin[Export on Linux]
+    win --> artifacts[Packages on the run's page]
+    mac --> artifacts
+    lin --> artifacts
+    artifacts -->|a tag| release[GitHub release]
+```
+
+- **Build and test** fetches Terrain3D's libraries with `tools/vendor-terrain3d.sh`, then runs
+  `dotnet build` (warnings are errors) and `dotnet test`.
+- **Export** runs on each platform's own runner:
+  - `tools/install-godot.sh` installs the pinned Godot .NET editor and that platform's export
+    templates, checked against Godot's SHA-512 sums and cached between runs;
+  - the job fetches the libraries, imports the project, and exports its preset of
+    `export_presets.cfg` (ADR-031);
+  - it packages the result (a zip, Godot's zip of the signed app, or a tarball that keeps the
+    executable bit) and uploads it as it is.
+- **Publish the release** attaches the three packages to a GitHub release when the run was started
+  by a `v*` tag.
+- The repository commits no binaries. `build/` is ignored, and so is
+  `game/addons/terrain_3d/bin/`, whose libraries come from the pinned, checksummed Terrain3D
+  archive. The rest of the addon is committed.
 
 ## Extending (later milestones)
 

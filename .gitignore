@@ -8,14 +8,15 @@ mono_crash.*.json
 # .NET
 bin/
 obj/
-# Vendored Terrain3D native libraries (ADR-005) are not build output.
-!game/addons/terrain_3d/bin/
 TestResults/
 *.user
 *.suo
 *.DotSettings.user
 .vs/
 .idea/
+
+# Terrain3D's native libraries: tools/vendor-terrain3d.sh fetches them (ADR-075).
+game/addons/terrain_3d/bin/
 
 # OS
 .DS_Store

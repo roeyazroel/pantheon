@@ -1,6 +1,6 @@
 # ADR-031: The Book of the World, the last overlays, the strategic overview and export presets
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-075](ADR-075-builds-in-ci-and-fetched-libraries.md)
 - Date: 2026-10-19
 - Builds on: [ADR-020](ADR-020-vertical-slice-history-flow-and-eligible-pantheons.md) (the game's
   flow and panels), [ADR-021](ADR-021-domains-holy-sites-schisms-species-settings-and-audio.md) (the

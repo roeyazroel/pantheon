@@ -111,7 +111,7 @@ public sealed class ArchitectureRulesTests
             foreach (var feature in DesktopLibraryFeatures)
             {
                 Assert.True(libraries.TryGetValue(feature, out var resourcePath), $"{manifest} has no '{feature}' library.");
-                Assert.True(LibraryExists(gameDirectory, resourcePath!), $"{manifest}: '{feature}' points at missing {resourcePath}.");
+                Assert.True(LibraryExists(gameDirectory, resourcePath!), $"{manifest}: '{feature}' points at missing {resourcePath}. Run tools/vendor-terrain3d.sh to fetch the libraries.");
             }
         }
     }

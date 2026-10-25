@@ -1,0 +1,152 @@
+# Builds and tests every push to main, and exports the game for Windows, macOS and Linux, each on
+# its own system (ADR-075). The exports run when started by hand (Actions > Build > Run workflow)
+# or by pushing a version tag (v*), which also publishes them as a GitHub release.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Fetch Terrain3D's libraries
+        run: tools/vendor-terrain3d.sh
+
+      - name: Build
+        run: dotnet build Pantheon.sln
+
+      - name: Test
+        run: dotnet test Pantheon.sln --no-build
+
+  export:
+    name: Export (${{ matrix.platform }})
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            runner: windows-latest
+            preset: Windows Desktop
+            output: windows/Pantheon.exe
+            package: Pantheon-windows-x86_64.zip
+          # The macOS export signs the app with Apple's codesign, which only runs on a Mac.
+          - platform: macos
+            runner: macos-latest
+            preset: macOS
+            output: macos/Pantheon.zip
+            package: Pantheon-macos-universal.zip
+          - platform: linux
+            runner: ubuntu-latest
+            preset: Linux
+            output: linux/Pantheon.x86_64
+            package: Pantheon-linux-x86_64.tar.gz
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache Godot
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/godot
+          key: godot-${{ runner.os }}-${{ hashFiles('tools/install-godot.sh') }}
+
+      - name: Install Godot and its export templates
+        run: |
+          godot="$(tools/install-godot.sh --dest "${RUNNER_TEMP}/godot")"
+          echo "GODOT=${godot}" >> "${GITHUB_ENV}"
+
+      - name: Fetch Terrain3D's libraries
+        run: tools/vendor-terrain3d.sh
+
+      - name: Import the project
+        run: |
+          "${GODOT}" --headless --path game --import
+
+      - name: Export
+        env:
+          PRESET: ${{ matrix.preset }}
+          OUTPUT: ${{ matrix.output }}
+        run: |
+          mkdir -p "build/$(dirname "${OUTPUT}")"
+          "${GODOT}" --headless --path game --export-release "${PRESET}" "../build/${OUTPUT}"
+          test -f "build/${OUTPUT}"
+          ls -la "build/$(dirname "${OUTPUT}")"
+
+      - name: Package
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          mkdir -p dist
+          case "${RUNNER_OS}" in
+            Windows) (cd build/windows && 7z a -tzip "../../dist/${PACKAGE}" .) ;;
+            macOS) cp build/macos/Pantheon.zip "dist/${PACKAGE}" ;;
+            Linux) tar -czf "dist/${PACKAGE}" -C build/linux . ;;
+          esac
+          ls -la dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: dist/${{ matrix.package }}
+          archive: false
+          if-no-files-found: error
+
+  release:
+    name: Publish the release
+    needs: export
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: Pantheon-*
+          path: dist
+          merge-multiple: true
+          skip-decompress: true
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la dist
+          for package in Pantheon-windows-x86_64.zip Pantheon-macos-universal.zip Pantheon-linux-x86_64.tar.gz; do
+            test -f "dist/${package}"
+          done
+          gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
+            --title "PANTHEON ${GITHUB_REF_NAME}" --generate-notes

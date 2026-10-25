@@ -69,8 +69,13 @@ rule is followed by the conventions that meet it in this repository.
   - a model's answer is an input to the world, taken in between ticks and kept in it;
   - nothing in play waits on a network;
   - the key stays in the profile, and goes only to its provider.
-- Add services, CI, package feeds or build tooling only when a task needs them. The one tool
-  script, `tools/vendor-terrain3d.sh`, reproduces vendored code.
+- Add services, CI, package feeds or build tooling only when a task needs them. The tool scripts
+  are `tools/vendor-terrain3d.sh`, which fetches Terrain3D's libraries, and `tools/install-godot.sh`,
+  which installs Godot and its export templates. The one CI workflow,
+  `.github/workflows/build.yml`, tests every push and exports the releases
+  ([ADR-075](docs/ADR/ADR-075-builds-in-ci-and-fetched-libraries.md)).
+- Commit no build output or native libraries. `build/` and Terrain3D's `bin/` are ignored; the
+  libraries come from the pinned, checksummed archive.
 
 ### Keep macOS, Windows and Linux working
 
@@ -184,11 +189,13 @@ rule is followed by the conventions that meet it in this repository.
 | Nodes, input, UI | `game/Scripts`, with scenes in `game/Scenes` and actions in `game/project.godot` |
 | Content | `game/Data/*.json` |
 | Tests | `src/Pantheon.Tests` |
+| CI and release builds | `.github/workflows/build.yml`, with its scripts in `tools/` |
 | Decisions | `docs/ADR/` |
 
 ## Commands
 
 ```bash
+tools/vendor-terrain3d.sh                # once after cloning: fetches Terrain3D's libraries
 godot --headless --path game --import    # once after cloning: registers Terrain3D
 dotnet build Pantheon.sln                # warnings are errors
 dotnet test Pantheon.sln                 # headless, no Godot needed

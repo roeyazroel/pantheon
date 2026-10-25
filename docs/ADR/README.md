@@ -20,7 +20,7 @@ silently:
 | [ADR-002](ADR-002-csharp-primary-language.md) | C# as the primary language | Accepted |
 | [ADR-003](ADR-003-host-authoritative-enet-networking.md) | Host-authoritative networking over ENet, no lockstep | Accepted; implemented from Milestone 12 (ADR-018) |
 | [ADR-004](ADR-004-statistical-population-simulation-with-tiering.md) | Statistical population simulation with tiering | Accepted; amended by ADR-008 and ADR-032 |
-| [ADR-005](ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 |
+| [ADR-005](ADR-005-terrain3d-for-terrain.md) | Terrain3D for terrain rendering | Accepted; amended by ADR-007 and ADR-075 |
 | [ADR-006](ADR-006-simulation-state-separate-from-scenes.md) | Simulation state is separate from scenes | Accepted |
 | [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md) | Patch Terrain3D's generated shader and report why the fallback is used | Accepted (amends ADR-005) |
 | [ADR-008](ADR-008-settlement-step-and-representative-citizens.md) | Settlement step cadence and representative citizens | Accepted (amends ADR-004); amended by ADR-032 and ADR-049 |
@@ -46,7 +46,7 @@ silently:
 | [ADR-028](ADR-028-seasons-extremes-and-ecology.md) | Seasons, weather extremes and the land's life | Accepted |
 | [ADR-029](ADR-029-hazards-preparation-and-marks-on-the-land.md) | Hazards, disaster preparation and marks on the land | Accepted |
 | [ADR-030](ADR-030-creature-paths-divine-hand-and-divine-acts.md) | Creatures' paths, the Divine Hand and the Divine Acts | Accepted |
-| [ADR-031](ADR-031-book-of-the-world-overlays-overview-and-exports.md) | The Book of the World, the last overlays, the strategic overview and export presets | Accepted |
+| [ADR-031](ADR-031-book-of-the-world-overlays-overview-and-exports.md) | The Book of the World, the last overlays, the strategic overview and export presets | Accepted; amended by ADR-075 |
 | [ADR-032](ADR-032-prophets-elders-and-temple-influence.md) | Prophets and elders as Tier 3 individuals, and temples and prophets as sources of influence | Accepted (amends ADR-004 and ADR-008) |
 | [ADR-033](ADR-033-resources-gathering-forests-and-roads.md) | Wood and stone, gathering, forests and roads | Accepted |
 | [ADR-034](ADR-034-great-events-plague-eclipses-reformations-and-world-wars.md) | Great events: the plague, eclipses, reformations, world wars, great droughts and great migrations | Accepted |
@@ -90,6 +90,7 @@ silently:
 | [ADR-072](ADR-072-gods-and-creatures-as-agents.md) | Gods and Creatures as agents, woken by what happens | Accepted |
 | [ADR-073](ADR-073-natural-trees-roads-and-land.md) | Natural trees, roads and land, grown in code | Accepted (amends ADR-053 and ADR-033) |
 | [ADR-074](ADR-074-the-players-angel.md) | The player's angel, a conscience and a guide shaped by the god's deeds | Accepted |
+| [ADR-075](ADR-075-builds-in-ci-and-fetched-libraries.md) | Release builds in CI, and Terrain3D's libraries fetched rather than committed | Accepted (amends ADR-005 and ADR-031) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier
