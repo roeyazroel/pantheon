@@ -174,7 +174,8 @@ rule is followed by the conventions that meet it in this repository.
   sessions `--host`, `--join`, `--name`, `--god` and `--upnp`,
   and scripted smoke runs with
   `--quit-after-frames` and `--screenshot`, which print frame times, the performance lines with a
-  save timed and, in shared sessions, the network lines. The README lists them.
+  save timed and, in shared sessions, the network lines.
+  [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) lists them.
 
 ## Where things go
 
@@ -223,6 +224,6 @@ godot --path game -- --terrain=fallback  # check the fallback renderer
 - `dotnet build Pantheon.sln` reports no warnings and `dotnet test Pantheon.sln` passes.
 - The game starts and stays playable with both terrain renderers.
 - New simulation rules have tests, and new systems have debug tooling.
-- The README (controls and options), `docs/ARCHITECTURE.md`, the milestone plan and, for
-  decisions, a new ADR are updated. When a milestone is finished, so is
-  `docs/PROGRESS_SUMMARY.md`.
+- The README (the game and its controls, for players), `docs/DEVELOPMENT.md` (the debug keys
+  and launch options), `docs/ARCHITECTURE.md`, the milestone plan and, for decisions, a new ADR
+  are updated. When a milestone is finished, so is `docs/PROGRESS_SUMMARY.md`.
