@@ -1923,7 +1923,8 @@ Main controls:
 - Debug: F1 shows the debug panel, F3 the region debug map and F4 grants 500 Divine Power.
 - Saves: F5 and F9 quicksave and quickload, and F2 makes a new world.
 
-The [README](../README.md) lists every control and option.
+The [README](../README.md) lists the player's controls, and [DEVELOPMENT.md](DEVELOPMENT.md) the
+debug keys and every launch option.
 
 ## Known gaps and deviations from the specification
 
