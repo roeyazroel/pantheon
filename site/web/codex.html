@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codex — PANTHEON</title>
+  <meta name="description" content="PANTHEON's miracles, domains, personalities, Creatures, holy sites, world sizes and biomes, read from the game's own content files.">
+  <meta name="theme-color" content="#07080d">
+  <link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="module" src="assets/js/codex.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#codex">Skip to the codex</a>
+  <nav class="site-nav" aria-label="Main">
+    <a class="brand" href="index.html">PANTHEON</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="index.html#minds">The minds</a></li>
+      <li><a href="index.html#pantheon">Your gods</a></li>
+      <li><a href="index.html#talk">Talk</a></li>
+      <li><a href="index.html#angel">Your angel</a></li>
+      <li><a href="index.html#world">The island</a></li>
+      <li><a href="codex.html" aria-current="page">Codex</a></li>
+      <li><a href="index.html#download">Download</a></li>
+    </ul>
+  </nav>
+  <main>
+    <section class="section" id="codex" style="padding-top:140px">
+      <div class="inner">
+        <div class="section-head">
+          <p class="eyebrow">From the game's own data</p>
+          <h2>Codex</h2>
+          <p class="lead" id="codex-intro"></p>
+        </div>
+        <div class="codex-tabs" id="codex-tabs" role="tablist" aria-label="Codex"></div>
+        <label class="visually-hidden" for="codex-search">Search this page</label>
+        <input class="codex-search" id="codex-search" type="search" placeholder="Search this page" autocomplete="off">
+        <div class="entries" id="entries" aria-live="polite"></div>
+        <p class="notice" style="margin-top:32px">Every entry is read from <code>game/Data</code>, the same files the game
+          loads, when the site is built. Numbers are the game's own.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="inner">
+      <div class="brand" style="font-size:1.1rem">PANTHEON</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="https://github.com/roeyazroel/pantheon">GitHub</a></li>
+        <li><a href="https://github.com/roeyazroel/pantheon/releases">Releases</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

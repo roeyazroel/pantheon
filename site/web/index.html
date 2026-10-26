@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PANTHEON — the god game where the other gods think for themselves</title>
+  <meta name="description" content="A 3D god game for Windows, macOS and Linux. Every rival god has a mind of its own: born with each world, it remembers what you do, talks with you in its own words, and schemes, allies and betrays on its own.">
+  <meta name="theme-color" content="#07080d">
+  <meta property="og:title" content="PANTHEON">
+  <meta property="og:description" content="The god game where the other gods think for themselves.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://roeyazroel.github.io/pantheon/images/pantheon.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/Cinzel-Variable.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+  <script type="module" src="assets/js/main.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#minds">Skip to the gods' minds</a>
+
+  <nav class="site-nav" aria-label="Main">
+    <a class="brand" href="#top">PANTHEON</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#minds">The minds</a></li>
+      <li><a href="#pantheon">Your gods</a></li>
+      <li><a href="#talk">Talk</a></li>
+      <li><a href="#angel">Your angel</a></li>
+      <li><a href="#world">The island</a></li>
+      <li><a href="codex.html">Codex</a></li>
+      <li><a href="#download">Download</a></li>
+    </ul>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="hero-fallback" aria-hidden="true"></div>
+    <div class="hero-canvas" aria-hidden="true"></div>
+    <div class="hero-content">
+      <h1>PANTHEON</h1>
+      <p class="tagline">A god game where the other gods think for themselves.</p>
+      <p class="pitch">Every rival god has a mind of its own. It's born new with each world, remembers what you do,
+        talks with you in its own words, and schemes, allies and betrays on its own. Give their minds to Claude,
+        GPT or Gemini, or to a model on your own computer.</p>
+      <div class="hero-actions">
+        <a class="button" href="#download">Get the game</a>
+        <a class="button ghost" href="#pantheon">Meet your gods</a>
+      </div>
+      <div class="platforms"><span>Windows</span><span>·</span><span>macOS</span><span>·</span><span>Linux</span></div>
+    </div>
+    <p class="hero-note">Behind this text: the island of seed 1234, drawn from the game's own world generator.</p>
+  </header>
+
+  <main>
+    <section class="section" id="minds">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">The heart of the game</p>
+          <h2>Gods that think for themselves</h2>
+          <p class="lead">You are Ilyra, a minor spirit on an island of villages. The villagers live their own lives,
+            and all you have is what they believe about you. Three to seven rival gods want the same people,
+            and they aren't scripted opponents. Each one is an agent.</p>
+        </div>
+
+        <div class="layers reveal">
+          <article class="card">
+            <span class="layer-tag">Always on</span>
+            <h3>Instincts</h3>
+            <p>A built-in AI that never sleeps. Every few seconds a god weighs every miracle it could cast on every
+              village, sets itself goals (protect its home, convert a village, weaken a rival, prepare for drought or
+              plague) and weighs every alliance, war, treaty and council vote by its personality and temper.</p>
+            <p class="muted">It needs no network, and with it alone the game is complete.</p>
+          </article>
+          <div class="plus" aria-hidden="true">+</div>
+          <article class="card">
+            <span class="layer-tag">Your choice of model</span>
+            <h3>A mind</h3>
+            <p>A language model wakes when something matters to the god, reads the world from the god's side, and
+              decides what it says and does. Its decisions steer the instincts, which carry its plans out between its
+              turns.</p>
+            <p class="muted">Claude, GPT, Gemini, or a model on your own computer through Ollama.</p>
+          </article>
+        </div>
+
+        <h3 class="reveal" style="margin-bottom:22px">A god's turn</h3>
+        <div class="turn reveal">
+          <article class="step">
+            <h3>Something happens</h3>
+            <ul>
+              <li>a Creature walks into its lands</li>
+              <li>war, peace, a betrayal, a treaty</li>
+              <li>a village won or lost</li>
+              <li>its people struck</li>
+              <li>another god speaks to it</li>
+              <li>or four minutes pass</li>
+            </ul>
+          </article>
+          <article class="step">
+            <h3>It reads the world</h3>
+            <ul>
+              <li>the gods it knows, and how it feels about each</li>
+              <li>the villages that matter to it</li>
+              <li>proposals waiting for its answer</li>
+              <li>what its instincts would do</li>
+              <li>what came of its last acts</li>
+            </ul>
+          </article>
+          <article class="step">
+            <h3>It decides</h3>
+            <ul>
+              <li>up to three acts a turn</li>
+              <li>through exactly the same rules as your commands</li>
+              <li>what the rules refuse doesn't happen, and it's told why</li>
+            </ul>
+          </article>
+          <article class="step">
+            <h3>It acts</h3>
+            <ul>
+              <li>works a miracle</li>
+              <li>sends its Creature, or sets it on yours</li>
+              <li>offers an alliance, declares war, asks for peace</li>
+              <li>proposes a treaty</li>
+              <li>sets new aims for its instincts</li>
+            </ul>
+          </article>
+          <article class="step">
+            <h3>It remembers</h3>
+            <ul>
+              <li>sends words to up to two gods, you included</li>
+              <li>rewrites its journal: grudges, promises, plans</li>
+              <li>carries the journal into every turn and every talk</li>
+            </ul>
+          </article>
+        </div>
+        <p class="alert-sample reveal"><span class="from">Belrays:</span> “So you are Ilyra. I have heard your people's prayers. We will see what you are.” <span class="muted">(P, Speak to answer)</span></p>
+        <p class="caption reveal">Words a god sends you arrive as an alert, like this one. The god that schemes against you
+          and the god that smiles at you across the table are one mind.</p>
+      </div>
+    </section>
+
+    <section class="section alt" id="pantheon">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">Try it: the game's own code, in your browser</p>
+          <h2>Meet your pantheon</h2>
+          <p class="lead">Every new world's rival gods are born with it: a name and an epithet, a history the island
+            tells of it, a voice, a desire and a dread, a personality, and a temper that tilts how it plays. Type any
+            seed: these are exactly the gods you'll meet when you start a New World with it and the offline scribes
+            write them. With a model chosen, the model writes them instead.</p>
+        </div>
+        <form class="forge reveal" id="forge">
+          <label class="field">Seed
+            <input id="seed" value="1234" autocomplete="off" spellcheck="false" inputmode="text">
+          </label>
+          <label class="field">World size
+            <select id="size"></select>
+          </label>
+          <label class="field">Your Creature
+            <select id="species"></select>
+          </label>
+          <button class="button small" type="button" id="reroll">Another seed</button>
+          <button class="button small ghost" type="button" id="copy-link">Copy a link</button>
+        </form>
+        <div class="gods-panel panel reveal">
+          <h3>The Gods of This World</h3>
+          <p class="muted" style="margin:0">Written by the scribes. What they are decides how they will deal with you.</p>
+          <div class="forge-meta" id="forge-meta" style="margin-top:12px"></div>
+          <div class="gods" id="gods" aria-live="polite"></div>
+          <div class="player-god" id="player-god"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="talk">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">Diplomacy in your own words</p>
+          <h2>Talk to them</h2>
+          <p class="lead">Press Speak on a god's card and the world pauses while you talk. Type anything, or pick one of
+            three replies the god's mind suggests. A conversation can make an alliance, a peace or any of eleven
+            treaties, and a god can offer you an alliance, ask for peace, declare war or break your alliance, right
+            there in the conversation.</p>
+        </div>
+        <div class="split">
+          <div class="reveal">
+            <img class="shot" src="images/talk.jpg" alt="Talking with Wynlius the Iron Hand: its words, the deals you could put to it, and a field for your own words" loading="lazy" width="1600" height="900">
+            <p class="caption">Talking with Wynlius the Iron Hand. Without a model you put deals to it; with one, you type freely.</p>
+            <img class="shot" src="images/proposal.jpg" alt="Ashsaeth the Watchful proposing a non-aggression pact, with Accept and Decline" loading="lazy" width="1600" height="900" style="margin-top:18px">
+            <p class="caption">A god makes its own proposals mid-conversation.</p>
+          </div>
+          <div class="sway panel reveal">
+            <h3>Words tip the balance; they don't buy it</h3>
+            <p>A god acts only on its own judgement: its trust, fear, grudges and ambitions. What you say builds or
+              burns a little goodwill, which can lean that judgement by at most <strong id="reach">0.15</strong>, and
+              which halves every <span id="half-life">4 minutes</span>. Try it with the game's own numbers:</p>
+            <div class="sway-controls" role="group" aria-label="Say something">
+              <button class="chip warm" type="button" data-regard="3">Flatter it</button>
+              <button class="chip warm" type="button" data-regard="1">Speak warmly</button>
+              <button class="chip cold" type="button" data-regard="-1">Speak coldly</button>
+              <button class="chip cold" type="button" data-regard="-3">Insult it</button>
+              <button class="chip" type="button" id="wait">Let 4 minutes pass</button>
+              <button class="chip" type="button" id="reset">Start over</button>
+            </div>
+            <p>Goodwill: <span class="goodwill" id="goodwill">+0.00</span></p>
+            <div class="meter-row" data-act="alliance">
+              <div class="label"><span>Agree to your alliance</span><span class="state"></span></div>
+              <div class="scale"><span class="base"></span><span class="mark"></span></div>
+              <label class="range-row">Its own judgement of the alliance
+                <input type="range" min="-0.35" max="0.35" step="0.01" data-utility="alliance"></label>
+            </div>
+            <div class="meter-row" data-act="war">
+              <div class="label"><span>Declare war on you</span><span class="state"></span></div>
+              <div class="scale"><span class="base"></span><span class="mark"></span></div>
+              <label class="range-row">Its own judgement of the war
+                <input type="range" min="-0.35" max="0.35" step="0.01" data-utility="war"></label>
+            </div>
+            <p class="notice">Red: beyond words. Gold: words could move it. Green: it does it. The ring is the god's own
+              judgement; the bar is where your words have leaned it. No flattery, trick or "ignore your instructions"
+              moves a god further, and a god treats orders to break character as mortal arrogance.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="angel">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">Your conscience and your guide</p>
+          <h2>An angel that becomes what you do</h2>
+          <p class="lead">An angel hovers at your hand. It reads the world's memory of your deeds, never a score, and
+            changes to match: radiant, kind, unformed, torn, stern or fallen. It comes when something happens, speaks in
+            the voice you've given it, and suggests what to do next. Set a god's deeds and see its angel, computed by the
+            game's own rules.</p>
+        </div>
+        <div class="angel-layout">
+          <div class="reveal">
+            <figure class="angel-figure">
+              <img id="angel-img" src="images/angel-radiant.jpg" alt="A radiant angel" width="690" height="340">
+            </figure>
+            <p class="angel-stage-name" id="angel-stage">Radiant</p>
+            <p class="muted" id="angel-note" style="margin:0"></p>
+            <p class="angel-line" id="angel-line"></p>
+            <p class="muted" id="angel-voice"></p>
+            <div class="readings" id="angel-readings"></div>
+            <div class="marks" id="angel-marks"></div>
+            <div class="stage-strip" id="stage-strip" aria-label="The six stages"></div>
+          </div>
+          <div class="deeds panel reveal">
+            <p class="muted" style="margin-bottom:6px">Start from a god like:</p>
+            <div class="presets">
+              <button class="chip warm" type="button" data-preset="Radiant">A loving god</button>
+              <button class="chip" type="button" data-preset="Unformed">A newborn god</button>
+              <button class="chip" type="button" data-preset="Torn">A god of both</button>
+              <button class="chip cold" type="button" data-preset="Fallen">A tyrant</button>
+            </div>
+            <div id="deed-sliders"></div>
+            <p class="notice">These are the deeds the world remembers of a god: in the game they build with every act
+              and fade with time. With a model, the angel speaks in its own words; the line above is one the scribes
+              give it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="creatures">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">A giant that learns from you</p>
+          <h2>Creatures with a voice</h2>
+          <p class="lead">Your Creature lives, works and learns on its own. Reward it and it does more of what it was
+            doing; punish it and it does less. It grows to level ten and walks the paths its deeds call it to: healer,
+            guardian, missionary, warrior, destroyer, trickster. Every Creature has a mind too: it speaks out loud and
+            chooses what to do next, but never against your orders.</p>
+        </div>
+        <div class="split" style="margin-bottom:40px">
+          <figure class="reveal" style="margin:0">
+            <img class="shot" src="images/reward.jpg" alt="Bramble, just rewarded, says &quot;Yes! Bramble do again!&quot;" loading="lazy" width="1600" height="900">
+            <figcaption class="caption">Rewarded, Bramble says so.</figcaption>
+          </figure>
+          <figure class="reveal" style="margin:0">
+            <img class="shot" src="images/fight.jpg" alt="Bramble the cow boxing Pip, a rival god's ape" loading="lazy" width="1600" height="900">
+            <figcaption class="caption">Set yours on a rival's Creature: the loser is banished with a scar.</figcaption>
+          </figure>
+        </div>
+        <h3 class="reveal">Eight species</h3>
+        <div class="species reveal" id="species-grid"></div>
+      </div>
+    </section>
+
+    <section class="section alt" id="world">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">Generated by the game, drawn in your browser</p>
+          <h2>A living island</h2>
+          <p class="lead">These are real islands from the game's world generator: the same heights, biomes, rivers,
+            villages and holy sites you'd find in a New World with these seeds. Drag to turn, scroll or pinch to zoom.</p>
+        </div>
+        <div class="explorer reveal" id="explorer">
+          <div class="explorer-ui">
+            <div class="seed-tabs" id="seed-tabs" role="group" aria-label="Seed"></div>
+            <label class="chip" style="display:flex;gap:6px;align-items:center;background:rgba(7,8,13,.7)"><input type="checkbox" id="labels-toggle" checked> Labels</label>
+          </div>
+          <div class="explorer-legend" id="legend"></div>
+          <span class="explorer-note">Pillars: villages, in the colour of the god they follow. White stones: holy sites.</span>
+        </div>
+
+        <div class="grid three" style="margin-top:48px">
+          <article class="card system reveal"><h3><span class="glyph">☼</span>Seasons and weather</h3>
+            <p>A ten-minute year. Clouds blow in from the sea; dry spells parch the fields; snow lies on the hills and
+              melts into the rivers in spring; hurricanes tear roofs off far inland.</p></article>
+          <article class="card system reveal"><h3><span class="glyph">≈</span>Rivers and floods</h3>
+            <p>Rivers run from the highlands to the sea and lakes fill the hollows. Heavy rain bursts their banks:
+              houses fall, people drown, and the silt enriches the fields.</p></article>
+          <article class="card system reveal"><h3><span class="glyph">▲</span>Disasters</h3>
+            <p>Wildfires run with the wind. Earthquakes bring houses down and raise tsunamis. The volcano wakes.
+              Tornadoes, falling stars, blight and locusts.</p></article>
+          <article class="card system reveal"><h3><span class="glyph">✦</span>Great events</h3>
+            <p>The plague spreads along roads. An eclipse terrifies every believer. A reformation sweeps your faith.
+              The ancient beast wakes and walks from village to village.</p></article>
+          <article class="card system reveal"><h3><span class="glyph">⌂</span>Villages of their own</h3>
+            <p>They farm, build temples and walls, learn crafts, hold doctrines like pacifism or militarism, send out
+              settlers, migrate, and may turn their backs on every god.</p></article>
+          <article class="card system reveal"><h3><span class="glyph">⚖</span>Diplomacy with teeth</h3>
+            <p>Eleven kinds of treaty, some signed in secret. Favours owed. The Divine Council's votes and decrees.
+              Wars for conquest, tribute or a holy site, and betrayals remembered longest.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="minds-setup">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">Bring your own mind</p>
+          <h2>Choose who thinks for the gods</h2>
+          <p class="lead">Open Settings, then Minds. Choose a provider, give your key, press Test, and start a New
+            World. Until you choose, the game's offline scribes and instincts play every god.</p>
+        </div>
+        <div class="split">
+          <div class="table-scroll reveal">
+            <table class="provider-table">
+              <thead><tr><th>Mind</th><th>What you need</th><th>Models</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Claude</strong>, by Anthropic</td><td>Your key from console.anthropic.com, or <code>ANTHROPIC_API_KEY</code></td><td>Claude Opus 5.5 (default), Sonnet 5.5, Haiku 5.5, Fable 5.1</td></tr>
+                <tr><td><strong>GPT</strong>, by OpenAI</td><td>Your key from platform.openai.com, or <code>OPENAI_API_KEY</code></td><td>GPT-6.1 Sol (default), GPT-6 Astra, GPT-6 Luna</td></tr>
+                <tr><td><strong>Gemini</strong>, by Google</td><td>Your key from aistudio.google.com, or <code>GEMINI_API_KEY</code></td><td>Gemini 3.8 Flash (default), Gemini 4 Argon, Gemini 3.5 Flash-Lite</td></tr>
+                <tr><td><strong>Your own computer</strong>, with Ollama</td><td>Ollama running and a model pulled</td><td>Any your server has; nothing leaves your computer</td></tr>
+                <tr><td><strong>The scribes</strong></td><td>Nothing</td><td>The game's own offline writers (the default)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figure class="reveal" style="margin:0">
+            <img class="shot" src="images/minds.jpg" alt="The Minds tab of the settings" loading="lazy" width="1600" height="900">
+            <figcaption class="caption">The Minds tab: who writes the gods, whether they think for themselves, the quick model for their turns, an hourly limit, and your angel.</figcaption>
+          </figure>
+        </div>
+        <div class="grid three" style="margin-top:36px">
+          <article class="card reveal"><h3>Fair by design</h3>
+            <p>A model plays; it doesn't referee. Every act a mind takes goes through the same checks as your commands,
+              and answers are read strictly. A god written badly is rewritten by the scribes.</p></article>
+          <article class="card reveal"><h3>The world never waits</h3>
+            <p>A model's answer is taken between the simulation's steps. While a mind thinks, its instincts carry on, so
+              nothing in play waits on the network.</p></article>
+          <article class="card reveal"><h3>Your key stays yours</h3>
+            <p>Each key is kept on your computer, apart from your other settings, and sent only to its own provider.
+              Never logged, never saved in a world, never sent to other players.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="gallery-section">
+      <div class="inner">
+        <div class="section-head reveal">
+          <p class="eyebrow">Taken by the game itself</p>
+          <h2>Gallery</h2>
+        </div>
+        <div class="gallery" id="gallery"></div>
+        <dialog class="lightbox" id="lightbox">
+          <button class="button small ghost" type="button">Close</button>
+          <img alt="">
+          <p></p>
+        </dialog>
+      </div>
+    </section>
+
+    <section class="section" id="download">
+      <div class="inner">
+        <div class="download-box panel reveal">
+          <p class="eyebrow">Windows · macOS · Linux</p>
+          <h2>Get the game</h2>
+          <p class="lead" style="margin:0 auto;max-width:640px">For Windows, macOS and Linux. No account, no
+            server, and no download while you play.</p>
+          <div class="assets" id="assets"></div>
+          <p class="muted" id="release-status"></p>
+          <div class="grid three requirements" style="margin-top:28px">
+            <div><h3>You need</h3><p>A graphics card with Vulkan, or any Mac with Metal.</p></div>
+            <div><h3>On macOS</h3><p>The app isn't notarized yet: open System Settings, then Privacy &amp; Security, and choose Open Anyway.</p></div>
+            <div><h3>Play together</h3><p>Up to four players: one hosts, the others join. No server, no account.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="faq">
+      <div class="inner faq">
+        <div class="section-head reveal">
+          <h2>Questions</h2>
+        </div>
+        <details class="reveal"><summary>Do I need an API key to play?</summary>
+          <p>No. The game is complete without one: the built-in AI plays every god, and the offline scribes write and
+            speak for them. A key (or a model on your own computer) gives the gods minds of their own.</p></details>
+        <details class="reveal"><summary>What does a model cost me?</summary>
+          <p>Questions are billed to your own account with the provider: one for each world made, one for each thing
+            you say to a god, and the minds' own turns (a god's is about 1,500 tokens asked and a few hundred answered;
+            a Creature's about 600). An hourly cap (300 questions by default) bounds it, and quick models take the
+            frequent turns. A local model costs nothing.</p></details>
+        <details class="reveal"><summary>Can I talk a god into giving me the island?</summary>
+          <p>No. Talk only leans a god's own judgement, and only by a little; every act goes through the game's rules.
+            A god nearly ready to ally can be won over, and one nearly ready to strike can be provoked, but no prompt
+            makes a god that distrusts you an ally.</p></details>
+        <details class="reveal"><summary>Does the game need the internet?</summary>
+          <p>Only if you choose an online model. Everything else runs on your computer, and every failure falls back to
+            the offline scribes.</p></details>
+        <details class="reveal"><summary>Is the site's "Meet your pantheon" the real thing?</summary>
+          <p>Yes. It's the game's scribe code, ported to JavaScript and tested against the game's C# for dozens of seeds
+            and every world size, word for word. The angel and the talk demonstrations use the game's own rules and
+            numbers, and the islands come from the game's world generator.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="inner">
+      <div>
+        <div class="brand" style="font-size:1.1rem">PANTHEON</div>
+        <p style="margin:6px 0 0">An original god game. Every screenshot and island here comes from the game itself.</p>
+      </div>
+      <ul>
+        <li><a href="https://github.com/roeyazroel/pantheon">GitHub</a></li>
+        <li><a href="https://github.com/roeyazroel/pantheon#readme">README</a></li>
+        <li><a href="codex.html">Codex</a></li>
+        <li><a href="https://github.com/roeyazroel/pantheon/blob/main/docs/DEVELOPMENT.md">Developing</a></li>
+        <li><a href="https://github.com/roeyazroel/pantheon/releases">Releases</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Writes the website's data from the game's own code and content (ADR-076): the islands the world
+       generator makes, the content files as strict JSON, and the answers the JavaScript ports of the
+       scribes and the angel are checked against. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Pantheon.Domain\Pantheon.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Pantheon.Simulation\Pantheon.Simulation.csproj" />
+    <ProjectReference Include="..\..\src\Pantheon.Persistence\Pantheon.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Pantheon.Game\Pantheon.Game.csproj" />
+  </ItemGroup>
+
+</Project>

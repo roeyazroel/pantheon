@@ -73,9 +73,17 @@ src/
                               through generateContent, a local model through Ollama's API, and the
                               factory that opens the one the settings choose
   Pantheon.Tests/             xUnit tests (headless)
-tools/                        Maintenance scripts: vendor-terrain3d.sh (Terrain3D's libraries) and
-                              install-godot.sh (Godot .NET and its export templates, ADR-075)
-.github/workflows/            build.yml: tests on every push; exports on each platform's own runner
+site/                         The website (ADR-076)
+  web/                        Its pages, styles and scripts, with the JavaScript ports of the scribes
+                              and the angel
+  export/                     Pantheon.SiteExport: the game's content as strict JSON, islands from the
+                              world generator, and fixtures of the scribes' and the angel's answers
+  tests/                      node:test checks of the ports against those fixtures
+tools/                        Maintenance scripts: vendor-terrain3d.sh (Terrain3D's libraries),
+                              install-godot.sh (Godot .NET and its export templates, ADR-075) and
+                              build-site.sh (the website, ADR-076)
+.github/workflows/            build.yml: tests on every push; exports on each platform's own runner.
+                              pages.yml: builds, tests and publishes the website
 docs/                         PANTHEON_SPEC.md (the owner's specification), PROGRESS_SUMMARY.md,
                               GAME_SPEC.md, ARCHITECTURE.md, ADR/
 .docs/                        Milestone task files (plan / progress contracts)
@@ -2985,6 +2993,41 @@ flowchart LR
 - The repository commits no binaries. `build/` is ignored, and so is
   `game/addons/terrain_3d/bin/`, whose libraries come from the pinned, checksummed Terrain3D
   archive. The rest of the addon is committed.
+
+## The website
+
+The website (ADR-076) is static pages in `site/web`, published with GitHub Pages. What it shows of
+the game comes from the game: nothing is drawn or written by hand that the game decides.
+
+```mermaid
+flowchart LR
+    content[game/Data] --> export[Pantheon.SiteExport]
+    code[Pantheon.Simulation and Pantheon.Game] --> export
+    export --> data[data: content as strict JSON]
+    export --> islands[islands: heights, water, biomes, villages]
+    export --> fixtures[fixtures: the scribes' and the angel's answers]
+    ports[site/web ports of the scribes and the angel] --> tests[site/tests]
+    fixtures --> tests
+    data --> site[build/site]
+    islands --> site
+    pages[site/web pages] --> site
+    shots[docs/images] --> site
+    three[three.js, pinned and checksummed] --> site
+    tests -->|pass| site
+    site -->|push to main| deploy[GitHub Pages]
+```
+
+- **The exporter** is a console project in the solution, built against the current code. It
+  generates three islands at the first size, with the scribes' gods, and samples each on a
+  257 × 257 grid; and it runs the scribes for 63 seeds and the angel for 400 conducts.
+- **The ports** (`random.js`, `scribes.js`, `angel.js`) follow the C# step for step: 64-bit
+  arithmetic in `BigInt`, float arithmetic through `Math.fround`, round-half-to-even, the same order
+  of draws. The tests compare them with the fixtures word for word and float for float.
+- **The pages** read the content files for the codex, the generator's lore, the angel's weights and
+  lines, and the talk rules' numbers, so a content change reaches the site on its next build. The
+  island view draws the exported samples with three.js, coloured by `biome_palette.json`.
+- `tools/build-site.sh` does all of it locally; `.github/workflows/pages.yml` does it for pull
+  requests and publishes on pushes to `main`.
 
 ## Extending (later milestones)
 
