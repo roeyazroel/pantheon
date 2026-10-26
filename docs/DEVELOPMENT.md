@@ -21,6 +21,7 @@ vision summary) and the [ADRs](ADR/README.md). The milestone plans and their sta
 - [Debug tools](#debug-tools)
 - [Command-line options](#command-line-options)
 - [Taking the README's screenshots](#taking-the-readmes-screenshots)
+- [The website](#the-website)
 - [Where the numbers live](#where-the-numbers-live)
 - [Saves and the profile](#saves-and-the-profile)
 - [Repository layout](#repository-layout)
@@ -486,6 +487,32 @@ folder for each run so that runs side by side do not share a profile. The README
 taken at 1600 × 900 from seed 1234 and saved as JPEG; the option lines for each are in
 [images/README.md](images/README.md).
 
+## The website
+
+The website, published at <https://roeyazroel.github.io/pantheon/>, is built from the game's own code
+and content ([ADR-076](ADR/ADR-076-a-website-built-from-the-game.md)):
+
+```bash
+tools/build-site.sh            # export, test and assemble build/site
+tools/build-site.sh --serve    # the same, then serve it at http://localhost:8000/
+```
+
+It needs the .NET SDK and, for its tests, Node.js 20 or newer (`--skip-tests` builds without them).
+
+- **`site/web`** holds the pages (`index.html`, `codex.html`, `404.html`), the stylesheet and the
+  scripts. They are plain ES modules with no build step: edit them and rebuild.
+- **`site/export`** (`Pantheon.SiteExport`) writes `build/site-data`: the content as strict JSON,
+  the islands, and the fixtures. `--islands 1234,7,...` chooses other seeds.
+- **`site/tests`** check the JavaScript ports of the scribes and the angel against the fixtures.
+  When `PersonaScribe`, `PersonaText`, `AngelLooks`, `ConductModel.Traits`, `SeedMixer` or
+  `SimulationRandom` change, change `site/web/assets/js/scribes.js`, `angel.js` or `random.js` with
+  them; the tests say where they differ.
+- **three.js** is pinned in `tools/build-site.sh` by version and SHA-256. To upgrade, change both
+  and check the island still draws.
+- **Publishing.** `.github/workflows/pages.yml` publishes every push to `main` that touches the site,
+  the code, the content, the fonts or the screenshots. Pages must be set to deploy from GitHub
+  Actions once: Settings > Pages > Build and deployment > Source: GitHub Actions.
+
 ## Where the numbers live
 
 Every tunable number, name and colour is in `game/Data/*.json`, parsed strictly (unknown members
@@ -586,9 +613,12 @@ docs/                 The owner's specification (PANTHEON_SPEC.md, the source of
                       summary (PROGRESS_SUMMARY.md), the vision summary (GAME_SPEC.md), architecture
                       and ADRs
 .docs/                Milestone plans
-tools/                vendor-terrain3d.sh (Terrain3D's libraries) and install-godot.sh (Godot and its
-                      export templates)
-.github/workflows/    build.yml: tests on every push, and exports for Windows, macOS and Linux (ADR-075)
+site/                 The website (ADR-076): web/ (pages and scripts), export/ (Pantheon.SiteExport, its
+                      data from the game) and tests/ (the ports' checks)
+tools/                vendor-terrain3d.sh (Terrain3D's libraries), install-godot.sh (Godot and its
+                      export templates) and build-site.sh (the website)
+.github/workflows/    build.yml: tests on every push, and exports for Windows, macOS and Linux (ADR-075);
+                      pages.yml: builds, tests and publishes the website (ADR-076)
 ```
 
 ## Known issues

@@ -70,10 +70,12 @@ rule is followed by the conventions that meet it in this repository.
   - nothing in play waits on a network;
   - the key stays in the profile, and goes only to its provider.
 - Add services, CI, package feeds or build tooling only when a task needs them. The tool scripts
-  are `tools/vendor-terrain3d.sh`, which fetches Terrain3D's libraries, and `tools/install-godot.sh`,
-  which installs Godot and its export templates. The one CI workflow,
-  `.github/workflows/build.yml`, tests every push and exports the releases
-  ([ADR-075](docs/ADR/ADR-075-builds-in-ci-and-fetched-libraries.md)).
+  are `tools/vendor-terrain3d.sh`, which fetches Terrain3D's libraries, `tools/install-godot.sh`,
+  which installs Godot and its export templates, and `tools/build-site.sh`, which builds the website.
+  The CI workflows are `.github/workflows/build.yml`, which tests every push and exports the releases
+  ([ADR-075](docs/ADR/ADR-075-builds-in-ci-and-fetched-libraries.md)), and
+  `.github/workflows/pages.yml`, which builds, tests and publishes the website
+  ([ADR-076](docs/ADR/ADR-076-a-website-built-from-the-game.md)).
 - Commit no build output or native libraries. `build/` and Terrain3D's `bin/` are ignored; the
   libraries come from the pinned, checksummed archive.
 
@@ -191,6 +193,7 @@ rule is followed by the conventions that meet it in this repository.
 | Content | `game/Data/*.json` |
 | Tests | `src/Pantheon.Tests` |
 | CI and release builds | `.github/workflows/build.yml`, with its scripts in `tools/` |
+| The website: its pages, its JavaScript ports of the scribes and the angel, and their tests | `site/web` and `site/tests`; the data it takes from the game in `site/export`; built by `tools/build-site.sh` and `.github/workflows/pages.yml` |
 | Decisions | `docs/ADR/` |
 
 ## Commands
@@ -204,6 +207,7 @@ godot --path game                        # play
 godot --path game -- --seed=1234 --quit-after-frames=40 --screenshot=/tmp/pantheon.png
 godot --path game -- --seed=1234 --advance-ticks=9000 --camera-distance=110 --quit-after-frames=30 --screenshot=/tmp/grown.png
 godot --path game -- --terrain=fallback  # check the fallback renderer
+tools/build-site.sh --serve              # build the website and serve it at http://localhost:8000/
 ```
 
 `godot` stands for the Godot 4.7.2 .NET executable.
@@ -224,6 +228,8 @@ godot --path game -- --terrain=fallback  # check the fallback renderer
 - `dotnet build Pantheon.sln` reports no warnings and `dotnet test Pantheon.sln` passes.
 - The game starts and stays playable with both terrain renderers.
 - New simulation rules have tests, and new systems have debug tooling.
+- A change to the scribes, the angel or the seeded randomness changes the website's ports with it:
+  `tools/build-site.sh` runs their tests against the game's own answers (ADR-076).
 - The README (the game and its controls, for players), `docs/DEVELOPMENT.md` (the debug keys
   and launch options), `docs/ARCHITECTURE.md`, the milestone plan and, for decisions, a new ADR
   are updated. When a milestone is finished, so is `docs/PROGRESS_SUMMARY.md`.

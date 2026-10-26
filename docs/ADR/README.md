@@ -91,6 +91,7 @@ silently:
 | [ADR-073](ADR-073-natural-trees-roads-and-land.md) | Natural trees, roads and land, grown in code | Accepted (amends ADR-053 and ADR-033) |
 | [ADR-074](ADR-074-the-players-angel.md) | The player's angel, a conscience and a guide shaped by the god's deeds | Accepted |
 | [ADR-075](ADR-075-builds-in-ci-and-fetched-libraries.md) | Release builds in CI, and Terrain3D's libraries fetched rather than committed | Accepted (amends ADR-005 and ADR-031) |
+| [ADR-076](ADR-076-a-website-built-from-the-game.md) | A website on GitHub Pages, built from the game's own code and data | Accepted |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

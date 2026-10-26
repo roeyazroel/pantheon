@@ -1,0 +1,78 @@
+# Builds PANTHEON's website from the game's own code and content, and publishes it with GitHub Pages
+# (ADR-076). Pull requests build and test it; a push to main that changes it, or a run by hand
+# (Actions > Site > Run workflow), also publishes it. Pages must be set to deploy from GitHub
+# Actions once, in the repository's Settings > Pages.
+name: Site
+
+on:
+  push:
+    branches: [main]
+    paths: &site-paths
+      - "site/**"
+      - "src/**"
+      - "game/Data/**"
+      - "game/Fonts/**"
+      - "docs/images/**"
+      - "tools/build-site.sh"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths: *site-paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One publication at a time, and never one cut off halfway; a pull request's newer push cancels its
+# older build.
+concurrency:
+  group: site-${{ github.event_name == 'pull_request' && github.ref || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SDK_VERSION: "8.0.426"
+  NODE_VERSION: "22"
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build and test the site
+        run: tools/build-site.sh
+
+      - uses: actions/configure-pages@v6
+        if: github.event_name != 'pull_request'
+
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: build/site
+
+  deploy:
+    name: Publish
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

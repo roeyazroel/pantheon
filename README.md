@@ -10,7 +10,7 @@ gods' minds to Claude, GPT or Gemini with your own key, or to a model on your ow
 
 Windows · macOS · Linux
 
-[The AI](#gods-that-think-for-themselves) · [Get the game](#get-the-game) · [Your first game](#your-first-game) · [How to play](#how-to-play) · [Controls](#controls)
+[Website](https://roeyazroel.github.io/pantheon/) · [The AI](#gods-that-think-for-themselves) · [Get the game](#get-the-game) · [Your first game](#your-first-game) · [How to play](#how-to-play) · [Controls](#controls)
 
 ![The Gods of This World: the page that introduces a new world's rival gods, each with its name and epithet, personality, Creature, history and nature](docs/images/pantheon.jpg)
 
@@ -985,7 +985,8 @@ Your profile lives in one file, `pantheon.db`, in the game's data folder:
 PANTHEON is built with Godot 4.7.2 (.NET) and C#, with a simulation that runs and is tested
 without the engine. [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) covers building from source, the
 tests, the debug tools, every command-line option, the content files and how releases are made.
-Read [AGENTS.md](AGENTS.md) before changing anything. The owner's specification,
+The [website](https://roeyazroel.github.io/pantheon/) is built from the game's own code and data;
+`tools/build-site.sh --serve` builds it locally. Read [AGENTS.md](AGENTS.md) before changing anything. The owner's specification,
 [docs/PANTHEON_SPEC.md](docs/PANTHEON_SPEC.md), is the source of truth for what PANTHEON is, and
 [docs/PROGRESS_SUMMARY.md](docs/PROGRESS_SUMMARY.md) says how much of it is built.
 
