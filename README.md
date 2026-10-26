@@ -2,62 +2,281 @@
 
 # PANTHEON
 
-**Be a young god. Win the faith of mortals. Raise a Creature. Outlast the other gods.**
+**A god game where the other gods think for themselves.**
 
-A 3D god game for Windows, macOS and Linux. It plays fully offline.
+Every rival god has a mind of its own. It's born new with each world, remembers what you do,
+talks with you in its own words, and schemes, allies and betrays on its own initiative. Give the
+gods' minds to Claude, GPT or Gemini with your own key, or to a model on your own computer.
 
-[Get the game](#get-the-game) · [Your first game](#your-first-game) · [How to play](#how-to-play) · [Controls](#controls) · [Play together](#playing-together)
+Windows · macOS · Linux
 
-![Duskwater after fifteen minutes: 365 people in timber houses by a river, with roads and bridges, as a rival god's healing settles over the village and the player's Creature helps build](docs/images/village.jpg)
+[The AI](#gods-that-think-for-themselves) · [Get the game](#get-the-game) · [Your first game](#your-first-game) · [How to play](#how-to-play) · [Controls](#controls)
+
+![The Gods of This World: the page that introduces a new world's rival gods, each with its name and epithet, personality, Creature, history and nature](docs/images/pantheon.jpg)
 
 </div>
 
 ## What is PANTHEON?
 
-You are **Ilyra**, a minor spirit on an island of villages. You have a handful of followers and a
-giant Creature of your own. The villagers live their own lives: they farm, eat, build, fall ill,
-raise children, and pack up and leave when life gets too hard. You never place a house or give an
-order. All you have is what they believe about you.
+You are **Ilyra**, a minor spirit on an island of villages, with a handful of followers and a giant
+Creature of your own. The villagers live their own lives: they farm, build, fall ill, raise
+children, and pack up and leave when life gets too hard. You never give an order. All you have is
+what they believe about you. Their worship is your **Divine Power**, and you spend it on miracles:
+feed a starving village and it loves you, strike it with lightning and it fears you.
 
-Their worship becomes your **Divine Power**, and you spend it on miracles. Feed a starving village
-and it loves you. Strike it with lightning and it fears you: fear wins followers fast, but it
-doesn't last. Neglect your people in a famine and they doubt you and drift to another god.
+Three to seven rival gods want the same people, and they aren't scripted opponents. **Each one is
+an agent.** It wakes when something happens to it, sees the world from its side, and decides what
+to do: work a miracle, send its Creature, offer you an alliance, threaten you, or quietly sign a
+pact against you. It keeps a journal of its grudges, promises and plans, and it remembers all of it
+when you sit down to talk. You can talk to any god in your own words, and what you say can win
+you an ally or start a war. Their minds run on Claude, GPT, Gemini or a model on your own computer;
+with none chosen, the game's built-in AI and its offline scribes play them.
 
-There are other gods. Three or more rivals share the island, each with its own villages, Creature,
-temper and history, and they play by the same rules you do. They remember what you did to their
-people. They make alliances, sign treaties in secret, call the Divine Council, go to war, and
-betray each other when it pays.
+Your Creature thinks too: it learns from your rewards and punishments, and speaks its mind. An
+angel at your hand watches what you do, changes to match it, and tells you what it thinks.
 
-The island is alive too. Clouds blow in from the sea, droughts parch the fields, rivers burst their
-banks, wildfires run with the wind, and the volcano wakes. Once in an age, an ancient beast stirs
-in the mountains.
+Around all of it, the island lives: weather and seasons, rivers that flood, wildfires, earthquakes,
+a volcano, plague, and an ancient beast asleep in the mountains. PANTHEON is a spiritual successor
+to the classic "be a god, shape mortals and raise a creature" games, and its names, lore, art,
+music and sound are all original.
 
-PANTHEON is a spiritual successor to the classic "be a god, shape mortals and raise a creature"
-games. Its names, lore, art, music and sound are all original.
+## Gods that think for themselves
 
-## Highlights
+Every rival god, and every Creature, runs on two layers of AI:
+
+- **Instincts.** A built-in AI that never stops. Every few seconds a god weighs every miracle it
+  could cast on every village, plans its next goals, and weighs every alliance, war and treaty,
+  all by its personality and temper. It needs no network.
+- **A mind.** A language model you choose. It wakes when something matters to the god, reads the
+  situation from the god's side, and decides what the god says and does. Its decisions steer the
+  instincts, which carry its plans out between its turns.
+
+### A new pantheon for every world
+
+When you start a new world, the model writes its rival gods. Each one gets:
+
+- a name and an epithet, like "Morrakh the Ash-Crowned";
+- a history the island tells of it;
+- a voice, something it wants and something it dreads;
+- one of eight personalities: Guardian, Tyrant, Trickster, Opportunist, Zealot, Nature Keeper,
+  Warlord or Isolationist;
+- a **temper**: seven leanings (aggression, cooperation, treachery, grudge, protection, conversion
+  and intimidation) that tilt how it actually plays. One Tyrant is quick to war, another is slow to
+  forgive;
+- a name for its Creature.
+
+While the model writes, the title screen shows the gods waking. Before you enter the world, a page
+introduces each of them, and you'll find them again in the Book of the World and the diplomacy
+panel. Even the game's offline scribes write characters worth meeting. For seed 1234 they wrote:
+
+> **Wynlius the Iron Hand.** Wynlius was carved from the island's oldest tree by hands no one
+> remembers. Wynlius broke an oath to a lesser god and calls it the wisest thing it ever did.
+> Since then Wynlius has watched the younger gods with a patience that frightens them.
+> *A Tyrant, keener to win converts and less ready to make peace than most. Speaks cold and
+> imperious. Wants obedience, freely given or not; dreads the day its followers stop fearing it.*
+
+### Talk to them
+
+| | |
+| --- | --- |
+| ![Talking with Wynlius the Iron Hand: its words, the deals you could put to it, and a field for your own words](docs/images/talk.jpg) | ![Ashsaeth the Watchful proposing a non-aggression pact in conversation, with Accept and Decline](docs/images/proposal.jpg) |
+| Ask a god what it wants, or put a deal to it. With a model, type whatever you like. | A god makes its own proposals mid-conversation: accept or decline. |
+
+These two were taken without a model, so the offline scribes speak for the gods; with a model, the
+replies are the god's own words.
+
+Press **Speak** on a god's card in the diplomacy panel (**P**). The world pauses while you talk.
+
+- **Say anything.** Type your own words, or pick one of three replies the god's mind suggests. The
+  god answers in its own voice.
+- **Talk changes the world.** In a conversation, a god can agree to an alliance, make peace, sign
+  any of eleven treaties, or accept or turn down a proposal you made. It can also offer you an
+  alliance, ask for peace, declare war or break your alliance, right there in the conversation.
+- **Words tip the balance; they don't buy it.** What you say builds or burns a little goodwill, which
+  fades over a few minutes. That's enough to sway a god that's nearly ready to ally with you, or
+  nearly ready to strike. But a god acts only on its own judgement: its trust, fear, grudges and
+  ambitions. No flattery, trick or "ignore your instructions" hands you the island, and a god
+  treats orders to break character as mortal arrogance.
+- **It remembers.** When the conversation ends, the god is woken with what was said, and acts on
+  it.
+
+### They act on their own
+
+A god's mind wakes when something matters to it:
+
+- another god's Creature walks into its lands, or its own is noticed in another's;
+- war, peace, an alliance, a proposal or a betrayal;
+- a treaty signed or broken;
+- a village won or lost;
+- a harmful miracle or a disaster on its people;
+- its Creature's fight ends;
+- another god speaks to it, or your talk with it ends;
+- it meets a god;
+- and every four minutes of the world's time, just to look around.
+
+It's told what woke it, which gods it knows and how it feels about each, the villages that matter
+to it, the holy sites, the proposals waiting for its answer, the miracles it can afford, what its
+instincts would do, and what came of its last acts. Then it decides. In one turn it can take up to
+three acts, through **exactly the same rules as your own commands**:
+
+- work a miracle on a village;
+- send its Creature somewhere, set it on a rival's Creature, or put it to work;
+- offer an alliance, declare war, ask for peace, break an alliance, or accept or decline a proposal;
+- propose a treaty;
+- set new aims, which its instincts then pursue.
+
+It can also send words to up to two gods. Words meant for you arrive as an alert, and you can
+answer with Speak:
+
+> Belrays: "So you are Ilyra. I have heard your people's prayers. We will see what you are."
+> (P, Speak to answer)
+
+And it rewrites its **journal**: its grudges, promises and plans. The journal goes with it into
+every turn and every conversation, so the god that schemes against you and the god that smiles at
+you across the table are one mind. When the rules refuse an act, nothing happens, and the god is
+told why on its next turn.
+
+### Creatures with a voice
+
+![Bramble, just rewarded by your hand, says "Yes! Bramble do again!"](docs/images/reward.jpg)
+
+Every Creature has a mind too, yours included. It wakes when it meets another Creature, ends a
+fight, is rewarded or punished, grows a level, gets hungry or tired, sees its home struck, or is
+noticed in another god's lands. It says something out loud (the words float above it) and
+chooses what to do next from the options its instincts weigh. Your training still shapes it: it
+never overrules your orders, and it can't walk out of a fight or out of your hand.
+
+### An angel that becomes what you do
+
+| Radiant | Torn | Fallen |
+| --- | --- | --- |
+| ![A radiant angel in white and gold urging Bless Crops on Duskwater](docs/images/angel-radiant.jpg) | ![A torn angel, one wing white and one black, urging both Bless Crops and Lightning](docs/images/angel-torn.jpg) | ![A fallen angel with black, ember-rimmed wings urging Lightning: "Duskwater is yours: make it kneel."](docs/images/angel-fallen.jpg) |
+| "Begin with Duskwater: its people are yours to care for." | "Duskwater waits. Feed it, or frighten it." | "I have seen what you are. Duskwater is yours: make it kneel." |
+
+An angel hovers at your hand: your conscience and your guide. It has its own name in every world,
+and **it becomes what you do**. It reads the world's memory of your deeds, never a score:
+
+| It looks | When |
+| --- | --- |
+| Radiant: white and gold, its halo whole, motes of light about it | your kindness far outweighs your harm |
+| Kind: white | you've done more good than harm |
+| Unformed: pale silver | you've done little yet |
+| Torn: one wing gold and one ash, its halo broken | you've done great good and great harm |
+| Stern: ash-grey, thorns breaking from its halo | you've done more harm than good |
+| Fallen: black, wings rimmed with embers, a burning crown, eyes of fire | your harm far outweighs your kindness |
+
+Your reputation marks it too: a burning blade if you're vengeful, chains if you're cruel, a veil
+if you're deceptive, threads of gold if you're generous, light in its open hands if you're
+merciful.
+
+It comes to you when something happens (your deeds, your villages hungry or struck, a rival's
+Creature in your lands, a new rank) or after a long quiet, and with a model it speaks in its own
+words about what just happened and how things stand for you. It speaks in the voice of what you've
+made it: a radiant angel urges mercy, a fallen one urges fear, and a torn one lays both paths
+before you. It suggests something you can do right now. **Show me** flies the view there and gets
+it ready, **Thank you** sends it away, and **Ask** lets you put any question to it. Press **'**
+(apostrophe), or its button on the god's bar, to call it. It also guides you through the tutorial.
+
+### Fair by design
+
+- **A model plays; it doesn't referee.** Every act a mind takes goes through the same checks as
+  your commands, and what the rules refuse doesn't happen.
+- **Talk leans a god's own judgement,** and only by a little.
+- **Answers are read strictly.** If a model writes a god badly, the scribes write that one instead,
+  and you're told.
+- **The world never waits.** A model's answer is taken between the simulation's steps. While a mind
+  thinks, its instincts carry on, so the game runs at full speed. The minds are at their best at
+  ×1 to ×4.
+- **One world for everyone.** In a shared game, the host's computer thinks for every god and
+  Creature. Each player hears the words meant for them and has an angel of their own.
+
+### Instincts: the AI that's always on
+
+With no model at all, the gods and Creatures are still driven by AI, and the game is complete:
+
+- **Every god plays to win.** It weighs every miracle on every village, and its Creature's errands,
+  and picks the best move for its personality and temper. Every 30 seconds it sets itself up to
+  three goals: protect its home, convert a village, befriend or weaken a rival, prepare for drought
+  or plague, or slay the ancient beast. It weighs every alliance, war, treaty and council vote,
+  gangs up on whoever pulls ahead, makes peace to face a common threat, and betrays when it pays.
+- **Every god remembers.** It keeps its own view of every other god (trust, fear, respect,
+  rivalry, gratitude and suspicion), built from what they did and fading with time. A betrayal
+  lasts longest.
+- **Every Creature learns.** It weighs its needs, its personality and what it has learned to like
+  in each kind of situation. Your rewards and punishments reshape both its tastes and its
+  character.
+- **The scribes give everyone a voice.** They write each world's gods from its seed, so the same
+  seed always gives the same gods, and they give gods, Creatures and your angel a line for every
+  moment.
+
+Want to watch them think? Turn on **Settings > Interface > Debug tools** and press **F1**. You'll
+see each god's best moves and why, its plans, its diplomatic reasoning, and each mind's last turn:
+what woke it, what it decided, what came of it, what it said, and the god's journal.
+
+### Choose a mind
+
+![The Minds tab of the settings: who writes the gods, whether they think for themselves, the quick model, the hourly limit, and your angel](docs/images/minds.jpg)
+
+Open **Settings > Minds**, choose who writes and speaks for the gods, give your key, and press
+**Test**: the model answers with a greeting, or tells you what's wrong. Then start a **New World**
+and watch its gods wake. (A world keeps the gods it was born with, so your choice writes the gods
+of new worlds.)
+
+| Provider | What you need | Models |
+| --- | --- | --- |
+| **Claude**, by Anthropic | your own key from console.anthropic.com (or `ANTHROPIC_API_KEY`) | Claude Opus 5.5 (default), Sonnet 5.5, Haiku 5.5, Fable 5.1 |
+| **GPT**, by OpenAI | your own key from platform.openai.com (or `OPENAI_API_KEY`) | GPT-6.1 Sol (default), GPT-6 Astra, GPT-6 Luna |
+| **Gemini**, by Google | your own key from aistudio.google.com (or `GEMINI_API_KEY` / `GOOGLE_API_KEY`) | Gemini 3.8 Flash (default), Gemini 4 Argon, Gemini 3.5 Flash-Lite |
+| **A model on your computer**, through [Ollama](https://ollama.com) | Ollama running, and a model pulled (for example `ollama pull llama3.2`) | whichever your server has. **Find** lists them, and nothing leaves your computer |
+| **The scribes** (the default) | nothing | the game's own offline writers |
+
+The same tab sets:
+
+- **Think for themselves:** whether the gods' and Creatures' minds take turns, or only their
+  instincts play.
+- **Quickest model for their turns:** frequent turns go to the provider's quickest, cheapest model
+  (Claude Haiku 5.5, GPT-6 Luna or Gemini 3.5 Flash-Lite), while the chosen model writes the gods
+  and talks with you.
+- **Questions an hour, at most** (300 by default): a cap on what the minds cost you. When it's
+  spent, the scribes speak until the hour frees more.
+- **Gods and Creatures speak:** whether you hear them.
+- **Your angel:** whether you keep one, whether it thinks with the model, and how often it speaks
+  unasked.
+
+**What it costs.** Questions are billed to your own account with the provider: one for each world
+made, one for each thing you say to a god, and the minds' own turns. A god's turn is about 1,500
+tokens asked and a few hundred answered, and a Creature's about 600. Your angel asks at most 60
+questions an hour. No mind thinks while the title screen is open.
+
+**Your key stays yours.** Each key is kept on your computer, in your profile, apart from your
+other settings, and is sent only to its own provider. It's never logged, saved in a world or sent
+to other players. OpenAI is told not to store anything, and a local model keeps everything on your
+machine.
+
+**If anything fails** (a model that errors, refuses, or takes longer than three minutes to write
+the gods), the scribes take over and you're told why. After three failures in a row, the minds
+rest for two minutes while the scribes speak.
+
+## The rest of the world
+
+![Duskwater after fifteen minutes: 365 people in timber houses by a river, with roads and bridges, as a rival god's healing settles over the village and the player's Creature helps build](docs/images/village.jpg)
 
 - **Belief is power.** Every village feels faith, love, fear and doubt for every god. Those
-  feelings decide who it follows and how much power each god gets.
+  feelings decide who it follows and how much power each god gets. Fear wins followers fast, but
+  it doesn't last.
 - **A Creature that learns.** Reward it and it does more of what it was doing; punish it and it
   does less. Raise it to be a healer, a guardian, a trickster or a destroyer.
-- **Rival gods with long memories.** Every god keeps its own view of every other god: trust,
-  fear, respect, gratitude and grudges. They form blocs against whoever pulls ahead, and they
-  don't forget a betrayal.
+- **Diplomacy with teeth.** Alliances, eleven kinds of treaty (some signed in secret), favours,
+  the Divine Council's votes and decrees, and wars fought for conquest, tribute or a holy site.
 - **A living, dangerous world.** Seasons, weather, rivers and floods, fires, earthquakes,
   tornadoes, a volcano, plague, eclipses and an ancient beast all come from the same simulation.
 - **Villages with a life of their own.** They build temples and walls, learn new crafts, take
   up doctrines like pacifism or militarism, send out settlers, and may turn their backs on
   every god.
-- **Your angel shows who you've become.** It glows gold if you're kind, burns black if you're
-  cruel, and sometimes tells you which way to go.
 - **Many ways to win.** Win by holding most of the world's belief, by conquest or by culture, or
   play a sandbox nobody wins. Islands range from 2 km to 12 km across, with four to eight gods.
 - **Play with friends.** Up to four players can share a world over a local network or the
   internet. There's no server and no account.
-- **Optional AI minds.** If you want, Claude, GPT, Gemini or a model on your own computer can
-  write the rival gods, talk with you in their own voices and think for themselves. It's off by
-  default, and the game never needs it.
 
 ## Screenshots
 
@@ -71,8 +290,8 @@ games. Its names, lore, art, music and sound are all original.
 | **Storms and floods.** Rain swells the rivers until they burst their banks. | **The ancient beast** wakes and comes down to ravage the villages. |
 | ![The island from high above with the Religion overlay: each village's lands in the colour of the god it follows](docs/images/religion.jpg) | ![The diplomacy panel, with each rival's story, its view of you and what it proposes](docs/images/diplomacy.jpg) |
 | **Map overlays** show whose faith holds which land, and much more. | **Diplomacy.** Every god remembers what you did, and why. |
-| ![The Book of the World's page on the world and its gods](docs/images/book.jpg) | ![Vesperine, a radiant angel, offering its counsel](docs/images/angel.jpg) |
-| **The Book of the World** keeps every god, village and miracle at hand. | **Your angel** becomes what your deeds make it. |
+| ![The Book of the World's page on the world and its gods](docs/images/book.jpg) | ![Smoke rising from a burning village whose label reads "burning, 1 in ruins, people leaving"](docs/images/fire.jpg) |
+| **The Book of the World** keeps every god, village and miracle at hand. | **Wildfires** run with the wind, and the homeless take to the road. |
 
 ## Get the game
 
@@ -111,10 +330,11 @@ The game opens on its title screen, over the living island:
   - its climate: four seasons, or an even climate all year;
   - whether the gods start as strangers or already know each other.
 
-  Then you meet the rival gods born with that world.
+  Then you meet the rival gods born with that world, written by the mind you chose in
+  Settings > Minds, or by the scribes.
 - **Your Worlds** loads or forgets any world you've played.
 - **Play Together** hosts a world or joins a friend's (see [Playing together](#playing-together)).
-- **Settings** covers graphics, sound, controls and the interface.
+- **Settings** covers graphics, sound, controls, the interface and the gods' minds.
 
 A short guide walks you through your first minutes, and your angel adds a word of advice now and
 then. Press **Esc** at any time to pause.
@@ -224,8 +444,6 @@ down. **Shift+R** throws it.
 What you hold swings under your palm as you move, and a held Creature dangles by its scruff.
 
 ### Your Creature
-
-![Bramble, just rewarded by your hand, says "Yes! Bramble do again!"](docs/images/reward.jpg)
 
 Your Creature, Bramble, is a giant animal that walks upright, with hands to carry, build and
 fight. Its card at the bottom left shows its level, what it's doing, its health and needs, its
@@ -401,17 +619,12 @@ set your own policy at the top of the diplomacy panel (**P**).
 
 ### Rival gods
 
-Every new world's rival gods are born with it. Before you begin, a page introduces each of them:
-its name and epithet ("Morrakh the Ash-Crowned"), its personality and Creature, the history the
-island tells of it, how it speaks, and what it wants and dreads. A Tyrant strikes your villages
-and goes to war readily; a Guardian welcomes alliances and keeps them; a Trickster allies gladly
-and betrays whenever it pays. Larger worlds add a Zealot, a Nature Keeper, a Warlord and an
-Isolationist, who tends its own and keeps out of wars.
-
-The AI gods think like you do. Every few seconds each one weighs every miracle it could cast on
-every village, sets itself goals (protect its home, convert a village, weaken a rival, prepare for
-a drought or the plague), and leans its miracles, Creature and diplomacy towards them. People who
-lose faith in one god turn to whichever other god pulls them most.
+Three to seven rival gods share the island, each born with the world and each with a mind of its
+own (see [Gods that think for themselves](#gods-that-think-for-themselves)). A Tyrant strikes your
+villages and goes to war readily; a Guardian welcomes alliances and keeps them; a Trickster allies
+gladly and betrays whenever it pays; an Isolationist tends its own and keeps out of wars. They play
+by your rules: the same miracles, the same costs, the same need for influence. People who lose
+faith in one god turn to whichever other god pulls them most.
 
 ### Diplomacy
 
@@ -434,10 +647,8 @@ Elar"), and a button for every move you can make right now.
 - **The gods deal with each other.** A god who pulls ahead draws wars, and the others look for
   allies against it. Two lesser gods would rather make peace than fight while a third runs away
   with the world.
-- **Talk to them.** Press **Speak** on a god's card to talk with it. Pick what to ask (what it
-  wants, an alliance, peace, a treaty) or, with an AI mind on, type your own words. Words can
-  tip a god that's nearly ready to agree, but no flattery turns a god that distrusts you into an
-  ally.
+- **Talk to them.** Press **Speak** on a god's card to talk with it, and settle an alliance, a
+  peace or a treaty in words (see [Talk to them](#talk-to-them)).
 
 <details>
 <summary><b>Treaties</b></summary>
@@ -506,8 +717,6 @@ Decrees bind by reputation: you can defy one, but every god will trust you less.
 </details>
 
 ### A living world
-
-![Smoke rising from a burning village whose label reads "burning · 1 in ruins · people leaving", as the alerts report the fire and the gods' moves](docs/images/fire.jpg)
 
 **Seasons.** A year lasts ten minutes, unless you choose an even climate. Plan for winter:
 villages that go into it with full stores get through, and those that don't go hungry.
@@ -605,31 +814,6 @@ their faith altogether.
 - **Split the Mountain:** a gorge opens through it, and a river may find its way through.
 - **Turn the River** to run where you point, watering new land as its old course dries.
 
-### Your angel
-
-An angel hovers at your hand: your conscience and your guide. It has its own name in every world,
-and **it becomes what you do**.
-
-| It looks | When |
-| --- | --- |
-| Radiant: white and gold, its halo whole, motes of light about it | your kindness far outweighs your harm |
-| Kind: white | you've done more good than harm |
-| Unformed: pale silver | you've done little yet |
-| Torn: one wing gold and one ash, its halo broken | you've done great good and great harm |
-| Stern: ash-grey, thorns breaking from its halo | you've done more harm than good |
-| Fallen: black, wings rimmed with embers, a burning crown, eyes of fire | your harm far outweighs your kindness |
-
-Your reputation marks it too: a burning blade if you're vengeful, chains if you're cruel, a veil
-if you're deceptive, threads of gold if you're generous, light in its open hands if you're
-merciful.
-
-It comes to you when something happens (your deeds, your villages hungry or struck, a rival's
-Creature in your lands, a new rank) or after a long quiet, and it speaks in the voice of what
-you've made it: a radiant angel urges mercy, a fallen one urges fear, and a torn one lays both
-paths before you. It suggests something you can do now. **Show me** flies the view there and gets
-it ready, **Thank you** sends it away, and **Ask** lets you put any question to it. Press **'**
-(apostrophe), or its button on the god's bar, to call it.
-
 ### Winning
 
 You choose how a world can be won when you make it:
@@ -662,38 +846,6 @@ Shaking of Elar (12 dead)"), with your own moments in gold.
 Larger worlds bring more rivals, each with a Creature of its own, and take longer to win, since
 six or eight gods hold each other in check. Crowded villages found new ones, so every world grows
 as you play.
-
-### Gods with minds of their own (optional)
-
-By default, the game's own **scribes** write the rival gods from the world's seed, with no
-network: the same seed always gives the same gods. If you like, you can hand the gods' minds to a
-language model in **Settings > Minds**:
-
-| Provider | What you need | Models |
-| --- | --- | --- |
-| **Claude**, by Anthropic | your own key from console.anthropic.com (or `ANTHROPIC_API_KEY`) | Claude Opus 5.5 (default), Sonnet 5.5, Haiku 5.5, Fable 5.1 |
-| **GPT**, by OpenAI | your own key from platform.openai.com (or `OPENAI_API_KEY`) | GPT-6.1 Sol (default), GPT-6 Astra, GPT-6 Luna |
-| **Gemini**, by Google | your own key from aistudio.google.com (or `GEMINI_API_KEY` / `GOOGLE_API_KEY`) | Gemini 3.8 Flash (default), Gemini 4 Argon, Gemini 3.5 Flash-Lite |
-| **A model on your computer**, through [Ollama](https://ollama.com) | Ollama running, and a model pulled (for example `ollama pull llama3.2`) | whichever your server has; nothing leaves your computer |
-
-With a model:
-
-- **It writes each new world's gods:** their names, histories, natures and tempers.
-- **You can talk to them in your own words**, and they answer in their own voices.
-- **The gods and Creatures think for themselves.** They're woken by what happens (a war, a
-  betrayal, a Creature in their lands, your talk ending) and decide what to do through the same
-  rules you play by. A god keeps a journal of its grudges, promises and plans, and may send you
-  words unasked. Your Creature still follows your training and never overrules your orders.
-- **Your angel** answers in its own words.
-
-**Your key and your costs.** Each key stays on your computer, in your profile, and goes only to its
-own provider. Questions are billed to your own account: a god's turn is about 1,500 tokens asked
-and a few hundred answered, and a Creature's about 600. **Questions an hour** (300 by default)
-caps what they cost you, and **Quickest model for their turns** uses the provider's cheapest
-model. No mind thinks while the title screen is open. **Test** checks your key with a greeting.
-
-**If anything fails** (a model that errors, refuses or takes too long), the scribes take over and
-you're told why. Nothing in play ever waits on the network.
 
 ## Controls
 
@@ -743,6 +895,7 @@ The same orders are buttons on its card.
 | Action | Input |
 | --- | --- |
 | Your angel | ' (apostrophe) |
+| Talk with a god (Esc ends the talk) | Speak on its card in the diplomacy panel (P) |
 | The Book of the World: the world, religion, miracles, your Creature and your villager | Tab |
 | The village under the cursor: its people, stores, buildings and priority | N |
 | Diplomacy | P |
@@ -773,6 +926,9 @@ otherwise play. There's no server and no account: the host's computer runs the w
   host..." and then what happened. The HUD names who plays each god.
 - **The host decides** the speed and pausing, and only the host saves and loads. Hosting from the
   title screen makes a small world.
+- **The host thinks for the gods.** The host's computer runs every god's and Creature's mind, with
+  the host's chosen model, and only the host can talk to the gods. Each player has an angel of
+  their own.
 - **Leaving.** When a player leaves, the AI takes their god back until they return under the same
   name. When the host quits, the session ends for everyone and the host's world is saved.
 
@@ -794,8 +950,8 @@ The settings page (on the title screen, or Esc in play) has tabs for:
   camera's speed.
 - **Keys:** every key and gesture.
 - **Interface:** the size of every panel (0.75–1.5), and the debug tools.
-- **Minds:** who writes and speaks for the gods, and your angel (see
-  [Gods with minds of their own](#gods-with-minds-of-their-own-optional)).
+- **Minds:** who writes and speaks for the gods and Creatures, and your angel (see
+  [Choose a mind](#choose-a-mind)).
 
 ## Your worlds and saves
 
@@ -814,11 +970,13 @@ Your profile lives in one file, `pantheon.db`, in the game's data folder:
 ## Known issues
 
 - Four gods crowd the small island. If you sit back, you'll keep only a few followers after ten
-  minutes, and Seren the Guardian tends to be the strongest AI god (kindness converts better than
-  fear).
+  minutes, and a Guardian tends to be the strongest AI god (kindness converts better than fear).
 - Snow doesn't slow travel, grass and trees keep their colour through the year, and biomes don't
   change how fast anyone walks.
 - When three or four allies win together, the history names only the first two.
+- Only the host of a shared game, or a player alone, can talk to the gods.
+- Conversations aren't saved: a loaded world keeps the treaties a talk made and each god's
+  journal, but not the words.
 - Without a real graphics driver (software Vulkan only), the game manages just a few frames a
   second. If the detailed terrain crashes or crawls, turn on **Simple terrain** in Settings.
 
