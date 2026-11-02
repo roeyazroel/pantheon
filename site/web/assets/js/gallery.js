@@ -4,7 +4,12 @@ import { escapeHtml } from './content.js';
 
 export const SHOTS = [
   ['pantheon.jpg', 'The gods of a new world, born with it.'],
-  ['village.jpg', 'Duskwater after fifteen minutes: a rival heals it while Bramble helps build.'],
+  ['village.jpg', 'Duskwater after fifteen minutes: lanes, houses and fields on the river.'],
+  ['night.jpg', 'A winter night at Kestrel Rise, windows lit along the lanes.'],
+  ['dusk.jpg', 'Evening light over Duskwater.'],
+  ['autumn.jpg', 'Autumn turns the oaks and birches.'],
+  ['winter.jpg', 'Frost on the land and the roofs.'],
+  ['miracle.jpg', 'A healing settles over Duskwater.'],
   ['talk.jpg', 'Talking with Wynlius the Iron Hand.'],
   ['proposal.jpg', 'Ashsaeth proposes a pact in the middle of a conversation.'],
   ['fight.jpg', 'Bramble and Pip box; the loser is banished with a scar.'],
@@ -18,7 +23,7 @@ export const SHOTS = [
   ['book.jpg', 'The Book of the World.'],
   ['minds.jpg', 'Choosing a mind for the gods.'],
   ['title.jpg', 'The title screen, over the living island.'],
-  ['creature.jpg', 'Bramble among the huts of its home.'],
+  ['creature.jpg', 'Bramble among the houses of its home.'],
 ];
 
 /** Builds the gallery and its dialog. */

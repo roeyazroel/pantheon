@@ -203,10 +203,11 @@ export class IslandView {
       this.scene.background = new THREE.Color(SKY);
     }
     this.camera = new THREE.PerspectiveCamera(38, 1, 10, 20000);
-    this.scene.add(new THREE.HemisphereLight(0xc9dcff, 0x4a3a22, 1.25));
-    const sun = new THREE.DirectionalLight(0xffe6bf, 2.1);
-    sun.position.set(-1400, 1600, 900);
-    this.scene.add(sun);
+    this.sky = new THREE.HemisphereLight(0xc9dcff, 0x4a3a22, 1.25);
+    this.scene.add(this.sky);
+    this.sun = new THREE.DirectionalLight(0xffe6bf, 2.1);
+    this.sun.position.set(-1400, 1600, 900);
+    this.scene.add(this.sun);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
@@ -247,6 +248,16 @@ export class IslandView {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Lights the island as an hour of the game's day_night.json lights it. The strengths are scaled for this renderer. */
+  setHour(key) {
+    this.sky.color.set(key.SkyHorizon).lerp(new THREE.Color(key.SkyTop), 0.5);
+    this.sky.intensity = 0.5 + key.Ambient * 0.75;
+    this.sun.color.set(key.Light);
+    this.sun.intensity = 0.15 + key.Energy * 1.3;
+    this.scene.fog.color.set(key.Haze);
+    this.scene.background?.set(key.SkyHorizon);
   }
 
   /** Shows an island, in place of any shown before. */

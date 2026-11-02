@@ -138,7 +138,7 @@ told why on its next turn.
 
 ### Creatures with a voice
 
-![Bramble, just rewarded by your hand, says "Yes! Bramble do again!"](docs/images/reward.jpg)
+![Bramble, just rewarded by your hand, says "Bramble happy. Ilyra kind."](docs/images/reward.jpg)
 
 Every Creature has a mind too, yours included. It wakes when it meets another Creature, ends a
 fight, is rewarded or punished, grows a level, gets hungry or tired, sees its home struck, or is
@@ -259,7 +259,7 @@ rest for two minutes while the scribes speak.
 
 ## The rest of the world
 
-![Duskwater after fifteen minutes: 365 people in timber houses by a river, with roads and bridges, as a rival god's healing settles over the village and the player's Creature helps build](docs/images/village.jpg)
+![Duskwater after fifteen minutes: lanes of timber houses by a river, with fields, roads and bridges, and the player's Creature at work](docs/images/village.jpg)
 
 - **Belief is power.** Every village feels faith, love, fear and doubt for every god. Those
   feelings decide who it follows and how much power each god gets. Fear wins followers fast, but
@@ -282,7 +282,11 @@ rest for two minutes while the scribes speak.
 
 | | |
 | --- | --- |
-| ![The title screen over the living island](docs/images/title.jpg) | ![Bramble, the player's giant cow, playing among the huts of its home village](docs/images/creature.jpg) |
+| ![Evening over Duskwater: the land gold, the shadows long](docs/images/dusk.jpg) | ![A winter night at Kestrel Rise: lit windows along snowy lanes under the moon](docs/images/night.jpg) |
+| **Evening.** The sun crosses your island every four minutes. | **Night.** Windows light, people go indoors, and lamps burn by the shrines. |
+| ![Autumn: oaks and birches turning red and gold around a village](docs/images/autumn.jpg) | ![Winter: frost on the land and the roofs of Duskwater](docs/images/winter.jpg) |
+| **Autumn.** The grass dries to straw and the oaks blaze. | **Winter.** The fields lie fallow and the trees stand bare. |
+| ![The title screen over the living island](docs/images/title.jpg) | ![Bramble, the player's giant cow, among the houses of its home village](docs/images/creature.jpg) |
 | **The title screen.** Continue a world, take the tutorial or start a new one. | **Your Creature.** It lives, works and learns on its own. |
 | ![Bramble the cow boxing Pip, a rival god's ape, with a health bar over each](docs/images/fight.jpg) | ![The volcano erupting: a plume of smoke over the peak and fire running down its slope](docs/images/eruption.jpg) |
 | **Creatures fight.** Set yours on a rival's, and the loser is banished with a scar. | **The volcano wakes.** Lava runs downhill and ash falls on the villages. |

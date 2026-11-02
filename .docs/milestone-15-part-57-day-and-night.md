@@ -51,6 +51,8 @@ flowchart LR
 
 ## Results
 
-1978 tests pass (18 new). Uncapped at 2720x1530 on the M3 Pro, before part 55 and now, by day: close
-15.6 → 14.7 ms, near 17.2 → 16.4, wide 21.9 → 17.1 and high 17.8 → 15.9; night costs about the same.
-The stress world (50 villages, 7000 people) went from 21.7 to 19.5 ms.
+1978 tests pass (18 new). Uncapped at 2720x1530 on the M3 Pro, before part 55 and now, at noon with the
+sun moving: close 15.6 → 15.6 ms, near 17.2 → 16.7, wide 21.9 → 19.4 and high 17.8 → 16.4; night costs
+the same or less. The stress world (50 villages, 7000 people) went from 21.7 to 19.5 ms.
+
+Remember that a tick is an hour now: tick 9000 is 3 in the morning, so measure and capture with `--hour`.

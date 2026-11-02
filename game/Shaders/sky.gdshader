@@ -10,6 +10,10 @@ global uniform sampler2D look_clouds : filter_linear_mipmap, repeat_enable;
 uniform vec3 top_color : source_color = vec3(0.17, 0.35, 0.64);
 uniform vec3 horizon_color : source_color = vec3(0.74, 0.8, 0.84);
 uniform vec3 ground_color : source_color = vec3(0.09, 0.2, 0.28);
+// The sun or moon, set twice a second: a sky that read the light itself would be refiltered every frame.
+uniform vec3 light_direction = vec3(0.0, 1.0, 0.0);
+uniform vec3 light_color : source_color = vec3(1.0);
+uniform float light_energy = 1.0;
 
 float hash(vec3 p) {
 	return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
@@ -21,13 +25,11 @@ void sky() {
 	vec3 color = mix(horizon_color, top_color, pow(up, 0.5));
 	color = mix(color, ground_color, smoothstep(0.0, -0.3, dir.y));
 
-	if (LIGHT0_ENABLED) {
-		float facing = max(dot(dir, LIGHT0_DIRECTION), 0.0);
-		float glow = pow(facing, 18.0) * 0.22 + pow(facing, 220.0) * 0.45;
-		float disc = smoothstep(0.99962, 0.99978, facing);
-		// The glow is the sky's own, so the moon's stays faint; the disc is bright whatever its energy.
-		color += LIGHT0_COLOR * (glow * LIGHT0_ENERGY + disc * mix(6.0, 1.6, look_season.w));
-	}
+	float facing = max(dot(dir, light_direction), 0.0);
+	float glow = pow(facing, 18.0) * 0.22 + pow(facing, 220.0) * 0.45;
+	float disc = smoothstep(0.99962, 0.99978, facing);
+	// The glow is the sky's own, so the moon's stays faint; the disc is bright whatever its energy.
+	color += light_color * (glow * light_energy + disc * mix(6.0, 1.6, look_season.w));
 
 	if (!AT_CUBEMAP_PASS && dir.y > 0.0) {
 		float night = look_season.w;

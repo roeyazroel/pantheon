@@ -22,9 +22,10 @@ async function initIslands() {
     islandsUnavailable();
     return;
   }
-  const [palette, view, index] = await Promise.all([
+  const [palette, view, day, index] = await Promise.all([
     content('biome_palette.json'),
     content('divine_view.json'),
+    content('day_night.json'),
     fetch('islands/index.json').then((r) => r.json()),
   ]);
   const small = matchMedia('(max-width: 720px)').matches;
@@ -45,10 +46,26 @@ async function initIslands() {
     islandView.show(await loadIsland(button.dataset.file));
   });
   document.querySelector('#labels-toggle').addEventListener('change', (event) => islandView.setLabels(event.target.checked));
+  initHours(document.querySelector('#hour-tabs'), day, islandView);
   const legend = document.querySelector('#legend');
   const biomes = ['Grassland', 'Forest', 'Highland', 'RiverValley', 'Coast', 'Swamp', 'Desert', 'Tundra', 'Volcanic'];
   legend.innerHTML = biomes.map((b) => `<span><i class="swatch" style="background:${palette[b]}"></i>${b.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>`).join('')
     + `<span><i class="swatch" style="background:${palette.ShallowWater}"></i>Water</span>`;
+}
+
+/** The explorer's hours: the game's own light at dawn, noon, dusk and midnight. */
+function initHours(tabs, day, view) {
+  const hours = [['Dawn', 7], ['Noon', 13], ['Dusk', 19.5], ['Night', 0]];
+  const keyAt = (hour) => day.Keys.reduce((best, key) => (Math.abs(key.Hour - hour) < Math.abs(best.Hour - hour) ? key : best));
+  tabs.innerHTML = hours.map(([name, hour], i) => `<button type="button" data-hour="${hour}" aria-pressed="${i === 1}">${name}</button>`).join('');
+  tabs.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-hour]');
+    if (button) {
+      tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+      view.setHour(keyAt(Number(button.dataset.hour)));
+    }
+  });
+  view.setHour(keyAt(13));
 }
 
 async function initSpecies() {

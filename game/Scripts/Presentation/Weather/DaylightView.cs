@@ -52,6 +52,9 @@ internal sealed class DaylightView
             _sinceSky = 0.0;
             _sky.SetShaderParameter("top_color", light.SkyTop.ToGodot());
             _sky.SetShaderParameter("horizon_color", light.SkyHorizon.ToGodot());
+            _sky.SetShaderParameter("light_direction", new Vector3(light.ToLight.X, light.ToLight.Y, light.ToLight.Z));
+            _sky.SetShaderParameter("light_color", light.Light.ToGodot());
+            _sky.SetShaderParameter("light_energy", light.Energy);
         }
 
         return light;

@@ -40,8 +40,10 @@ far more `Ambient` than noon, as the sky's dim colours are also the light it giv
 ### The sky (`sky.gdshader`)
 
 A custom sky replaces the stock one: a gradient the hour sets, a glow and a disc for the sun or moon,
-and high cloud and stars in the sky itself but not in the light it gives. Its radiance is refiltered
-incrementally at 128 pixels and its colours change twice a second, so a moving sun costs almost nothing.
+and high cloud and stars in the sky itself but not in the light it gives. A sky that reads the scene's
+light is refiltered every frame the light moves, which cost up to 0.6 ms in the near view. So it is
+given the light as plain uniforms, like its colours, twice a second, and refiltered incrementally at
+128 pixels.
 
 ### Night in the villages
 
@@ -67,16 +69,19 @@ six hours on with the debug tools, `--hour` to hold an hour, and the hour in F1.
 
 ## Consequences
 
-- **Performance**, uncapped at 2720x1530 on an M3 Pro, the build before part 55 against this one, each
-  run alternating:
+- **Performance**, uncapped at 2720x1530 on an M3 Pro, the build before part 55 against this one, with
+  the sun or moon moving. "Before" had a fixed afternoon sun; noon is the dearest hour of the day:
 
-  | View | Before | After, day | After, night |
+  | View | Before | Noon | Night |
   | --- | --- | --- | --- |
-  | Close (40 m) | 15.6 ms | 14.7 ms | 15.0 ms |
-  | Near (110 m) | 17.2 ms | 16.4 ms | 16.7 ms |
-  | Wide (420 m) | 21.9 ms | 17.1 ms | 17.2 ms |
-  | High (1400 m) | 17.8 ms | 15.9 ms | 15.9 ms |
-  | Stress world | 21.7 ms | 19.5 ms | |
+  | Close (40 m) | 15.6 ms | 15.6 ms | 15.6 ms |
+  | Near (110 m) | 17.2 ms | 16.7 ms | 16.9 ms |
+  | Wide (420 m) | 21.9 ms | 19.4 ms | 17.9 ms |
+  | High (1400 m) | 17.8 ms | 16.4 ms | 16.0 ms |
+  | Stress world, morning | 21.7 ms | 19.5 ms | |
+
+  The commit of this part gave better daytime numbers, measured by mistake at tick 9000, which is
+  3 in the morning. These are the true ones.
 
 - At ×16 a day passes in 15 seconds, and shadows sweep visibly. It is the price of a clock every
   player shares; the setting holds the hour for those who mind.
