@@ -24,7 +24,7 @@ public sealed class PerformanceToolTests
         var shipped = TestContent.Shipped;
 
         var content = StressScenario.Content(shipped);
-        var presentation = StressScenario.Presentation(new PresentationContent(TestContent.Palette, TestContent.SettlementView, TestContent.DivineView, TestContent.WeatherView));
+        var presentation = StressScenario.Presentation(new PresentationContent(TestContent.Palette, TestContent.SettlementView, TestContent.DivineView, TestContent.WeatherView, TestContent.DayNight));
 
         var stress = content.Sizes.Sizes[^1];
         Assert.Equal((StressScenario.SizeName, 50, 8), (stress.Name, stress.Settlements, stress.Gods));

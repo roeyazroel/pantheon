@@ -36,7 +36,7 @@ internal sealed class WorldLookView
         _drift += new Vector2(wind.X, wind.Z) * (view.CloudDrift * CloudTiles * delta);
         _drift = new Vector2(Mathf.PosMod(_drift.X, 1f), Mathf.PosMod(_drift.Y, 1f));
         var cover = Mathf.Lerp(view.ClearCloudCover, view.OvercastCloudCover, look.Overcast);
-        RenderingServer.GlobalShaderParameterSet("look_season", new Vector4(look.Spring, look.Autumn, look.Winter, 0f));
+        RenderingServer.GlobalShaderParameterSet("look_season", new Vector4(look.Spring, look.Autumn, look.Winter, DayClock.Night));
         RenderingServer.GlobalShaderParameterSet("look_sky", new Vector4(cover, look.Overcast, _drift.X, _drift.Y));
     }
 }

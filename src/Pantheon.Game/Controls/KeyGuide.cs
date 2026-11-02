@@ -109,6 +109,7 @@ public static class KeyGuide
         new(KeyGroup.Debug, "People leave the village you point at", ["debug_migrate"]),
         new(KeyGroup.Debug, "The next weather spell", ["debug_weather_spell"]),
         new(KeyGroup.Debug, "The next season", ["debug_season"]),
+        new(KeyGroup.Debug, "Six hours on", ["debug_hours"]),
         new(KeyGroup.Debug, "A storm where you point", ["debug_storm"]),
         new(KeyGroup.Debug, "An earthquake where you point", ["debug_quake"]),
         new(KeyGroup.Debug, "A fire where you point", ["debug_fire"]),

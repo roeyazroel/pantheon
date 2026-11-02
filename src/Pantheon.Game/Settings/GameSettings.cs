@@ -88,6 +88,9 @@ public sealed record GameSettings
     /// <summary>Whether the edges of what is drawn are smoothed (SMAA, ADR-077).</summary>
     public bool SmoothEdges { get; init; } = true;
 
+    /// <summary>Whether the day passes; when not, it is always the same fine afternoon (ADR-079).</summary>
+    public bool DayAndNight { get; init; } = true;
+
     /// <summary>Share of the window's resolution the world is drawn at (0.5..1), upscaled.</summary>
     public float RenderScale { get; init; } = 1f;
 

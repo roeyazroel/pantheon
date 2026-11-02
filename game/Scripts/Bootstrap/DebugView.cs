@@ -153,6 +153,7 @@ internal sealed class DebugView
         TerrainIsFallback = _presenter.TerrainIsFallback,
         ZoomBand = _camera.Model.Band,
         CameraDistance = _camera.Model.Distance,
+        DayHour = Pantheon.Client.Presentation.DayClock.Hour,
         CursorWorldPosition = cursor,
         RegionBoundariesVisible = _presenter.RegionBoundariesVisible,
         StatusMessage = status,

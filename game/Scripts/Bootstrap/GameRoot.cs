@@ -93,7 +93,7 @@ public partial class GameRoot : Node3D
         var worldNode = GetNode<Node3D>("World");
         _divinePresenter = new DivinePresenter(worldNode.AddLayer("Divine"), presentation.DivineView);
         _creatures = new CreaturePresenter(worldNode.AddLayer("Creatures"), presentation.DivineView);
-        _weather = new WeatherPresenter(worldNode.AddLayer("Weather"), presentation.WeatherView, content.Weather, GetNodeOrNull<DirectionalLight3D>("Sun"), GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment);
+        _weather = new WeatherPresenter(worldNode.AddLayer("Weather"), presentation.WeatherView, content.Weather, presentation.DayNight, GetNodeOrNull<DirectionalLight3D>("Sun"), GetNodeOrNull<WorldEnvironment>("WorldEnvironment")?.Environment);
         _disasters = new DisasterPresenter(worldNode.AddLayer("Disasters"), _camera, content.Disasters.Hazards, presentation.SettlementView.Streaming.EffectRadius);
         _migrants = new Pantheon.Client.Presentation.Migration.MigrationPresenter(worldNode.AddLayer("Migrants"), presentation.DivineView, Pantheon.Client.Presentation.People.PersonAssets.For(presentation.SettlementView));
         var hand = DivineHand.Create();

@@ -1,6 +1,6 @@
 // The world's look, shared by every shader of the land (ADR-078), so the whole picture turns with
 // the year and the weather together. WorldLookView sets these each frame.
-//   look_season: x spring, y autumn, z winter, each 0..1 and fading into the next;
+//   look_season: x spring, y autumn, z winter, each 0..1 and fading into the next; w how much of night it is;
 //   look_sky: x how much of the sky is cloud, y how wet the land is, zw how far the clouds have drifted.
 // Colours here are linear.
 global uniform vec4 look_season;

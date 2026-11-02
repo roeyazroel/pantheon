@@ -50,6 +50,7 @@ internal sealed class NatureDebug
         (InputActions.DebugMigrate, () => AtCursor("send people away", point => MigrationCommands.SendFrom(_session, point))),
         (InputActions.DebugMeet, () => _setStatus(CreatureCommands.BringOther(_session))),
         (InputActions.DebugSeason, () => _setStatus(SeasonCommands.NextSeason(_session))),
+        (InputActions.DebugHours, () => Pantheon.Client.Presentation.DayClock.Shift += 6f),
         (InputActions.DebugHazard, NextHazard),
         (InputActions.DebugGreatEvent, NextGreatEvent),
     ];
@@ -88,6 +89,8 @@ internal sealed class NatureDebug
         {
             _setStatus(SeasonCommands.SetSeason(_session, season));
         }
+
+        Pantheon.Client.Presentation.DayClock.Held = options.Hour;
 
         if (options.Weather is { } weather && Weather(weather, focus) is { } status)
         {

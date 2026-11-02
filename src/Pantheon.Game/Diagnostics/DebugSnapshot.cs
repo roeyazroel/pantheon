@@ -114,6 +114,9 @@ public sealed record DebugSnapshot
     /// <summary>Current camera distance in metres.</summary>
     public required float CameraDistance { get; init; }
 
+    /// <summary>The hour of the day (ADR-079), if the client keeps one.</summary>
+    public float? DayHour { get; init; }
+
     /// <summary>Ground point under the mouse cursor, if the cursor is over the terrain.</summary>
     public Vector3? CursorWorldPosition { get; init; }
 

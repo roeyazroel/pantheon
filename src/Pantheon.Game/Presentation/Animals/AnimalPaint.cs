@@ -53,12 +53,17 @@ public static class AnimalPaint
     private static Vector3 Fur(Vector3 p, AnimalPalette palette, FurPattern pattern, int salt) => pattern switch
     {
         FurPattern.None => palette.Fur,
-        FurPattern.Stripes => MathF.Abs(MathF.Sin(((p.Y * 3.3f) + (0.45f * MathF.Sin((p.X * 2.3f) + (p.Z * 1.9f))) + salt) * MathF.PI)) > 0.8f
-            ? palette.Marking
-            : palette.Fur,
-        FurPattern.Patches => Noise((p * 0.95f) + new Vector3(salt * 3.7f, 1.3f, salt * 1.1f)) > 0.58f ? palette.Marking : palette.Fur,
+        FurPattern.Stripes => Vector3.Lerp(palette.Fur, palette.Marking, Soft(0.74f, 0.84f, MathF.Abs(MathF.Sin(((p.Y * 3.3f) + (0.45f * MathF.Sin((p.X * 2.3f) + (p.Z * 1.9f))) + salt) * MathF.PI)))),
+        FurPattern.Patches => Vector3.Lerp(palette.Fur, palette.Marking, Soft(0.55f, 0.61f, Noise((p * 0.95f) + new Vector3(salt * 3.7f, 1.3f, salt * 1.1f)))),
         FurPattern.Plates => Vector3.Lerp(palette.Fur, palette.Marking, Noise(p * 4f) * 0.5f),
     };
+
+    /// <summary>A soft edge between two colours of a coat, which a hard one would show the mesh's cells.</summary>
+    private static float Soft(float from, float to, float value)
+    {
+        var t = Math.Clamp((value - from) / (to - from), 0f, 1f);
+        return t * t * (3f - (2f * t));
+    }
 
     /// <summary>A shell of plates with dark seams between them and a lighter middle to each.</summary>
     private static Vector3 Shell(Vector3 p, AnimalPalette palette)

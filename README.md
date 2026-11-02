@@ -723,6 +723,11 @@ dries to straw, the oaks and birches blaze and stand bare, the fields ripen and 
 lies on the land. Plan for winter: villages that go into it with full stores get through, and those
 that don't go hungry.
 
+**Day and night.** The sun rises and sets over your island every four minutes. At dusk the windows
+light, house by house, most people go indoors, and a lamp burns by each shrine under the moon and stars.
+The night is beautiful, and it changes nothing about the rules: your people work and pray by the same
+laws at any hour. The settings can hold a fine afternoon if you prefer it.
+
 | | Spring | Summer | Autumn | Winter |
 | --- | --- | --- | --- | --- |
 | Weather | more rain | warmer and drier | the most rain | colder: snow on the hills |
@@ -941,7 +946,7 @@ router and gives the others their public address. A shared game uses about 13 KB
 
 The settings page (on the title screen, or Esc in play) has tabs for:
 
-- **Graphics:** fullscreen, vertical sync, shadows, lighting effects, smooth edges, render scale, particles,
+- **Graphics:** fullscreen, vertical sync, shadows, lighting effects, smooth edges, day and night, render scale, particles,
   how many villagers and how much vegetation are drawn, terrain quality, **Simple terrain** for
   computers the detailed land is slow on, and the simulation's time budget per frame.
 - **Sound:** the loudness of everything, the music, the effects, and the wind and rain. Every

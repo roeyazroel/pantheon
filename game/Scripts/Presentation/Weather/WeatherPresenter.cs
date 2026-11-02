@@ -26,13 +26,11 @@ public sealed class WeatherPresenter
     private readonly Dictionary<int, CloudView> _views = [];
     private readonly HashSet<int> _seen = [];
     private readonly DirectionalLight3D? _sun;
-    private readonly float _sunEnergy;
     private readonly Godot.Environment? _environment;
-    private readonly float _ambientEnergy;
     private readonly float _skyEnergy;
-    private readonly Color _sunColor;
     private readonly float _haze;
     private readonly WorldLookView _look = new();
+    private readonly DaylightView _daylight;
     private TerrainField? _terrain;
     private readonly Divine.MapOverlay _snow;
     private float _snowWorldSize;
@@ -45,9 +43,10 @@ public sealed class WeatherPresenter
     /// <param name="parent">Node that holds the weather visuals.</param>
     /// <param name="view">Weather view settings.</param>
     /// <param name="rules">Weather rules, for when a cell is a thunderstorm.</param>
-    /// <param name="sun">The sun, dimmed under storms; <c>null</c> for none.</param>
+    /// <param name="day">How the day passes (ADR-079).</param>
+    /// <param name="sun">The light of the sun and moon, dimmed under storms; <c>null</c> for none.</param>
     /// <param name="environment">The scene's environment, whose sky and ambient light an eclipse dims (ADR-034); <c>null</c> for none.</param>
-    public WeatherPresenter(Node3D parent, WeatherViewSettings view, WeatherRules rules, DirectionalLight3D? sun, Godot.Environment? environment = null)
+    public WeatherPresenter(Node3D parent, WeatherViewSettings view, WeatherRules rules, DayNightSettings day, DirectionalLight3D? sun, Godot.Environment? environment = null)
     {
         _clouds = parent.AddLayer("Clouds");
         _strikes = parent.AddLayer("Lightning");
@@ -55,12 +54,10 @@ public sealed class WeatherPresenter
         _view = view;
         _rules = rules;
         _sun = sun;
-        _sunEnergy = sun?.LightEnergy ?? 1f;
         _environment = environment;
-        _ambientEnergy = environment?.AmbientLightEnergy ?? 1f;
         _skyEnergy = environment?.BackgroundEnergyMultiplier ?? 1f;
-        _sunColor = sun?.LightColor ?? Colors.White;
         _haze = environment?.FogDensity ?? 0f;
+        _daylight = new DaylightView(day, sun, environment);
     }
 
     /// <summary>Forgets the old world's clouds.</summary>
@@ -83,11 +80,12 @@ public sealed class WeatherPresenter
     public void Sync(WorldState world, double seconds, float delta, GroundPosition focus)
     {
         SyncSnow(world, delta);
+        var daylight = _daylight.Update(world.Tick, delta);
         _look.Update(WorldLook.Of(_rules, world, focus), _view, Breeze.At(world.Weather, focus), delta);
         if (_sun is not null)
         {
-            _sun.LightColor = _sunColor.Lerp(_view.StormLight.ToGodot(), _look.Overcast);
-            var target = _sunEnergy * (1f - (_view.StormGloom * CloudLayout.Gloom(_rules, world.Weather, focus)))
+            _sun.LightColor = daylight.Light.ToGodot().Lerp(_view.StormLight.ToGodot(), _look.Overcast);
+            var target = daylight.Energy * (1f - (_view.StormGloom * CloudLayout.Gloom(_rules, world.Weather, focus)))
                 * (1f - (_view.EclipseDarkness * Pantheon.Game.GreatEvents.GreatEventText.Darkness(world)));
             _sun.LightEnergy = Mathf.Lerp(_sun.LightEnergy, target, 1f - Mathf.Exp(-GloomRate * delta));
         }
@@ -96,7 +94,8 @@ public sealed class WeatherPresenter
         {
             // An eclipse darkens the sky and its light on the land too (ADR-034).
             var eclipse = 1f - (_view.EclipseDarkness * Pantheon.Game.GreatEvents.GreatEventText.Darkness(world));
-            _environment.AmbientLightEnergy = _ambientEnergy * eclipse;
+            _environment.AmbientLightEnergy = daylight.Ambient * eclipse;
+            _environment.FogLightColor = daylight.Haze.ToGodot();
             _environment.BackgroundEnergyMultiplier = _skyEnergy * eclipse;
             _environment.FogDensity = _haze * (1f + ((_view.StormHaze - 1f) * _look.Overcast));
         }

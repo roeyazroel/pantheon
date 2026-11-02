@@ -109,14 +109,17 @@ public static class PersonMesh
         var (round, limb) = (detailed ? 8 : 5, detailed ? 6 : 4);
         foreach (var (side, leg, arm) in new[] { (1f, (int)PersonPart.LeftLeg, (int)PersonPart.LeftArm), (-1f, (int)PersonPart.RightLeg, (int)PersonPart.RightArm) })
         {
-            b.Tube(new Vector3(side * 0.095f, 0.07f, 0f), new Vector3(side * 0.1f, HipHeight + 0.02f, 0f), 0.06f, 0.088f, 1f, limb, leg, (int)PersonSlot.Trousers);
+            b.Tube(new Vector3(side * 0.095f, 0.07f, 0f), new Vector3(side * 0.1f, HipHeight + 0.02f, 0f), 0.062f, 0.098f, 1f, limb, leg, (int)PersonSlot.Trousers);
             b.Box(new Vector3(side * 0.095f, 0.045f, 0.035f), new Vector3(0.1f, 0.09f, 0.23f), leg, (int)PersonSlot.Leather);
-            b.Tube(new Vector3(side * 0.24f, ShoulderHeight + 0.01f, 0f), new Vector3(side * 0.255f, 0.91f, 0.01f), 0.062f, 0.05f, 1f, limb, arm, (int)PersonSlot.Clothes);
-            b.Ball(new Vector3(side * 0.255f, 0.86f, 0.015f), new Vector3(0.045f, 0.055f, 0.045f), arm, (int)PersonSlot.Skin);
+            b.Tube(new Vector3(side * 0.245f, ShoulderHeight + 0.01f, 0f), new Vector3(side * 0.262f, 0.91f, 0.01f), 0.08f, 0.054f, 1f, limb, arm, (int)PersonSlot.Clothes);
+            b.Ball(new Vector3(side * 0.262f, 0.855f, 0.015f), new Vector3(0.05f, 0.066f, 0.05f), arm, (int)PersonSlot.Skin);
         }
 
         b.Tube(new Vector3(0f, 0.72f, 0f), new Vector3(0f, ShoulderHeight + 0.02f, 0f), 0.21f, 0.2f, 0.62f, round, (int)PersonPart.Torso, (int)PersonSlot.Clothes);
-        b.Ball(new Vector3(0f, ShoulderHeight + 0.01f, 0f), new Vector3(0.205f, 0.075f, 0.13f), (int)PersonPart.Torso, (int)PersonSlot.Clothes);
+        b.Ball(new Vector3(0f, ShoulderHeight + 0.01f, 0f), new Vector3(0.235f, 0.085f, 0.14f), (int)PersonPart.Torso, (int)PersonSlot.Clothes);
+
+        // The tunic flares below the belt.
+        b.Tube(new Vector3(0f, 0.68f, 0f), new Vector3(0f, HipHeight + 0.02f, 0f), 0.262f, 0.212f, 0.72f, round, (int)PersonPart.Torso, (int)PersonSlot.Clothes);
         b.Tube(new Vector3(0f, HipHeight, 0f), new Vector3(0f, HipHeight + 0.05f, 0f), 0.215f, 0.215f, 0.65f, round, (int)PersonPart.Torso, (int)PersonSlot.Leather);
         b.Tube(new Vector3(0f, ShoulderHeight, 0f), new Vector3(0f, 1.53f, 0f), 0.05f, 0.047f, 1f, limb, (int)PersonPart.Head, (int)PersonSlot.Skin);
         b.Ball(new Vector3(0f, 1.625f, 0.012f), new Vector3(0.1f, 0.118f, 0.11f), (int)PersonPart.Head, (int)PersonSlot.Skin);

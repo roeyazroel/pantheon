@@ -56,7 +56,8 @@ internal sealed partial class CloudView : Node3D
         var target = new Vector3(cell.X, 0f, cell.Z);
         Position = Position.Lerp(target, 1f - MathF.Exp(-FollowRate * delta));
         var (color, opacity) = CloudLayout.Look(cell, view);
-        _material.AlbedoColor = color.ToGodot(opacity);
+        var lit = color.ToGodot(opacity);
+        _material.AlbedoColor = new Color(lit.R * DayClock.Brightness, lit.G * DayClock.Brightness, lit.B * DayClock.Brightness, lit.A);
         var drops = CloudLayout.RainDrops(cell, view);
         var snowing = WeatherModel.Classify(rules, cell) == WeatherKind.Snow;
         _streak.AlbedoColor = snowing ? SnowColor : view.RainColor.ToGodot(0.55f);

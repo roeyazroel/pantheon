@@ -144,6 +144,9 @@ public static class InputActions
     /// <summary>Debug: the next season begins now (Y, ADR-028).</summary>
     public static readonly StringName DebugSeason = "debug_season";
 
+    /// <summary>Six hours on (debug, ADR-079).</summary>
+    public static readonly StringName DebugHours = "debug_hours";
+
     /// <summary>Debug: the next hazard of the cycle starts at the cursor (I, ADR-029).</summary>
     public static readonly StringName DebugHazard = "debug_hazard";
 

@@ -50,7 +50,7 @@ public sealed class WorldPresenter
         _terrain = TerrainPresenterFactory.Create(terrainPreference, root.AddLayer("Terrain"), camera, content.SettlementView.Streaming);
         _water = new WaterPresenter(root.AddLayer("Water"));
         _freshWater = new FreshWaterPresenter(root.AddLayer("FreshWater"));
-        _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView);
+        _settlements = new SettlementPresenter(root.AddLayer("Settlements"), rules, content.SettlementView, content.DivineView, content.DayNight);
         _forests = new ForestPresenter(root.AddLayer("Forests"), rules, content.SettlementView.Layout, content.SettlementView.Streaming, content.SettlementView.Trees);
         _groundCover = new GroundCoverPresenter(root.AddLayer("GroundCover"), content.SettlementView, rules, content.Palette.RockSlopeStart);
         _roads = new RoadPresenter(root.AddLayer("Roads"), rules.Roads, Buildings.BuildingAssets.For(content.SettlementView.Architecture));

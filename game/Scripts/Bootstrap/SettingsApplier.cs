@@ -58,6 +58,7 @@ internal static class SettingsApplier
         }
 
         Presentation.GraphicsScale.Particles = settings.Particles;
+        Presentation.DayClock.On = settings.DayAndNight;
         if (session is not null)
         {
             session.Scheduler.BudgetSeconds = settings.SimulationBudget / 1000.0;

@@ -43,6 +43,11 @@ public static class WeatherReadout
             climate.HealthLossPerSecond,
             climate.MigrationFactor));
         lines.Add(DescribeLook(WorldLook.Of(rules, snapshot.World, new GroundPosition(0f, 0f))));
+        if (snapshot.DayHour is { } hour)
+        {
+            lines.Add(DescribeDay(hour));
+        }
+
         lines.Add(Format("Weather: {0} {1} cells.", WeatherText.Describe(weather, snapshot.World.Tick), weather.Cells.Count));
         foreach (var cell in weather.Cells.OrderByDescending(c => Math.Max(c.Wind, c.Precipitation)).ThenBy(c => c.Id).Take(ListedCells))
         {
@@ -55,6 +60,12 @@ public static class WeatherReadout
     /// <returns>One line.</returns>
     public static string DescribeLook(WorldLookState look) =>
         Format("Look: spring {0:0.00}, autumn {1:0.00}, winter {2:0.00}.", look.Spring, look.Autumn, look.Winter);
+
+    /// <summary>The hour of the day (ADR-079).</summary>
+    /// <param name="hour">The hour, 0 up to 24.</param>
+    /// <returns>One line.</returns>
+    public static string DescribeDay(float hour) =>
+        Format("Day: {0:00}:{1:00}.", (int)hour, (int)((hour - (int)hour) * 60f));
 
     /// <summary>One cell: what it is, where, and its state.</summary>
     /// <param name="rules">Weather rules.</param>

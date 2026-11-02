@@ -1,0 +1,43 @@
+{
+  // Presentation only: how the day passes (ADR-079). The hour follows from the world's clock, so
+  // shared worlds agree and nothing is saved. The simulation never reads this file.
+  //
+  // A day lasts DaySeconds of the world's time. A new world begins at StartHour. The sun rises at
+  // Sunrise and sets at Sunset, reaching HighestSun degrees above the horizon; the moon reaches
+  // HighestMoon. One light plays both, drawn no lower than LowestLight degrees, and changes at sunrise
+  // and sunset, so the keys bring its Energy to 0 at both. With the day and night turned off in the
+  // settings, it is always HeldHour.
+  "DaySeconds": 240.0,
+  "StartHour": 9.0,
+  "Sunrise": 6.0,
+  "Sunset": 20.0,
+  "HeldHour": 16.2,
+  "HighestSun": 62.0,
+  "HighestMoon": 48.0,
+  "LowestLight": 7.0,
+
+  // At night up to AsleepShare of a village's people are indoors, lit windows show Lamplight, and a
+  // light of ShrineLight strength burns by each shrine, reaching ShrineLightReach metres.
+  "AsleepShare": 0.8,
+  "ShrineLight": 3.0,
+  "ShrineLightReach": 46.0,
+  "Lamplight": "#ffb25e",
+
+  // The light at the hours named; the hours between blend. Light and Energy are the sun or the moon,
+  // Ambient the sky's own light, SkyTop and SkyHorizon the sky, Haze the distance, and Night how much
+  // of night it is.
+  "Keys": [
+    { "Hour": 0.0, "Light": "#9db8e8", "Energy": 0.62, "Ambient": 0.62, "SkyTop": "#050b1e", "SkyHorizon": "#16233f", "Haze": "#223352", "Night": 1.0 },
+    { "Hour": 4.5, "Light": "#a8bde6", "Energy": 0.5, "Ambient": 0.62, "SkyTop": "#07102a", "SkyHorizon": "#1f2d4c", "Haze": "#2a3a58", "Night": 1.0 },
+    { "Hour": 5.5, "Light": "#d8b8c8", "Energy": 0.14, "Ambient": 1.25, "SkyTop": "#1c2c58", "SkyHorizon": "#c08a98", "Haze": "#8c8094", "Night": 0.7 },
+    { "Hour": 6.0, "Light": "#ffc092", "Energy": 0.0, "Ambient": 1.55, "SkyTop": "#2c4678", "SkyHorizon": "#f2b284", "Haze": "#d2b2a4", "Night": 0.35 },
+    { "Hour": 7.0, "Light": "#ffd2a4", "Energy": 1.2, "Ambient": 1.3, "SkyTop": "#3a629e", "SkyHorizon": "#f6d6ae", "Haze": "#e2d0bc", "Night": 0.0 },
+    { "Hour": 9.5, "Light": "#fff0d8", "Energy": 1.5, "Ambient": 1.12, "SkyTop": "#2c5aa8", "SkyHorizon": "#bcd0e2", "Haze": "#b9cbdc", "Night": 0.0 },
+    { "Hour": 13.0, "Light": "#fff2de", "Energy": 1.55, "Ambient": 1.12, "SkyTop": "#2a5ab0", "SkyHorizon": "#b6cde4", "Haze": "#b5c9dc", "Night": 0.0 },
+    { "Hour": 16.5, "Light": "#ffe8c2", "Energy": 1.5, "Ambient": 1.15, "SkyTop": "#2c5aa4", "SkyHorizon": "#c6d2dc", "Haze": "#bccbd8", "Night": 0.0 },
+    { "Hour": 18.5, "Light": "#ffcb94", "Energy": 1.3, "Ambient": 1.3, "SkyTop": "#39578f", "SkyHorizon": "#f5c08a", "Haze": "#e0c0a4", "Night": 0.0 },
+    { "Hour": 19.5, "Light": "#ffa878", "Energy": 0.6, "Ambient": 1.6, "SkyTop": "#2c3a6e", "SkyHorizon": "#ee9468", "Haze": "#c49a8c", "Night": 0.25 },
+    { "Hour": 20.0, "Light": "#ffa070", "Energy": 0.0, "Ambient": 1.45, "SkyTop": "#1f2a58", "SkyHorizon": "#b8707c", "Haze": "#8a7284", "Night": 0.55 },
+    { "Hour": 21.0, "Light": "#9db8e8", "Energy": 0.45, "Ambient": 0.64, "SkyTop": "#0a1230", "SkyHorizon": "#232f50", "Haze": "#2a3a58", "Night": 1.0 }
+  ]
+}

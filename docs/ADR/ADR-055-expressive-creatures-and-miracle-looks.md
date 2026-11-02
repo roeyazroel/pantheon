@@ -1,6 +1,6 @@
 # ADR-055: Expressive Creatures and miracle looks
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-079](ADR-079-day-and-night.md)
 - Date: 2026-10-20
 - Builds on: [ADR-010](ADR-010-creature-simulation-and-learning.md) (the Creature and its god's
   rewards and punishments), [ADR-021](ADR-021-domains-holy-sites-schisms-species-settings-and-audio.md)

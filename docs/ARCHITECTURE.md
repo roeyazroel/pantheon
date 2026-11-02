@@ -47,7 +47,7 @@ game/                         Godot 4.7.2 project (res://)
                               creatures.json, god_ai.json, diplomacy.json, weather.json, disasters.json,
                               migration.json, world_sizes.json, domains.json, ecology.json, history.json,
                               holy_sites.json, society.json, water.json (simulation);
-                              settlement_view.json, biome_palette.json, divine_view.json, weather_view.json
+                              settlement_view.json, biome_palette.json, divine_view.json, weather_view.json, day_night.json
                               (presentation); minds.json (the gods' minds: Claude models and the
                               scribes' lore, ADR-065)
   Materials/ Shaders/         Presentation resources (.tres, .gdshader)
@@ -816,11 +816,16 @@ and a Lumen an Ape. A missing,
   fingers pan (or zoom), Option with two fingers orbits and a pinch zooms, each gesture taken once
   though the engine delivers it twice; the window's edge pans when the settings say so. `Follow`
   keeps the focus on a moving thing, such as the Creature, until the player pans away (ADR-058).
-- The light (`Scenes/Main.tscn`, ADR-051, ADR-077, ADR-078): a procedural sky, a low side sun with
-  soft shadows, AgX tonemapping, a soft glow (switched by the settings' lighting effects), haze that
+- The light (`Scenes/Main.tscn`, ADR-051, ADR-077, ADR-078, ADR-079): `Shaders/sky.gdshader`, one
+  light for the sun and the moon with soft shadows, AgX tonemapping, a soft glow (switched by the settings' lighting effects), haze that
   thickens over low land and a little contrast. SMAA smooths edges (the settings' Smooth edges). No
   ambient occlusion: `GroundShade` darkens the land's hollows, and its cost was the largest of any
   effect.
+- The day (ADR-079): `DayNight` (pure, from `day_night.json`) gives the hour from the world's tick and
+  the light at that hour, so shared worlds agree and nothing is saved. `Weather/DaylightView` turns the
+  light and sets the sky's colours; `WeatherPresenter` sets its strength, dimmed under storms and in an
+  eclipse. `DayClock` shares where the day stands with what draws by it: windows through `look_season.w`,
+  each shrine's lamp, and the people who go indoors. Presentation only: the simulation never reads it.
 - The world's look (ADR-078): `WorldLook.Of` (pure) says how far the year has turned the land and how
   dark the sky is; `Weather/WorldLookView` eases it and hands it, with the clouds' drift, to global
   shader uniforms that `Shaders/world_look.gdshaderinc` reads for the ground, trees, grass, fields,

@@ -8,6 +8,8 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
+#include "res://Shaders/world_look.gdshaderinc"
+
 uniform vec3 skin_tones[6];
 uniform vec3 hair_colors[8];
 uniform vec3 trousers;
@@ -18,6 +20,8 @@ uniform float leg_swing = 0.42;
 uniform float arm_swing = 0.36;
 
 varying vec3 albedo;
+varying float body_height;
+varying vec2 ground;
 
 const float HIP = 0.88;
 const float SHOULDER = 1.41;
@@ -141,6 +145,8 @@ void vertex() {
 	v.y -= drop;
 	VERTEX = hidden ? vec3(0.0) : v;
 	NORMAL = n;
+	body_height = v.y;
+	ground = (MODEL_MATRIX * vec4(v, 1.0)).xz;
 
 	vec3 clothes = COLOR.rgb;
 	switch (slot) {
@@ -156,7 +162,10 @@ void vertex() {
 }
 
 void fragment() {
-	ALBEDO = albedo;
+	// Darker towards the feet, as cloth and shade fall; a soft edge keeps a figure apart from the ground.
+	ALBEDO = look_shaded(albedo * mix(0.74, 1.06, smoothstep(0.05, 1.5, body_height)), ground);
 	ROUGHNESS = 0.88;
 	SPECULAR = 0.25;
+	RIM = 0.3;
+	RIM_TINT = 0.6;
 }

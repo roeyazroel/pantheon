@@ -136,7 +136,7 @@ internal sealed partial class MiracleEffect : Node3D
         {
             var size = _radius * 2f * MathF.Sqrt(t);
             _ring.Size = new Vector3(MathF.Max(size, 0.5f), 80f, MathF.Max(size, 0.5f));
-            _ring.Modulate = new Color(_ring.Modulate, 1f - t);
+            _ring.Modulate = new Color(_ring.Modulate, 0.5f * (1f - t));
         }
 
         if (_bolt is not null)
@@ -253,7 +253,7 @@ internal sealed partial class MiracleEffect : Node3D
     /// <summary>A ring of light on the ground that spreads to the radius.</summary>
     private void AddRing(Color color)
     {
-        _ring = new Decal { Name = "Wave", TextureAlbedo = RingTexture.Texture, Modulate = color, Size = new Vector3(1f, 80f, 1f), EmissionEnergy = 2f, CullMask = DeclutteredLabel.GroundOnly };
+        _ring = new Decal { Name = "Wave", TextureAlbedo = RingTexture.Texture, Modulate = new Color(color, 0.5f), Size = new Vector3(1f, 80f, 1f), EmissionEnergy = 1f, CullMask = DeclutteredLabel.GroundOnly };
         AddChild(_ring);
     }
 

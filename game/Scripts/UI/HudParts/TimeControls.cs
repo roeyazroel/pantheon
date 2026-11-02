@@ -46,6 +46,7 @@ internal sealed partial class TimeControls : PanelContainer
     {
         ArgumentNullException.ThrowIfNull(model);
         var calendar = model.Calendar ?? string.Empty;
+        calendar = calendar.Length > 0 && Presentation.DayClock.Word.Length > 0 ? calendar + " · " + Presentation.DayClock.Word : calendar;
         if (_calendar.Text != calendar)
         {
             _calendar.Text = calendar;

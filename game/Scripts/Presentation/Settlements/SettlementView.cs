@@ -39,6 +39,9 @@ internal sealed class SettlementView
     private readonly CitizenView _citizens;
     private readonly DeclutteredLabel _label;
     private readonly DivineViewSettings _divine;
+    private readonly OmniLight3D _lamp;
+    private readonly float _lampLight;
+    private readonly float _asleep;
     private (int Housing, float ConstructionProgress, int Ruins)? _siteInputs;
 
     /// <summary>Creates the settlement's nodes under <paramref name="parent"/> and shows its current state.</summary>
@@ -51,7 +54,8 @@ internal sealed class SettlementView
     /// <param name="settings">Settlement presentation settings.</param>
     /// <param name="divine">God colours, for the label.</param>
     /// <param name="world">The world, for god names.</param>
-    public SettlementView(Node3D parent, SettlementAssets assets, WorldSeed seed, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings, DivineViewSettings divine, WorldState world)
+    /// <param name="day">How the day passes, for the shrine's lamp and who is abroad (ADR-079).</param>
+    public SettlementView(Node3D parent, SettlementAssets assets, WorldSeed seed, SettlementState settlement, TerrainField terrain, SettlementRules rules, SettlementViewSettings settings, DivineViewSettings divine, WorldState world, DayNightSettings day)
     {
         _terrain = terrain;
         _divine = divine;
@@ -63,12 +67,17 @@ internal sealed class SettlementView
         _buildings = BuildingAssets.For(settings.Architecture);
         AddPart(root, "Shrine", _buildings.Shrine, center);
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + (Vector3.Up * (CivicMesh.ShrineTop + 0.35f)));
+        _lamp = new OmniLight3D { Name = "ShrineLamp", Position = center + (Vector3.Up * (CivicMesh.ShrineTop + 2f)), LightColor = day.Lamplight.ToGodot(), OmniRange = day.ShrineLightReach, ShadowEnabled = false, LightEnergy = 0f, Visible = false };
+        root.AddChild(_lamp);
+        _lampLight = day.ShrineLight;
+        _buildings.Material.SetShaderParameter("lamplight", day.Lamplight.ToGodot());
         _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id, terrain);
         _civicView = new CivicView(root, _buildings);
         _style = settings.Style;
         _styleView = new StyleView(root, _style);
         _crowd = new SettlementCrowd(seed, settlement.Id, settings);
         _citizens = new CitizenView(root, People.PersonAssets.For(settings), settings.Citizens, seed);
+        _asleep = day.AsleepShare;
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
         root.AddChild(_label);
 
@@ -127,7 +136,9 @@ internal sealed class SettlementView
         }
 
         _crowd.Advance(simulationSeconds, _terrain, roads);
-        _citizens.Show(_crowd, settlement.Id, followed, distance);
+        _citizens.Show(_crowd, settlement.Id, followed, distance, DayClock.Night * _asleep);
+        _lamp.Visible = DayClock.Night > 0.02f;
+        _lamp.LightEnergy = _lampLight * DayClock.Night;
         return _crowd.GetStatus(settlement.Population, distance);
     }
 

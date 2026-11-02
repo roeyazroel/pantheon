@@ -94,6 +94,7 @@ silently:
 | [ADR-076](ADR-076-a-website-built-from-the-game.md) | A website on GitHub Pages, built from the game's own code and data | Accepted |
 | [ADR-077](ADR-077-land-water-and-villages.md) | The land's breadth, living water, and villages of lanes | Accepted (amends ADR-008, ADR-022, ADR-051, ADR-052 and ADR-054) |
 | [ADR-078](ADR-078-a-world-that-turns-with-the-year.md) | A world that turns with the year and the weather | Accepted (amends ADR-051, ADR-052 and ADR-077) |
+| [ADR-079](ADR-079-day-and-night.md) | Day and night, the sky, and figures with some life | Accepted (amends ADR-055 and ADR-077) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

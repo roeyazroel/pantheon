@@ -239,6 +239,7 @@ turns them on.
 | Start the next weather spell: normal, dry, wet, heat wave, cold wave | F8 |
 | Call a storm at the cursor, short of a hurricane | F10 |
 | Begin the next season | Y |
+| Six hours on | \\ |
 | Start the next hazard at the cursor: tornado, landslide, meteor, blight, locusts, tsunami, eruption | I |
 | Start the next great event: the plague at the village nearest the cursor, an eclipse, your faith's reformation, the beast's waking, the anomaly at the cursor | ; |
 | Start an earthquake at the cursor | F11 (fn+F11 on Mac laptops) |
@@ -276,8 +277,8 @@ counts.
   disasters, groups on the road, notables and followed villagers), one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now, its persona (who wrote it, and its temper in numbers, ADR-065) and its top candidate actions with their scores and reasons, its plans (the goals it
   holds with their weights and ages, when it plans next, the gods it knows) and the goals it is
-  weighing, its diplomatic moves with the factors behind them, the climate (the season, what it and a heat or cold wave change, and how far the year has turned the
-  land's look), the weather (the spell, the wind and the strongest cells),
+  weighing, its diplomatic moves with the factors behind them, the climate (the season, what it and a heat or cold wave change, how far the year has turned the
+  land's look, and the hour), the weather (the spell, the wind and the strongest cells),
   disasters (earthquakes and the fiercest fires), hazards (the volcano, tornadoes, swarms, blighted
   and buried regions, and marks on the land), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature
@@ -340,7 +341,7 @@ counts.
   grows by half, at least 10 people). Use them to drive famines and recoveries.
 - **F8** starts the next weather spell (normal, dry, wet, heat wave, cold wave) for its longest
   length, and **F10** calls a storm at the cursor, short of a hurricane. Use them to drive
-  droughts and storm damage. **Y** begins the next season.
+  droughts and storm damage. **Y** begins the next season, and **\\** moves the day six hours on.
 - **I** starts the next hazard of the cycle at the cursor: a tornado, a landslide, a meteor,
   blight in the fields, a locust swarm, a wave on the nearest coast, then the volcano's waking.
 - **F11** starts an earthquake (magnitude 6.5) and **F12** a fire at the cursor.
@@ -444,6 +445,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--victory=all\|sandbox\|<list>` | How a new world may be won: every way, no way, or a list of `ascendancy`, `conquest` and `cultural` separated by commas, for example `--victory=conquest,cultural`. Default: ascendancy. |
 | `--seasons=on\|off` | Whether a new world turns through four seasons (default on; see [Seasons](../README.md#a-living-world)). |
 | `--season=spring\|summer\|autumn\|winter` | Begin this season at the start, giving an even-climate world seasons (debug). |
+| `--hour=<0..24>` | Hold this hour for the whole run (for captures, ADR-079). |
 | `--rank=<rank>` | Your god starts at this rank, such as LesserGod or God (debug). |
 | `--domains=<domain>[,<domain>...]` | Take up these domains at the start, as your rank allows. |
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
@@ -531,7 +533,7 @@ and out-of-range values are errors).
 | The gods' minds and the angel | `minds.json`, `angel.json` |
 | Creatures, their bonds and combat | `creatures.json` (`Bonds`, `Combat`) |
 | Domains and holy sites | `domains.json`, `holy_sites.json` |
-| Weather and seasons | `weather.json` (`Seasons`, `Extremes`); how clouds look in `weather_view.json` |
+| Weather and seasons | `weather.json` (`Seasons`, `Extremes`); how clouds look in `weather_view.json`; the hours, colours and sun's path of the day in `day_night.json` |
 | Disasters, hazards and preparedness | `disasters.json` (`Hazards`, `Preparedness`) |
 | Rivers, lakes, floods and wells | `water.json` |
 | The land's life | `ecology.json` |

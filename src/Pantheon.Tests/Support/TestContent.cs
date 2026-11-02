@@ -101,6 +101,9 @@ internal static class TestContent
     /// <summary>The shipped weather view settings.</summary>
     public static WeatherViewSettings WeatherView => ShippedPresentationContent.Value.WeatherView;
 
+    /// <summary>The shipped day and night.</summary>
+    public static DayNightSettings DayNight => ShippedPresentationContent.Value.DayNight;
+
     /// <summary>The shipped divine view settings.</summary>
     public static DivineViewSettings DivineView => ShippedPresentationContent.Value.DivineView;
 
@@ -114,5 +117,5 @@ internal static class TestContent
 
     /// <summary>Parses and validates the shipped presentation content.</summary>
     private static PresentationContent LoadPresentation() =>
-        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName), ReadText(WeatherViewSettings.FileName));
+        PresentationContent.Parse(ReadText(BiomePalette.FileName), ReadText(SettlementViewSettings.FileName), ReadText(DivineViewSettings.FileName), ReadText(WeatherViewSettings.FileName), ReadText(DayNightSettings.FileName));
 }

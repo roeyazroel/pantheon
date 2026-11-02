@@ -16,6 +16,7 @@ public sealed class SettlementPresenter
     private readonly SettlementRules _rules;
     private readonly SettlementViewSettings _settings;
     private readonly DivineViewSettings _divine;
+    private readonly DayNightSettings _day;
     private readonly SettlementAssets _assets = new();
     private readonly Dictionary<int, SettlementView> _views = [];
     private TerrainField? _terrain;
@@ -26,12 +27,14 @@ public sealed class SettlementPresenter
     /// <param name="rules">Settlement rules, for the house count, construction progress and labour split.</param>
     /// <param name="settings">Settlement presentation settings.</param>
     /// <param name="divine">God colours, for the labels.</param>
-    public SettlementPresenter(Node3D parent, SettlementRules rules, SettlementViewSettings settings, DivineViewSettings divine)
+    /// <param name="day">How the day passes (ADR-079).</param>
+    public SettlementPresenter(Node3D parent, SettlementRules rules, SettlementViewSettings settings, DivineViewSettings divine, DayNightSettings day)
     {
         _parent = parent;
         _rules = rules;
         _settings = settings;
         _divine = divine;
+        _day = day;
     }
 
     /// <summary>Tier and representatives of every settlement after the latest <see cref="UpdateCitizens"/>.</summary>
@@ -71,7 +74,7 @@ public sealed class SettlementPresenter
             }
             else
             {
-                _views[settlement.Id] = new SettlementView(_parent, _assets, _seed, settlement, _terrain, _rules, _settings, _divine, world);
+                _views[settlement.Id] = new SettlementView(_parent, _assets, _seed, settlement, _terrain, _rules, _settings, _divine, world, _day);
             }
         }
     }
