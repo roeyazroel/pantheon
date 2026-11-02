@@ -718,8 +718,10 @@ Decrees bind by reputation: you can defy one, but every god will trust you less.
 
 ### A living world
 
-**Seasons.** A year lasts ten minutes, unless you choose an even climate. Plan for winter:
-villages that go into it with full stores get through, and those that don't go hungry.
+**Seasons.** A year lasts ten minutes, unless you choose an even climate. You can see it: the grass
+dries to straw, the oaks and birches blaze and stand bare, the fields ripen and lie fallow, and frost
+lies on the land. Plan for winter: villages that go into it with full stores get through, and those
+that don't go hungry.
 
 | | Spring | Summer | Autumn | Winter |
 | --- | --- | --- | --- | --- |
@@ -939,7 +941,7 @@ router and gives the others their public address. A shared game uses about 13 KB
 
 The settings page (on the title screen, or Esc in play) has tabs for:
 
-- **Graphics:** fullscreen, vertical sync, shadows, lighting effects, render scale, particles,
+- **Graphics:** fullscreen, vertical sync, shadows, lighting effects, smooth edges, render scale, particles,
   how many villagers and how much vegetation are drawn, terrain quality, **Simple terrain** for
   computers the detailed land is slow on, and the simulation's time budget per frame.
 - **Sound:** the loudness of everything, the music, the effects, and the wind and rain. Every

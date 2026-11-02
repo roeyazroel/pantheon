@@ -30,6 +30,9 @@ public sealed class WeatherPresenter
     private readonly Godot.Environment? _environment;
     private readonly float _ambientEnergy;
     private readonly float _skyEnergy;
+    private readonly Color _sunColor;
+    private readonly float _haze;
+    private readonly WorldLookView _look = new();
     private TerrainField? _terrain;
     private readonly Divine.MapOverlay _snow;
     private float _snowWorldSize;
@@ -56,6 +59,8 @@ public sealed class WeatherPresenter
         _environment = environment;
         _ambientEnergy = environment?.AmbientLightEnergy ?? 1f;
         _skyEnergy = environment?.BackgroundEnergyMultiplier ?? 1f;
+        _sunColor = sun?.LightColor ?? Colors.White;
+        _haze = environment?.FogDensity ?? 0f;
     }
 
     /// <summary>Forgets the old world's clouds.</summary>
@@ -78,8 +83,10 @@ public sealed class WeatherPresenter
     public void Sync(WorldState world, double seconds, float delta, GroundPosition focus)
     {
         SyncSnow(world, delta);
+        _look.Update(WorldLook.Of(_rules, world, focus), _view, Breeze.At(world.Weather, focus), delta);
         if (_sun is not null)
         {
+            _sun.LightColor = _sunColor.Lerp(_view.StormLight.ToGodot(), _look.Overcast);
             var target = _sunEnergy * (1f - (_view.StormGloom * CloudLayout.Gloom(_rules, world.Weather, focus)))
                 * (1f - (_view.EclipseDarkness * Pantheon.Game.GreatEvents.GreatEventText.Darkness(world)));
             _sun.LightEnergy = Mathf.Lerp(_sun.LightEnergy, target, 1f - Mathf.Exp(-GloomRate * delta));
@@ -91,6 +98,7 @@ public sealed class WeatherPresenter
             var eclipse = 1f - (_view.EclipseDarkness * Pantheon.Game.GreatEvents.GreatEventText.Darkness(world));
             _environment.AmbientLightEnergy = _ambientEnergy * eclipse;
             _environment.BackgroundEnergyMultiplier = _skyEnergy * eclipse;
+            _environment.FogDensity = _haze * (1f + ((_view.StormHaze - 1f) * _look.Overcast));
         }
 
         _seen.Clear();

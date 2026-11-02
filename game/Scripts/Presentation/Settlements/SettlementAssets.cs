@@ -13,9 +13,6 @@ internal sealed class SettlementAssets
     private const string MaterialDirectory = "res://Materials/";
     private const int RadialSegments = 12;
 
-    private const float ShrineSink = 0.6f;
-    private const float ShrineBaseHeight = 1.6f;
-    private const float ShrinePillarHeight = 7f;
     private const float ShrineCrownRadius = 1f;
 
     private const float ScaffoldPoleRadius = 0.09f;
@@ -28,10 +25,7 @@ internal sealed class SettlementAssets
     /// <summary>Loads the materials and builds the meshes.</summary>
     public SettlementAssets()
     {
-        var stone = LoadMaterial("shrine_stone");
         var timber = LoadMaterial("scaffold");
-        ShrineBase = new CylinderMesh { TopRadius = 2.4f, BottomRadius = 2.8f, Height = ShrineBaseHeight, RadialSegments = RadialSegments, Rings = 1, Material = stone };
-        ShrinePillar = new CylinderMesh { TopRadius = 0.55f, BottomRadius = 0.9f, Height = ShrinePillarHeight, RadialSegments = RadialSegments, Rings = 1, Material = stone };
         ShrineCrown = new SphereMesh { Radius = ShrineCrownRadius, Height = 2f * ShrineCrownRadius, Material = LoadMaterial("shrine_crown") };
         ScaffoldPole = new CylinderMesh { TopRadius = ScaffoldPoleRadius, BottomRadius = ScaffoldPoleRadius, Height = ScaffoldPoleHeight, RadialSegments = 6, Rings = 1, Material = timber };
         TimberPile = new BoxMesh { Size = TimberPileSize, Material = timber };
@@ -44,12 +38,6 @@ internal sealed class SettlementAssets
     /// <summary>Radius of the ring of scaffold poles around a building site.</summary>
     public static float ScaffoldRadius => 2.6f;
 
-    /// <summary>Wayshrine plinth.</summary>
-    public Mesh ShrineBase { get; }
-
-    /// <summary>Wayshrine pillar.</summary>
-    public Mesh ShrinePillar { get; }
-
     /// <summary>Glowing orb on top of the pillar.</summary>
     public Mesh ShrineCrown { get; }
 
@@ -61,15 +49,6 @@ internal sealed class SettlementAssets
 
     /// <summary>A ruined house's heap (ADR-014).</summary>
     public Mesh Rubble { get; }
-
-    /// <summary>Centre of the plinth relative to the shrine's ground point.</summary>
-    public static Vector3 ShrineBaseOffset => new(0f, (ShrineBaseHeight * 0.5f) - ShrineSink, 0f);
-
-    /// <summary>Centre of the pillar, standing on the plinth.</summary>
-    public static Vector3 ShrinePillarOffset => new(0f, ShrineBaseHeight - ShrineSink + (ShrinePillarHeight * 0.5f), 0f);
-
-    /// <summary>Centre of the crown orb, resting on the pillar.</summary>
-    public static Vector3 ShrineCrownOffset => new(0f, ShrineBaseHeight - ShrineSink + ShrinePillarHeight + (ShrineCrownRadius * 0.6f), 0f);
 
     /// <summary>Centre of a scaffold pole relative to the ground below it.</summary>
     public static Vector3 ScaffoldPoleOffset => new(0f, (ScaffoldPoleHeight * 0.5f) - ScaffoldPoleSink, 0f);

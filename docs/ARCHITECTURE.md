@@ -816,9 +816,16 @@ and a Lumen an Ape. A missing,
   fingers pan (or zoom), Option with two fingers orbits and a pinch zooms, each gesture taken once
   though the engine delivers it twice; the window's edge pans when the settings say so. `Follow`
   keeps the focus on a moving thing, such as the Creature, until the player pans away (ADR-058).
-- The light (`Scenes/Main.tscn`, ADR-051): a procedural sky, the sun with soft shadows, ACES
-  tonemapping, screen-space ambient occlusion and a soft glow (both switched by the settings'
-  lighting effects), distance fog and a little contrast.
+- The light (`Scenes/Main.tscn`, ADR-051, ADR-077, ADR-078): a procedural sky, a low side sun with
+  soft shadows, AgX tonemapping, a soft glow (switched by the settings' lighting effects), haze that
+  thickens over low land and a little contrast. SMAA smooths edges (the settings' Smooth edges). No
+  ambient occlusion: `GroundShade` darkens the land's hollows, and its cost was the largest of any
+  effect.
+- The world's look (ADR-078): `WorldLook.Of` (pure) says how far the year has turned the land and how
+  dark the sky is; `Weather/WorldLookView` eases it and hands it, with the clouds' drift, to global
+  shader uniforms that `Shaders/world_look.gdshaderinc` reads for the ground, trees, grass, fields,
+  roads, roofs and water. So the whole picture turns together, for two vectors a frame.
+  `Terrain3DShaderPatch.WithLook` brings it into the terrain's generated shader.
 - `Presentation/WorldPresenter`: rebuilds and syncs all world visuals:
   - `Terrain/ITerrainPresenter` with `Terrain3DTerrainPresenter` (primary) and
     `FallbackMeshTerrainPresenter` (fallback, logged and labelled with its reason), chosen by

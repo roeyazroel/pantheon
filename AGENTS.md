@@ -141,8 +141,8 @@ rule is followed by the conventions that meet it in this repository.
 - Current tools: the F1 debug panel (the performance metrics and the simulation's CPU budget, the debris, what streams near the camera with the ground cover and the wildlife, and the world's load, gods, the god AI's goal, persona and temper and top candidates with reasons,
   its plans, the goals it is weighing and the gods it knows, and its diplomatic moves with their factors, influence, the Creature's behaviour, its state and behaviour tree (the gods' watch over their villages shows as alerts and remembered trespasses), face, needs,
   options, learned weights and memories, every Creature's combat skill, scars and views of the
-  others, and how yours would meet the nearest one, its attributes, paths and callings, the climate (the season and what it and a heat
-  or cold wave change), the weather's spell and cells, the land's life at the cursor (snow,
+  others, and how yours would meet the nearest one, its attributes, paths and callings, the climate (the season, what it and a heat
+  or cold wave change, and how far the year has turned the land's look), the weather's spell and cells, the land's life at the cursor (snow,
   wildlife, damage, scar, pollution and biodiversity), the rivers'
   levels and the lakes, earthquakes and fires, the volcano, tornadoes, locust swarms, blighted and
   buried land and the marks on it,

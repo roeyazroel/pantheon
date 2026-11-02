@@ -20,6 +20,7 @@ public static class GroundShade
     private const int MottleSalt = 7601;
     private const int DrySalt = 7602;
     private const int StrataSalt = 7603;
+    private const int GrainSalt = 7604;
 
     // Metres of hollow, at the fine and the broad scale, that count as a full hollow.
     private const float FineHollow = 1.2f;
@@ -76,7 +77,8 @@ public static class GroundShade
         var (east, south) = (x * field.Spacing, z * field.Spacing);
         var mottle = (NatureNoise.Fbm(east / shade.MottleMetres, south / shade.MottleMetres, Period, 3, MottleSalt) * 2f) - 1f;
         var dry = SmoothStep(0.42f, 0.62f, NatureNoise.Fbm(east / shade.DryMetres, south / shade.DryMetres, Period, 3, DrySalt));
-        var light = shade.Neutral * (1f + (shade.Mottle * mottle));
+        var grain = (NatureNoise.Fbm(east / shade.GrainMetres, south / shade.GrainMetres, Period, 2, GrainSalt) * 2f) - 1f;
+        var light = shade.Neutral * (1f + (shade.Mottle * mottle) + (shade.Grain * grain));
         light *= (1f - (shade.HollowDark * Math.Clamp(hollow, 0f, 1f))) * (1f + (shade.RidgeLight * Math.Clamp(-hollow, 0f, 1f)));
         light *= 1f - (shade.WetShore * (1f - SmoothStep(0f, shade.WetShoreHeight, height)));
         var rock = SmoothStep(palette.RockSlopeStart, palette.RockSlopeFull, field.GetSlope(x, z));

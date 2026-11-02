@@ -26,7 +26,7 @@ internal sealed class StyleView
         _settings = settings;
         var tinted = new StandardMaterial3D { VertexColorUseAsAlbedo = true, VertexColorIsSrgb = true, Roughness = 0.85f };
         Add(root, StylePieceKind.FlowerBed, Meshes.ToArrayMesh(FlowerBedMesh.Build(), tinted), colored: true);
-        _mounds = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseColors = true, Mesh = new SphereMesh { Radius = FlowerBedMesh.Radius, Height = FlowerBedMesh.Height * 2f, RadialSegments = 10, Rings = 3, IsHemisphere = true, Material = tinted } };
+        _mounds = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseColors = true, Mesh = new SphereMesh { Radius = FlowerBedMesh.Radius, Height = FlowerBedMesh.Height, RadialSegments = 10, Rings = 3, IsHemisphere = true, Material = tinted } };
         root.AddChild(new MultiMeshInstance3D { Name = "StyleMounds", Multimesh = _mounds });
         Add(root, StylePieceKind.Bush, new SphereMesh { Radius = 1.1f, Height = 1.6f, RadialSegments = 8, Rings = 4, Material = tinted }, colored: true);
         Add(root, StylePieceKind.Obelisk, new CylinderMesh { TopRadius = 0.15f, BottomRadius = 0.65f, Height = 5.5f, RadialSegments = 4, Rings = 1, Material = Plain(settings.Obelisk, 0.6f) }, colored: false);

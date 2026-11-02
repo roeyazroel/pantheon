@@ -60,10 +60,9 @@ internal sealed class SettlementView
         var root = parent.AddLayer(string.Create(CultureInfo.InvariantCulture, $"Settlement_{settlement.Id}"));
         var center = new Vector3(settlement.Position.X, terrain.SampleHeight(settlement.Position.X, settlement.Position.Z), settlement.Position.Z);
 
-        AddPart(root, "ShrineBase", assets.ShrineBase, center + SettlementAssets.ShrineBaseOffset);
-        AddPart(root, "ShrinePillar", assets.ShrinePillar, center + SettlementAssets.ShrinePillarOffset);
-        AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
         _buildings = BuildingAssets.For(settings.Architecture);
+        AddPart(root, "Shrine", _buildings.Shrine, center);
+        AddPart(root, "ShrineCrown", assets.ShrineCrown, center + (Vector3.Up * (CivicMesh.ShrineTop + 0.35f)));
         _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id, terrain);
         _civicView = new CivicView(root, _buildings);
         _style = settings.Style;

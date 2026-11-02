@@ -82,7 +82,7 @@ public sealed record GameSettings
     /// <summary>Whether the sun casts shadows.</summary>
     public bool Shadows { get; init; } = true;
 
-    /// <summary>Whether the light's finer effects are on: ambient occlusion in the folds of the land and a soft glow (ADR-051).</summary>
+    /// <summary>Whether the light's finer effect is on: a soft glow from bright miracles and the shrine (ADR-051, ADR-078).</summary>
     public bool LightingEffects { get; init; } = true;
 
     /// <summary>Whether the edges of what is drawn are smoothed (SMAA, ADR-077).</summary>

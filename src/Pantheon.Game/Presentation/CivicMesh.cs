@@ -12,6 +12,32 @@ namespace Pantheon.Game.Presentation;
 /// </summary>
 public static class CivicMesh
 {
+    /// <summary>The height at which a shrine's cradle holds its light, in metres.</summary>
+    public const float ShrineTop = 8.5f;
+
+    /// <summary>A village's shrine (ADR-078): three worn steps, a tapering shaft with carved bands and a flared cradle for its light, all stone.</summary>
+    /// <param name="detailed">The detailed shrine or the simple one.</param>
+    /// <returns>The triangles.</returns>
+    public static TaggedMesh Shrine(bool detailed)
+    {
+        const int stone = (int)BuildingSlot.Stone;
+        var b = new MeshBuilder(detailed);
+        var sides = detailed ? 16 : 8;
+        Vector3 At(float y) => new(0f, y, 0f);
+        b.Tube(At(-0.6f), At(0.4f), 3.3f, 3.2f, 1f, sides, 0, stone, capped: true);
+        b.Tube(At(0.4f), At(0.85f), 2.6f, 2.5f, 1f, sides, 0, stone, capped: true);
+        b.Tube(At(0.85f), At(1.3f), 1.95f, 1.85f, 1f, sides, 0, stone, capped: true);
+        b.Tube(At(1.3f), At(1.7f), 1.1f, 0.72f, 1f, sides, 0, stone, capped: true);
+        b.Tube(At(1.7f), At(7.5f), 0.66f, 0.44f, 1f, sides, 0, stone);
+        foreach (var (y, radius) in new[] { (3.1f, 0.72f), (5.3f, 0.64f), (7.2f, 0.56f) })
+        {
+            b.Tube(At(y - 0.1f), At(y + 0.1f), radius, radius, 1f, sides, 0, stone, capped: true);
+        }
+
+        b.Tube(At(7.5f), At(ShrineTop), 0.44f, 1.05f, 1f, sides, 0, stone, capped: true);
+        return b.Finish();
+    }
+
     /// <summary>A temple.</summary>
     /// <param name="motif">The style of the god it is raised to, if strongly felt.</param>
     /// <param name="detailed">The detailed temple or the simple one.</param>

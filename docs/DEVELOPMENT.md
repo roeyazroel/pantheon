@@ -276,8 +276,8 @@ counts.
   disasters, groups on the road, notables and followed villagers), one line per god (power and income, rank, followers, the next rank), each AI god's
   goal now, its persona (who wrote it, and its temper in numbers, ADR-065) and its top candidate actions with their scores and reasons, its plans (the goals it
   holds with their weights and ages, when it plans next, the gods it knows) and the goals it is
-  weighing, its diplomatic moves with the factors behind them, the climate (the season and what it and a heat or cold wave
-  change), the weather (the spell, the wind and the strongest cells),
+  weighing, its diplomatic moves with the factors behind them, the climate (the season, what it and a heat or cold wave change, and how far the year has turned the
+  land's look), the weather (the spell, the wind and the strongest cells),
   disasters (earthquakes and the fiercest fires), hazards (the volcano, tornadoes, swarms, blighted
   and buried regions, and marks on the land), migration (the groups on the road and every
   god's refugee policy with the AI's reason), the Creature

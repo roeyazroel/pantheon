@@ -6,6 +6,8 @@
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx, shadows_disabled;
 
+#include "res://Shaders/world_look.gdshaderinc"
+
 uniform vec4 shallow_color : source_color = vec4(0.30, 0.46, 0.38, 1.0);
 uniform vec4 deep_color : source_color = vec4(0.05, 0.20, 0.23, 1.0);
 uniform vec4 foam_color : source_color = vec4(0.90, 0.93, 0.90, 1.0);
@@ -57,7 +59,7 @@ void fragment() {
 	float streaks = smoothstep(0.5, 0.72, near.b * 0.5 + fine.b * 0.5) * smoothstep(0.25, 0.8, speed) * (1.0 - smoothstep(0.25, 0.8, depth));
 	float edge = (1.0 - smoothstep(0.06, 0.16, depth)) * smoothstep(0.3, 0.6, near.b) * 0.5;
 	float foam = clamp(streaks + edge, 0.0, 1.0) * (1.0 - muddiness);
-	ALBEDO = mix(water, foam_color.rgb, foam * 0.7);
+	ALBEDO = look_shaded(mix(water, foam_color.rgb, foam * 0.7), world_position.xz);
 
 	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);
 	float body = mix(shallow_alpha, deep_alpha, smoothstep(0.0, 0.7, depth)) + fresnel * 0.25;

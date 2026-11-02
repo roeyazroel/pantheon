@@ -25,6 +25,7 @@ internal sealed partial class FireView : Node3D
         Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
         VertexColorUseAsAlbedo = true,
         AlbedoTexture = Weather.SoftDiscTexture.Texture,
+        DisableFog = true,
     };
 
     private GpuParticles3D _flames = null!;
@@ -39,9 +40,9 @@ internal sealed partial class FireView : Node3D
     {
         var view = new FireView { Name = "Fire", Position = ground };
         var half = regionSize * 0.45f;
-        view._flames = CreateParticles("Flames", 140, 1.2, new Vector3(half, 1f, half), FlameMaterial, new Vector2(10f, 14f), 5f, 10f, Gradient(new Color(1f, 0.85f, 0.4f, 0.95f), new Color(1f, 0.35f, 0.1f, 0f)));
+        view._flames = CreateParticles("Flames", 140, 1.2, new Vector3(half, 1f, half), FlameMaterial, new Vector2(5f, 8f), 4f, 8f, Gradient(new Color(1f, 0.5f, 0.12f, 0.8f), new Color(0.75f, 0.12f, 0.02f, 0f)));
         view._flames.Position = new Vector3(0f, FlameHeight * 0.3f, 0f);
-        view._smoke = CreateParticles("Smoke", 40, 9.0, new Vector3(half * 0.8f, 2f, half * 0.8f), SmokeMaterial, new Vector2(34f, 34f), SmokeRise * 0.8f, SmokeRise * 1.2f, Gradient(new Color(0.22f, 0.2f, 0.19f, 0.6f), new Color(0.5f, 0.49f, 0.48f, 0f)));
+        view._smoke = CreateParticles("Smoke", 40, 9.0, new Vector3(half * 0.8f, 2f, half * 0.8f), SmokeMaterial, new Vector2(34f, 34f), SmokeRise * 0.8f, SmokeRise * 1.2f, Gradient(new Color(0.08f, 0.07f, 0.07f, 0.72f), new Color(0.24f, 0.23f, 0.23f, 0f)));
         view._smoke.Position = new Vector3(0f, FlameHeight, 0f);
         view._glow = new OmniLight3D { Name = "Glow", LightColor = new Color(1f, 0.55f, 0.2f), OmniRange = regionSize * 1.4f, ShadowEnabled = false, Position = new Vector3(0f, 10f, 0f) };
         view.AddChild(view._flames);

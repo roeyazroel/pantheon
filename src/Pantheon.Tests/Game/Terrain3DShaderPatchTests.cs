@@ -87,4 +87,25 @@ public sealed class Terrain3DShaderPatchTests
 
         return count;
     }
+
+    [Fact]
+    public void TheWorldsLook_ReachesTheGround_WhereItsLinesAreFound()
+    {
+        var code = "void fragment() {\n" + Terrain3DShaderPatch.AlbedoLine + "\n" + Terrain3DShaderPatch.RoughnessLine + "\n}";
+
+        var looked = Terrain3DShaderPatch.WithLook(code);
+
+        Assert.Contains("world_look.gdshaderinc", looked, StringComparison.Ordinal);
+        Assert.Contains("look_ground(", looked, StringComparison.Ordinal);
+        Assert.Contains("look_rough(roughness)", looked, StringComparison.Ordinal);
+        Assert.DoesNotContain(Terrain3DShaderPatch.AlbedoLine, looked, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AShaderOfAnotherVersion_IsLeftAsItIs_RatherThanBroken()
+    {
+        const string other = "void fragment() {\nALBEDO = vec3(1.0);\n}";
+
+        Assert.Equal(other, Terrain3DShaderPatch.WithLook(other));
+    }
 }

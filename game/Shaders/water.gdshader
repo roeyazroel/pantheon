@@ -4,6 +4,8 @@
 shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx, shadows_disabled;
 
+#include "res://Shaders/world_look.gdshaderinc"
+
 uniform vec4 shore_color : source_color = vec4(0.52, 0.78, 0.70, 1.0);
 uniform vec4 shallow_color : source_color = vec4(0.14, 0.50, 0.56, 1.0);
 uniform vec4 deep_color : source_color = vec4(0.05, 0.20, 0.30, 1.0);
@@ -57,7 +59,7 @@ void fragment() {
 	float rolling = crest * lace * (1.0 - smoothstep(0.0, foam_reach, depth)) * smoothstep(0.0, 0.015, depth + 0.004);
 	float lip = (1.0 - smoothstep(0.0, 0.014, depth)) * smoothstep(0.25, 0.5, chop.b);
 	float foam = clamp(rolling * (1.0 - far) + lip * (1.0 - far * 0.7), 0.0, 1.0);
-	ALBEDO = mix(water, foam_color.rgb, foam * 0.9);
+	ALBEDO = look_shaded(mix(water, foam_color.rgb, foam * 0.9), world_position.xz);
 
 	// Water looks more opaque at grazing angles.
 	float fresnel = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 4.0);

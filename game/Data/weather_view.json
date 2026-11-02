@@ -12,6 +12,14 @@
   "CloudOpacity": 0.4,
   // Up close the sky is out of view: the light dims by up to StormGloom under the darkest storm.
   "StormGloom": 0.55,
+  // Clouds' shadows drift over the land at CloudDrift m/s, covering ClearCloudCover of it on a clear
+  // day and OvercastCloudCover under the darkest storm, whose light turns StormLight and whose haze
+  // thickens StormHaze times (ADR-078).
+  "ClearCloudCover": 0.34,
+  "OvercastCloudCover": 1.0,
+  "CloudDrift": 14.0,
+  "StormLight": "#c6ccd4",
+  "StormHaze": 2.2,
   // An eclipse (ADR-034) takes EclipseDarkness of the sunlight away.
   "EclipseDarkness": 0.85,
   "FadeNearDistance": 300.0,

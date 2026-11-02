@@ -60,6 +60,16 @@ public sealed class ArchitectureTests
     }
 
     [Fact]
+    public void AShrine_RisesFromTheGround_ToTheCradleOfItsLight()
+    {
+        var shrine = CivicMesh.Shrine(detailed: true);
+
+        Assert.True(shrine.Positions.Min(p => p.Y) < 0f, "its steps run into the ground");
+        Assert.Equal(CivicMesh.ShrineTop, shrine.Positions.Max(p => p.Y), 2);
+        Assert.All(shrine.Tags, tag => Assert.Equal((int)BuildingSlot.Stone, (int)tag.Y));
+    }
+
+    [Fact]
     public void ARoofsVertices_SayHowFarUpTheSlopeTheyLie()
     {
         var mesh = HouseMesh.Build(HouseStyle.Longhouse, twoStoreys: false, detailed: true);

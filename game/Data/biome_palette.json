@@ -63,8 +63,8 @@
     },
 
     // The land's broad light and colour (ADR-077), over the colour map on both terrain renderers.
-    // Level ground is Neutral bright, so ridges have room to lighten. Soft patches of MottleMetres
-    // and the drying of the grass in patches of DryMetres break the land up; a hollow, judged
+    // Level ground is Neutral bright, so ridges have room to lighten. Soft patches of MottleMetres, a
+    // grain of GrainMetres and the drying of the grass in patches of DryMetres break the land up; a hollow, judged
     // against the land within HollowMetres and four times that, darkens; rivers and lakes green the
     // land within LushMetres; wet ground darkens up to WetShoreHeight above the sea; rock falls in
     // bands StrataMetres high.
@@ -72,6 +72,8 @@
       "Neutral": 0.92,
       "MottleMetres": 34.0,
       "Mottle": 0.16,
+      "GrainMetres": 6.0,
+      "Grain": 0.16,
       "DryMetres": 190.0,
       "Dry": 0.75,
       "DryTint": "#f4dc9a",

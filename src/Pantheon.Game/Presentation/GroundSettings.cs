@@ -52,6 +52,12 @@ public sealed record GroundShadeSettings
     /// <summary>How strongly those patches show, 0..1.</summary>
     public required float Mottle { get; init; }
 
+    /// <summary>Size of the fine grain of light and dark that a texture's own detail loses with distance, in metres.</summary>
+    public required float GrainMetres { get; init; }
+
+    /// <summary>How strongly the grain shows, 0..1.</summary>
+    public required float Grain { get; init; }
+
     /// <summary>Size of the patches where the grass dries, in metres.</summary>
     public required float DryMetres { get; init; }
 
@@ -100,7 +106,7 @@ public sealed record GroundShadeSettings
             throw new ArgumentException("Ground.Shade.Neutral must lie above 0, up to 1.");
         }
 
-        foreach (var share in new[] { Mottle, Dry, HollowDark, RidgeLight, Lush, WetShore, Strata })
+        foreach (var share in new[] { Mottle, Grain, Dry, HollowDark, RidgeLight, Lush, WetShore, Strata })
         {
             if (!(share is >= 0f and <= 1f))
             {
@@ -108,7 +114,7 @@ public sealed record GroundShadeSettings
             }
         }
 
-        foreach (var metres in new[] { MottleMetres, DryMetres, HollowMetres, LushMetres, WetShoreHeight, StrataMetres })
+        foreach (var metres in new[] { MottleMetres, GrainMetres, DryMetres, HollowMetres, LushMetres, WetShoreHeight, StrataMetres })
         {
             if (!(metres > 0f))
             {

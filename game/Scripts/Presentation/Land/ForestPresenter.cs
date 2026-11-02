@@ -366,6 +366,7 @@ public sealed class ForestPresenter
             TreeKind.Palm => 2f,
             TreeKind.Pine or TreeKind.Fir or TreeKind.Oak or TreeKind.Willow or TreeKind.Snag => 0f,
         });
+        instance.SetInstanceShaderParameter("deciduous", key.Kind is TreeKind.Oak or TreeKind.Birch or TreeKind.Willow ? 1f : 0f);
         return instance;
     }
 

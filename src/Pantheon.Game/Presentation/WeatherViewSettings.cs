@@ -38,6 +38,21 @@ public sealed record WeatherViewSettings
     /// <summary>Share of the sunlight the darkest storm over the camera's focus takes away (0..1).</summary>
     public required float StormGloom { get; init; }
 
+    /// <summary>How much of the sky is cloud on a clear day, for the shadows that drift over the land (ADR-078), 0..1.</summary>
+    public required float ClearCloudCover { get; init; }
+
+    /// <summary>How much of the sky is cloud under the darkest storm, 0..1.</summary>
+    public required float OvercastCloudCover { get; init; }
+
+    /// <summary>How fast the clouds' shadows drift, in metres a second.</summary>
+    public required float CloudDrift { get; init; }
+
+    /// <summary>The colour of the light under the darkest storm.</summary>
+    public required RgbColor StormLight { get; init; }
+
+    /// <summary>How many times thicker the haze is under the darkest storm.</summary>
+    public required float StormHaze { get; init; }
+
     /// <summary>Share of the sunlight an eclipse takes away (0..1, ADR-034).</summary>
     public float EclipseDarkness { get; init; } = 0.85f;
 

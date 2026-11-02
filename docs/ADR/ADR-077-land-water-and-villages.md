@@ -1,6 +1,6 @@
 # ADR-077: The land's breadth, living water, and villages of lanes
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-078](ADR-078-a-world-that-turns-with-the-year.md)
 - Date: 2026-11-02
 - Amends: [ADR-008](ADR-008-settlement-step-and-representative-citizens.md) (the house spiral),
   [ADR-022](ADR-022-rivers-lakes-floods-water-ocean-and-justice.md) (the water's look),

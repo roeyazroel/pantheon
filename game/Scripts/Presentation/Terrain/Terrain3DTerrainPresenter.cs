@@ -103,7 +103,7 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
             return;
         }
 
-        shader.Code = patched;
+        shader.Code = Terrain3DShaderPatch.WithLook(patched);
         material.Call("set_shader_override", shader);
     }
 

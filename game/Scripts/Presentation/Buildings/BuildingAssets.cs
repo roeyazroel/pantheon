@@ -16,6 +16,7 @@ public sealed class BuildingAssets
     private readonly Dictionary<(HouseStyle, bool, int), ArrayMesh> _houses = [];
     private readonly Dictionary<StyleMotif, ArrayMesh> _temples = [];
     private ArrayMesh? _plainTemple;
+    private ArrayMesh? _shrine;
     private ArrayMesh? _stake;
     private ArrayMesh? _wallSegment;
     private ArrayMesh? _timberTower;
@@ -57,6 +58,9 @@ public sealed class BuildingAssets
     public ArrayMesh Temple(StyleMotif? motif) => motif is { } style
         ? _temples.TryGetValue(style, out var mesh) ? mesh : _temples[style] = Build(CivicMesh.Temple(style, detailed: true))
         : _plainTemple ??= Build(CivicMesh.Temple(null, detailed: true));
+
+    /// <summary>A village's shrine.</summary>
+    public ArrayMesh Shrine => _shrine ??= Build(CivicMesh.Shrine(detailed: true));
 
     /// <summary>A palisade's stake.</summary>
     public ArrayMesh Stake => _stake ??= Build(CivicMesh.Stake(detailed: true));

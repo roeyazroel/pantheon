@@ -389,3 +389,18 @@ toggle_diplomacy={
 
 renderer/rendering_method="forward_plus"
 textures/vram_compression/import_etc2_astc=true
+
+[shader_globals]
+
+look_season={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+look_sky={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+look_clouds={
+"type": "sampler2D",
+"value": ""
+}

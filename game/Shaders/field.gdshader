@@ -1,9 +1,12 @@
 // A village's fields (ADR-077): worked ground lying on the land. UV runs across the field, and the
 // rows follow its U axis; the vertex colour is the crop. Furrows of bare soil show between the rows,
-// the crop grows unevenly, and the field's edge is ragged so that it melts into the ground around it.
+// the crop grows unevenly and turns with the year (ADR-078), and the field's edge is ragged so that it
+// melts into the ground around it.
 // Drawn over the ground and a little towards the eye, as the roads are.
 shader_type spatial;
 render_mode blend_mix, depth_draw_never, cull_disabled, diffuse_burley, specular_disabled;
+
+#include "res://Shaders/world_look.gdshaderinc"
 
 uniform sampler2D noise : filter_linear_mipmap, repeat_enable;
 uniform vec3 soil : source_color = vec3(0.32, 0.24, 0.17);
@@ -31,7 +34,13 @@ void fragment() {
 	vec3 growing = crop * (0.72 + 0.5 * blotch) * (0.82 + 0.36 * broad) * (0.9 + 0.2 * grain);
 	vec3 bare = soil * (0.8 + 0.4 * grain);
 	float patchy = smoothstep(0.3, 0.5, blotch + grain * 0.2);
-	ALBEDO = mix(mix(bare, growing, furrow * patchy), growing * 0.86, far);
+	// Green shoots in spring, gold at harvest, and in winter the fields lie fallow.
+	float light = dot(growing, vec3(0.3, 0.59, 0.11));
+	growing = mix(growing, vec3(light) * vec3(0.72, 1.3, 0.52), look_season.x * 0.8);
+	growing = mix(growing, vec3(light) * vec3(1.5, 1.14, 0.46), look_season.y * 0.85);
+	growing = mix(growing, bare * 1.1, look_season.z);
+	bare *= 1.0 - 0.16 * look_sky.y;
+	ALBEDO = look_shaded(mix(mix(bare, growing, furrow * patchy), growing * 0.86, far), ground);
 	float edge = min(min(UV.x, 1.0 - UV.x), min(UV.y, 1.0 - UV.y));
 	ALPHA = smoothstep(0.0, 0.07 + 0.08 * grain, edge + (blotch - 0.5) * 0.1);
 	ROUGHNESS = 1.0;

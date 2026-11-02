@@ -14,6 +14,7 @@ internal sealed class ConstructionSiteView
 
     private readonly Node3D _root;
     private readonly MultiMeshInstance3D _house;
+    private readonly ShaderMaterial _rising;
     private readonly BuildingAssets _buildings;
 
     /// <summary>Creates the hidden building site under <paramref name="parent"/>.</summary>
@@ -26,7 +27,10 @@ internal sealed class ConstructionSiteView
         _root = new Node3D { Name = "ConstructionSite", Visible = false };
         var multimesh = BuildingAssets.NewMultiMesh();
         multimesh.InstanceCount = 1;
-        _house = new MultiMeshInstance3D { Name = "House", Multimesh = multimesh };
+        // Its own material, for how far it is built: an instance uniform here read as 0 on every other
+        // building wherever the renderer ran out of room for them, which hid them all (ADR-078).
+        _rising = (ShaderMaterial)buildings.Material.Duplicate();
+        _house = new MultiMeshInstance3D { Name = "House", Multimesh = multimesh, MaterialOverride = _rising };
         _root.AddChild(_house);
         _root.AddChild(CreateScaffold(assets));
         _root.AddChild(new MeshInstance3D { Name = "Timber", Mesh = assets.TimberPile, Position = SettlementAssets.TimberPileOffset });
@@ -57,7 +61,7 @@ internal sealed class ConstructionSiteView
 
         var house = site.House;
         _root.Transform = new Transform3D(new Basis(Vector3.Up, house.Yaw).Scaled(Vector3.One * house.Scale), house.Position.ToGodot());
-        _house.SetInstanceShaderParameter("built", Mathf.Clamp(site.Progress, 0.02f, 0.999f));
+        _rising.SetShaderParameter("built", Mathf.Clamp(site.Progress, 0.02f, 0.999f));
     }
 
     /// <summary>Scaffold poles evenly spaced around the walls, drawn with one multimesh.</summary>

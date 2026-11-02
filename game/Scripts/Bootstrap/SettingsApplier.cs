@@ -54,7 +54,6 @@ internal static class SettingsApplier
 
         if (environment is not null)
         {
-            environment.SsaoEnabled = settings.LightingEffects;
             environment.GlowEnabled = settings.LightingEffects;
         }
 
@@ -71,7 +70,8 @@ internal static class SettingsApplier
             camera.Speed = settings.CameraSpeed;
         }
 
-        viewport.ScreenSpaceAA = settings.SmoothEdges ? Viewport.ScreenSpaceAAEnum.Smaa : Viewport.ScreenSpaceAAEnum.Disabled;
+        var smoothable = RenderingServer.GetCurrentRenderingMethod() != "gl_compatibility";
+        viewport.ScreenSpaceAA = settings.SmoothEdges && smoothable ? Viewport.ScreenSpaceAAEnum.Smaa : Viewport.ScreenSpaceAAEnum.Disabled;
         viewport.Scaling3DMode = settings.RenderScale < 1f ? Viewport.Scaling3DModeEnum.Fsr : Viewport.Scaling3DModeEnum.Bilinear;
         viewport.Scaling3DScale = settings.RenderScale;
         AudioPresenter.ApplyVolumes(settings);

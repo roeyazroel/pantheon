@@ -1,6 +1,6 @@
 # ADR-052: Village architecture
 
-- Status: Accepted; amended by [ADR-077](ADR-077-land-water-and-villages.md)
+- Status: Accepted; amended by [ADR-077](ADR-077-land-water-and-villages.md) and [ADR-078](ADR-078-a-world-that-turns-with-the-year.md)
 - Date: 2026-10-20
 - Builds on: [ADR-023](ADR-023-settlement-society-priorities-buildings-and-technology.md) (temples and walls),
   [ADR-042](ADR-042-religions-look-on-villages.md) (religion's look) and

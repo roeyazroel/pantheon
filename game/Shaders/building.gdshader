@@ -10,11 +10,13 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
+#include "res://Shaders/world_look.gdshaderinc"
+
 uniform vec3 trim;
 uniform vec3 door;
 uniform vec3 window_color;
 uniform vec3 stone;
-instance uniform float built = 1.0;
+uniform float built = 1.0;
 
 varying vec3 local_position;
 varying vec3 local_normal;
@@ -23,6 +25,7 @@ varying float pattern;
 varying float up_roof;
 varying float roofed;
 varying float weather;
+varying vec2 ground;
 
 const float SINK = 0.6;
 const float TOP = 7.2;
@@ -51,6 +54,7 @@ void vertex() {
 	up_roof = UV.x;
 	roofed = slot == 1 ? 1.0 : 0.0;
 	weather = hash(MODEL_MATRIX[3].xz * 0.37);
+	ground = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
 	switch (slot) {
 		case 0: base_color = COLOR.rgb; pattern = float(packed % 8); break;
 		case 1: base_color = INSTANCE_CUSTOM.rgb; pattern = float(packed / 8); break;
@@ -117,13 +121,16 @@ void fragment() {
 		float moss = smoothstep(0.55, 0.8, blotch) * (1.0 - smoothstep(0.1, 0.65, up_roof)) * smoothstep(0.35, 0.8, weather);
 		color = mix(color, color * vec3(0.62, 0.78, 0.5), moss * 0.7);
 		color *= 0.9 + 0.22 * blotch;
+		// Rain darkens the thatch; winter's frost dusts the roofs, thickest high up.
+		color *= 1.0 - 0.16 * look_sky.y;
+		color = mix(color, vec3(0.74, 0.78, 0.84), look_season.z * 0.5 * smoothstep(0.25, 0.8, up_roof + blotch * 0.4));
 	} else {
 		color *= mix(0.68, 1.0, smoothstep(-0.25, 0.9, p.y));
 		color *= 0.94 + 0.12 * blotch;
 	}
 
 	color *= 0.92 + 0.16 * weather;
-	ALBEDO = color;
-	ROUGHNESS = rough;
+	ALBEDO = look_shaded(color, ground);
+	ROUGHNESS = look_rough(rough);
 	SPECULAR = 0.3;
 }

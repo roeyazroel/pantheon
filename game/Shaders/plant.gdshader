@@ -6,6 +6,8 @@
 shader_type spatial;
 render_mode diffuse_burley, cull_disabled, specular_schlick_ggx;
 
+#include "res://Shaders/world_look.gdshaderinc"
+
 uniform sampler2D leaf_atlas : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
 uniform sampler2D bark : filter_linear_mipmap, repeat_enable;
 uniform vec2 wind = vec2(0.15, 0.0);
@@ -15,13 +17,19 @@ uniform float flutter_strength = 1.0;
 uniform float leaf_brightness = 2.7;
 instance uniform vec3 trunk_color = vec3(0.12, 0.08, 0.05);
 instance uniform float bark_style = 0.0;
+// Whether a tree turns and drops its leaves with the year (ADR-078).
+instance uniform float deciduous = 0.0;
 
 varying vec3 tint;
 varying float part;
 varying float light;
+varying float phase_of;
+varying vec2 ground;
 
 void vertex() {
 	part = UV2.x;
+	phase_of = INSTANCE_CUSTOM.a;
+	ground = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
 	light = UV2.y;
 	tint = INSTANCE_CUSTOM.rgb;
 	float phase = INSTANCE_CUSTOM.a * TAU;
@@ -60,10 +68,18 @@ void fragment() {
 		albedo = tint * leaves.rgb * leaf_brightness * shade;
 		through = tint * 0.7 * shade;
 		rough = 0.78;
+		if (deciduous > 0.5) {
+			// Each tree turns gold or rust in its own time, and winter strips it down to its boughs.
+			vec3 turned = mix(vec3(0.62, 0.34, 0.05), vec3(0.42, 0.1, 0.03), fract(phase_of * 7.0)) * shade * dot(leaves.rgb, vec3(0.5)) * leaf_brightness;
+			float turning = look_season.y * smoothstep(0.1, 0.5, fract(phase_of * 3.0) + 0.35);
+			albedo = mix(albedo, turned, turning);
+			through = mix(through, turned * 0.8, turning);
+			alpha *= step(look_season.z * 1.15, look_patches(ground * 6.0) + fract(phase_of * 5.0) * 0.1);
+		}
 	} else if (part < 2.5) {
 		// A blade: dark at its foot, light at its tip.
-		albedo = tint * mix(0.45, 1.2, light);
-		through = tint * 0.35;
+		albedo = look_turned(tint * mix(0.45, 1.2, light), ground);
+		through = albedo * 0.35;
 		rough = 0.82;
 	} else if (part < 3.5) {
 		float grain = texture(bark, UV * 0.37).r;
@@ -76,9 +92,11 @@ void fragment() {
 		albedo = tint;
 		through = tint * 0.4;
 		rough = 0.7;
+		// Flowers are gone by winter.
+		alpha = 1.0 - step(0.5, look_season.z);
 	}
 
-	ALBEDO = albedo;
+	ALBEDO = look_shaded(albedo, ground);
 	ALPHA = alpha;
 	ALPHA_SCISSOR_THRESHOLD = 0.5;
 	BACKLIGHT = through;
