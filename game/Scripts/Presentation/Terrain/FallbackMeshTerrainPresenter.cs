@@ -56,6 +56,7 @@ public sealed class FallbackMeshTerrainPresenter : ITerrainPresenter
         Clear();
         _field = field;
         _rgba = TerrainColorizer.ComputeRgba(field, palette);
+        GroundShade.Apply(_rgba, field, palette);
         var chunks = TerrainMeshBuilder.ChunksPerSide(field, CellsPerChunk, CoarseStride);
         _chunks = new MeshInstance3D[chunks * chunks];
         _coarse = new ArrayMesh[chunks * chunks];

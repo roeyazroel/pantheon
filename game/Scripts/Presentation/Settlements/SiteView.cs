@@ -8,21 +8,20 @@ using Pantheon.Game.Presentation;
 namespace Pantheon.Client.Presentation.Settlements;
 
 /// <summary>
-/// The built part of a settlement: houses in the village's style (ADR-052, one multimesh), the
-/// building site and the fields (one multimesh tinted per crop). Instances are only rewritten when
-/// the layout or the village's look changes.
+/// The built part of a settlement: houses in the village's style (ADR-052, ADR-077, one multimesh per
+/// variant), its lanes, the building site and the fields (one multimesh tinted per crop). Instances
+/// are only rewritten when the layout or the village's look changes.
 /// </summary>
 internal sealed class SiteView
 {
-    private readonly MultiMesh _houses;
+    private readonly MultiMesh[] _houses = new MultiMesh[HouseMesh.Variants];
+    private readonly LaneView _lanes;
     private readonly BuildingAssets _buildings;
     private readonly int _settlementId;
     private VillageLook? _look;
-    private readonly MultiMesh _fields;
+    private readonly FieldView _fields;
     private readonly MultiMesh _rubble;
     private readonly ConstructionSiteView _construction;
-    private readonly float _fieldSize;
-    private readonly Color[] _cropColors;
     private IReadOnlyList<HutPlacement> _shownHouses = [];
     private IReadOnlyList<FieldPlacement> _shownFields = [];
     private IReadOnlyList<HutPlacement> _shownRuins = [];
@@ -32,17 +31,21 @@ internal sealed class SiteView
     /// <param name="assets">Shared meshes.</param>
     /// <param name="layout">Layout settings, for the field size and crop colours.</param>
     /// <param name="buildings">The buildings made in code.</param>
-    /// <param name="settlementId">The settlement, for each house's shade.</param>
-    public SiteView(Node3D root, SettlementAssets assets, SettlementLayoutSettings layout, BuildingAssets buildings, int settlementId)
+    /// <param name="settlementId">The settlement, for each house's colours.</param>
+    /// <param name="terrain">Terrain, which its lanes lie on.</param>
+    public SiteView(Node3D root, SettlementAssets assets, SettlementLayoutSettings layout, BuildingAssets buildings, int settlementId, Pantheon.Simulation.Terrain.TerrainField terrain)
     {
         (_buildings, _settlementId) = (buildings, settlementId);
-        _houses = BuildingAssets.NewMultiMesh();
-        root.AddChild(new MultiMeshInstance3D { Name = "Houses", Multimesh = _houses });
-        _fields = AddMultiMesh(root, "Fields", assets.FieldPlot, useColors: true);
+        for (var variant = 0; variant < _houses.Length; variant++)
+        {
+            _houses[variant] = BuildingAssets.NewMultiMesh();
+            root.AddChild(new MultiMeshInstance3D { Name = "Houses" + variant, Multimesh = _houses[variant] });
+        }
+
+        _lanes = new LaneView(root, layout, terrain);
+        _fields = new FieldView(root, layout, terrain);
         _rubble = AddMultiMesh(root, "Ruins", assets.Rubble, useColors: false);
         _construction = new ConstructionSiteView(root, assets, buildings);
-        _fieldSize = layout.FieldSize;
-        _cropColors = layout.CropColors.Select(color => color.ToGodot()).ToArray();
     }
 
     /// <summary>Dresses the houses and the building site in the village's look, when it changed.</summary>
@@ -55,7 +58,11 @@ internal sealed class SiteView
         }
 
         _look = look;
-        _houses.Mesh = _buildings.House(look.Style, look.TwoStoreys);
+        for (var variant = 0; variant < _houses.Length; variant++)
+        {
+            _houses[variant].Mesh = _buildings.House(look.Style, look.TwoStoreys, variant);
+        }
+
         PlaceHouses(_shownHouses);
         _construction.Dress(look);
     }
@@ -68,11 +75,12 @@ internal sealed class SiteView
         {
             PlaceHouses(site.Houses);
             _shownHouses = site.Houses;
+            _lanes.Show(site);
         }
 
         if (!site.Fields.SequenceEqual(_shownFields))
         {
-            PlaceFields(site.Fields);
+            _fields.Show(site.Fields);
             _shownFields = site.Fields;
         }
 
@@ -106,35 +114,24 @@ internal sealed class SiteView
         }
 
         var (walls, roof) = HouseMesh.PatternsOf(look.Style);
-        _houses.InstanceCount = houses.Count;
+        var written = new int[_houses.Length];
+        for (var variant = 0; variant < _houses.Length; variant++)
+        {
+            _houses[variant].InstanceCount = houses.Count(house => house.Variant == variant);
+        }
+
         for (var i = 0; i < houses.Count; i++)
         {
             var house = houses[i];
+            var multimesh = _houses[house.Variant];
+            var at = written[house.Variant]++;
             var shade = VillageArchitecture.ShadeOf(_buildings.Settings, _settlementId, i);
-            _houses.SetInstanceTransform(i, new Transform3D(new Basis(Vector3.Up, house.Yaw).Scaled(Vector3.One * house.Scale), house.Position.ToGodot()));
-            _houses.SetInstanceColor(i, BuildingAssets.InstanceColor(look.Wall, shade));
-            _houses.SetInstanceCustomData(i, BuildingAssets.InstanceCustom(look.Roof, walls, roof, 2f - shade));
+            var (wallColor, roofColor) = VillageArchitecture.ColorsOf(look, _buildings.Settings, _settlementId, i);
+            multimesh.SetInstanceTransform(at, new Transform3D(new Basis(Vector3.Up, house.Yaw).Scaled(Vector3.One * house.Scale), house.Position.ToGodot()));
+            multimesh.SetInstanceColor(at, BuildingAssets.InstanceColor(wallColor, shade));
+            multimesh.SetInstanceCustomData(at, BuildingAssets.InstanceCustom(roofColor, walls, roof, 2f - shade));
         }
     }
-
-    /// <summary>Writes one tilted, crop-coloured slab per field.</summary>
-    private void PlaceFields(IReadOnlyList<FieldPlacement> fields)
-    {
-        _fields.InstanceCount = fields.Count;
-        for (var i = 0; i < fields.Count; i++)
-        {
-            var field = fields[i];
-            var up = field.Normal.ToGodot();
-            var right = up.Cross(new Vector3(Mathf.Sin(field.Yaw), 0f, Mathf.Cos(field.Yaw))).Normalized();
-            var forward = right.Cross(up);
-            var basis = new Basis(right * _fieldSize, up, forward * _fieldSize);
-            _fields.SetInstanceTransform(i, new Transform3D(basis, field.Position.ToGodot() + (up * SettlementAssets.FieldCenterLift)));
-            _fields.SetInstanceColor(i, CropColor(field.Variant));
-        }
-    }
-
-    /// <summary>The crop colour a field's variant picks.</summary>
-    private Color CropColor(float variant) => _cropColors[Math.Clamp((int)(variant * _cropColors.Length), 0, _cropColors.Length - 1)];
 
     /// <summary>Adds an empty multimesh.</summary>
     private static MultiMesh AddMultiMesh(Node3D root, string name, Mesh mesh, bool useColors)

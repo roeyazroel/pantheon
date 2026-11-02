@@ -13,7 +13,7 @@ namespace Pantheon.Client.Presentation.Buildings;
 public sealed class BuildingAssets
 {
     private static BuildingAssets? _shared;
-    private readonly Dictionary<(HouseStyle, bool), ArrayMesh> _houses = [];
+    private readonly Dictionary<(HouseStyle, bool, int), ArrayMesh> _houses = [];
     private readonly Dictionary<StyleMotif, ArrayMesh> _temples = [];
     private ArrayMesh? _plainTemple;
     private ArrayMesh? _stake;
@@ -46,9 +46,10 @@ public sealed class BuildingAssets
     /// <summary>A house.</summary>
     /// <param name="style">Its style.</param>
     /// <param name="twoStoreys">Whether it has an upper storey.</param>
+    /// <param name="variant">Which of the style's variants.</param>
     /// <returns>The mesh.</returns>
-    public ArrayMesh House(HouseStyle style, bool twoStoreys) =>
-        _houses.TryGetValue((style, twoStoreys), out var mesh) ? mesh : _houses[(style, twoStoreys)] = Build(HouseMesh.Build(style, twoStoreys, detailed: true));
+    public ArrayMesh House(HouseStyle style, bool twoStoreys, int variant) =>
+        _houses.TryGetValue((style, twoStoreys, variant), out var mesh) ? mesh : _houses[(style, twoStoreys, variant)] = Build(HouseMesh.Build(style, twoStoreys, detailed: true, variant));
 
     /// <summary>A temple for a god's style, or a plain one.</summary>
     /// <param name="motif">The style, if strongly felt.</param>

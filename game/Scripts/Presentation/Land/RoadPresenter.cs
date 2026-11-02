@@ -19,13 +19,11 @@ public sealed class RoadPresenter
     // A road is redrawn once this many more metres are built.
     private const float RedrawMetres = 4f;
 
-    private const string ShaderPath = "res://Shaders/road.gdshader";
-
     private readonly Node3D _parent;
     private readonly RoadRules _rules;
-    private readonly ShaderMaterial _material;
     private readonly Dictionary<int, (MeshInstance3D Node, float Built, bool Open)> _views = [];
     private readonly HashSet<int> _seen = [];
+    private readonly List<(BridgeSpan Span, int Road)> _crossings = [];
     private TerrainField? _terrain;
 
     /// <summary>Creates the presenter; nothing is shown until <see cref="Rebuild"/>.</summary>
@@ -37,9 +35,6 @@ public sealed class RoadPresenter
         _parent = parent;
         _rules = rules;
         _buildings = buildings;
-        _material = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
-        _material.SetShaderParameter("noise", PlantTextures.Noise);
-
     }
 
     private readonly Buildings.BuildingAssets _buildings;
@@ -51,6 +46,7 @@ public sealed class RoadPresenter
     {
         _parent.FreeChildren();
         _views.Clear();
+        _crossings.Clear();
         _terrain = terrain;
         Sync(world);
     }
@@ -86,6 +82,7 @@ public sealed class RoadPresenter
             {
                 _views[id].Node.QueueFree();
                 _views.Remove(id);
+                _crossings.RemoveAll(crossing => crossing.Road == id);
             }
         }
     }
@@ -100,30 +97,10 @@ public sealed class RoadPresenter
             var tool = new SurfaceTool();
             tool.Begin(Mesh.PrimitiveType.Triangles);
             tool.SetNormal(Vector3.Up);
-            for (var i = 0; i < ribbon.Count; i++)
-            {
-                var section = ribbon[i];
-                Vertex(tool, section.Left, 0f, section.Along);
-                Vertex(tool, section.Centre, 0.5f, section.Along);
-                Vertex(tool, section.Right, 1f, section.Along);
-            }
-
-            for (var i = 1; i < ribbon.Count; i++)
-            {
-                var (a, b) = ((i - 1) * 3, i * 3);
-                for (var strip = 0; strip < 2; strip++)
-                {
-                    tool.AddIndex(a + strip);
-                    tool.AddIndex(b + strip);
-                    tool.AddIndex(a + strip + 1);
-                    tool.AddIndex(a + strip + 1);
-                    tool.AddIndex(b + strip);
-                    tool.AddIndex(b + strip + 1);
-                }
-            }
-
+            var vertices = 0;
+            RoadMesh.Add(tool, ribbon, ref vertices, (a, b) => BridgeLayout.IsWet(_terrain!, a.Centre) && BridgeLayout.IsWet(_terrain!, b.Centre));
             node.Mesh = tool.Commit();
-            node.MaterialOverride = _material;
+            node.MaterialOverride = RoadMesh.Material;
             node.SetInstanceShaderParameter("cut", open ? 0f : 1f);
         }
 
@@ -132,29 +109,31 @@ public sealed class RoadPresenter
         return node;
     }
 
-    /// <summary>A vertex of the track: across it (0 left, 0.5 middle, 1 right) and metres along it.</summary>
-    private static void Vertex(SurfaceTool tool, System.Numerics.Vector3 point, float across, float along)
-    {
-        tool.SetUV(new Vector2(across, along));
-        tool.AddVertex(Point(point));
-    }
-
     /// <summary>A layout point as a Godot vector.</summary>
     private static Vector3 Point(System.Numerics.Vector3 point) => new(point.X, point.Y, point.Z);
 
-    /// <summary>A plank bridge over each stretch of water the road crosses (ADR-054), stretched bank to bank.</summary>
+    /// <summary>
+    /// A plank bridge over each stretch of water the road crosses (ADR-054, ADR-077), from the road on
+    /// one bank to the road on the other. Roads sharing a crossing share the first one's bridge.
+    /// </summary>
     private void Bridges(RoadState road, Node3D under)
     {
-        foreach (var (start, finish) in BridgeLayout.Spans(road, _terrain!))
+        _crossings.RemoveAll(crossing => crossing.Road == road.Id);
+        foreach (var span in BridgeLayout.Spans(road, _terrain!))
         {
-            var (a, b) = (new Vector3(start.X, start.Y, start.Z), new Vector3(finish.X, finish.Y, finish.Z));
-            var length = a.DistanceTo(b) + 2f;
-            var multimesh = Buildings.BuildingAssets.NewMultiMesh(Meshes.ToArrayMesh(BridgeLayout.Mesh(length), _buildings.Material));
+            if (_crossings.Exists(crossing => crossing.Span.SameCrossing(span)))
+            {
+                continue;
+            }
+
+            _crossings.Add((span, road.Id));
+            var (a, b) = (Point(span.From), Point(span.To));
+            var multimesh = Buildings.BuildingAssets.NewMultiMesh(Meshes.ToArrayMesh(BridgeLayout.Mesh(span, _terrain!), _buildings.Material));
             multimesh.InstanceCount = 1;
             var basis = new Basis(Vector3.Up, Mathf.Atan2(b.X - a.X, b.Z - a.Z));
             multimesh.SetInstanceTransform(0, new Transform3D(basis, (a + b) / 2f));
-            multimesh.SetInstanceColor(0, Buildings.BuildingAssets.InstanceColor(_buildings.Settings.Styles[Pantheon.Game.Presentation.HouseStyle.Longhouse].Walls[0]));
-            multimesh.SetInstanceCustomData(0, Buildings.BuildingAssets.InstanceCustom(_buildings.Settings.Trim, Pantheon.Game.Presentation.SurfacePattern.Planks, Pantheon.Game.Presentation.SurfacePattern.Planks));
+            multimesh.SetInstanceColor(0, Buildings.BuildingAssets.InstanceColor(_buildings.Settings.Styles[HouseStyle.Longhouse].Walls[0]));
+            multimesh.SetInstanceCustomData(0, Buildings.BuildingAssets.InstanceCustom(_buildings.Settings.Trim, SurfacePattern.Planks, SurfacePattern.Planks));
             under.AddChild(new MultiMeshInstance3D { Name = "Bridge", Multimesh = multimesh });
         }
     }

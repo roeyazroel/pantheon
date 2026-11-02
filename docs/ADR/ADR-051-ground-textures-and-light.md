@@ -1,6 +1,6 @@
 # ADR-051: Ground textures and light
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-077](ADR-077-land-water-and-villages.md)
 - Date: 2026-10-20
 - Builds on: [ADR-005](ADR-005-terrain3d-for-terrain.md) (Terrain3D),
   [ADR-007](ADR-007-terrain3d-shader-patch-and-fallback-reason.md) (its shader) and

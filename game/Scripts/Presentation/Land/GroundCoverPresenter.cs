@@ -210,7 +210,7 @@ public sealed class GroundCoverPresenter
         var bare = new List<Clearing>();
         foreach (var settlement in world.Settlements.Where(s => s.Population > 0 || s.Housing > 0))
         {
-            GroundCoverLayout.BareGround(SettlementLayout.ComputeSite(settlement, _rules, _terrain!, _view.Layout), _view.Layout.FieldSize, _view.Layout.ShrineClearance, bare);
+            GroundCoverLayout.BareGround(SettlementLayout.ComputeSite(settlement, _rules, _terrain!, _view.Layout), _view.Layout, bare);
         }
 
         return bare;

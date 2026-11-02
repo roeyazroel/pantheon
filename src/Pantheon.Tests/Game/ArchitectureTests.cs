@@ -25,22 +25,62 @@ public sealed class ArchitectureTests
     [InlineData(HouseStyle.StiltHouse)]
     public void EveryHouse_StandsInTheGround_FitsItsPlot_FacesItsDoorOut_AndAnUpperStoreyRaisesIt(HouseStyle style)
     {
-        var low = HouseMesh.Build(style, twoStoreys: false, detailed: true);
-        var high = HouseMesh.Build(style, twoStoreys: true, detailed: true);
-        IEnumerable<Vector3> Slot(TaggedMesh mesh, BuildingSlot slot) => mesh.Positions.Where((_, i) => (int)mesh.Tags[i].Y == (int)slot);
-
-        Assert.Equal(-HouseMesh.Sink, low.Positions.Min(p => p.Y), 2);
-        Assert.InRange(low.Positions.Max(p => p.Y), 2.5f, HouseMesh.Top);
-        Assert.All(Slot(low, BuildingSlot.Wall), p => Assert.InRange(new Vector2(p.X, p.Z).Length(), 0f, 2.8f));
-        Assert.All(Slot(low, BuildingSlot.Door), p => Assert.True(p.Z > 1f, "the door faces +Z, towards the shrine"));
-        Assert.NotEmpty(Slot(low, BuildingSlot.Roof));
-        Assert.True(!HouseMesh.HasUpperStorey(style) ? high.Positions.Max(p => p.Y) == low.Positions.Max(p => p.Y) : high.Positions.Max(p => p.Y) > low.Positions.Max(p => p.Y) + 1f);
-        Assert.All(high.Positions, p => Assert.True(p.Y <= HouseMesh.Top));
-        for (var t = 0; t < low.Indices.Length; t += 3)
+        foreach (var variant in Enumerable.Range(0, HouseMesh.Variants))
         {
-            var (a, b, c) = (low.Positions[low.Indices[t]], low.Positions[low.Indices[t + 1]], low.Positions[low.Indices[t + 2]]);
-            Assert.True(Vector3.Dot(Vector3.Cross(b - a, c - a), low.Normals[low.Indices[t]]) <= 1e-5f, "Godot's front faces wind clockwise");
+            var low = HouseMesh.Build(style, twoStoreys: false, detailed: true, variant);
+            var high = HouseMesh.Build(style, twoStoreys: true, detailed: true, variant);
+            IEnumerable<Vector3> Slot(TaggedMesh mesh, BuildingSlot slot) => mesh.Positions.Where((_, i) => (int)mesh.Tags[i].Y == (int)slot);
+
+            Assert.Equal(-HouseMesh.Sink, low.Positions.Min(p => p.Y), 2);
+            Assert.InRange(low.Positions.Max(p => p.Y), 2.5f, HouseMesh.Top);
+            Assert.All(Slot(low, BuildingSlot.Wall), p => Assert.InRange(new Vector2(p.X, p.Z).Length(), 0f, 3.7f));
+            Assert.All(Slot(low, BuildingSlot.Door), p => Assert.True(p.Z > 1f, "the door faces +Z, towards its lane"));
+            Assert.NotEmpty(Slot(low, BuildingSlot.Roof));
+            Assert.True(!HouseMesh.HasUpperStorey(style) ? high.Positions.Max(p => p.Y) == low.Positions.Max(p => p.Y) : high.Positions.Max(p => p.Y) > low.Positions.Max(p => p.Y) + 1f);
+            Assert.All(high.Positions, p => Assert.True(p.Y <= HouseMesh.Top));
+            for (var t = 0; t < low.Indices.Length; t += 3)
+            {
+                var (a, b, c) = (low.Positions[low.Indices[t]], low.Positions[low.Indices[t + 1]], low.Positions[low.Indices[t + 2]]);
+                Assert.True(Vector3.Dot(Vector3.Cross(b - a, c - a), low.Normals[low.Indices[t]]) <= 1e-5f, "Godot's front faces wind clockwise");
+            }
         }
+    }
+
+    [Theory]
+    [InlineData(HouseStyle.RoundHut)]
+    [InlineData(HouseStyle.Longhouse)]
+    [InlineData(HouseStyle.StoneCottage)]
+    [InlineData(HouseStyle.Adobe)]
+    [InlineData(HouseStyle.StiltHouse)]
+    public void AStylesVariants_AreEachTheirOwnHouse(HouseStyle style)
+    {
+        var meshes = Enumerable.Range(0, HouseMesh.Variants).Select(variant => HouseMesh.Build(style, twoStoreys: false, detailed: true, variant)).ToList();
+
+        Assert.Equal(HouseMesh.Variants, meshes.Select(mesh => MathF.Round(mesh.Positions.Sum(p => p.X + (3f * p.Y) + (7f * p.Z)))).Distinct().Count());
+    }
+
+    [Fact]
+    public void ARoofsVertices_SayHowFarUpTheSlopeTheyLie()
+    {
+        var mesh = HouseMesh.Build(HouseStyle.Longhouse, twoStoreys: false, detailed: true);
+        var roof = mesh.Positions.Zip(mesh.Tags).Where(pair => (int)pair.Second.Y == (int)BuildingSlot.Roof && pair.Second.X > 0.5f).ToList();
+
+        Assert.NotEmpty(roof);
+        Assert.All(roof, pair => Assert.True(pair.First.Y > 3f, "the top of a slope is at the ridge"));
+    }
+
+    [Fact]
+    public void AVillagesHouses_MostlyShareItsColours_ButNotAll()
+    {
+        var look = new VillageLook(HouseStyle.Longhouse, false, Settings.Styles[HouseStyle.Longhouse].Walls[0], Settings.Styles[HouseStyle.Longhouse].Roofs[0], null);
+        var plain = Enumerable.Range(0, 200).Select(slot => VillageArchitecture.ColorsOf(look, Settings, 7, slot)).ToList();
+        var garden = look with { Roof = Settings.GardenRoof, Motif = StyleMotif.Garden };
+        var devout = Enumerable.Range(0, 200).Select(slot => VillageArchitecture.ColorsOf(garden, Settings, 7, slot)).ToList();
+
+        Assert.True(plain.Select(colors => colors.Roof).Distinct().Count() >= 2, "roofs differ along a street");
+        Assert.All(plain, colors => Assert.Contains(colors.Roof, Settings.Styles[HouseStyle.Longhouse].Roofs));
+        Assert.InRange(devout.Count(colors => colors.Roof == Settings.GardenRoof) / 200f, Settings.MotifShare - 0.12f, Settings.MotifShare + 0.12f);
+        Assert.Equal(plain, Enumerable.Range(0, 200).Select(slot => VillageArchitecture.ColorsOf(look, Settings, 7, slot)));
     }
 
     [Fact]

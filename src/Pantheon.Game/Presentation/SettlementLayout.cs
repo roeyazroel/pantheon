@@ -8,31 +8,37 @@ using Pantheon.Simulation.Terrain;
 namespace Pantheon.Game.Presentation;
 
 /// <summary>
-/// Deterministic visual layout of a settlement. Houses stand on a sunflower spiral around the
-/// shrine, one per <see cref="SettlementRules.HousingPerHouse"/> of housing; house <c>k</c> always
-/// takes the <c>k</c>-th dry slot, so growth only adds houses. The house under construction takes
-/// the next slot. Fields lie on a second spiral outside the houses, so as the village grows over
-/// its inner fields, new ones appear further out.
+/// Deterministic visual layout of a settlement. Houses line the lanes of its plan
+/// (<see cref="VillagePlan"/>), one per <see cref="SettlementRules.HousingPerHouse"/> of housing;
+/// house <c>k</c> always takes the <c>k</c>-th plot on good ground, so growth only adds houses. The
+/// house under construction takes the next plot. Fields lie on a spiral outside the houses, so as
+/// the village grows over its inner fields, new ones appear further out.
 /// </summary>
 public static class SettlementLayout
 {
-    // Spiral slots tried per house or field; slots on low or steep ground are skipped.
-    private const int AttemptsPerHouse = 3;
+    // Spiral slots tried per field; slots on low or steep ground are skipped.
     private const int AttemptsPerField = 4;
+
+    // How far out the plan is first read, in metres, and how much further each time it runs short; beyond
+    // the last reach the land has run out.
+    private const float FirstReach = 40f;
+    private const float FurtherReach = 1.5f;
+    private const float LastReach = 900f;
+
+    // Half a house's width, for the slope of the ground it stands on.
+    private const float HouseHalfWidth = 2.5f;
 
     // Houses keep this far, in metres, from a river or lake (ADR-022).
     private const float RiverClearance = 4f;
 
-    private const float MinimumHouseScale = 0.85f;
-    private const float HouseScaleRange = 0.3f;
-    private const float HouseYawJitter = 0.35f;
+    private const float MinimumHouseScale = 0.9f;
+    private const float HouseScaleRange = 0.25f;
     private const float FieldYawJitter = 0.3f;
 
     // A square field turned to any yaw reaches this far from its centre, as a share of its side.
     private const float HalfDiagonal = 0.7072f;
 
-    // Hash salts, so houses and fields draw unrelated values from the same slot numbers.
-    private const ulong HouseSalt = 1;
+    // Hash salts, so fields draw unrelated values from the same slot numbers.
     private const ulong FieldVariantSalt = 2;
     private const ulong FieldYawSalt = 3;
 
@@ -89,26 +95,45 @@ public static class SettlementLayout
         return new SettlementSite(new Vector3(center.X, terrain.SampleHeight(center.X, center.Y), center.Y), houses, construction, fields, discRadius, ruins);
     }
 
-    /// <summary>The first <paramref name="count"/> dry slots of the house spiral, each facing the shrine with a little jitter.</summary>
+    /// <summary>The first <paramref name="count"/> plots of the village's plan on dry, gentle ground, each house's door to its lane.</summary>
     private static List<HutPlacement> ComputeHouseSlots(int settlementId, Vector2 center, TerrainField terrain, SettlementLayoutSettings settings, int count)
     {
         var slots = new List<HutPlacement>(count);
-        for (var slot = 0; slots.Count < count && slot < count * AttemptsPerHouse; slot++)
+        for (var reach = FirstReach; slots.Count < count; reach *= FurtherReach)
         {
-            var radius = settings.ShrineClearance + (settings.HouseSpacing * MathF.Sqrt(slot + 0.5f));
-            var ground = SpiralPoint(center, slot, radius);
-            var height = terrain.SampleHeight(ground.X, ground.Y);
-            if (height < settings.MinimumGroundHeight || terrain.IsNearFreshWater(ground.X, ground.Y, RiverClearance))
+            slots.Clear();
+            foreach (var plot in VillagePlan.Plots(settlementId, center, settings, reach))
             {
-                continue;
+                var height = terrain.SampleHeight(plot.Ground.X, plot.Ground.Y);
+                if (height < settings.MinimumGroundHeight || Steepness(terrain, plot.Ground) > settings.HouseMaxSlope
+                    || terrain.IsNearFreshWater(plot.Ground.X, plot.Ground.Y, RiverClearance))
+                {
+                    continue;
+                }
+
+                var variant = (int)(plot.Size * HouseMesh.Variants * 7f) % HouseMesh.Variants;
+                slots.Add(new HutPlacement(new Vector3(plot.Ground.X, height, plot.Ground.Y), plot.Yaw, MinimumHouseScale + (HouseScaleRange * plot.Size), variant));
+                if (slots.Count == count)
+                {
+                    break;
+                }
             }
 
-            var jitter = PresentationHash.Unit(HouseSalt, (ulong)settlementId, (ulong)slot);
-            var yaw = FacingYaw(ground, center) + ((jitter - 0.5f) * HouseYawJitter);
-            slots.Add(new HutPlacement(new Vector3(ground.X, height, ground.Y), yaw, MinimumHouseScale + (HouseScaleRange * jitter)));
+            if (reach >= LastReach)
+            {
+                break;
+            }
         }
 
         return slots;
+    }
+
+    /// <summary>The ground's slope across a house, rise over run.</summary>
+    private static float Steepness(TerrainField terrain, Vector2 ground)
+    {
+        var across = terrain.SampleHeight(ground.X + HouseHalfWidth, ground.Y) - terrain.SampleHeight(ground.X - HouseHalfWidth, ground.Y);
+        var along = terrain.SampleHeight(ground.X, ground.Y + HouseHalfWidth) - terrain.SampleHeight(ground.X, ground.Y - HouseHalfWidth);
+        return MathF.Sqrt((across * across) + (along * along)) / (2f * HouseHalfWidth);
     }
 
     /// <summary>

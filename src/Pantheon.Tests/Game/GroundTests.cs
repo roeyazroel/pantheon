@@ -49,20 +49,32 @@ public sealed class GroundTests
     }
 
     [Fact]
-    public void AForestsEdge_BlendsIntoTheGrass_OverAFewMetres_NotAsAHardLine()
+    public void ABiomesBorder_Wanders_AndBlendsOverManyMetres_NotAsAHardLine()
     {
         var field = Field((_, _) => 20f, (x, _) => x < 64 ? Biome.Grassland : Biome.Forest);
 
         var words = TerrainControl.Compute(field, Palette);
-        float Blend(int x) => (words[(64 * field.Resolution) + x] >> 14 & 0xFF) / 255f;
-        int Overlay(int x) => (int)(words[(64 * field.Resolution) + x] >> 22 & 0x1F);
+        var n = field.Resolution;
+        int Base(int x, int z) => (int)(words[(z * n) + x] >> 27 & 0x1F);
+        float Blend(int x, int z) => (words[(z * n) + x] >> 14 & 0xFF) / 255f;
+        var edges = Enumerable.Range(0, n).Select(z => Enumerable.Range(0, n).First(x => Base(x, z) != (int)GroundKind.Grass)).ToList();
 
-        Assert.Equal(0f, Blend(40));
-        Assert.Equal(0f, Blend(90));
-        Assert.InRange(Blend(63), 0.25f, 0.5f);
-        Assert.InRange(Blend(64), 0.25f, 0.5f);
-        Assert.Equal(((int)GroundKind.ForestFloor, (int)GroundKind.Grass), (Overlay(63), Overlay(64)));
-        Assert.True(Blend(61) > 0f && Blend(61) < Blend(63), "the blend fades away from the edge");
+        Assert.All(Enumerable.Range(0, n), z => Assert.Equal(0f, Blend(4, z)));
+        Assert.True(edges.Max() - edges.Min() >= 6, "the border wanders by many metres from row to row");
+        Assert.All(Enumerable.Range(0, n), z => Assert.InRange(Blend(edges[z] - 1, z), 0.05f, 0.51f));
+        Assert.True(Enumerable.Range(0, n).Average(z => Blend(edges[z] - 6, z)) < Enumerable.Range(0, n).Average(z => Blend(edges[z] - 1, z)), "the blend fades away from the edge");
+    }
+
+    [Fact]
+    public void GrassShowsThroughAForestsLitter_InPatches_ButTheSameLandIsAlwaysTheSame()
+    {
+        var field = Field((_, _) => 20f, (_, _) => Biome.Forest);
+
+        var words = TerrainControl.Compute(field, Palette);
+        var grass = words.Count(word => (word >> 27 & 0x1F) == (uint)GroundKind.Grass);
+
+        Assert.InRange(grass / (float)words.Length, 0.1f, 0.8f);
+        Assert.Equal(words, TerrainControl.Compute(field, Palette));
     }
 
     [Fact]
@@ -82,12 +94,45 @@ public sealed class GroundTests
     [Fact]
     public void TheGround_NeedsColoursForEveryTexture()
     {
-        var json = TestContent.ReadText(BiomePalette.FileName).Replace("      \"Ash\": [\"#26221f\", \"#5a524b\"]\n", string.Empty, StringComparison.Ordinal)
-            .Replace("\"Mud\": [\"#2f2c1e\", \"#5e573a\"],", "\"Mud\": [\"#2f2c1e\", \"#5e573a\"]", StringComparison.Ordinal);
+        var json = TestContent.ReadText(BiomePalette.FileName).Replace("      \"Ash\": [\"#3a3431\", \"#6e645c\"]\n", string.Empty, StringComparison.Ordinal)
+            .Replace("\"Mud\": [\"#3b3725\", \"#6a6242\"],", "\"Mud\": [\"#3b3725\", \"#6a6242\"]", StringComparison.Ordinal);
 
         var exception = Assert.Throws<ContentFormatException>(() => BiomePalette.Parse(json));
 
         Assert.Contains("Ground.Textures needs a darker and a lighter colour for Ash", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheLandsShade_DarkensHollows_LightensRidges_AndIsTheSameEachTime()
+    {
+        // A valley along the middle, its floor 6 m below the level land.
+        var field = Field((x, _) => 20f - (6f * MathF.Exp(-MathF.Pow((x - 64f) / 6f, 2f))) + (6f * MathF.Exp(-MathF.Pow((x - 20f) / 6f, 2f))), (_, _) => Biome.Grassland);
+        var first = Shaded(field);
+        float Light(int x) => Enumerable.Range(0, field.Resolution).Average(z => (float)first[((z * field.Resolution) + x) * 4]);
+
+        Assert.True(Light(64) < Light(100) * 0.9f, "a hollow is darker than the level land");
+        Assert.True(Light(20) >= Light(100), "a ridge is no darker than the level land");
+        Assert.Equal(first, Shaded(field));
+    }
+
+    [Fact]
+    public void TheSeaFloor_KeepsItsLevelShade_AndWetSandDarkensAtTheWatersEdge()
+    {
+        var field = Field((x, _) => x < 40 ? -4f : (x - 40) * 0.1f, (x, _) => x < 40 ? Biome.Sea : Biome.Grassland);
+        var shaded = Shaded(field);
+        float Light(int x) => Enumerable.Range(0, field.Resolution).Average(z => (float)shaded[((z * field.Resolution) + x) * 4]);
+
+        Assert.Equal(200f * Palette.Ground.Shade.Neutral, Light(10), 0);
+        Assert.True(Light(42) < Light(60) * 0.9f, "wet ground at the water's edge is darker");
+    }
+
+    /// <summary>A grey colour map over the land, shaded.</summary>
+    private static byte[] Shaded(TerrainField field)
+    {
+        var rgba = new byte[field.Resolution * field.Resolution * 4];
+        Array.Fill(rgba, (byte)200);
+        GroundShade.Apply(rgba, field, Palette);
+        return rgba;
     }
 
     /// <summary>A 129-sample square terrain, 2 m apart, of the given heights and biomes.</summary>

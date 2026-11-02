@@ -62,7 +62,7 @@ public sealed class SettlementLayoutTests
     }
 
     [Fact]
-    public void Houses_StandOnDryLandAroundTheShrine_WithDoorsTowardsIt()
+    public void Houses_StandOnDryGentleLandAroundTheShrine_WithDoorsToTheirLanes()
     {
         var site = Site(Settlement(housing: 300));
         var center = new Vector2(site.Center.X, site.Center.Z);
@@ -76,8 +76,25 @@ public sealed class SettlementLayoutTests
             Assert.True(house.Position.Y >= Layout.MinimumGroundHeight);
             Assert.InRange(Vector2.Distance(center, ground), Layout.ShrineClearance, site.HouseDiscRadius + 0.001f);
             Assert.Equal(Layout.DoorDistance, Vector2.Distance(ground, door), 3);
-            Assert.True(Vector2.Distance(center, door) < Vector2.Distance(center, ground));
+            Assert.InRange(house.Variant, 0, HouseMesh.Variants - 1);
+            Assert.True(DistanceToLane(door) < DistanceToLane(ground), "a door opens towards its lane");
         }
+
+        float DistanceToLane(Vector2 point)
+        {
+            var rings = Enumerable.Range(0, 8).Select(ring => MathF.Abs(Vector2.Distance(point, center) - VillagePlan.RingRadius(ring, Layout)));
+            var spokes = Enumerable.Range(0, VillagePlan.Spokes).Select(VillagePlan.Direction).Where(way => Vector2.Dot(point - center, way) > 0f)
+                .Select(way => MathF.Abs(Vector2.Dot(point - center, new Vector2(-way.Y, way.X))));
+            return rings.Concat(spokes).Min();
+        }
+    }
+
+    [Fact]
+    public void Houses_ComeInEveryVariant()
+    {
+        var site = Site(Settlement(housing: 300));
+
+        Assert.Equal(HouseMesh.Variants, site.Houses.Select(house => house.Variant).Distinct().Count());
     }
 
     [Fact]

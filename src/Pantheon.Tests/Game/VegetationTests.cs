@@ -136,12 +136,15 @@ public sealed class VegetationTests
     [Fact]
     public void ABridge_IsBuiltToItsSpan_ItsPostsKeepingTheirSize()
     {
-        var short_ = BridgeLayout.Mesh(8f);
-        var long_ = BridgeLayout.Mesh(40f);
+        var side = 129;
+        var terrain = new TerrainField(side, 2f, new float[side * side], new float[side * side], new float[side * side], new Biome[side * side]);
+        BridgeSpan Span(float length) => new(new Vector3(40f, 1f, 100f), new Vector3(40f + length, 1f, 100f), 0f);
+        var short_ = BridgeLayout.Mesh(Span(8f), terrain);
+        var long_ = BridgeLayout.Mesh(Span(40f), terrain);
 
-        Assert.InRange(long_.Positions.Max(p => p.Z) - long_.Positions.Min(p => p.Z), 39.9f, 40.3f);
+        Assert.InRange(long_.Positions.Max(p => p.Z) - long_.Positions.Min(p => p.Z), 41.5f, 42.5f);
         Assert.True(long_.Indices.Length > short_.Indices.Length * 3);
-        Assert.Equal(short_.Positions.Max(p => p.Y), long_.Positions.Max(p => p.Y), 3);
+        Assert.Equal(short_.Positions.Max(p => p.Y), long_.Positions.Max(p => p.Y), 1);
     }
 
     [Fact]
@@ -181,7 +184,7 @@ public sealed class VegetationTests
         var village = world.Settlements[0];
         var site = SettlementLayout.ComputeSite(village, session.Content.SettlementRules, session.Terrain, TestContent.SettlementView.Layout);
         var bare = new List<Clearing>();
-        GroundCoverLayout.BareGround(site, TestContent.SettlementView.Layout.FieldSize, TestContent.SettlementView.Layout.ShrineClearance, bare);
+        GroundCoverLayout.BareGround(site, TestContent.SettlementView.Layout, bare);
         var (minX, minZ) = (village.Position.X - 64f, village.Position.Z - 64f);
         List<GroundCoverPlacement> Lay()
         {

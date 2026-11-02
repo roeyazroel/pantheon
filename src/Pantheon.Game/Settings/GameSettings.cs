@@ -85,6 +85,9 @@ public sealed record GameSettings
     /// <summary>Whether the light's finer effects are on: ambient occlusion in the folds of the land and a soft glow (ADR-051).</summary>
     public bool LightingEffects { get; init; } = true;
 
+    /// <summary>Whether the edges of what is drawn are smoothed (SMAA, ADR-077).</summary>
+    public bool SmoothEdges { get; init; } = true;
+
     /// <summary>Share of the window's resolution the world is drawn at (0.5..1), upscaled.</summary>
     public float RenderScale { get; init; } = 1f;
 

@@ -64,7 +64,7 @@ internal sealed class SettlementView
         AddPart(root, "ShrinePillar", assets.ShrinePillar, center + SettlementAssets.ShrinePillarOffset);
         AddPart(root, "ShrineCrown", assets.ShrineCrown, center + SettlementAssets.ShrineCrownOffset);
         _buildings = BuildingAssets.For(settings.Architecture);
-        _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id);
+        _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id, terrain);
         _civicView = new CivicView(root, _buildings);
         _style = settings.Style;
         _styleView = new StyleView(root, _style);

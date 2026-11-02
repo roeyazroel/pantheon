@@ -72,6 +72,29 @@ public static class VillageArchitecture
         return new VillageLook(built, HouseMesh.HasUpperStorey(built) && houses >= settings.TwoStoreyHouses, wall, roof, motif);
     }
 
+    /// <summary>
+    /// A house's own colours (ADR-077): most take the village's, or its god's where they show, and the
+    /// rest any of their style's, so a street is of a kind without being of one colour.
+    /// </summary>
+    /// <param name="look">The village's look.</param>
+    /// <param name="settings">Architecture settings.</param>
+    /// <param name="settlementId">The village.</param>
+    /// <param name="slot">The house's place in the village.</param>
+    /// <returns>Its walls' and its roof's colours.</returns>
+    public static (RgbColor Wall, RgbColor Roof) ColorsOf(VillageLook look, ArchitectureSettings settings, int settlementId, int slot)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        var keep = PresentationHash.Unit(Salt + 1, (ulong)(uint)settlementId, (ulong)(uint)slot);
+        if (keep < (look.Motif is null ? 1f - settings.HouseMix : settings.MotifShare))
+        {
+            return (look.Wall, look.Roof);
+        }
+
+        var colors = settings.Styles[look.Style];
+        var pick = PresentationHash.Mix(Salt + 2, (ulong)(uint)settlementId, (ulong)(uint)slot);
+        return (colors.Walls[(int)(pick % (ulong)colors.Walls.Count)], colors.Roofs[(int)((pick >> 16) % (ulong)colors.Roofs.Count)]);
+    }
+
     /// <summary>A house's own shade of the village's colours, so no two look quite alike.</summary>
     /// <param name="settings">Architecture settings.</param>
     /// <param name="settlementId">The village.</param>

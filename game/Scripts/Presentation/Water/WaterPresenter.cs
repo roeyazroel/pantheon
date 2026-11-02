@@ -55,6 +55,7 @@ public sealed class WaterPresenter
         var depths = WaterDepthMap.Compute(field, DepthMapResolution, palette.DeepWaterDepth);
         var image = Image.CreateFromData(DepthMapResolution, DepthMapResolution, false, Image.Format.L8, depths);
         _water.SetShaderParameter("depth_map", ImageTexture.CreateFromImage(image));
+        _water.SetShaderParameter("ripples", WaterTextures.Ripples);
         _water.SetShaderParameter("map_size", field.WorldSize);
         _water.SetShaderParameter("shallow_color", palette.ShallowWater.ToGodot());
         _water.SetShaderParameter("deep_color", palette.DeepWater.ToGodot());

@@ -11,12 +11,13 @@ public sealed class GameSettingsTests
     {
         var settings = new GameSettings
         {
-            Fullscreen = true, VSync = false, Shadows = false, LightingEffects = false, RenderScale = 0.75f, Citizens = 0.5f, Vegetation = 0.5f, Particles = 0.25f,
+            Fullscreen = true, VSync = false, Shadows = false, LightingEffects = false, SmoothEdges = false, RenderScale = 0.75f, Citizens = 0.5f, Vegetation = 0.5f, Particles = 0.25f,
             TerrainQuality = 0.75f, SimulationBudget = 10f, MasterVolume = 0.3f, MusicVolume = 0f, EffectsVolume = 1f, AmbienceVolume = 0.2f,
         };
 
         Assert.Equal(settings, GameSettings.Parse(settings.Serialize()));
         Assert.True(new GameSettings().LightingEffects, "the lighting effects are on unless turned off");
+        Assert.True(new GameSettings().SmoothEdges, "edges are smoothed unless turned off");
     }
 
     [Fact]

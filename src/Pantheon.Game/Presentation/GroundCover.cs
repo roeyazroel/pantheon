@@ -148,16 +148,16 @@ public static class GroundCoverLayout
         }
     }
 
-    /// <summary>The ground a village keeps bare: by each house, building site and ruin, on each field, and on the square by the shrine.</summary>
+    /// <summary>The ground a village keeps bare: by each house, building site and ruin, on each field, on its lanes and on the green by the shrine.</summary>
     /// <param name="site">The village's layout.</param>
-    /// <param name="fieldSize">A field's side, in metres.</param>
-    /// <param name="square">The square's radius, in metres.</param>
+    /// <param name="layout">Layout settings.</param>
     /// <param name="into">Receives the bare patches.</param>
-    public static void BareGround(SettlementSite site, float fieldSize, float square, List<Clearing> into)
+    public static void BareGround(SettlementSite site, SettlementLayoutSettings layout, List<Clearing> into)
     {
         ArgumentNullException.ThrowIfNull(site);
+        ArgumentNullException.ThrowIfNull(layout);
         ArgumentNullException.ThrowIfNull(into);
-        into.Add(new Clearing(new Vector2(site.Center.X, site.Center.Z), square));
+        into.Add(new Clearing(new Vector2(site.Center.X, site.Center.Z), layout.GreenRadius));
         foreach (var house in site.Houses.Concat(site.Ruins).Concat(site.Construction is { } building ? [building.House] : []))
         {
             into.Add(new Clearing(new Vector2(house.Position.X, house.Position.Z), 3.2f * house.Scale));
@@ -165,7 +165,19 @@ public static class GroundCoverLayout
 
         foreach (var field in site.Fields)
         {
-            into.Add(new Clearing(new Vector2(field.Position.X, field.Position.Z), fieldSize * 0.72f));
+            into.Add(new Clearing(new Vector2(field.Position.X, field.Position.Z), layout.FieldSize * 0.72f));
+        }
+
+        foreach (var lane in VillagePlan.Lanes(site, layout))
+        {
+            for (var i = 1; i < lane.Count; i++)
+            {
+                var length = Vector2.Distance(lane[i - 1], lane[i]);
+                for (var along = 0f; along < length; along += layout.LaneWidth)
+                {
+                    into.Add(new Clearing(Vector2.Lerp(lane[i - 1], lane[i], along / length), layout.LaneWidth));
+                }
+            }
         }
     }
 

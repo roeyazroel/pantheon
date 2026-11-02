@@ -15,6 +15,7 @@ internal sealed class StyleView
     private readonly StyleSettings _settings;
     private readonly Dictionary<StylePieceKind, MultiMesh> _pieces = [];
     private readonly MultiMesh _flames;
+    private readonly MultiMesh _mounds;
     private string _shown = string.Empty;
 
     /// <summary>Creates the (empty) pieces under a settlement's root.</summary>
@@ -24,7 +25,9 @@ internal sealed class StyleView
     {
         _settings = settings;
         var tinted = new StandardMaterial3D { VertexColorUseAsAlbedo = true, VertexColorIsSrgb = true, Roughness = 0.85f };
-        Add(root, StylePieceKind.FlowerBed, new CylinderMesh { TopRadius = 1.4f, BottomRadius = 1.5f, Height = 0.3f, RadialSegments = 8, Rings = 1, Material = tinted }, colored: true);
+        Add(root, StylePieceKind.FlowerBed, Meshes.ToArrayMesh(FlowerBedMesh.Build(), tinted), colored: true);
+        _mounds = new MultiMesh { TransformFormat = MultiMesh.TransformFormatEnum.Transform3D, UseColors = true, Mesh = new SphereMesh { Radius = FlowerBedMesh.Radius, Height = FlowerBedMesh.Height * 2f, RadialSegments = 10, Rings = 3, IsHemisphere = true, Material = tinted } };
+        root.AddChild(new MultiMeshInstance3D { Name = "StyleMounds", Multimesh = _mounds });
         Add(root, StylePieceKind.Bush, new SphereMesh { Radius = 1.1f, Height = 1.6f, RadialSegments = 8, Rings = 4, Material = tinted }, colored: true);
         Add(root, StylePieceKind.Obelisk, new CylinderMesh { TopRadius = 0.15f, BottomRadius = 0.65f, Height = 5.5f, RadialSegments = 4, Rings = 1, Material = Plain(settings.Obelisk, 0.6f) }, colored: false);
         Add(root, StylePieceKind.Brazier, new CylinderMesh { TopRadius = 0.8f, BottomRadius = 0.35f, Height = 1.3f, RadialSegments = 8, Rings = 1, Material = Plain(settings.Obelisk, 0.7f) }, colored: false);
@@ -67,7 +70,7 @@ internal sealed class StyleView
                 var piece = list[i];
                 var lift = kind switch
                 {
-                    StylePieceKind.FlowerBed => 0.08f,
+                    StylePieceKind.FlowerBed => 0f,
                     StylePieceKind.Bush => 0.6f,
                     StylePieceKind.Obelisk => 2.6f,
                     StylePieceKind.Brazier => 0.6f,
@@ -82,6 +85,14 @@ internal sealed class StyleView
 
                 flames += kind == StylePieceKind.Brazier ? 1 : 0;
             }
+        }
+
+        var beds = byKind.GetValueOrDefault(StylePieceKind.FlowerBed) ?? [];
+        _mounds.InstanceCount = beds.Count;
+        for (var i = 0; i < beds.Count; i++)
+        {
+            _mounds.SetInstanceTransform(i, new Transform3D(new Basis(Vector3.Up, beds[i].Yaw).Scaled(Vector3.One * beds[i].Scale), beds[i].Position.ToGodot()));
+            _mounds.SetInstanceColor(i, _settings.Bush.ToGodot());
         }
 
         var braziers = byKind.GetValueOrDefault(StylePieceKind.Brazier) ?? [];

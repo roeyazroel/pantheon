@@ -33,6 +33,7 @@ public sealed class SettlementCrowd : ICitizenWays
     private double? _lastSeconds;
     private double? _rebuiltAt;
     private double? _bakedAt;
+    private IReadOnlyList<BridgeSpan> _bridges = [];
     private readonly LocalNavLand _land = new();
     private SettlementState? _settlement;
     private SettlementSite? _site;
@@ -119,9 +120,23 @@ public sealed class SettlementCrowd : ICitizenWays
         for (var i = 0; i < _roster.Count; i++)
         {
             var pose = Follow(i, CitizenRoutine.Evaluate(_roster[i], simulationSeconds, _settings.Citizens, this), maxStep, simulationSeconds);
-            var height = terrain.SampleHeight(pose.Ground.X, pose.Ground.Y) + pose.Bounce;
+            var height = FootingAt(terrain, pose.Ground) + pose.Bounce;
             _poses[i] = new CitizenPose(new Vector3(pose.Ground.X, height, pose.Ground.Y), pose.Yaw, pose.Lean, pose.Activity, pose.Cycle);
         }
+    }
+
+    /// <summary>The height a walker stands at: on a bridge's deck over the water, or on the ground.</summary>
+    private float FootingAt(TerrainField terrain, Vector2 ground)
+    {
+        foreach (var bridge in _bridges)
+        {
+            if (bridge.DeckOver(ground) is { } deck)
+            {
+                return deck;
+            }
+        }
+
+        return terrain.SampleHeight(ground.X, ground.Y);
     }
 
     /// <summary>The settlement's tier and representatives, for the debug overlay.</summary>
@@ -160,7 +175,7 @@ public sealed class SettlementCrowd : ICitizenWays
             return;
         }
 
-        var bridges = new List<(Vector3 From, Vector3 To)>();
+        var bridges = new List<BridgeSpan>();
         foreach (var road in roads ?? [])
         {
             if ((road.FromSettlementId == settlement.Id || road.ToSettlementId == settlement.Id) && road.Built > 0f)
@@ -169,6 +184,7 @@ public sealed class SettlementCrowd : ICitizenWays
             }
         }
 
+        _bridges = bridges;
         Navigation = LocalNavGrid.Build(site, settlement, terrain, _settings.Citizens, _land, bridges);
         (_gridFor, _bakedAt) = (key, _lastSeconds);
     }

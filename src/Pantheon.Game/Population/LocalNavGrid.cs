@@ -94,7 +94,7 @@ public sealed class LocalNavGrid
     /// </param>
     /// <param name="bridges">Bridges over the water, end to end, which walkers may cross (ADR-057).</param>
     /// <returns>The grid.</returns>
-    public static LocalNavGrid Build(SettlementSite site, SettlementState settlement, TerrainField terrain, CitizenSettings settings, LocalNavLand? land = null, IReadOnlyList<(Vector3 From, Vector3 To)>? bridges = null)
+    public static LocalNavGrid Build(SettlementSite site, SettlementState settlement, TerrainField terrain, CitizenSettings settings, LocalNavLand? land = null, IReadOnlyList<BridgeSpan>? bridges = null)
     {
         ArgumentNullException.ThrowIfNull(site);
         ArgumentNullException.ThrowIfNull(settlement);
@@ -117,9 +117,9 @@ public sealed class LocalNavGrid
         }
 
         var blocked = land is { } kept ? (bool[])kept.Water.Clone() : LocalNavLand.SampleWater(terrain, origin, cell, side);
-        foreach (var (from, to) in bridges ?? [])
+        foreach (var bridge in bridges ?? [])
         {
-            Open(blocked, origin, cell, side, new Vector2(from.X, from.Z), new Vector2(to.X, to.Z), DeckHalfWidth);
+            Open(blocked, origin, cell, side, new Vector2(bridge.From.X, bridge.From.Z), new Vector2(bridge.To.X, bridge.To.Z), DeckHalfWidth);
         }
 
         var clearance = settings.NavClearance;

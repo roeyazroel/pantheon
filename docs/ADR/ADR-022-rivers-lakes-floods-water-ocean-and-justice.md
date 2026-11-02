@@ -1,6 +1,6 @@
 # ADR-022: Rivers, lakes, floods and drinking water, with the Ocean and Justice domains
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-077](ADR-077-land-water-and-villages.md)
 - Date: 2026-10-19
 - Builds on: [ADR-013](ADR-013-weather-cells-and-soil-water.md) (weather and soil water),
   [ADR-014](ADR-014-disasters-as-processes.md) (disasters as processes) and

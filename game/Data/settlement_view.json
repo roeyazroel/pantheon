@@ -2,10 +2,21 @@
   // Presentation only: how settlements are drawn. The simulation never reads this file.
   // Distances are in metres.
   "Layout": {
-    // Houses stand on a sunflower spiral around the shrine, one house per HousingPerHouse of
-    // housing (settlement_rules.json). The house under construction takes the next slot.
+    // One house per HousingPerHouse of housing (settlement_rules.json), on a plan of lanes (ADR-077):
+    // a green of GreenRadius around the shrine, eight lanes running out from it the ways a road can
+    // leave a region, and a cross lane every CrossLaneSpacing metres. Plots PlotFrontage wide line the
+    // lanes, the houses Setback from a lane's middle, straying up to PlotJitter; a village builds on
+    // LaneShare of the lanes' sides. The house under construction takes the next plot. Houses keep
+    // off ground steeper than HouseMaxSlope.
     "ShrineClearance": 9.0,
-    "HouseSpacing": 6.5,
+    "GreenRadius": 12.0,
+    "CrossLaneSpacing": 32.0,
+    "PlotFrontage": 7.5,
+    "Setback": 4.6,
+    "PlotJitter": 1.6,
+    "LaneShare": 0.72,
+    "LaneWidth": 2.4,
+    "HouseMaxSlope": 0.55,
     "MinimumGroundHeight": 0.6,
     "DoorDistance": 3.0,
 
@@ -122,7 +133,12 @@
     "MotifStrength": 0.35,
     "LonghouseHouses": 18,
     "TwoStoreyHouses": 40,
-    "HouseVariation": 0.08
+    "HouseVariation": 0.08,
+    // A share of a village's houses take any of their style's colours rather than the village's own
+    // (HouseMix), and where a god's look shows, MotifShare of them take it, so that a god's village
+    // reads by its colours without every roof being the same (ADR-077).
+    "HouseMix": 0.5,
+    "MotifShare": 0.72
   },
 
   // Trees (spec sections 61 and 93, ADR-053): the species each biome grows and their shares (a biome

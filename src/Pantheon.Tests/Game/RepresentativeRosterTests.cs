@@ -227,7 +227,8 @@ public sealed class RepresentativeRosterTests
         var villagers = Roster(Building()).Where(citizen => citizen.Role == CitizenRole.Villager).ToList();
 
         Assert.NotEmpty(villagers);
-        Assert.All(villagers, villager => Assert.InRange(Vector2.Distance(villager.Home, villager.Work), 0f, Citizens.WanderRadius + Tolerance));
+        // A spot that falls in a neighbour's walls is moved just outside them.
+        Assert.All(villagers, villager => Assert.InRange(Vector2.Distance(villager.Home, villager.Work), 0f, Citizens.WanderRadius + 0.5f));
     }
 
     [Fact]

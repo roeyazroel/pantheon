@@ -11,6 +11,15 @@ namespace Pantheon.Game.Presentation;
 [JsonConverter(typeof(RgbColorJsonConverter))]
 public readonly record struct RgbColor(float R, float G, float B)
 {
+    /// <summary>White, which leaves a colour unchanged when multiplied.</summary>
+    public static RgbColor White => new(1f, 1f, 1f);
+
+    /// <summary>Two colours multiplied channel by channel, as a tint over a colour.</summary>
+    /// <param name="a">One colour.</param>
+    /// <param name="b">The other.</param>
+    /// <returns>Their product.</returns>
+    public static RgbColor operator *(RgbColor a, RgbColor b) => new(a.R * b.R, a.G * b.G, a.B * b.B);
+
     /// <summary>Parses <c>#rrggbb</c> (the leading <c>#</c> is optional).</summary>
     /// <param name="text">Hex colour text.</param>
     /// <returns>The colour.</returns>

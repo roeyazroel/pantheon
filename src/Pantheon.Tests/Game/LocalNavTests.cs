@@ -170,7 +170,7 @@ public sealed class LocalNavTests
         // A river runs north to south at x 80..90; the shrine stands east of it.
         var terrain = FlatTerrain((x, _) => x is > 80f and < 90f ? -2f : 5f);
         var hut = new HutPlacement(new Vector3(120f, 5f, 100f), 0f, 1f);
-        var bridge = (From: new Vector3(78f, 5.6f, 60f), To: new Vector3(92f, 5.6f, 60f));
+        var bridge = new BridgeSpan(new Vector3(78f, 5.6f, 60f), new Vector3(92f, 5.6f, 60f), 0.5f);
         var (west, east) = (new Vector2(60f, 70f), new Vector2(110f, 70f));
 
         var unbridged = LocalNavGrid.Build(Site([hut]), Village(), terrain, Citizens);

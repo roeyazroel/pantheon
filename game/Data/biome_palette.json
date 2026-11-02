@@ -16,15 +16,15 @@
   "Beach": "#d6c28c",
   "Rock": "#6e6860",
   "Snow": "#eef1f4",
-  "ShallowWater": "#3fa4b8",
-  "DeepWater": "#123f5c",
+  "ShallowWater": "#2f9aa0",
+  "DeepWater": "#10405a",
   "RegionBoundary": "#f4ead2",
   "RegionHighlight": "#ffd34d",
   "BeachMaxHeight": 2.5,
   "SnowStartHeight": 112.0,
   "SnowBlendRange": 18.0,
-  "RockSlopeStart": 0.7,
-  "RockSlopeFull": 1.4,
+  "RockSlopeStart": 0.75,
+  "RockSlopeFull": 1.7,
   "DeepWaterDepth": 18.0,
   "ColorVariation": 0.05,
 
@@ -32,19 +32,59 @@
   // darker and lighter colour, with its own pattern (grass blades, leaf litter, pebbles, strata,
   // ripples, drifts, moss, puddles, cinders) and a normal map. The biome colours above tint them by
   // TintStrength; UvScale is how often they repeat (Terrain3D's UV scale).
+  //
+  // From the god's height a repeating texture is one flat colour, so the land's breadth is drawn
+  // over it (ADR-077). Borders wander WarpMetres from where the biomes meet, over WarpLength metres,
+  // and blend BorderMetres either way. Patches: another ground shows through a texture, over about
+  // Share of the land, in patches of Metres.
   "Ground": {
     "Textures": {
-      "Grass": ["#3d6326", "#9db25e"],
-      "ForestFloor": ["#2b3420", "#7d6642"],
-      "Earth": ["#5f4a33", "#9c8058"],
-      "Rock": ["#57524c", "#a39d93"],
-      "Sand": ["#bfa16b", "#ead9a8"],
+      "Grass": ["#47602f", "#a3ad66"],
+      "ForestFloor": ["#3f4a2c", "#8d8254"],
+      "Earth": ["#6f5a40", "#a9926a"],
+      "Rock": ["#6e665a", "#a2978a"],
+      "Sand": ["#c4a873", "#ecdcae"],
       "Snow": ["#cfd8e3", "#ffffff"],
-      "Moss": ["#5f6b4c", "#a2a684"],
-      "Mud": ["#2f2c1e", "#5e573a"],
-      "Ash": ["#26221f", "#5a524b"]
+      "Moss": ["#66724f", "#a8aa86"],
+      "Mud": ["#3b3725", "#6a6242"],
+      "Ash": ["#3a3431", "#6e645c"]
     },
     "TintStrength": 0.15,
-    "UvScale": 0.1
+    "UvScale": 0.1,
+    "BorderMetres": 18.0,
+    "WarpMetres": 26.0,
+    "WarpLength": 90.0,
+    "Patches": {
+      "ForestFloor": { "With": "Grass", "Share": 0.45, "Metres": 16.0 },
+      "Earth": { "With": "Grass", "Share": 0.3, "Metres": 22.0 },
+      "Ash": { "With": "Earth", "Share": 0.3, "Metres": 26.0 },
+      "Moss": { "With": "Earth", "Share": 0.25, "Metres": 18.0 },
+      "Mud": { "With": "Moss", "Share": 0.3, "Metres": 12.0 }
+    },
+
+    // The land's broad light and colour (ADR-077), over the colour map on both terrain renderers.
+    // Level ground is Neutral bright, so ridges have room to lighten. Soft patches of MottleMetres
+    // and the drying of the grass in patches of DryMetres break the land up; a hollow, judged
+    // against the land within HollowMetres and four times that, darkens; rivers and lakes green the
+    // land within LushMetres; wet ground darkens up to WetShoreHeight above the sea; rock falls in
+    // bands StrataMetres high.
+    "Shade": {
+      "Neutral": 0.92,
+      "MottleMetres": 34.0,
+      "Mottle": 0.16,
+      "DryMetres": 190.0,
+      "Dry": 0.75,
+      "DryTint": "#f4dc9a",
+      "HollowMetres": 7.0,
+      "HollowDark": 0.42,
+      "RidgeLight": 0.08,
+      "LushMetres": 16.0,
+      "Lush": 0.6,
+      "LushTint": "#a8c890",
+      "WetShore": 0.3,
+      "WetShoreHeight": 0.8,
+      "Strata": 0.2,
+      "StrataMetres": 4.5
+    }
   }
 }

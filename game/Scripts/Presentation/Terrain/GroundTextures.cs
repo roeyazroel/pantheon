@@ -83,8 +83,8 @@ internal static class GroundTextures
         GroundKind.ForestFloor => (Mix(Mix(Fbm(21, 0.01f, 5), 0.6f, Fbm(23, 0.05f, 3), 0.4f), 0.65f, Cells(22, 0.12f, FastNoiseLite.CellularReturnTypeEnum.CellValue), 0.35f), 4f, 0.9f),
         // Earth: soil with pebbles.
         GroundKind.Earth => (Mix(Fbm(31, 0.015f, 5), 0.65f, Threshold(Cells(32, 0.04f, FastNoiseLite.CellularReturnTypeEnum.Distance), 0.25f), 0.35f), 5f, 0.92f),
-        // Rock: broken stone, cracked between its plates.
-        GroundKind.Rock => (Mix(Fbm(41, 0.01f, 6), 0.55f, Cells(42, 0.02f, FastNoiseLite.CellularReturnTypeEnum.Distance2Div), 0.45f), 9f, 0.85f),
+        // Rock: broad plates of stone, cracked between them; the fine grain is left to the normal map.
+        GroundKind.Rock => (Mix(Fbm(41, 0.006f, 3), 0.6f, Cells(42, 0.012f, FastNoiseLite.CellularReturnTypeEnum.Distance2Div), 0.4f), 7f, 0.88f),
         // Sand: fine grain over wind ripples.
         GroundKind.Sand => (Mix(Ripples(51, 0.06f), 0.45f, Fbm(52, 0.08f, 3), 0.55f), 2f, 0.97f),
         // Snow: soft drifts.

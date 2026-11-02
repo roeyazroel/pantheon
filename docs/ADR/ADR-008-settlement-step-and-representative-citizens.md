@@ -1,6 +1,6 @@
 # ADR-008: Settlement step cadence and representative citizens
 
-- Status: Accepted; amended by [ADR-032](ADR-032-prophets-elders-and-temple-influence.md) and [ADR-049](ADR-049-people-that-look-and-move-like-people.md)
+- Status: Accepted; amended by [ADR-032](ADR-032-prophets-elders-and-temple-influence.md), [ADR-049](ADR-049-people-that-look-and-move-like-people.md) and [ADR-077](ADR-077-land-water-and-villages.md)
 - Date: 2026-10-18
 - Amends: [ADR-004](ADR-004-statistical-population-simulation-with-tiering.md)
 

@@ -37,6 +37,33 @@ public sealed class WaterPresentationTests
     }
 
     [Fact]
+    public void WaterFlows_DownItsFall_FasterWhereItIsSteeper_AndALakeLiesStill()
+    {
+        const int side = 65;
+        var count = side * side;
+        var ground = new float[count];
+
+        // Row 10 falls gently east, row 30 falls steeply east, row 50 is level; everywhere else is dry.
+        var surface = Enumerable.Range(0, count).Select(i => (i / side) switch
+        {
+            >= 8 and <= 12 => 20f - (i % side * 0.05f),
+            >= 28 and <= 32 => 20f - (i % side * 1f),
+            >= 48 and <= 52 => 6f,
+            _ => float.NaN,
+        }).ToArray();
+        var terrain = new Pantheon.Simulation.Terrain.TerrainField(side, 2f, ground, new float[count], new float[count], new Pantheon.Domain.Ecology.Biome[count], new Pantheon.Simulation.Terrain.HydrologyMap(surface, [], []));
+
+        var gentle = WaterSurfaceMesh.FlowAt(terrain, 30, 10);
+        var steep = WaterSurfaceMesh.FlowAt(terrain, 30, 30);
+
+        Assert.True(gentle.X > 0f, "it runs towards the lower side");
+        Assert.True(steep.X > gentle.X, "steeper water runs faster");
+        Assert.InRange(steep.Length(), 0f, 1.001f);
+        Assert.Equal(0f, WaterSurfaceMesh.FlowAt(terrain, 30, 50).Length(), 4);
+        Assert.Equal(0f, WaterSurfaceMesh.FlowAt(terrain, 30, 20).Length(), 4);
+    }
+
+    [Fact]
     public void Floodwater_RisesFromTheRiverOverTheLandBesideIt_OnlyWhereItFloods()
     {
         var world = Rivers.Value;

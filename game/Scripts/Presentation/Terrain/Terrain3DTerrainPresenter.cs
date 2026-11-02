@@ -109,7 +109,7 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
 
     /// <summary>
     /// Imports the height map, the control map that picks each sample's textures, and the biome
-    /// colours as a gentle tint over them (ADR-051).
+    /// colours as a gentle tint over them (ADR-051), with the land's broad light and colour (ADR-077).
     /// </summary>
     private static void ImportMaps(Node3D terrain, TerrainField field, BiomePalette palette)
     {
@@ -118,6 +118,7 @@ public sealed class Terrain3DTerrainPresenter : ITerrainPresenter
         var control = Image.CreateFromData(size, size, false, Image.Format.Rf, MemoryMarshal.AsBytes(TerrainControl.Compute(field, palette).AsSpan()).ToArray());
         var rgba = TerrainColorizer.ComputeRgba(field, palette);
         TerrainControl.Tint(rgba, palette.Ground);
+        GroundShade.Apply(rgba, field, palette);
         var colors = Image.CreateFromData(size, size, false, Image.Format.Rgba8, rgba);
         var images = new Godot.Collections.Array { heights, control, colors };
         terrain.Get("data").AsGodotObject().Call("import_images", images, Vector3.Zero, 0f, 1f);

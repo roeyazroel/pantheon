@@ -57,6 +57,39 @@ public static class RoadLayout
         return sections;
     }
 
+    /// <summary>A lane's or a path's track (ADR-077): a cross-section every <see cref="Step"/> metres along a way, laid on the ground as a road's is.</summary>
+    /// <param name="way">The way's points.</param>
+    /// <param name="width">Its width, in metres, about which it wanders.</param>
+    /// <param name="seed">Which wandering it takes.</param>
+    /// <param name="terrain">Terrain, for the ground's height.</param>
+    /// <returns>Cross-sections from the way's start.</returns>
+    public static List<RoadSection> Strip(IReadOnlyList<Vector2> way, float width, int seed, TerrainField terrain)
+    {
+        ArgumentNullException.ThrowIfNull(way);
+        ArgumentNullException.ThrowIfNull(terrain);
+        var sections = new List<RoadSection>();
+        var along = 0f;
+        for (var i = 1; i < way.Count; i++)
+        {
+            var (a, b) = (way[i - 1], way[i]);
+            var length = Vector2.Distance(a, b);
+            var side = Vector2.Normalize(new Vector2(-(b - a).Y, (b - a).X));
+            var steps = Math.Max(1, (int)MathF.Ceiling(length / Step));
+            for (var step = i == 1 ? 0 : 1; step <= steps; step++)
+            {
+                var at = along + (length * step / steps);
+                var wander = (NatureNoise.Fbm(at / 9f, seed * 3.1f, 4096, 2, 7400 + seed) - 0.5f) * 2f;
+                var point = Vector2.Lerp(a, b, (float)step / steps) + (side * wander * width * 0.4f);
+                var half = side * (width * (0.85f + (0.3f * NatureNoise.Fbm(at / 6f, seed * 5.7f, 4096, 2, 7500 + seed))) / 2f);
+                sections.Add(new RoadSection(Ground(terrain, point + half), Ground(terrain, point), Ground(terrain, point - half), at));
+            }
+
+            along += length;
+        }
+
+        return sections;
+    }
+
     /// <summary>The road's width at a place along it: within a tenth of <see cref="Width"/> either way, wandering slowly.</summary>
     /// <param name="roadId">The road.</param>
     /// <param name="along">Metres from its start.</param>

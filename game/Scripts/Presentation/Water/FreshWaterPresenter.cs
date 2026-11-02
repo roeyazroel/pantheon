@@ -50,6 +50,8 @@ public sealed class FreshWaterPresenter
         var shader = GD.Load<Shader>(ShaderPath);
         _rivers = new ShaderMaterial { Shader = shader };
         _floods = new ShaderMaterial { Shader = shader };
+        _rivers.SetShaderParameter("ripples", WaterTextures.Ripples);
+        _floods.SetShaderParameter("ripples", WaterTextures.Ripples);
         _floods.SetShaderParameter("muddiness", 0.55f);
         _floods.SetShaderParameter("shallow_alpha", 0.55f);
     }
@@ -117,7 +119,7 @@ public sealed class FreshWaterPresenter
         _floodSheet.Mesh = mesh is null || mesh.IsEmpty ? null : ToArrayMesh(mesh);
     }
 
-    /// <summary>A Godot mesh of the water quads, the depth in the vertex colour.</summary>
+    /// <summary>A Godot mesh of the water quads, the depth and the flow in the vertex colour.</summary>
     private static ArrayMesh ToArrayMesh(WaterSurfaceMeshData data)
     {
         var positions = new Vector3[data.Positions.Length];
@@ -126,7 +128,8 @@ public sealed class FreshWaterPresenter
         for (var i = 0; i < positions.Length; i++)
         {
             positions[i] = new Vector3(data.Positions[i].X, data.Positions[i].Y, data.Positions[i].Z);
-            colors[i] = new Color(data.Depths[i], 0f, 0f);
+            var flow = data.Flows?[i] ?? System.Numerics.Vector2.Zero;
+            colors[i] = new Color(data.Depths[i], (flow.X * 0.5f) + 0.5f, (flow.Y * 0.5f) + 0.5f);
             normals[i] = Vector3.Up;
         }
 

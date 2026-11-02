@@ -828,9 +828,12 @@ and a Lumen an Ape. A missing,
     nine ground textures made in code (`GroundTextures`: a pattern from seamless noise between two
     colours, its height in the albedo's alpha, a normal map with roughness in its alpha), chosen
     sample by sample by the control map `TerrainControl.Compute` paints in the core: the biome's
-    texture, blended into a neighbouring biome's over 6 m, with rock on steep slopes, snow on cold
-    heights or sand near the sea over it, each turned at random but rock. The biome colours tint
-    them gently (`TerrainControl.Tint`). The fallback keeps the vertex colours. The terrain streams its detail
+    texture, its borders wandering and blended over 18 m into a neighbouring biome's, a second
+    ground showing through in patches, with rock on steep slopes, snow on cold heights or sand near
+    the sea over it, each turned at random but rock (ADR-077). The biome colours tint them gently
+    (`TerrainControl.Tint`), and `GroundShade` lays the land's broad light and colour over the colour
+    map on both renderers: hollows, ridges, drying grass, lush banks, wet shores and banded rock. The
+    fallback keeps the vertex colours. The terrain streams its detail
     (§84, ADR-050): Terrain3D by its own clipmap, and the fallback by building every chunk from
     every second sample and rebuilding those near the camera from every sample, their borders
     matched to the coarse (`TerrainMeshBuilder.BuildChunk`'s `edgeStride`).
@@ -839,11 +842,14 @@ and a Lumen an Ape. A missing,
     frame, and go beyond a wider radius. `StreamingSettings` (`Streaming` in
     `settlement_view.json`) holds the radii, and F1's streaming line shows what is loaded.
   - `Water/WaterPresenter`: sea-level plane (`Materials/water.tres`, `Shaders/water.gdshader`)
-    tinted by a baked depth map, so it does not read the depth buffer. Waves flatten and the
-    surface gets rougher with camera distance, which avoids flickering sun glints.
+    tinted by a baked depth map, so it does not read the depth buffer. Three layers of ripples from
+    `Water/WaterTextures` drift across it, and waves roll in and break into foam over the shallows
+    (ADR-077). Ripples flatten, foam fades and the surface gets rougher with camera distance, which
+    avoids flickering sun glints.
   - `Water/FreshWaterPresenter` (ADR-022): the rivers and lakes from the `HydrologyMap`
     (`WaterSurfaceMesh`) and the floodwater (`FloodSurface`), with `Shaders/fresh_water.gdshader`
-    (depth in the vertex colour; floods are muddy).
+    (depth and flow in the vertex colour; `WaterSurfaceMesh.FlowAt` gives the flow, which carries the
+    ripples and foam along, ADR-077; water fades out at its banks; floods are muddy).
   - `Settlements/SettlementPresenter`: one `SettlementView` per settlement with the shrine and
     the name/population label, plus:
     - `SiteView`: the houses in the village's look (ADR-052): one MultiMesh of the style's house
@@ -1600,15 +1606,23 @@ running for every settlement either way.
   flock wheels round its point), never on water or a village's bare ground. `AnimalMesh` builds a
   deer and a bird, their parts tagged for `Shaders/animal.gdshader` (legs swing, heads lower to
   graze, wings beat, antlers for stags). `BridgeLayout` finds where a road crosses water and lays
-  a plank bridge from bank to bank (`RoadPresenter`).
+  a `BridgeSpan` from the top of one bank to the top of the other, its deck arching between the
+  road's two ends (ADR-077). `RoadPresenter` draws one bridge per crossing, and `SettlementCrowd`
+  stands walkers on its deck.
+- `VillagePlan` (ADR-077) lays a village out from its id alone: a green, eight lanes along the ways
+  a road can leave a region, cross lanes, and plots along them, houses' doors to their lanes.
+  `SettlementLayout` takes its plots on dry, gentle ground in order, so growth only adds houses, and
+  no road built later needs one moved. `LaneView` and `FieldView` draw the worn ground and the fields
+  on the land.
 - `VillageArchitecture` (ADR-052) gives a village its look: the style its land builds in
   (`StyleOf`: adobe, stilt houses, stone cottages, timber longhouses, round huts), longhouses and
   an upper storey as it grows, colours from `Architecture` in `settlement_view.json`, and its
-  god's colours where its style (ADR-042) is strongly felt. `HouseMesh` and `CivicMesh` build the
+  god's colours where its style (ADR-042) is strongly felt; `ColorsOf` gives each house its own
+  (ADR-077). `HouseMesh` (four variants of each style) and `CivicMesh` build the
   houses, temples, stakes, stone walls and towers with `MeshBuilder`, tagging each vertex with its
   `BuildingSlot`; `CivicLayout.Towers` places the towers by the gates. `Shaders/building.gdshader`
   paints each slot with a pattern worked out in the building's own space (daub, planks, coursed
-  stone, thatch, slate, timber grain) and hides what is not yet built.
+  stone, thatch, slate, timber grain), weathers it, and hides what is not yet built.
 - `PersonLooks` gives each person their skin, hair, clothes (by work), height and headwear (a
   straw hat, a scarf) and a dress from `PresentationHash`; prophets and elders wear a robe of their
   god's colour and carry a staff. `PersonMotions` maps what a figure does to a motion (sitting,

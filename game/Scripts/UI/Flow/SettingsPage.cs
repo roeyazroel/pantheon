@@ -28,6 +28,7 @@ internal static class SettingsPage
         Toggle(menu, graphics, "Vertical sync", s => s.VSync, (s, on) => s with { VSync = on });
         Toggle(menu, graphics, "Shadows", s => s.Shadows, (s, on) => s with { Shadows = on });
         Toggle(menu, graphics, "Lighting effects", s => s.LightingEffects, (s, on) => s with { LightingEffects = on });
+        Toggle(menu, graphics, "Smooth edges", s => s.SmoothEdges, (s, on) => s with { SmoothEdges = on });
         Slide(menu, graphics, "Render scale", s => s.RenderScale, (s, v) => s with { RenderScale = v }, GameSettings.MinRenderScale, 1f);
         Slide(menu, graphics, "Particles", s => s.Particles, (s, v) => s with { Particles = v }, GameSettings.MinParticles, 1f);
         Slide(menu, graphics, "Citizens shown", s => s.Citizens, (s, v) => s with { Citizens = v }, GameSettings.MinCitizens, 1f);

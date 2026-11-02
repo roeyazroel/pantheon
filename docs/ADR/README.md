@@ -92,6 +92,7 @@ silently:
 | [ADR-074](ADR-074-the-players-angel.md) | The player's angel, a conscience and a guide shaped by the god's deeds | Accepted |
 | [ADR-075](ADR-075-builds-in-ci-and-fetched-libraries.md) | Release builds in CI, and Terrain3D's libraries fetched rather than committed | Accepted (amends ADR-005 and ADR-031) |
 | [ADR-076](ADR-076-a-website-built-from-the-game.md) | A website on GitHub Pages, built from the game's own code and data | Accepted |
+| [ADR-077](ADR-077-land-water-and-villages.md) | The land's breadth, living water, and villages of lanes | Accepted (amends ADR-008, ADR-022, ADR-051, ADR-052 and ADR-054) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

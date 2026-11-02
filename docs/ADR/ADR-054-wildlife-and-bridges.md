@@ -1,6 +1,6 @@
 # ADR-054: Wildlife and bridges
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-077](ADR-077-land-water-and-villages.md)
 - Date: 2026-10-20
 - Builds on: [ADR-028](ADR-028-seasons-extremes-and-ecology.md) (the land's wildlife),
   [ADR-049](ADR-049-people-that-look-and-move-like-people.md) (the crowds' clock) and

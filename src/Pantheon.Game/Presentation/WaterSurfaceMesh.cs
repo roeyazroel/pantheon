@@ -10,7 +10,8 @@ namespace Pantheon.Game.Presentation;
 /// <param name="Positions">Vertex positions in world metres.</param>
 /// <param name="Depths">Depth of the water over the ground at each vertex, 0..1 of the deepest drawn.</param>
 /// <param name="Indices">Triangle list, wound clockwise when seen from above, as Godot expects.</param>
-public sealed record WaterSurfaceMeshData(Vector3[] Positions, float[] Depths, int[] Indices)
+/// <param name="Flows">Which way and how fast the water runs at each vertex, each axis -1..1 (ADR-077); still when <c>null</c>.</param>
+public sealed record WaterSurfaceMeshData(Vector3[] Positions, float[] Depths, int[] Indices, Vector2[]? Flows = null)
 {
     /// <summary>Whether there is nothing to draw.</summary>
     public bool IsEmpty => Indices.Length == 0;
@@ -29,6 +30,12 @@ public static class WaterSurfaceMesh
 
     /// <summary>Metres a flood's water stands above the water it rises from before it rises.</summary>
     public const float FloodClearance = 0.3f;
+
+    // The fall per metre of a river that runs at full speed.
+    private const float FastFall = 0.06f;
+
+    // Samples either way the fall of the water is measured over: the surface steps from cell to cell.
+    private const int FlowReach = 6;
 
     /// <summary>The rivers and lakes: one quad per <paramref name="step"/>-sample cell that has water at a corner.</summary>
     /// <param name="field">Terrain with its hydrology.</param>
@@ -94,6 +101,7 @@ public static class WaterSurfaceMesh
         private readonly List<Vector3> _positions = [];
         private readonly List<float> _depths = [];
         private readonly List<int> _indices = [];
+        private readonly List<Vector2> _flows = [];
 
         /// <summary>A quad over the cell from sample (x0, z0) to (x1, z1), its corners at the given water heights.</summary>
         public void Quad(TerrainField field, int x0, int z0, int x1, int z1, float topLeft, float topRight, float bottomLeft, float bottomRight)
@@ -107,12 +115,42 @@ public static class WaterSurfaceMesh
         }
 
         /// <summary>The finished mesh.</summary>
-        public WaterSurfaceMeshData Build() => new([.. _positions], [.. _depths], [.. _indices]);
+        public WaterSurfaceMeshData Build() => new([.. _positions], [.. _depths], [.. _indices], [.. _flows]);
 
         private void Corner(TerrainField field, int x, int z, float level)
         {
             _positions.Add(new Vector3(x * field.Spacing, level, z * field.Spacing));
             _depths.Add(Math.Clamp((level - field.GetHeight(x, z)) / DeepestDrawn, 0f, 1f));
+            _flows.Add(FlowAt(field, x, z));
         }
+    }
+
+    /// <summary>
+    /// Which way water runs at a sample, from the fall of its surface over the wet samples around it:
+    /// downhill, faster the steeper the fall, and still on a level lake.
+    /// </summary>
+    /// <param name="field">Terrain with its hydrology.</param>
+    /// <param name="x">Sample column.</param>
+    /// <param name="z">Sample row.</param>
+    /// <returns>Each axis -1..1; zero on dry ground.</returns>
+    public static Vector2 FlowAt(TerrainField field, int x, int z)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        var fall = new Vector2(Fall(field, x, z, 1, 0), Fall(field, x, z, 0, 1)) / FastFall;
+        var length = fall.Length();
+        return length > 1f ? fall / length : fall;
+    }
+
+    /// <summary>How far the water falls per metre along a direction, across a sample; none where either side is dry.</summary>
+    private static float Fall(TerrainField field, int x, int z, int dx, int dz)
+    {
+        var (ahead, behind) = (LevelAt(field, x + (dx * FlowReach), z + (dz * FlowReach)), LevelAt(field, x - (dx * FlowReach), z - (dz * FlowReach)));
+        return float.IsNaN(ahead) || float.IsNaN(behind) ? 0f : (behind - ahead) / (2f * FlowReach * field.Spacing);
+    }
+
+    private static float LevelAt(TerrainField field, int x, int z)
+    {
+        var last = field.Resolution - 1;
+        return field.Hydrology.WaterSurface[(Math.Clamp(z, 0, last) * field.Resolution) + Math.Clamp(x, 0, last)];
     }
 }

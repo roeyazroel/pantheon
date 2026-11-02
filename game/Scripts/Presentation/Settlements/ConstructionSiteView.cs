@@ -38,7 +38,7 @@ internal sealed class ConstructionSiteView
     public void Dress(VillageLook look)
     {
         var multimesh = _house.Multimesh;
-        multimesh.Mesh = _buildings.House(look.Style, look.TwoStoreys);
+        multimesh.Mesh = _buildings.House(look.Style, look.TwoStoreys, 0);
         var (walls, roof) = HouseMesh.PatternsOf(look.Style);
         multimesh.SetInstanceTransform(0, Transform3D.Identity);
         multimesh.SetInstanceColor(0, BuildingAssets.InstanceColor(look.Wall));

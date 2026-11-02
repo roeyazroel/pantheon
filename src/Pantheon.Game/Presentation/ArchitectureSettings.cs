@@ -58,6 +58,12 @@ public sealed record ArchitectureSettings
     /// <summary>How far each house's colours vary from the village's, as a share of their brightness.</summary>
     public required float HouseVariation { get; init; }
 
+    /// <summary>The share of a village's houses that take any of their style's colours rather than the village's own (ADR-077).</summary>
+    public required float HouseMix { get; init; }
+
+    /// <summary>The share of a village's houses that take its god's colours, where they show at all (ADR-077).</summary>
+    public required float MotifShare { get; init; }
+
     /// <summary>Throws when a value is out of range.</summary>
     /// <exception cref="ArgumentException">A value is invalid.</exception>
     public void Validate()
