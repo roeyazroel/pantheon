@@ -46,6 +46,8 @@ internal sealed partial class AudioPresenter : Node
     private AudioStreamPlayer _musicNext = null!;
     private AudioStreamPlayer _rain = null!;
     private AudioStreamPlayer _wind = null!;
+    private AudioStreamPlayer _crickets = null!;
+    private AudioStreamPlayer _birdsong = null!;
     private Task<(Dictionary<SoundKind, float[]> Sounds, double Milliseconds)>? _making;
     private Task? _composing;
     private Pantheon.Game.Audio.Orchestra.MusicContent? _score;
@@ -89,7 +91,7 @@ internal sealed partial class AudioPresenter : Node
         }
 
         (_musicNow, _musicNext) = (Player(MusicBus), Player(MusicBus));
-        (_rain, _wind) = (Player(AmbienceBus), Player(AmbienceBus));
+        (_rain, _wind, _crickets, _birdsong) = (Player(AmbienceBus), Player(AmbienceBus), Player(AmbienceBus), Player(AmbienceBus));
         _making = Task.Run(Make);
         _score = Bootstrap.Startup.TryLoadMusic();
         if (_score is { } score)
@@ -157,6 +159,10 @@ internal sealed partial class AudioPresenter : Node
         var (rain, wind) = AudioDirector.Ambience(_session.Content.Weather, _session.World, _focus());
         Ease(_rain, rain, delta);
         Ease(_wind, wind, delta);
+        var season = Pantheon.Simulation.Weather.ClimateModel.SeasonOf(_session.Content.Weather, _session.World);
+        var (crickets, birds) = AudioDirector.SmallCreatures(DayClock.Night, DayClock.Birds, rain, season);
+        Ease(_crickets, crickets, delta);
+        Ease(_birdsong, birds, delta);
     }
 
     /// <summary>Makes every sound, off the main thread.</summary>
@@ -239,7 +245,7 @@ internal sealed partial class AudioPresenter : Node
             _sounds[kind] = Stream(samples, stereo: false, loop: SoundBank.Loops(kind));
         }
 
-        foreach (var (player, kind) in new[] { (_rain, SoundKind.Rain), (_wind, SoundKind.Wind) })
+        foreach (var (player, kind) in new[] { (_rain, SoundKind.Rain), (_wind, SoundKind.Wind), (_crickets, SoundKind.Crickets), (_birdsong, SoundKind.Birdsong) })
         {
             player.Stream = _sounds[kind];
             player.VolumeDb = -60f;

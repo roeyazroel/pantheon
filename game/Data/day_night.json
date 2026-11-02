@@ -16,28 +16,39 @@
   "HighestMoon": 48.0,
   "LowestLight": 7.0,
 
-  // At night up to AsleepShare of a village's people are indoors, lit windows show Lamplight, and a
+  // People leave off between HomeFrom and HomeBy, each at their own hour, and walk home along the
+  // village's ways at HomeSpeed m/s, up to MostHurry times faster when the game runs fast. They go in
+  // at the door, DoorReach metres from the house's centre, and by IndoorsBy everybody is in. They rise
+  // between UpFrom and UpBy and come out of the same door (ADR-080). Windows show Lamplight, and a
   // light of ShrineLight strength burns by each shrine, reaching ShrineLightReach metres.
-  "AsleepShare": 0.8,
+  "HomeFrom": 17.0,
+  "HomeBy": 18.5,
+  "IndoorsBy": 22.0,
+  "UpFrom": 5.5,
+  "UpBy": 7.5,
+  "HomeSpeed": 2.3,
+  "MostHurry": 8.0,
+  "DoorReach": 2.0,
   "ShrineLight": 3.0,
   "ShrineLightReach": 46.0,
   "Lamplight": "#ffb25e",
 
   // The light at the hours named; the hours between blend. Light and Energy are the sun or the moon,
   // Ambient the sky's own light, SkyTop and SkyHorizon the sky, Haze the distance, and Night how much
-  // of night it is.
+  // of night it is. Lamps is the share of windows lit, Hearths how much smoke rises from the houses,
+  // Mist how much mist lies on low land, and Birds how much birdsong there is (ADR-080).
   "Keys": [
-    { "Hour": 0.0, "Light": "#9db8e8", "Energy": 0.62, "Ambient": 0.62, "SkyTop": "#050b1e", "SkyHorizon": "#16233f", "Haze": "#223352", "Night": 1.0 },
-    { "Hour": 4.5, "Light": "#a8bde6", "Energy": 0.5, "Ambient": 0.62, "SkyTop": "#07102a", "SkyHorizon": "#1f2d4c", "Haze": "#2a3a58", "Night": 1.0 },
-    { "Hour": 5.5, "Light": "#d8b8c8", "Energy": 0.14, "Ambient": 1.25, "SkyTop": "#1c2c58", "SkyHorizon": "#c08a98", "Haze": "#8c8094", "Night": 0.7 },
-    { "Hour": 6.0, "Light": "#ffc092", "Energy": 0.0, "Ambient": 1.55, "SkyTop": "#2c4678", "SkyHorizon": "#f2b284", "Haze": "#d2b2a4", "Night": 0.35 },
-    { "Hour": 7.0, "Light": "#ffd2a4", "Energy": 1.2, "Ambient": 1.3, "SkyTop": "#3a629e", "SkyHorizon": "#f6d6ae", "Haze": "#e2d0bc", "Night": 0.0 },
-    { "Hour": 9.5, "Light": "#fff0d8", "Energy": 1.5, "Ambient": 1.12, "SkyTop": "#2c5aa8", "SkyHorizon": "#bcd0e2", "Haze": "#b9cbdc", "Night": 0.0 },
-    { "Hour": 13.0, "Light": "#fff2de", "Energy": 1.55, "Ambient": 1.12, "SkyTop": "#2a5ab0", "SkyHorizon": "#b6cde4", "Haze": "#b5c9dc", "Night": 0.0 },
-    { "Hour": 16.5, "Light": "#ffe8c2", "Energy": 1.5, "Ambient": 1.15, "SkyTop": "#2c5aa4", "SkyHorizon": "#c6d2dc", "Haze": "#bccbd8", "Night": 0.0 },
-    { "Hour": 18.5, "Light": "#ffcb94", "Energy": 1.3, "Ambient": 1.3, "SkyTop": "#39578f", "SkyHorizon": "#f5c08a", "Haze": "#e0c0a4", "Night": 0.0 },
-    { "Hour": 19.5, "Light": "#ffa878", "Energy": 0.6, "Ambient": 1.6, "SkyTop": "#2c3a6e", "SkyHorizon": "#ee9468", "Haze": "#c49a8c", "Night": 0.25 },
-    { "Hour": 20.0, "Light": "#ffa070", "Energy": 0.0, "Ambient": 1.45, "SkyTop": "#1f2a58", "SkyHorizon": "#b8707c", "Haze": "#8a7284", "Night": 0.55 },
-    { "Hour": 21.0, "Light": "#9db8e8", "Energy": 0.45, "Ambient": 0.64, "SkyTop": "#0a1230", "SkyHorizon": "#232f50", "Haze": "#2a3a58", "Night": 1.0 }
+    { "Hour": 0.0, "Light": "#9db8e8", "Energy": 0.62, "Ambient": 0.62, "SkyTop": "#050b1e", "SkyHorizon": "#16233f", "Haze": "#223352", "Night": 1.0, "Lamps": 0.35, "Hearths": 0.12, "Mist": 0.6, "Birds": 0.0 },
+    { "Hour": 4.5, "Light": "#a8bde6", "Energy": 0.5, "Ambient": 0.62, "SkyTop": "#07102a", "SkyHorizon": "#1f2d4c", "Haze": "#2a3a58", "Night": 1.0, "Lamps": 0.2, "Hearths": 0.12, "Mist": 1.2, "Birds": 0.0 },
+    { "Hour": 5.5, "Light": "#d8b8c8", "Energy": 0.14, "Ambient": 1.25, "SkyTop": "#1c2c58", "SkyHorizon": "#c08a98", "Haze": "#8c8094", "Night": 0.7, "Lamps": 0.5, "Hearths": 0.5, "Mist": 1.8, "Birds": 0.5 },
+    { "Hour": 6.0, "Light": "#ffc092", "Energy": 0.0, "Ambient": 1.55, "SkyTop": "#2c4678", "SkyHorizon": "#f2b284", "Haze": "#d2b2a4", "Night": 0.35, "Lamps": 0.45, "Hearths": 0.8, "Mist": 2.4, "Birds": 1.0 },
+    { "Hour": 7.0, "Light": "#ffd2a4", "Energy": 1.2, "Ambient": 1.3, "SkyTop": "#3a629e", "SkyHorizon": "#f6d6ae", "Haze": "#e2d0bc", "Night": 0.0, "Lamps": 0.08, "Hearths": 0.9, "Mist": 1.8, "Birds": 1.0 },
+    { "Hour": 9.5, "Light": "#fff0d8", "Energy": 1.5, "Ambient": 1.12, "SkyTop": "#2c5aa8", "SkyHorizon": "#bcd0e2", "Haze": "#b9cbdc", "Night": 0.0, "Lamps": 0.0, "Hearths": 0.3, "Mist": 0.2, "Birds": 0.45 },
+    { "Hour": 13.0, "Light": "#fff2de", "Energy": 1.55, "Ambient": 1.12, "SkyTop": "#2a5ab0", "SkyHorizon": "#b6cde4", "Haze": "#b5c9dc", "Night": 0.0, "Lamps": 0.0, "Hearths": 0.12, "Mist": 0.0, "Birds": 0.2 },
+    { "Hour": 16.5, "Light": "#ffe8c2", "Energy": 1.5, "Ambient": 1.15, "SkyTop": "#2c5aa4", "SkyHorizon": "#c6d2dc", "Haze": "#bccbd8", "Night": 0.0, "Lamps": 0.0, "Hearths": 0.25, "Mist": 0.0, "Birds": 0.25 },
+    { "Hour": 18.5, "Light": "#ffcb94", "Energy": 1.3, "Ambient": 1.3, "SkyTop": "#39578f", "SkyHorizon": "#f5c08a", "Haze": "#e0c0a4", "Night": 0.0, "Lamps": 0.3, "Hearths": 0.85, "Mist": 0.0, "Birds": 0.45 },
+    { "Hour": 19.5, "Light": "#ffa878", "Energy": 0.6, "Ambient": 1.6, "SkyTop": "#2c3a6e", "SkyHorizon": "#ee9468", "Haze": "#c49a8c", "Night": 0.25, "Lamps": 0.8, "Hearths": 0.8, "Mist": 0.0, "Birds": 0.35 },
+    { "Hour": 20.0, "Light": "#ffa070", "Energy": 0.0, "Ambient": 1.45, "SkyTop": "#1f2a58", "SkyHorizon": "#b8707c", "Haze": "#8a7284", "Night": 0.55, "Lamps": 0.95, "Hearths": 0.7, "Mist": 0.2, "Birds": 0.1 },
+    { "Hour": 21.0, "Light": "#9db8e8", "Energy": 0.45, "Ambient": 0.64, "SkyTop": "#0a1230", "SkyHorizon": "#232f50", "Haze": "#2a3a58", "Night": 1.0, "Lamps": 1.0, "Hearths": 0.5, "Mist": 0.4, "Birds": 0.0 }
   ]
 }

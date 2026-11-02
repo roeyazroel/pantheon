@@ -7,6 +7,7 @@ export const SHOTS = [
   ['village.jpg', 'Duskwater after fifteen minutes: lanes, houses and fields on the river.'],
   ['night.jpg', 'A winter night at Kestrel Rise, windows lit along the lanes.'],
   ['dusk.jpg', 'Evening light over Duskwater.'],
+  ['evening.jpg', 'The day done, people walk home along the lanes.'],
   ['autumn.jpg', 'Autumn turns the oaks and birches.'],
   ['winter.jpg', 'Frost on the land and the roofs.'],
   ['miracle.jpg', 'A healing settles over Duskwater.'],

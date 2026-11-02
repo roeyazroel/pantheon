@@ -405,6 +405,10 @@ look_sky={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+look_day={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
 look_clouds={
 "type": "sampler2D",
 "value": ""

@@ -2,9 +2,11 @@
 // the year and the weather together. WorldLookView sets these each frame.
 //   look_season: x spring, y autumn, z winter, each 0..1 and fading into the next; w how much of night it is;
 //   look_sky: x how much of the sky is cloud, y how wet the land is, zw how far the clouds have drifted.
+//   look_day: x the share of windows with a lamp in them (ADR-080).
 // Colours here are linear.
 global uniform vec4 look_season;
 global uniform vec4 look_sky;
+global uniform vec4 look_day;
 global uniform sampler2D look_clouds : filter_linear_mipmap, repeat_enable;
 
 // Soft patches over the land, 0..1.

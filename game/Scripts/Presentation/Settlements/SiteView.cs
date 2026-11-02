@@ -16,6 +16,7 @@ internal sealed class SiteView
 {
     private readonly MultiMesh[] _houses = new MultiMesh[HouseMesh.Variants];
     private readonly LaneView _lanes;
+    private readonly HearthView _hearths;
     private readonly BuildingAssets _buildings;
     private readonly int _settlementId;
     private VillageLook? _look;
@@ -33,7 +34,8 @@ internal sealed class SiteView
     /// <param name="buildings">The buildings made in code.</param>
     /// <param name="settlementId">The settlement, for each house's colours.</param>
     /// <param name="terrain">Terrain, which its lanes lie on.</param>
-    public SiteView(Node3D root, SettlementAssets assets, SettlementLayoutSettings layout, BuildingAssets buildings, int settlementId, Pantheon.Simulation.Terrain.TerrainField terrain)
+    /// <param name="center">The village's middle.</param>
+    public SiteView(Node3D root, SettlementAssets assets, SettlementLayoutSettings layout, BuildingAssets buildings, int settlementId, Pantheon.Simulation.Terrain.TerrainField terrain, Vector3 center)
     {
         (_buildings, _settlementId) = (buildings, settlementId);
         for (var variant = 0; variant < _houses.Length; variant++)
@@ -43,6 +45,7 @@ internal sealed class SiteView
         }
 
         _lanes = new LaneView(root, layout, terrain);
+        _hearths = new HearthView(root, center);
         _fields = new FieldView(root, layout, terrain);
         _rubble = AddMultiMesh(root, "Ruins", assets.Rubble, useColors: false);
         _construction = new ConstructionSiteView(root, assets, buildings);
@@ -93,6 +96,10 @@ internal sealed class SiteView
         _construction.Show(site.Construction);
     }
 
+    /// <summary>Thickens or thins the village's smoke for the hour.</summary>
+    /// <param name="camera">The camera's place.</param>
+    public void Breathe(Vector3 camera) => _hearths.Update(camera);
+
     /// <summary>Writes one low, skewed heap per ruined house.</summary>
     private void PlaceRuins(IReadOnlyList<HutPlacement> ruins)
     {
@@ -113,6 +120,7 @@ internal sealed class SiteView
             return;
         }
 
+        _hearths.Show(houses, HouseMesh.SmokeHeight(look.Style, look.TwoStoreys));
         var (walls, roof) = HouseMesh.PatternsOf(look.Style);
         var written = new int[_houses.Length];
         for (var variant = 0; variant < _houses.Length; variant++)

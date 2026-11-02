@@ -9,6 +9,7 @@ namespace Pantheon.Game.Population;
 /// <param name="RegionalTierEnterDistance">The settlement enters Tier 2 within this distance.</param>
 /// <param name="RegionalTierExitDistance">The settlement leaves Tier 2 beyond this distance.</param>
 /// <param name="Navigation">The village's local navigation in Tier 2 (ADR-046): its cells, those blocked, the ways searched and those that go round something; <c>null</c> without one.</param>
+/// <param name="Indoors">How many of the representatives have gone in for the night (ADR-080).</param>
 public sealed record CrowdStatus(
     int SettlementId,
     SimulationTier Tier,
@@ -17,4 +18,5 @@ public sealed record CrowdStatus(
     float CameraDistance,
     float RegionalTierEnterDistance,
     float RegionalTierExitDistance,
-    (int Cells, int Blocked, int Searches, int Detours)? Navigation = null);
+    (int Cells, int Blocked, int Searches, int Detours)? Navigation = null,
+    int Indoors = 0);

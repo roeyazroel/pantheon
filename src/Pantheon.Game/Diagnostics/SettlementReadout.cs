@@ -112,12 +112,13 @@ internal static class SettlementReadout
                 crowd.CameraDistance,
                 crowd.RegionalTierEnterDistance),
             SimulationTier.Regional => Format(
-                "  sim {0}: {1} citizens shown, 1 per {2:0.0} people, camera {3:0} m, statistical beyond {4:0} m",
+                "  sim {0}: {1} citizens shown{5}, 1 per {2:0.0} people, camera {3:0} m, statistical beyond {4:0} m",
                 DescribeTier(crowd.Tier),
                 crowd.Representatives,
                 crowd.PeoplePerRepresentative,
                 crowd.CameraDistance,
-                crowd.RegionalTierExitDistance),
+                crowd.RegionalTierExitDistance,
+                crowd.Indoors > 0 ? Format(", {0} of them indoors", crowd.Indoors) : string.Empty),
         };
     }
 

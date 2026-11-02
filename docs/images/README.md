@@ -28,6 +28,7 @@ shows how to take them, on a machine without a GPU too. Each was taken with thes
 | `book.jpg` | `--book=world --angel=off --advance-ticks=3000 --hour=15 --quit-after-frames=50` |
 | `autumn.jpg` | `--season=autumn --focus=3 --camera-distance=170 --advance-ticks=9000 --angel=off --hour=15 --quit-after-frames=150` |
 | `winter.jpg` | `--season=winter --camera-distance=130 --advance-ticks=9000 --angel=off --hour=15 --quit-after-frames=150` |
+| `evening.jpg` | `--focus=8 --camera-distance=70 --advance-ticks=9000 --angel=off --hour=18 --quit-after-frames=300` |
 | `dusk.jpg` | `--camera-distance=200 --advance-ticks=9000 --angel=off --hour=18.1 --quit-after-frames=150` |
 | `night.jpg` | `--season=winter --focus=8 --camera-distance=90 --advance-ticks=9000 --angel=off --hour=22.5 --quit-after-frames=150` |
 | `miracle.jpg` | `--divine-power=9000 --cast=heal --camera-distance=90 --advance-ticks=9000 --angel=off --hour=15 --quit-after-frames=26` |

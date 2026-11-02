@@ -38,6 +38,12 @@ public enum SoundKind
 
     /// <summary>A looping rain.</summary>
     Rain,
+
+    /// <summary>Looping crickets, on warm nights (ADR-080).</summary>
+    Crickets,
+
+    /// <summary>Looping birdsong, thickest at dawn (ADR-080).</summary>
+    Birdsong,
 }
 
 /// <summary>The music's mood (spec §60's dynamic music).</summary>

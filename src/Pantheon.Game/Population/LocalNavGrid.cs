@@ -162,15 +162,28 @@ public sealed class LocalNavGrid
             return known;
         }
 
-        Vector2[]? way = null;
-        if (!Clear(from, to, from, to))
+        var way = Route(from, to);
+        _ways[key] = way;
+        return way;
+    }
+
+    /// <summary>
+    /// A way searched for afresh and not kept: for people setting out from wherever they happen to be
+    /// (ADR-080), whose ways would pile up, never to be asked for again.
+    /// </summary>
+    /// <param name="from">Where the figure sets off.</param>
+    /// <param name="to">Where it goes.</param>
+    /// <returns>The waypoints after the start, or <c>null</c> to walk straight.</returns>
+    public Vector2[]? Route(Vector2 from, Vector2 to)
+    {
+        if (Clear(from, to, from, to))
         {
-            Searches++;
-            way = Search(from, to);
-            Detours += way is null ? 0 : 1;
+            return null;
         }
 
-        _ways[key] = way;
+        Searches++;
+        var way = Search(from, to);
+        Detours += way is null ? 0 : 1;
         return way;
     }
 

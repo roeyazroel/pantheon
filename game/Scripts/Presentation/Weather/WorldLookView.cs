@@ -12,6 +12,9 @@ internal sealed class WorldLookView
     // The clouds' noise in the shader is this many tiles a metre (world_look.gdshaderinc).
     private const float CloudTiles = 0.00038f;
 
+    // How much more the hearths burn in the depth of winter.
+    private const float ColdHearths = 0.6f;
+
     private WorldLookState? _shown;
     private Vector2 _drift;
 
@@ -38,5 +41,7 @@ internal sealed class WorldLookView
         var cover = Mathf.Lerp(view.ClearCloudCover, view.OvercastCloudCover, look.Overcast);
         RenderingServer.GlobalShaderParameterSet("look_season", new Vector4(look.Spring, look.Autumn, look.Winter, DayClock.Night));
         RenderingServer.GlobalShaderParameterSet("look_sky", new Vector4(cover, look.Overcast, _drift.X, _drift.Y));
+        RenderingServer.GlobalShaderParameterSet("look_day", new Vector4(DayClock.Lamps, 0f, 0f, 0f));
+        DayClock.Hearths = Mathf.Min(1f, DayClock.Hearths * (1f + (ColdHearths * look.Winter)));
     }
 }

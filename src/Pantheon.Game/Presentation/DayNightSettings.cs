@@ -28,8 +28,20 @@ public sealed record DaylightKey
     /// <summary>The colour of the haze.</summary>
     public required RgbColor Haze { get; init; }
 
-    /// <summary>How much of night this is, 0..1: it lights windows, brings out the stars and sends people indoors.</summary>
+    /// <summary>How much of night this is, 0..1: it brings out the stars and the fireflies and sends the birds to roost.</summary>
     public required float Night { get; init; }
+
+    /// <summary>The share of windows with a lamp in them, 0..1, so they go out as a village falls asleep (ADR-080).</summary>
+    public required float Lamps { get; init; }
+
+    /// <summary>How many hearths are burning, 0..1: smoke from the houses at breakfast and supper.</summary>
+    public required float Hearths { get; init; }
+
+    /// <summary>How much mist lies on low land, as a multiple of the haze there.</summary>
+    public required float Mist { get; init; }
+
+    /// <summary>How much birdsong there is, 0..1.</summary>
+    public required float Birds { get; init; }
 }
 
 /// <summary>How the day passes (ADR-079), from <c>day_night.json</c>. Presentation only: the simulation never reads it.</summary>
@@ -62,8 +74,29 @@ public sealed record DayNightSettings
     /// <summary>The lowest the light is drawn from, in degrees: lower, its shadows would run for ever.</summary>
     public required float LowestLight { get; init; }
 
-    /// <summary>The share of a village's people indoors in the depth of night, 0..1.</summary>
-    public required float AsleepShare { get; init; }
+    /// <summary>The hour the first people leave off and walk home (ADR-080).</summary>
+    public required float HomeFrom { get; init; }
+
+    /// <summary>The hour the last people leave off.</summary>
+    public required float HomeBy { get; init; }
+
+    /// <summary>The hour by which everybody is in.</summary>
+    public required float IndoorsBy { get; init; }
+
+    /// <summary>The hour the first people rise.</summary>
+    public required float UpFrom { get; init; }
+
+    /// <summary>The hour the last people rise.</summary>
+    public required float UpBy { get; init; }
+
+    /// <summary>How fast people walk home, in metres a second.</summary>
+    public required float HomeSpeed { get; init; }
+
+    /// <summary>The most times faster they may hurry when the game runs fast.</summary>
+    public required float MostHurry { get; init; }
+
+    /// <summary>The distance from a house's centre at which someone reaches its door and goes in, in metres.</summary>
+    public required float DoorReach { get; init; }
 
     /// <summary>The strength of the warm light by a shrine in the depth of night.</summary>
     public required float ShrineLight { get; init; }
@@ -115,9 +148,19 @@ public sealed record DayNightSettings
             throw new ArgumentException("StartHour and HeldHour must lie in 0..24.");
         }
 
-        if (!(HighestSun is > 0f and <= 90f) || !(HighestMoon is > 0f and <= 90f) || !(LowestLight is > 0f and <= 45f) || !(AsleepShare is >= 0f and <= 1f))
+        if (!(HighestSun is > 0f and <= 90f) || !(HighestMoon is > 0f and <= 90f) || !(LowestLight is > 0f and <= 45f))
         {
-            throw new ArgumentException("HighestSun and HighestMoon must lie in 0..90, LowestLight in 0..45 and AsleepShare in 0..1.");
+            throw new ArgumentException("HighestSun and HighestMoon must lie in 0..90, and LowestLight in 0..45.");
+        }
+
+        if (!(UpFrom >= 0f && UpFrom <= UpBy && UpBy < HomeFrom && HomeFrom <= HomeBy && HomeBy < IndoorsBy && IndoorsBy < 24f))
+        {
+            throw new ArgumentException("UpFrom, UpBy, HomeFrom, HomeBy and IndoorsBy must follow one another through the day.");
+        }
+
+        if (!(HomeSpeed > 0f) || !(MostHurry >= 1f) || !(DoorReach > 0f))
+        {
+            throw new ArgumentException("HomeSpeed and DoorReach must be positive, and MostHurry at least 1.");
         }
 
         if (Keys.Count < 2 || Keys[0].Hour != 0f)
@@ -128,9 +171,17 @@ public sealed record DayNightSettings
         var last = -1f;
         foreach (var key in Keys)
         {
-            if (!(key.Hour > last && key.Hour < 24f) || !(key.Energy >= 0f) || !(key.Ambient >= 0f) || !(key.Night is >= 0f and <= 1f))
+            if (!(key.Hour > last && key.Hour < 24f) || !(key.Energy >= 0f) || !(key.Ambient >= 0f) || !(key.Mist >= 0f))
             {
-                throw new ArgumentException("Keys must be in order of hour within 0..24, with Energy and Ambient not negative and Night in 0..1.");
+                throw new ArgumentException("Keys must be in order of hour within 0..24, with Energy, Ambient and Mist not negative.");
+            }
+
+            foreach (var share in new[] { key.Night, key.Lamps, key.Hearths, key.Birds })
+            {
+                if (!(share is >= 0f and <= 1f))
+                {
+                    throw new ArgumentException("A key's Night, Lamps, Hearths and Birds must lie in 0..1.");
+                }
             }
 
             last = key.Hour;

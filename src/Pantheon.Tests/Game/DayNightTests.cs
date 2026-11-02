@@ -107,6 +107,18 @@ public sealed class DayNightTests
     }
 
     [Fact]
+    public void Lamps_GoOutAsTheVillageSleeps_AndHearthsBurnAtBreakfastAndSupper()
+    {
+        Assert.True(DayNight.At(Settings, 21f).Lamps > DayNight.At(Settings, 3f).Lamps, "most lamps are out by the small hours");
+        Assert.Equal(0f, DayNight.At(Settings, 13f).Lamps, 3);
+        Assert.True(DayNight.At(Settings, 7f).Hearths > DayNight.At(Settings, 13f).Hearths);
+        Assert.True(DayNight.At(Settings, 18.5f).Hearths > DayNight.At(Settings, 13f).Hearths);
+        Assert.True(DayNight.At(Settings, 6.5f).Mist > DayNight.At(Settings, 13f).Mist);
+        Assert.True(DayNight.At(Settings, 6.5f).Birds > DayNight.At(Settings, 13f).Birds);
+        Assert.Equal(0f, DayNight.At(Settings, 23f).Birds, 3);
+    }
+
+    [Fact]
     public void EveryPartOfTheDay_HasItsWord()
     {
         Assert.Equal(6, Enum.GetValues<DayPart>().Select(DayNight.WordOf).Distinct().Count());

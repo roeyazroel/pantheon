@@ -31,12 +31,28 @@ public sealed class AudioTests
     [Theory]
     [InlineData(SoundKind.Wind)]
     [InlineData(SoundKind.Rain)]
+    [InlineData(SoundKind.Crickets)]
+    [InlineData(SoundKind.Birdsong)]
     public void TheLoops_RunOnIntoTheirStart_WithoutAJump(SoundKind kind)
     {
         var samples = SoundBank.Render(kind);
 
         Assert.True(SoundBank.Loops(kind));
         Assert.True(Math.Abs(samples[^1] - samples[0]) < 0.25f);
+    }
+
+    [Fact]
+    public void Crickets_SingOnWarmNights_AndBirdsWithTheLight_AndRainHushesThem()
+    {
+        var warmNight = AudioDirector.SmallCreatures(1f, 0f, 0f, Pantheon.Domain.Weather.Season.Summer);
+        var winterNight = AudioDirector.SmallCreatures(1f, 0f, 0f, Pantheon.Domain.Weather.Season.Winter);
+        var dawn = AudioDirector.SmallCreatures(0.3f, 1f, 0f, Pantheon.Domain.Weather.Season.Spring);
+        var wet = AudioDirector.SmallCreatures(1f, 1f, 1f, Pantheon.Domain.Weather.Season.Summer);
+
+        Assert.True(warmNight.Crickets > 0.2f && warmNight.Birds == 0f);
+        Assert.Equal(0f, winterNight.Crickets);
+        Assert.True(dawn.Birds > dawn.Crickets);
+        Assert.Equal((0f, 0f), wet);
     }
 
     [Fact]

@@ -25,9 +25,14 @@ public sealed class SettlementCrowd : ICitizenWays
     private readonly WorldSeed _seed;
     private readonly int _settlementId;
     private readonly SettlementViewSettings _settings;
+    private readonly DayNightSettings? _day;
     private IReadOnlyList<RepresentativeCitizen> _roster = [];
     private Vector2[] _shown = [];
     private bool[] _placed = [];
+    private bool[] _inside = [];
+    private Vector2[]?[] _homeways = [];
+    private int[] _waypoint = [];
+    private float? _lastHour;
     private CitizenPose[] _poses = [];
     private RosterInputs? _rosterInputs;
     private double? _lastSeconds;
@@ -35,6 +40,10 @@ public sealed class SettlementCrowd : ICitizenWays
     private double? _bakedAt;
     private IReadOnlyList<BridgeSpan> _bridges = [];
     private readonly LocalNavLand _land = new();
+
+    // Which of a village's people go in first.
+    private const ulong EveningSalt = 80;
+
     private SettlementState? _settlement;
     private SettlementSite? _site;
     private (int Houses, HutPlacement? Construction, int Ruins, bool Temple, int Roads)? _gridFor;
@@ -43,12 +52,14 @@ public sealed class SettlementCrowd : ICitizenWays
     /// <param name="seed">World seed, for the roster hashes.</param>
     /// <param name="settlementId">Settlement shown.</param>
     /// <param name="settings">Settlement presentation settings.</param>
-    public SettlementCrowd(WorldSeed seed, int settlementId, SettlementViewSettings settings)
+    /// <param name="day">How the day passes, for who is abroad (ADR-080); nobody ever goes in without it.</param>
+    public SettlementCrowd(WorldSeed seed, int settlementId, SettlementViewSettings settings, DayNightSettings? day = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         _seed = seed;
         _settlementId = settlementId;
         _settings = settings;
+        _day = day;
     }
 
     /// <summary>Current tier.</summary>
@@ -110,19 +121,118 @@ public sealed class SettlementCrowd : ICitizenWays
     /// <param name="simulationSeconds">The crowds' time in seconds.</param>
     /// <param name="terrain">Terrain, for the figures' heights.</param>
     /// <param name="roads">The world's roads, whose bridges the village's walkers cross (ADR-057).</param>
-    public void Advance(double simulationSeconds, TerrainField terrain, IReadOnlyList<Domain.Roads.RoadState>? roads = null)
+    /// <param name="hour">The hour of the day (ADR-080); when <c>null</c> people keep to their routine.</param>
+    public void Advance(double simulationSeconds, TerrainField terrain, IReadOnlyList<Domain.Roads.RoadState>? roads = null, float? hour = null)
     {
         ArgumentNullException.ThrowIfNull(terrain);
         Bake(terrain, roads);
         var elapsed = _lastSeconds is { } last ? Math.Max(0.0, simulationSeconds - last) : 0.0;
         _lastSeconds = simulationSeconds;
         var maxStep = (float)(_settings.Citizens.CatchUpSpeed * elapsed);
+        var homeStep = HomeStep(hour, (float)elapsed);
         for (var i = 0; i < _roster.Count; i++)
         {
-            var pose = Follow(i, CitizenRoutine.Evaluate(_roster[i], simulationSeconds, _settings.Citizens, this), maxStep, simulationSeconds);
+            var phase = hour is { } now && _day is { } day ? CitizenEvening.Of(day, now, ShareOf(i)) : EveningPhase.Abroad;
+            var pose = phase == EveningPhase.Abroad
+                ? Rising(i, simulationSeconds, maxStep)
+                : GoingIn(i, phase, homeStep, simulationSeconds);
             var height = FootingAt(terrain, pose.Ground) + pose.Bounce;
-            _poses[i] = new CitizenPose(new Vector3(pose.Ground.X, height, pose.Ground.Y), pose.Yaw, pose.Lean, pose.Activity, pose.Cycle);
+            _poses[i] = new CitizenPose(new Vector3(pose.Ground.X, height, pose.Ground.Y), pose.Yaw, pose.Lean, pose.Activity, pose.Cycle, _inside[i]);
         }
+
+        _lastHour = hour;
+    }
+
+    /// <summary>A figure's own place among its neighbours, for when it goes in and comes out.</summary>
+    private float ShareOf(int index) => PresentationHash.Unit(EveningSalt, (ulong)(uint)_settlementId, (ulong)(uint)index);
+
+    /// <summary>How far people walk home this frame, hurrying if the evening is passing fast.</summary>
+    private float HomeStep(float? hour, float elapsed)
+    {
+        if (_day is not { } day || hour is not { } now)
+        {
+            return 0f;
+        }
+
+        var passed = _lastHour is { } last ? ((now - last + DayNight.Hours) % DayNight.Hours) : 0f;
+        return day.HomeSpeed * elapsed * CitizenEvening.Hurry(day, passed, elapsed);
+    }
+
+    /// <summary>A figure on its routine; one who was indoors steps out of its door, and its routine leads it from there.</summary>
+    private RoutinePose Rising(int index, double seconds, float maxStep)
+    {
+        if (_inside[index])
+        {
+            _inside[index] = false;
+            _shown[index] = DoorOf(index);
+        }
+
+        _homeways[index] = null;
+        return Follow(index, CitizenRoutine.Evaluate(_roster[index], seconds, _settings.Citizens, this), maxStep, seconds);
+    }
+
+    /// <summary>A figure whose day is done: it walks the village's ways to its door and goes in. Once night has come it is in, wherever it had got to.</summary>
+    private RoutinePose GoingIn(int index, EveningPhase phase, float step, double seconds)
+    {
+        var door = DoorOf(index);
+        if (phase == EveningPhase.Indoors || _inside[index] || !_placed[index])
+        {
+            (_inside[index], _placed[index], _shown[index]) = (true, true, door);
+            return new RoutinePose(door, 0f, 0f, 0f, CitizenActivity.AtHome, 0f);
+        }
+
+        if (_homeways[index] is null)
+        {
+            _homeways[index] = HomewayOf(index, door);
+            _waypoint[index] = 0;
+        }
+
+        var way = _homeways[index]!;
+        var (at, left) = (_shown[index], step);
+        while (_waypoint[index] < way.Length)
+        {
+            var next = way[_waypoint[index]];
+            var gap = Vector2.Distance(at, next);
+            if (gap > left)
+            {
+                at += (next - at) * (left / gap);
+                _shown[index] = at;
+                var walked = (float)(seconds * _settings.Citizens.CatchUpSpeed);
+                return new RoutinePose(at, GroundMath.YawAlong(next - at), 0f, CitizenRoutine.Bounce(walked, _settings.Citizens), CitizenActivity.Walking, CitizenRoutine.Strides(walked, _settings.Citizens));
+            }
+
+            (at, left) = (next, left - gap);
+            _waypoint[index]++;
+        }
+
+        (_inside[index], _shown[index]) = (true, door);
+        return new RoutinePose(door, 0f, 0f, 0f, CitizenActivity.AtHome, 0f);
+    }
+
+    /// <summary>The way from where a figure stands to its door: round what stands between, to the spot before the door, and in.</summary>
+    private Vector2[] HomewayOf(int index, Vector2 door)
+    {
+        var home = _roster[index].Home;
+        var round = Navigation?.Route(_shown[index], home);
+        var way = new Vector2[(round?.Length ?? 1) + 1];
+        if (round is null)
+        {
+            way[0] = home;
+        }
+        else
+        {
+            Array.Copy(round, way, round.Length);
+        }
+
+        way[^1] = door;
+        return way;
+    }
+
+    /// <summary>Where a figure goes in: its house's door, or for those with no house the spot where it rests.</summary>
+    private Vector2 DoorOf(int index)
+    {
+        var (citizen, reach) = (_roster[index], _day?.DoorReach ?? 2f);
+        return _site is { } site && citizen.House >= 0 && citizen.House < site.Houses.Count ? site.DoorOf(citizen.House, reach) : citizen.Home;
     }
 
     /// <summary>The height a walker stands at: on a bridge's deck over the water, or on the ground.</summary>
@@ -151,7 +261,8 @@ public sealed class SettlementCrowd : ICitizenWays
         cameraDistance,
         _settings.Citizens.RegionalTierEnterDistance,
         _settings.Citizens.RegionalTierExitDistance,
-        Navigation is { } grid ? (grid.Cells, grid.Blocked, grid.Searches, grid.Detours) : null);
+        Navigation is { } grid ? (grid.Cells, grid.Blocked, grid.Searches, grid.Detours) : null,
+        Array.FindAll(_inside, inside => inside).Length);
 
     /// <inheritdoc />
     public IReadOnlyList<Vector2>? Way(int index, CitizenLeg leg, Vector2 from, Vector2 to) => Navigation?.Way(from, to);
@@ -240,6 +351,7 @@ public sealed class SettlementCrowd : ICitizenWays
     {
         var shown = new Vector2[roster.Count];
         var placed = new bool[roster.Count];
+        var inside = new bool[roster.Count];
         var poses = new CitizenPose[roster.Count];
         for (var i = 0; i < roster.Count; i++)
         {
@@ -247,6 +359,7 @@ public sealed class SettlementCrowd : ICitizenWays
             {
                 shown[i] = _shown[i];
                 placed[i] = _placed[i];
+                inside[i] = _inside[i];
                 poses[i] = _poses[i];
             }
             else if (!promoted)
@@ -259,6 +372,9 @@ public sealed class SettlementCrowd : ICitizenWays
         _roster = roster;
         _shown = shown;
         _placed = placed;
+        _inside = inside;
+        _homeways = new Vector2[]?[roster.Count];
+        _waypoint = new int[roster.Count];
         _poses = poses;
         RosterVersion++;
     }
@@ -270,6 +386,9 @@ public sealed class SettlementCrowd : ICitizenWays
         _roster = [];
         _shown = [];
         _placed = [];
+        _inside = [];
+        _homeways = [];
+        _waypoint = [];
         _poses = [];
         _rosterInputs = null;
         RosterVersion++;

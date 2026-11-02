@@ -36,7 +36,11 @@ public enum DayPart
 /// <param name="SkyHorizon">The colour of the sky at the horizon.</param>
 /// <param name="Haze">The colour of the haze.</param>
 /// <param name="Night">How much of night this is, 0..1.</param>
-public readonly record struct Daylight(float Hour, Vector3 ToLight, RgbColor Light, float Energy, float Ambient, RgbColor SkyTop, RgbColor SkyHorizon, RgbColor Haze, float Night);
+/// <param name="Lamps">The share of windows with a lamp in them, 0..1.</param>
+/// <param name="Hearths">How many hearths are burning, 0..1.</param>
+/// <param name="Mist">How much mist lies on low land, as a multiple of the haze there.</param>
+/// <param name="Birds">How much birdsong there is, 0..1.</param>
+public readonly record struct Daylight(float Hour, Vector3 ToLight, RgbColor Light, float Energy, float Ambient, RgbColor SkyTop, RgbColor SkyHorizon, RgbColor Haze, float Night, float Lamps, float Hearths, float Mist, float Birds);
 
 /// <summary>
 /// The day's light as a function of the world's clock (ADR-079), so every player of a shared world
@@ -90,7 +94,11 @@ public static class DayNight
             RgbColor.Lerp(before.SkyTop, after.SkyTop, t),
             RgbColor.Lerp(before.SkyHorizon, after.SkyHorizon, t),
             RgbColor.Lerp(before.Haze, after.Haze, t),
-            Lerp(before.Night, after.Night, t));
+            Lerp(before.Night, after.Night, t),
+            Lerp(before.Lamps, after.Lamps, t),
+            Lerp(before.Hearths, after.Hearths, t),
+            Lerp(before.Mist, after.Mist, t),
+            Lerp(before.Birds, after.Birds, t));
     }
 
     /// <summary>Which part of the day an hour is.</summary>

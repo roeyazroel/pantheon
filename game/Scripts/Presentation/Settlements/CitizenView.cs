@@ -15,9 +15,6 @@ namespace Pantheon.Client.Presentation.Settlements;
 /// </summary>
 internal sealed class CitizenView
 {
-    // Which of the people go indoors first.
-    private const ulong NightSalt = 79;
-
     private readonly MultiMeshInstance3D _instance;
     private readonly MultiMesh _multimesh;
     private readonly CitizenSettings _settings;
@@ -44,8 +41,7 @@ internal sealed class CitizenView
     /// <param name="settlementId">The settlement.</param>
     /// <param name="followed">The villagers the gods follow: their figures hide, as they are shown in full (ADR-043).</param>
     /// <param name="cameraDistance">The camera's distance from the village, which picks the figure's detail.</param>
-    /// <param name="indoors">The share of people indoors for the night (ADR-079), each going in at their own hour.</param>
-    public void Show(SettlementCrowd crowd, int settlementId, IReadOnlyList<VillagerState> followed, float cameraDistance, float indoors)
+    public void Show(SettlementCrowd crowd, int settlementId, IReadOnlyList<VillagerState> followed, float cameraDistance)
     {
         var poses = crowd.Poses;
         _instance.Visible = poses.Count > 0;
@@ -71,8 +67,7 @@ internal sealed class CitizenView
         {
             var pose = poses[i];
             var index = i;
-            var hidden = PresentationHash.Unit(NightSalt, (ulong)(uint)settlementId, (ulong)(uint)i) < indoors
-                || (followed.Count > 0 && System.Linq.Enumerable.Any(followed, v => v.SettlementId == settlementId && v.Slot == index));
+            var hidden = pose.Indoors || (followed.Count > 0 && System.Linq.Enumerable.Any(followed, v => v.SettlementId == settlementId && v.Slot == index));
             var scale = hidden ? 0f : _settings.FigureScale * _looks[i].Height;
             _multimesh.SetInstanceTransform(i, new Transform3D(new Basis(Vector3.Up, pose.Yaw).Scaled(Vector3.One * scale), pose.Position.ToGodot()));
             var motion = PersonMotions.Of(pose.Activity, crowd.Roster[i].Role);

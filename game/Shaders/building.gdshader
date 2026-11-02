@@ -134,9 +134,10 @@ void fragment() {
 	ALBEDO = look_shaded(color, ground);
 	ROUGHNESS = look_rough(rough);
 	SPECULAR = 0.3;
-	// At night windows light, house by house as the dark comes on, each lamp a little unsteady (ADR-079).
+	// Windows light, house by house as the dark comes on, each lamp a little unsteady (ADR-079), and go
+	// out again as the village falls asleep, a few lit again before dawn (ADR-080).
 	if (kind == 6) {
-		float lit = smoothstep(weather * 0.8 + 0.05, weather * 0.8 + 0.2, look_season.w);
+		float lit = smoothstep(weather * 0.8 + 0.05, weather * 0.8 + 0.2, look_day.x);
 		EMISSION = lamplight * lit * (2.6 + 0.5 * sin(TIME * (2.0 + weather * 3.0) + weather * 30.0));
 	}
 }

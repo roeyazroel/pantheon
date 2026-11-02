@@ -824,8 +824,11 @@ and a Lumen an Ape. A missing,
 - The day (ADR-079): `DayNight` (pure, from `day_night.json`) gives the hour from the world's tick and
   the light at that hour, so shared worlds agree and nothing is saved. `Weather/DaylightView` turns the
   light and sets the sky's colours; `WeatherPresenter` sets its strength, dimmed under storms and in an
-  eclipse. `DayClock` shares where the day stands with what draws by it: windows through `look_season.w`,
-  each shrine's lamp, and the people who go indoors. Presentation only: the simulation never reads it.
+  eclipse. `DayClock` shares where the day stands with what draws by it: windows through `look_day`, each
+  shrine's lamp, hearth smoke (`Settlements/HearthView`), fireflies, roosting birds and the crickets and
+  birdsong. Presentation only: the simulation never reads it.
+- People keep the hours (ADR-080): `CitizenEvening` gives each their own hours, and `SettlementCrowd`
+  walks them along the village's ways to their own doors, and brings them out in the morning.
 - The world's look (ADR-078): `WorldLook.Of` (pure) says how far the year has turned the land and how
   dark the sky is; `Weather/WorldLookView` eases it and hands it, with the clouds' drift, to global
   shader uniforms that `Shaders/world_look.gdshaderinc` reads for the ground, trees, grass, fields,

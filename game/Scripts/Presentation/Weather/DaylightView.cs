@@ -39,6 +39,9 @@ internal sealed class DaylightView
         DayClock.Hour = hour;
         DayClock.Word = DayClock.On || DayClock.Held is not null ? DayNight.WordOf(DayNight.PartOf(_settings, hour)) : string.Empty;
         DayClock.Night = light.Night;
+        DayClock.Lamps = light.Lamps;
+        DayClock.Hearths = light.Hearths;
+        DayClock.Birds = light.Birds;
         DayClock.Brightness = Mathf.Clamp(light.Ambient / _settings.Keys[^1].Ambient * 0.5f, 0.32f, 1f);
         if (_sun is not null)
         {

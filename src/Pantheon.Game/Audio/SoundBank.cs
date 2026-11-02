@@ -12,10 +12,10 @@ public static class SoundBank
     /// <summary>The sample rate the sounds are made at, in samples per second.</summary>
     public const int SampleRate = 22050;
 
-    /// <summary>Whether a sound is meant to loop (the wind and the rain).</summary>
+    /// <summary>Whether a sound is meant to loop (the wind, the rain, the crickets and the birds).</summary>
     /// <param name="kind">The sound.</param>
     /// <returns><c>true</c> for loops.</returns>
-    public static bool Loops(SoundKind kind) => kind is SoundKind.Wind or SoundKind.Rain;
+    public static bool Loops(SoundKind kind) => kind is SoundKind.Wind or SoundKind.Rain or SoundKind.Crickets or SoundKind.Birdsong;
 
     /// <summary>Makes a sound.</summary>
     /// <param name="kind">The sound.</param>
@@ -34,6 +34,8 @@ public static class SoundBank
         SoundKind.Fanfare => Bells(2.6, (0.0, 523.3), (0.14, 659.3), (0.28, 784.0), (0.42, 1046.5)),
         SoundKind.Wind => Wind(),
         SoundKind.Rain => Rain(),
+        SoundKind.Crickets => Crickets(),
+        SoundKind.Birdsong => Birdsong(),
     };
 
     /// <summary>Struck bells: inharmonic partials that ring out, one strike per note.</summary>
@@ -208,6 +210,63 @@ public static class SoundBank
         }
 
         return Synth.Normalize(Synth.Loop(samples, overlap), 0.7f);
+    }
+
+    /// <summary>Looping crickets: three singers of their own pitch and pace, each chirp a quick run of pulses.</summary>
+    private static float[] Crickets()
+    {
+        var overlap = SampleRate / 2;
+        var samples = new float[(8 * SampleRate) + overlap];
+        foreach (var (pitch, pace, start, level) in new[] { (4350.0, 1.75, 0.0, 1f), (4780.0, 2.25, 0.37, 0.7f), (3920.0, 1.25, 0.71, 0.55f) })
+        {
+            for (var i = 0; i < samples.Length; i++)
+            {
+                var t = i / (double)SampleRate;
+                var chirp = ((t * pace) + start) % 1.0;
+                if (chirp < 0.32)
+                {
+                    var pulse = 0.5f + (0.5f * Synth.Sine((chirp * 12.0) - 0.25));
+                    samples[i] += level * pulse * Synth.Sine(pitch * t);
+                }
+            }
+        }
+
+        return Synth.Normalize(Synth.Loop(samples, overlap), 0.6f);
+    }
+
+    /// <summary>Looping birdsong: short phrases of whistled notes sliding up or down, scattered through the loop.</summary>
+    private static float[] Birdsong()
+    {
+        var overlap = SampleRate / 2;
+        var samples = new float[(8 * SampleRate) + overlap];
+        var noise = new Noise(37);
+        float Roll() => (noise.Next() + 1f) / 2f;
+        for (var phrase = 0; phrase < 21; phrase++)
+        {
+            var at = Roll() * 7.6;
+            var pitch = 2300.0 + (Roll() * 2200.0);
+            var level = 0.35f + (0.65f * Roll());
+            var notes = 2 + (int)(Roll() * 4f);
+            for (var note = 0; note < notes; note++)
+            {
+                var length = 0.07 + (0.16 * Roll());
+                var slide = (Roll() - 0.5f) * 1600.0;
+                var start = (int)(at * SampleRate);
+                var count = (int)(length * SampleRate);
+                var phase = 0.0;
+                for (var i = 0; i < count && start + i < samples.Length; i++)
+                {
+                    var t = i / (double)count;
+                    phase += (pitch + (slide * t)) / SampleRate;
+                    samples[start + i] += level * Synth.Sine(phase) * Synth.Sine(t / 2.0);
+                }
+
+                at += length + (0.03 + (0.1 * Roll()));
+                pitch += (Roll() - 0.5f) * 500.0;
+            }
+        }
+
+        return Synth.Normalize(Synth.Loop(samples, overlap), 0.6f);
     }
 
     /// <summary>A looping rain: a bright hiss with drops.</summary>

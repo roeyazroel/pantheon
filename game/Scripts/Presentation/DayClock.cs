@@ -1,3 +1,5 @@
+using Godot;
+
 namespace Pantheon.Client.Presentation;
 
 /// <summary>Where the day stands for whatever draws by it (ADR-079): shared as <see cref="GraphicsScale"/> is, since many views read it and none owns it.</summary>
@@ -20,6 +22,18 @@ internal static class DayClock
 
     /// <summary>How much of night it is now, 0..1.</summary>
     public static float Night { get; set; }
+
+    /// <summary>The share of windows with a lamp in them now, 0..1.</summary>
+    public static float Lamps { get; set; }
+
+    /// <summary>How many hearths are burning now, 0..1.</summary>
+    public static float Hearths { get; set; }
+
+    /// <summary>How much birdsong there is now, 0..1.</summary>
+    public static float Birds { get; set; }
+
+    /// <summary>The wind where the camera looks, for what drifts on it: strength times the way it blows.</summary>
+    public static Vector2 Wind { get; set; }
 
     /// <summary>How bright unlit things in the sky should be now: clouds and rain, 0..1.</summary>
     public static float Brightness { get; set; } = 1f;

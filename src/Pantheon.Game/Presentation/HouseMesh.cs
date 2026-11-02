@@ -85,6 +85,19 @@ public static class HouseMesh
     /// <returns><c>true</c> when it can.</returns>
     public static bool HasUpperStorey(HouseStyle style) => style is not (HouseStyle.RoundHut or HouseStyle.StiltHouse);
 
+    /// <summary>The height a house's smoke rises from (ADR-080).</summary>
+    /// <param name="style">Its style.</param>
+    /// <param name="twoStoreys">Whether it has an upper storey.</param>
+    /// <returns>Metres above its foot.</returns>
+    public static float SmokeHeight(HouseStyle style, bool twoStoreys) => (twoStoreys ? 1.8f : 0f) + style switch
+    {
+        HouseStyle.RoundHut => 4.9f,
+        HouseStyle.Longhouse => 4.6f,
+        HouseStyle.StoneCottage => 3.9f,
+        HouseStyle.Adobe => 2.9f,
+        HouseStyle.StiltHouse => 5.4f,
+    };
+
     /// <summary>The walls' and roof's patterns of a style.</summary>
     /// <param name="style">The style.</param>
     /// <returns>The patterns.</returns>

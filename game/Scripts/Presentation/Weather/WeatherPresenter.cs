@@ -19,6 +19,9 @@ public sealed class WeatherPresenter
     // How quickly the light follows the weather overhead (per second).
     private const float GloomRate = 1.5f;
 
+    // How much harder a strong wind carries what drifts on it.
+    private const float BreezeDrift = 4f;
+
     private readonly Node3D _clouds;
     private readonly Node3D _strikes;
     private readonly WeatherViewSettings _view;
@@ -29,7 +32,9 @@ public sealed class WeatherPresenter
     private readonly Godot.Environment? _environment;
     private readonly float _skyEnergy;
     private readonly float _haze;
+    private readonly float _lowHaze;
     private readonly WorldLookView _look = new();
+    private readonly FireflyView _fireflies;
     private readonly DaylightView _daylight;
     private TerrainField? _terrain;
     private readonly Divine.MapOverlay _snow;
@@ -57,6 +62,8 @@ public sealed class WeatherPresenter
         _environment = environment;
         _skyEnergy = environment?.BackgroundEnergyMultiplier ?? 1f;
         _haze = environment?.FogDensity ?? 0f;
+        _lowHaze = environment?.FogHeightDensity ?? 0f;
+        _fireflies = new FireflyView(parent);
         _daylight = new DaylightView(day, sun, environment);
     }
 
@@ -81,7 +88,11 @@ public sealed class WeatherPresenter
     {
         SyncSnow(world, delta);
         var daylight = _daylight.Update(world.Tick, delta);
-        _look.Update(WorldLook.Of(_rules, world, focus), _view, Breeze.At(world.Weather, focus), delta);
+        var look = WorldLook.Of(_rules, world, focus);
+        var breeze = Breeze.At(world.Weather, focus);
+        _look.Update(look, _view, breeze, delta);
+        DayClock.Wind = new Vector2(breeze.X, breeze.Z) * (1f + (BreezeDrift * breeze.Strength));
+        _fireflies.Update(look, new Vector3(focus.X, _terrain is null ? 0f : Mathf.Max(_terrain.SampleHeight(focus.X, focus.Z), 0f), focus.Z));
         if (_sun is not null)
         {
             _sun.LightColor = daylight.Light.ToGodot().Lerp(_view.StormLight.ToGodot(), _look.Overcast);
@@ -98,6 +109,7 @@ public sealed class WeatherPresenter
             _environment.FogLightColor = daylight.Haze.ToGodot();
             _environment.BackgroundEnergyMultiplier = _skyEnergy * eclipse;
             _environment.FogDensity = _haze * (1f + ((_view.StormHaze - 1f) * _look.Overcast));
+            _environment.FogHeightDensity = _lowHaze * (1f + daylight.Mist);
         }
 
         _seen.Clear();

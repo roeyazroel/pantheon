@@ -727,10 +727,12 @@ dries to straw, the oaks and birches blaze and stand bare, the fields ripen and 
 lies on the land. Plan for winter: villages that go into it with full stores get through, and those
 that don't go hungry.
 
-**Day and night.** The sun rises and sets over your island every four minutes. At dusk the windows
-light, house by house, most people go indoors, and a lamp burns by each shrine under the moon and stars.
-The night is beautiful, and it changes nothing about the rules: your people work and pray by the same
-laws at any hour. The settings can hold a fine afternoon if you prefer it.
+**Day and night.** The sun rises and sets over your island every four minutes. Toward evening people
+leave off and walk home, each at their own hour, and go in at their own doors; smoke rises from the roofs
+at supper. The windows light, then go out as the village falls asleep, and a lamp burns by each shrine
+under the moon and stars. Crickets sing on warm nights and fireflies drift over the land. At dawn the mist
+lies in the valleys, the birds start up and everyone comes out again. It's all for the eye and the
+ear, and changes nothing about the rules. The settings can hold a fine afternoon if you prefer it.
 
 | | Spring | Summer | Autumn | Winter |
 | --- | --- | --- | --- | --- |

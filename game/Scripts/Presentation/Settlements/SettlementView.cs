@@ -41,7 +41,6 @@ internal sealed class SettlementView
     private readonly DivineViewSettings _divine;
     private readonly OmniLight3D _lamp;
     private readonly float _lampLight;
-    private readonly float _asleep;
     private (int Housing, float ConstructionProgress, int Ruins)? _siteInputs;
 
     /// <summary>Creates the settlement's nodes under <paramref name="parent"/> and shows its current state.</summary>
@@ -71,13 +70,12 @@ internal sealed class SettlementView
         root.AddChild(_lamp);
         _lampLight = day.ShrineLight;
         _buildings.Material.SetShaderParameter("lamplight", day.Lamplight.ToGodot());
-        _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id, terrain);
+        _siteView = new SiteView(root, assets, _layout, _buildings, settlement.Id, terrain, center);
         _civicView = new CivicView(root, _buildings);
         _style = settings.Style;
         _styleView = new StyleView(root, _style);
-        _crowd = new SettlementCrowd(seed, settlement.Id, settings);
+        _crowd = new SettlementCrowd(seed, settlement.Id, settings, day);
         _citizens = new CitizenView(root, People.PersonAssets.For(settings), settings.Citizens, seed);
-        _asleep = day.AsleepShare;
         _label = CreateLabel(center + (Vector3.Up * LabelHeight));
         root.AddChild(_label);
 
@@ -135,8 +133,9 @@ internal sealed class SettlementView
             _crowd.Refresh(settlement, SettlementEconomy.AllocateLabour(_rules, settlement), Site);
         }
 
-        _crowd.Advance(simulationSeconds, _terrain, roads);
-        _citizens.Show(_crowd, settlement.Id, followed, distance, DayClock.Night * _asleep);
+        _crowd.Advance(simulationSeconds, _terrain, roads, DayClock.Hour);
+        _citizens.Show(_crowd, settlement.Id, followed, distance);
+        _siteView.Breathe(camera);
         _lamp.Visible = DayClock.Night > 0.02f;
         _lamp.LightEnergy = _lampLight * DayClock.Night;
         return _crowd.GetStatus(settlement.Population, distance);

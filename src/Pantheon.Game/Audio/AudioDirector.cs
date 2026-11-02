@@ -28,6 +28,10 @@ public static class AudioDirector
     // A breeze is always heard; wind and rain add to it.
     private const float Breeze = 0.15f;
 
+    // The loudest the crickets and the birds get; they sit under the music.
+    private const float CricketLevel = 0.3f;
+    private const float BirdLevel = 0.32f;
+
     /// <summary>The sounds of a frame's events.</summary>
     /// <param name="events">The events, in order.</param>
     /// <param name="world">The world.</param>
@@ -148,6 +152,27 @@ public static class AudioDirector
         ArgumentNullException.ThrowIfNull(world);
         var weather = WeatherModel.At(rules, world.Weather, focus);
         return (Math.Clamp(weather.Rain, 0f, 1f), Math.Clamp(Breeze + weather.Wind, 0f, 1f));
+    }
+
+    /// <summary>
+    /// How loud the land's small creatures are (ADR-080): crickets through warm nights and birds with
+    /// the light. Rain hushes both, and the cold silences the crickets and thins the birds.
+    /// </summary>
+    /// <param name="night">How much of night it is, 0..1.</param>
+    /// <param name="birds">How much birdsong the hour holds, 0..1.</param>
+    /// <param name="rain">How hard it rains, 0..1.</param>
+    /// <param name="season">The season, if the world has them.</param>
+    /// <returns>The crickets' and the birds' volumes, each 0..1.</returns>
+    public static (float Crickets, float Birds) SmallCreatures(float night, float birds, float rain, Domain.Weather.Season? season)
+    {
+        var dry = 1f - Math.Clamp(rain * 2f, 0f, 1f);
+        var (warm, song) = season switch
+        {
+            Domain.Weather.Season.Winter => (0f, 0.25f),
+            Domain.Weather.Season.Autumn => (0.55f, 0.6f),
+            Domain.Weather.Season.Spring or Domain.Weather.Season.Summer or null => (1f, 1f),
+        };
+        return (Math.Clamp(night, 0f, 1f) * warm * dry * CricketLevel, Math.Clamp(birds, 0f, 1f) * song * dry * BirdLevel);
     }
 
     /// <summary>The sound of one event, if it makes one.</summary>

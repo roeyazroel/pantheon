@@ -92,6 +92,12 @@ public sealed class WildlifePresenter
     private void Fill(MultiMesh mesh, AnimalKind kind, IReadOnlyList<RgbColor> colors, ulong seed)
     {
         var animals = _poses.Where(p => p.Kind == kind).ToList();
+        if (kind == AnimalKind.Bird)
+        {
+            // The birds go to roost through the evening, and come back with the light (ADR-080).
+            animals = animals.Take(Mathf.RoundToInt(animals.Count * (1f - DayClock.Night))).ToList();
+        }
+
         mesh.InstanceCount = animals.Count;
         for (var i = 0; i < animals.Count; i++)
         {

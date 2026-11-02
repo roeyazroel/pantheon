@@ -1,6 +1,6 @@
 # ADR-079: Day and night, the sky, and figures with some life
 
-- Status: Accepted
+- Status: Accepted; amended by [ADR-080](ADR-080-people-go-home-at-night.md)
 - Date: 2026-11-02
 - Amends: [ADR-055](ADR-055-expressive-creatures-and-miracle-looks.md) (miracle looks) and
   [ADR-077](ADR-077-land-water-and-villages.md) (a fixed sun)
