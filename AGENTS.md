@@ -147,7 +147,7 @@ rule is followed by the conventions that meet it in this repository.
   levels and the lakes, earthquakes and fires, the volcano, tornadoes, locust swarms, blighted and
   buried land and the marks on it,
   migration groups and refugee policies, a shared session's players, round trips, traffic per
-  second, who decides and the sections a player received and how fresh they are, every god's domains, the holy sites with their
+  second, who decides, whether a host is listed on the local network and how many it answered, and the sections a player received and how fresh they are, every god's domains, the holy sites with their
   keepers, claimants and who leads their influence, every treaty (secrets included), favour, promise and the council, every war's goal and score, holy war and god's intelligence of the others, the selected settlement's economy, tier, local navigation and its people's clock,
   water, society and technology, culture, dangers and the houses' integrity, pressure to leave, belief, Old Faith,
   sanctuary and religious style, every followed villager with their needs, options and danger, the land's reshapings, every prophet's walk, last deed and time left, with the selected village's elder,

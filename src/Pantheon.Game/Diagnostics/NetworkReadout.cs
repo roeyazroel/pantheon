@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using Pantheon.Game.Multiplayer;
 using Pantheon.Networking;
+using Pantheon.Networking.Discovery;
 using Pantheon.Networking.Transport;
 
 namespace Pantheon.Game.Diagnostics;
@@ -15,8 +16,9 @@ public static class NetworkReadout
     /// <param name="host">The host.</param>
     /// <param name="port">The port it listens on.</param>
     /// <param name="session">The host's session, for god names.</param>
+    /// <param name="listed">What answers players looking on the local network (ADR-081), or <c>null</c> when it could not listen.</param>
     /// <returns>The lines.</returns>
-    public static IReadOnlyList<string> Describe(MultiplayerHost host, int port, GameSession session)
+    public static IReadOnlyList<string> Describe(MultiplayerHost host, int port, GameSession session, LanResponder? listed = null)
     {
         System.ArgumentNullException.ThrowIfNull(host);
         System.ArgumentNullException.ThrowIfNull(session);
@@ -25,6 +27,9 @@ public static class NetworkReadout
         {
             Format("Network: hosting on port {0}, {1} of {2} players joined; {3}", port, seats.Count - 1, NetworkProtocol.MaxClients, Traffic(host.Stats, host.Traffic)),
             "  authority: this host simulates the world and decides every act; players send intents and receive its sections",
+            listed is null
+                ? Format("  local network: not listed (UDP {0} unavailable); players join by address", LanCodec.Port)
+                : Format("  local network: listed on UDP {0}, {1} answered, {2} ignored", LanCodec.Port, listed.Answered, listed.Ignored),
         };
         lines.AddRange(seats.Select(seat => Format(
             "  {0} plays {1}{2}",

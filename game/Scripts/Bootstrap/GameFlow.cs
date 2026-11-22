@@ -83,6 +83,7 @@ internal sealed partial class GameFlow : Node
         _menu.Sizes = session.Content.Sizes.Sizes.Select(s => (s.Name, WorldMaker.Describe(s))).ToList();
         _menu.Settings = settings;
         _menu.Minds = choices.Minds;
+        _menu.ContentFingerprint = session.Content.Fingerprint;
         _births = new Births(session.Content, choices.Minds, _menu, () => _menu.Settings, options.Minds);
         var talk = new TalkController { Name = "Talk" };
         AddChild(talk);

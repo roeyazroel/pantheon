@@ -932,8 +932,13 @@ One player hosts a world and up to three others join it, each taking over a god 
 otherwise play. There's no server and no account: the host's computer runs the world.
 
 - **To host or join,** choose **Play Together** on the title screen. The host picks a seed, a
-  name and a port; each other player gives the host's address, their name and, if they like, the
-  god they want to play.
+  name and a port. The others type their name and, if they like, the god they want to play.
+- **On the same network** (a LAN party, or the same Wi-Fi), the host's world shows up under
+  **On your network**, with its seed, season, who plays and the gods still free. Press **Join**.
+  A world you can't join is shown greyed, with the reason, such as another version of the game.
+  The first time, your computer may ask whether Pantheon may use the local network or accept
+  connections: allow it.
+- **Anywhere else,** type the host's address and port under **Or by address**.
 - **Playing.** You play as usual: miracles, your Creature, diplomacy and your refugee policy.
   Each command goes to the host, which checks it and replies, so the status line says "Asking the
   host..." and then what happened. The HUD names who plays each god.
@@ -945,7 +950,8 @@ otherwise play. There's no server and no account: the host's computer runs the w
 - **Leaving.** When a player leaves, the AI takes their god back until they return under the same
   name. When the host quits, the session ends for everyone and the host's world is saved.
 
-To play over the internet, the host forwards UDP port **7777** (or the port they chose) on their
+Finding worlds uses UDP port **7778** on the local network, and doesn't cross routers or VPNs. To
+play over the internet, the host forwards UDP port **7777** (or the port they chose) on their
 router and gives the others their public address. A shared game uses about 13 KB/s per player.
 
 ## Settings

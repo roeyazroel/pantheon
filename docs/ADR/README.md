@@ -33,7 +33,7 @@ silently:
 | [ADR-015](ADR-015-four-gods-coalitions-and-pantheon-victory.md) | Four gods: coalitions, allies' memory and pantheon victory | Accepted (amends ADR-011); amended by ADR-020 |
 | [ADR-016](ADR-016-migration-groups-and-refugee-policies.md) | Migration as groups on the road, and gods' refugee policies | Accepted |
 | [ADR-017](ADR-017-creature-relationships-and-combat.md) | Creature relationships, meetings and combat | Accepted |
-| [ADR-018](ADR-018-multiplayer-host-snapshots-and-intents.md) | Multiplayer sessions: a host's world, players' intents and replicas kept by snapshots | Accepted; amended by ADR-019 |
+| [ADR-018](ADR-018-multiplayer-host-snapshots-and-intents.md) | Multiplayer sessions: a host's world, players' intents and replicas kept by snapshots | Accepted; amended by ADR-019 and ADR-081 |
 | [ADR-019](ADR-019-replication-by-section-and-rate.md) | Replication by section and rate, with interest and event-based diplomacy | Accepted (amends ADR-018); amended by ADR-024 and ADR-056 |
 | [ADR-020](ADR-020-vertical-slice-history-flow-and-eligible-pantheons.md) | The vertical slice: world history, the game's flow, save slots and eligible pantheons | Accepted (amends ADR-015) |
 | [ADR-021](ADR-021-domains-holy-sites-schisms-species-settings-and-audio.md) | Polish and expansion: domains, holy sites, schisms, Creature species, settings and synthesized audio | Accepted |
@@ -96,6 +96,7 @@ silently:
 | [ADR-078](ADR-078-a-world-that-turns-with-the-year.md) | A world that turns with the year and the weather | Accepted (amends ADR-051, ADR-052 and ADR-077) |
 | [ADR-079](ADR-079-day-and-night.md) | Day and night, the sky, and figures with some life | Accepted (amends ADR-055 and ADR-077) |
 | [ADR-080](ADR-080-people-go-home-at-night.md) | People go home at night, and the small hours of a village | Accepted (amends ADR-079) |
+| [ADR-081](ADR-081-finding-worlds-on-the-local-network.md) | Finding worlds on the local network | Accepted (amends ADR-018) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

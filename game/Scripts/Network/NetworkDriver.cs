@@ -10,8 +10,10 @@ namespace Pantheon.Client.Network;
 
 /// <summary>
 /// Wires a shared session into the game (ADR-018): it joins a host before the world is shown
-/// (<c>--join</c>), or hosts the local world (<c>--host</c>, with UPnP when asked). It polls the
-/// network every frame, and at the end says goodbye; a host also saves its world (spec §71).
+/// (<c>--join</c>, or <c>--join=lan</c> for the first world found on the local network), or hosts the
+/// local world (<c>--host</c>, with UPnP when asked), answering players on the local network who look
+/// for worlds (ADR-081). It polls the network every frame, and at the end says goodbye; a host also
+/// saves its world (spec §71).
 /// </summary>
 internal sealed class NetworkDriver
 {
@@ -21,6 +23,7 @@ internal sealed class NetworkDriver
     private readonly Action<string> _setStatus;
     private MultiplayerHost? _host;
     private MultiplayerClient? _client;
+    private LanResponder? _lan;
     private int _port;
     private string _address = string.Empty;
 
@@ -40,6 +43,16 @@ internal sealed class NetworkDriver
         if (options.Join is not { } target)
         {
             return null;
+        }
+
+        if (LanBrowser.IsAnyHost(target.Address))
+        {
+            if (FindOnNetwork(content, options.WantedGod) is not { } found)
+            {
+                return null;
+            }
+
+            target = found;
         }
 
         (_address, _port) = (target.Address, target.Port);
@@ -104,13 +117,17 @@ internal sealed class NetworkDriver
         }
 
         _port = port;
-        _host = new MultiplayerHost(session, transport, string.IsNullOrWhiteSpace(name) ? "Host" : name);
+        var host = _host = new MultiplayerHost(session, transport, string.IsNullOrWhiteSpace(name) ? "Host" : name);
         if (upnp)
         {
             _setStatus(OpenPort(port));
         }
 
-        _setStatus($"Hosting on port {port}: other players start with --join=<this computer's address>:{port}");
+        var (channel, unlisted) = UdpLanChannel.Listen();
+        _lan = channel is null ? null : new LanResponder(channel, () => LanResponder.Advert(session, host.Seats, port));
+        _setStatus(_lan is not null
+            ? $"Hosting on port {port}: friends on your network find this world in Play Together"
+            : $"Hosting on port {port}, but not listed on your network ({unlisted}): friends join with this computer's address");
     }
 
     /// <summary>Handles the network for this frame.</summary>
@@ -121,6 +138,7 @@ internal sealed class NetworkDriver
         if (_host is not null)
         {
             Show(_host.Update(delta));
+            _lan?.Update(delta);
         }
 
         if (_client is not null)
@@ -134,7 +152,7 @@ internal sealed class NetworkDriver
     /// <param name="session">The session.</param>
     /// <returns>The lines; none when playing alone.</returns>
     public IReadOnlyList<string> Lines(GameSession session) =>
-        _host is not null ? NetworkReadout.Describe(_host, _port, session)
+        _host is not null ? NetworkReadout.Describe(_host, _port, session, _lan)
         : _client is not null ? NetworkReadout.Describe(_client, Address, session)
         : [];
 
@@ -143,6 +161,8 @@ internal sealed class NetworkDriver
     /// <param name="savePath">Where a host saves its world.</param>
     public void Shutdown(GameSession session, string savePath)
     {
+        _lan?.Dispose();
+        _lan = null;
         if (_host is not null)
         {
             _host.Dispose();
@@ -156,6 +176,42 @@ internal sealed class NetworkDriver
 
     /// <summary>The host's address and port.</summary>
     private string Address => $"{_address}:{_port}";
+
+    /// <summary>Looks on the local network for a world to join (<c>--join=lan</c>, ADR-081), as long as joining waits for a host.</summary>
+    /// <param name="content">The game's content, to tell which worlds it could join.</param>
+    /// <param name="wantedGod">The god asked for, which must be free there.</param>
+    /// <returns>Where to join, or <c>null</c> after a status line saying why not.</returns>
+    private (string Address, int Port)? FindOnNetwork(GameContent content, string? wantedGod)
+    {
+        var (channel, failure) = UdpLanChannel.Ask();
+        if (channel is null)
+        {
+            _setStatus($"Could not look for worlds on your network ({failure}). Playing alone.");
+            return null;
+        }
+
+        using var browser = new LanBrowser(channel, content.Fingerprint);
+        var deadline = Time.GetTicksMsec() + JoinTimeoutMilliseconds;
+        var last = Time.GetTicksMsec();
+        while (Time.GetTicksMsec() < deadline)
+        {
+            var now = Time.GetTicksMsec();
+            browser.Update((now - last) / 1000.0);
+            last = now;
+            if (browser.Pick(wantedGod) is { } game)
+            {
+                _setStatus($"Found {LanText.Title(game)} on your network at {LanText.Where(game)}");
+                return (game.Address, game.Answer.Port);
+            }
+
+            OS.DelayMsec(50);
+        }
+
+        _setStatus(browser.Games.Count == 0 ? "No world found on your network. Playing alone."
+            : wantedGod is not null && browser.Pick(null) is { } open ? $"{wantedGod} is not free in any world on your network ({LanText.Title(open)}: {LanText.Details(open)}). Playing alone."
+            : $"No world on your network could be joined ({LanText.Title(browser.Games[0])}: {LanText.Details(browser.Games[0])}). Playing alone.");
+        return null;
+    }
 
     /// <summary>Asks the router to forward the port (spec §68: UPnP when available).</summary>
     private static string OpenPort(int port)

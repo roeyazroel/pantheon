@@ -67,7 +67,7 @@ src/
                               Tier 2 representative citizens (Population), Multiplayer (host and player),
                               Controls (the key map and the god's bar, ADR-068)
   Pantheon.Networking/        Host-authoritative protocol (ADR-003, ADR-018): messages, codecs, transport
-                              contract, in-memory loopback
+                              contract, in-memory loopback; finding worlds on the local network (ADR-081)
   Pantheon.Oracle/            The language models behind the gods' minds (ADR-065, ADR-067): Claude
                               through Anthropic's SDK, GPT through OpenAI's Responses API, Gemini
                               through generateContent, a local model through Ollama's API, and the
@@ -497,6 +497,10 @@ files and compiled assemblies and fails when either rule is broken.
 - `Transport/INetworkTransport`: connect, receive, send reliably or not, disconnect, round trip.
   `LoopbackNetwork` is an in-memory host and players for headless tests; the client's
   `Network/EnetTransport` is Godot's ENet. See [Multiplayer](#multiplayer).
+- `Discovery/` (ADR-081): `LanCodec` (the question, the `LanAnswer` card of a hosted world, port 7778,
+  one datagram of at most 1200 bytes), `LanAddress.IsLocal` (which senders a host answers),
+  `ILanChannel` (broadcast, send, poll) and `LoopbackLan`, an in-memory network of computers for
+  tests. The client's `Network/UdpLanChannel` is Godot's `PacketPeerUdp`.
 
 ### Persistence (`Pantheon.Persistence`)
 
@@ -750,7 +754,9 @@ and a Lumen an Ape. A missing,
   looks. `SettlementLabel` adds the main god's share; `SettlementPicker` finds the settlement
   nearest a point.
 - `Multiplayer/MultiplayerHost` and `Multiplayer/MultiplayerClient` share a world (ADR-018); see
-  [Multiplayer](#multiplayer). `GameSession` holds either the host's world or a player's replica,
+  [Multiplayer](#multiplayer). `Multiplayer/LanResponder` answers players on the local network for
+  a host, `LanBrowser` finds and sorts the worlds there for a player, and `LanText` words them
+  (ADR-081). `GameSession` holds either the host's world or a player's replica,
   and every player command can name its issuing god (`CastMiracleAs` and the like), which the host
   uses for its players' intents. `SessionEvents` keeps events for the local player and, on a
   host, for the players.
@@ -985,8 +991,11 @@ and a Lumen an Ape. A missing,
   (ADR-066).
 - `Network/EnetTransport` puts Godot's `ENetMultiplayerPeer` behind `INetworkTransport` (reliable and
   unreliable channels, round trips). `Network/NetworkDriver` joins a host before the world is shown
-  (`--join`), hosts the local world (`--host`, `--upnp`), polls the network each frame and, at the
-  end, says goodbye and saves a host's world.
+  (`--join`, or `--join=lan` for the first world found on the network), hosts the local world
+  (`--host`, `--upnp`) and answers the network for it, polls the network each frame and, at the
+  end, says goodbye and saves a host's world. `Network/UdpLanChannel` is the local network's
+  datagrams behind `ILanChannel`, and `UI/Flow/LanGameList` lists the worlds found on the Play
+  Together page while it is shown (ADR-081).
 - `UI/DiplomacyPanel`: the diplomacy panel (P), owned by `Bootstrap/PoliticsController` since
   ADR-068, built in code from `DiplomacyReadout` entries. An unmet god's card offers Seek
   (`CreatureCommands.Seek`) and, with the debug tools, Bring its Creature (K). Its
@@ -1490,6 +1499,30 @@ has the measured run.
   It discards its own events and takes each snapshot as its world.
 - **Leaving** (§71): a departed player's god goes back to the AI; a host that quits tells its
   players and saves its world. A saved world loads with the AI playing every `Remote` god.
+- **Finding a world** (§68, ADR-081): no player needs the host's address on the same network.
+  - **Asking:** while Play Together is open (or for `--join=lan`), a player's `LanBrowser`
+    broadcasts a question to UDP 7778 every second.
+  - **Answering:** a host's `LanResponder` answers from 7778 with `LanResponder.Advert`: version, data
+    fingerprint, port, host, seed and season, players and free gods. It answers only local
+    addresses, at most 20 a second.
+  - **Listing:** the browser lists the joinable worlds first and the others with the reason, and
+    forgets a host silent for 3.5 s.
+  - **Joining:** the same path as joining by address.
+
+```mermaid
+sequenceDiagram
+    participant Page as Play Together (LanGameList)
+    participant Browser as LanBrowser
+    participant Responder as LanResponder (host)
+    participant Host as MultiplayerHost
+    loop every second while the page is open
+        Browser->>Responder: PANTHEON? (broadcast to UDP 7778)
+        Responder->>Host: Seats, gods the AI plays
+        Responder-->>Browser: PANTHEON! LanAnswer (to the asking port)
+    end
+    Browser->>Page: worlds, joinable first; silent hosts forgotten after 3.5 s
+    Page->>Host: Join: Hello over ENet to the answer's address and port
+```
 
 ```mermaid
 flowchart LR

@@ -46,4 +46,13 @@ public static class SeasonText
         var left = Divine.DivineText.Clock(ClimateModel.TicksLeft(rules, world) / (double)SimulationTime.TicksPerSecond);
         return string.Format(CultureInfo.InvariantCulture, "{0} of year {1} ({2} left)", Name(season), ClimateModel.YearOf(rules, world), left);
     }
+
+    /// <summary>The season and year in a few words, or <c>null</c> in a world without seasons.</summary>
+    /// <param name="rules">Weather rules.</param>
+    /// <param name="world">World state.</param>
+    /// <returns>For example "Spring, year 1".</returns>
+    public static string? Calendar(WeatherRules rules, WorldState world) =>
+        ClimateModel.SeasonOf(rules, world) is { } season
+            ? string.Format(CultureInfo.InvariantCulture, "{0}, year {1}", Name(season), ClimateModel.YearOf(rules, world))
+            : null;
 }

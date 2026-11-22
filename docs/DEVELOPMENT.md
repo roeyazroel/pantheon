@@ -199,7 +199,9 @@ covers:
 - multiplayer: the messages and their encoding, a host and its players over an in-memory network
   (joining, gods, refusals, intents checked by the host, snapshots, events, leaving), each part of
   the world reaching players at its own rate, four players, coming back to one's god, and that only
-  the host saves, keeps the clock or uses the debug tools;
+  the host saves, keeps the clock or uses the debug tools; finding worlds on the local network (the
+  question and answer, which senders a host answers and how often, the list, worlds that cannot be
+  joined and why, forgetting a host that went quiet, and `--join=lan`);
 - the HUD model, alerts, map overlays, the diplomacy panel, the weather's and disasters' looks and
   tools, migration's walkers, overlay and alerts, Creatures' bonds on the card, panel and debug
   panel, and the migration of Milestone 1 to 10 saves;
@@ -434,7 +436,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--pause-menu=on\|off` | Open the pause menu at the start. |
 | `--speed=1\|4\|16` | The simulation's speed from the start. |
 | `--host=on\|off\|<port>` | Host this world for other players (port 7777 by default). |
-| `--join=<address>[:<port>]` | Join a host's world instead of making one. |
+| `--join=<address>[:<port>]\|lan` | Join a host's world instead of making one; `lan` joins the first world found on the local network (with `--god`, one where that god is free), waiting up to ten seconds (ADR-081). |
 | `--name=<player>` | Your name in a shared world. |
 | `--god=<name>` | The god you ask for when joining. |
 | `--upnp=on\|off` | Ask the router to forward the host's port. |
@@ -606,7 +608,8 @@ src/
                           (SQLite, or files when it cannot load: ADR-060)
   Pantheon.Game/          Engine-agnostic session (the local authority), scheduler, camera model, readouts,
                           HUD model, alerts, overlays, settlement layout and representative citizens
-  Pantheon.Networking/    The multiplayer protocol, its codecs and the transport contract (ADR-003, ADR-018)
+  Pantheon.Networking/    The multiplayer protocol, its codecs and the transport contract (ADR-003, ADR-018),
+                          and finding worlds on the local network (ADR-081)
   Pantheon.Oracle/        The language models behind the gods' minds: Claude through Anthropic's SDK, GPT
                           through OpenAI's Responses API, Gemini through generateContent, and a local
                           model through Ollama's API (ADR-065, ADR-067)

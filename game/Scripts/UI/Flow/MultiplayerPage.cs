@@ -5,7 +5,7 @@ using Pantheon.Networking;
 
 namespace Pantheon.Client.UI.Flow;
 
-/// <summary>Playing together (ADR-018): host a new shared world, or join a friend's.</summary>
+/// <summary>Playing together (ADR-018, ADR-081): join a world on your network or by address, or host one.</summary>
 internal static class MultiplayerPage
 {
     /// <summary>Builds the page.</summary>
@@ -19,6 +19,26 @@ internal static class MultiplayerPage
         column.AddChild(UiKit.Heading("Play Together"));
         column.AddChild(UiKit.Text("Up to three friends join your world, each playing one of the rival gods. No server or account: your computer runs the world.", UiTheme.SmallSize, UiKit.Muted));
 
+        column.AddChild(UiKit.Text("Join a world", UiTheme.BodySize, UiTheme.Gold));
+        var joinName = UiKit.Field("Player", "your name");
+        var god = UiKit.Field(string.Empty, "any");
+        column.AddChild(UiKit.Row("Your name", joinName));
+        column.AddChild(UiKit.Row("God to play", god));
+        string? Wanted() => god.Text.Trim().Length > 0 ? god.Text.Trim() : null;
+        column.AddChild(UiKit.Text("On your network", UiTheme.SmallSize, UiTheme.Ink));
+        column.AddChild(new LanGameList
+        {
+            Content = menu.ContentFingerprint,
+            Joining = game => menu.ChooseJoin(game.Address, game.Answer.Port, joinName.Text.Trim(), Wanted()),
+        });
+
+        column.AddChild(UiKit.Text("Or by address", UiTheme.SmallSize, UiTheme.Ink));
+        var address = UiKit.Field("127.0.0.1", "the host's address");
+        var joinPort = UiKit.Field(NetworkProtocol.DefaultPort.ToString(CultureInfo.InvariantCulture), "port");
+        column.AddChild(UiKit.Row("Host's address", address));
+        column.AddChild(UiKit.Row("Port", joinPort));
+        column.AddChild(UiKit.Button("Join", () => menu.ChooseJoin(address.Text.Trim(), Port(joinPort.Text), joinName.Text.Trim(), Wanted())));
+
         column.AddChild(UiKit.Text("Host a world", UiTheme.BodySize, UiTheme.Gold));
         var hostName = UiKit.Field("Host", "your name");
         var hostPort = UiKit.Field(NetworkProtocol.DefaultPort.ToString(CultureInfo.InvariantCulture), "port");
@@ -27,17 +47,7 @@ internal static class MultiplayerPage
         column.AddChild(UiKit.Row("Port", hostPort));
         column.AddChild(UiKit.Row("Seed", hostSeed));
         column.AddChild(UiKit.Button("Host", () => menu.ChooseHost(hostSeed.Text.Trim().Length > 0 ? WorldSeed.Parse(hostSeed.Text.Trim()) : seed, hostName.Text.Trim(), Port(hostPort.Text))));
-
-        column.AddChild(UiKit.Text("Join a world", UiTheme.BodySize, UiTheme.Gold));
-        var address = UiKit.Field("127.0.0.1", "the host's address");
-        var joinPort = UiKit.Field(NetworkProtocol.DefaultPort.ToString(CultureInfo.InvariantCulture), "port");
-        var joinName = UiKit.Field("Player", "your name");
-        var god = UiKit.Field(string.Empty, "any");
-        column.AddChild(UiKit.Row("Host's address", address));
-        column.AddChild(UiKit.Row("Port", joinPort));
-        column.AddChild(UiKit.Row("Your name", joinName));
-        column.AddChild(UiKit.Row("God to play", god));
-        column.AddChild(UiKit.Button("Join", () => menu.ChooseJoin(address.Text.Trim(), Port(joinPort.Text), joinName.Text.Trim(), god.Text.Trim().Length > 0 ? god.Text.Trim() : null)));
+        column.AddChild(UiKit.Text("Friends on your network see your world here; others join with your address.", UiTheme.CaptionSize, UiKit.Muted));
         return column;
     }
 

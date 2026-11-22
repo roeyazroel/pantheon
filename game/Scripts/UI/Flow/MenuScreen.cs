@@ -67,6 +67,9 @@ internal sealed partial class MenuScreen : CanvasLayer
     /// <summary>The settings the settings page shows and changes.</summary>
     public Pantheon.Game.Settings.GameSettings Settings { get; set; } = new();
 
+    /// <summary>The fingerprint of the game's data, so the Play Together page can tell which worlds on the network it could join (ADR-081).</summary>
+    public string ContentFingerprint { get; set; } = string.Empty;
+
     /// <summary>The gods' minds (ADR-065), for the settings' Claude models; none when the content did not load.</summary>
     public Pantheon.Game.Minds.MindContent? Minds { get; set; }
 

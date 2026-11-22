@@ -279,7 +279,9 @@ followed or the target has been measured.
 - Toward evening people walk home along the lanes and go in at their own doors, and come out in the
   morning. Windows go out as a village falls asleep, hearths smoke at breakfast and supper, mist lies
   at dawn, birds roost, fireflies drift on warm nights, and crickets and birdsong mark the hours (part 58).
-- 2000 xUnit tests pass headless (1978 at the end of part 57, 853 at the end of Milestone 15).
+- Players on the same network see each other's hosted worlds on the Play Together page and join with
+  one button, with no address to type. A world they cannot join shows why (part 59).
+- 2038 xUnit tests pass headless (2000 at the end of part 58, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built
@@ -1726,7 +1728,7 @@ Sections that only state intent are summarised at the end of this part.
 | 65 | Local-first architecture | Implemented | Fully offline by default. The player's profile (settings, worlds and saves) is one SQLite file inside the game's process, not a database server, with plain files if SQLite cannot load (ADR-060). By the owner's choice the player may give the rival gods' minds to Claude, GPT or Gemini, with their own key (ADR-067), or to a model on their own computer. It is optional and off by default, and every failure falls back to the offline scribes (ADR-065). The gods' and Creatures' agents ask the same model, at most a chosen number of questions an hour, and the scribes speak for them without one (ADR-072). |
 | 66 | Single-player architecture | Implemented | The local host (`GameSession`) runs the world with one player and three, five or seven AI gods by the world's size. |
 | 67 | Multiplayer architecture | Implemented | Host-authoritative (ADR-003, ADR-018): the host's computer runs the canonical world; players hold replicas that never own state. |
-| 68 | Networking technology | Implemented | Godot ENet over UDP, LAN and direct IP, UPnP when asked. Our own messages travel as packets rather than Godot RPCs, so the protocol stays engine-agnostic and testable. |
+| 68 | Networking technology | Implemented | Godot ENet over UDP, LAN and direct IP, UPnP when asked. Our own messages travel as packets rather than Godot RPCs, so the protocol stays engine-agnostic and testable. On a LAN the Play Together page lists the worlds hosted there, found by a broadcast question on UDP 7778 that each host answers, and `--join=lan` joins the first (ADR-081). |
 | 69 | Optional Steam networking | Not started (decision) | Optional and needs the Steamworks SDK; `INetworkTransport` is the seam for it beside ENet (ADR-021). |
 | 71 | Host disconnect | Implemented | The session ends for every player, whose replicas pause with the reason; the host's world is saved to `user://saves/hosted.json`. |
 | 72 | Future host migration | Not started | Not for the MVP. |

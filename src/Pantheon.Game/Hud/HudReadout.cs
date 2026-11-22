@@ -117,9 +117,7 @@ public static class HudReadout
             NextRankFollowers = next?.Followers ?? 0,
             BeliefShare = VictorySystem.StandingOf(content.DivineRules, world, god.Id).Share,
             WinningShare = world.Victory.Ascendancy ? content.DivineRules.VictoryShare : 0f,
-            Calendar = ClimateModel.SeasonOf(content.Weather, world) is { } season
-                ? Format("{0}, year {1}", SeasonText.Name(season), ClimateModel.YearOf(content.Weather, world))
-                : null,
+            Calendar = SeasonText.Calendar(content.Weather, world),
             Paused = session.Scheduler.IsPaused,
             Veiled = session.Veiled,
             SpeedPreset = SpeedPreset(session.Scheduler.TimeScale),
