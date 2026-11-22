@@ -274,9 +274,9 @@ rest for two minutes while the scribes speak.
   up doctrines like pacifism or militarism, send out settlers, and may turn their backs on
   every god.
 - **Many ways to win.** Win by holding most of the world's belief, by conquest or by culture, or
-  play a sandbox nobody wins. Islands range from 2 km to 12 km across, with four to eight gods.
-- **Play with friends.** Up to four players can share a world over a local network or the
-  internet. There's no server and no account.
+  play a sandbox nobody wins. Islands range from 2 km to 12 km across, with two to eight gods.
+- **Play with friends.** Up to eight players can share a world, one for each of its gods, over a
+  local network or the internet. There's no server and no account.
 
 ## Screenshots
 
@@ -948,6 +948,7 @@ unless you turn on Settings > Interface > Debug tools, and they're listed in
 One player hosts a world and others join it, each taking over a god the AI would otherwise play:
 as many as the world has rival gods. There's no server and no account: the host's computer runs the world.
 
+- **A full world.** Once every god is taken, a friend who tries to join is told no god is free.
 - **To host or join,** choose **Play Together** on the title screen. The host presses **Set up a
   shared world…** and makes a world with every choice of a new one, plus their name and a port. The
   others type their name and, if they like, the god they want to play.

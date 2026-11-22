@@ -152,11 +152,12 @@ public sealed class LanDiscoveryTests
     {
         var shared = SharedWorlds.Start();
         var free = LanResponder.Advert(shared.Host, shared.Server.Seats, Port).FreeGods.Count;
-        var players = Enumerable.Range(0, NetworkProtocol.MaxClients).Select(i => shared.Join($"Player {i}")).ToList();
+        Assert.True(free <= NetworkProtocol.MaxClients);
+        var players = Enumerable.Range(0, free).Select(i => shared.Join($"Player {i}")).ToList();
 
         var answer = LanResponder.Advert(shared.Host, shared.Server.Seats, Port);
 
-        Assert.Equal(free - NetworkProtocol.MaxClients, answer.FreeGods.Count);
+        Assert.Empty(answer.FreeGods);
         Assert.Equal(0, answer.Open);
         Assert.Equal(["Hostess", "Player 0", "Player 1", "Player 2"], answer.Players);
         var lan = new LoopbackLan();

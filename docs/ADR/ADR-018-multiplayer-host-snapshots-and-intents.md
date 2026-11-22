@@ -1,6 +1,6 @@
 # ADR-018: Multiplayer sessions: a host's world, players' intents and replicas kept by snapshots
 
-- Status: Accepted; its replication amended by ADR-019, its joining by ADR-081, its hosting by ADR-082
+- Status: Accepted; its replication amended by ADR-019, its joining by ADR-081, its hosting by ADR-082, its seats by ADR-083
 - Date: 2026-10-19
 - Builds on: [ADR-003](ADR-003-host-authoritative-enet-networking.md) (host-authoritative ENet, no
   lockstep) and [ADR-006](ADR-006-simulation-state-separate-from-scenes.md) (the world is

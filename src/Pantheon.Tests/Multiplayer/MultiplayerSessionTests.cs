@@ -77,6 +77,29 @@ public sealed class MultiplayerSessionTests
     }
 
     [Fact]
+    public void AWorldOfEightGods_SeatsSevenPlayers_AndTellsAnEighthNoGodIsFree()
+    {
+        // The small test island has room for eight gods when each needs one village (ADR-082).
+        var roomy = TestContent.Small with { Sizes = TestContent.Small.Sizes with { VillagesPerGod = 1 } };
+        Assert.Equal(8, WorldChoices.MaxGods(roomy, null, Pantheon.Domain.World.VillageCount.Normal));
+        var shared = SharedWorlds.Start(options: new NewWorldOptions { Gods = 8, GodName = "Morwen", Color = 2 }, content: roomy);
+        var session = shared.Host;
+
+        var players = Enumerable.Range(1, NetworkProtocol.MaxClients).Select(i => shared.Join($"Player {i}", content: roomy)).ToList();
+        var late = shared.Join("Eighth", content: roomy);
+
+        Assert.All(players, p => Assert.Equal(ClientPhase.Joined, p.Phase));
+        Assert.Equal(7, players.Select(p => p.GodId).Distinct().Count());
+        Assert.Equal((ClientPhase.Refused, "No god is free"), (late.Phase, late.Reason));
+        Assert.True(NetworkProtocol.MaxConnections > NetworkProtocol.MaxClients);
+        var replica = players[^1].Session!.World;
+        Assert.Equal(session.World.Setup, replica.Setup);
+        Assert.Equal(session.World.Victory, replica.Victory);
+        Assert.Equal(session.World.Gods.Select(g => (g.Name, g.Color)), replica.Gods.Select(g => (g.Name, g.Color)));
+        Assert.Equal("Morwen", replica.Gods[0].Name);
+    }
+
+    [Fact]
     public void APlayersMiracle_IsCheckedAndCastByTheHost_AsItsGod()
     {
         var shared = SharedWorlds.Start();

@@ -32,10 +32,12 @@ internal sealed class SharedWorlds
     /// <summary>Starts hosting a fresh small world.</summary>
     /// <param name="seed">The world's seed.</param>
     /// <returns>The host.</returns>
-    public static SharedWorlds Start(ulong seed = 1234)
+    /// <param name="options">How the host's world is made (ADR-082); the defaults when <c>null</c>.</param>
+    /// <param name="content">The host's and its players' content; the small test world's when <c>null</c>.</param>
+    public static SharedWorlds Start(ulong seed = 1234, NewWorldOptions? options = null, GameContent? content = null)
     {
         var network = new LoopbackNetwork();
-        var session = GameSession.CreateNew(TestContent.Small, new WorldSeed(seed));
+        var session = GameSession.CreateNew(content ?? TestContent.Small, new WorldSeed(seed), options ?? new NewWorldOptions());
         return new SharedWorlds(session, new MultiplayerHost(session, network.CreateHost(), "Hostess"), network);
     }
 

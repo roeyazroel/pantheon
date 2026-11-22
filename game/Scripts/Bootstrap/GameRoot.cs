@@ -64,6 +64,7 @@ public partial class GameRoot : Node3D
     private DebugView _debug = null!;
     private Hud? _hud;
     private GameFlow _flow = null!;
+    private Pantheon.Game.Presentation.DivineViewSettings? _divineView;
 
 
     /// <summary>Builds the session and the world visuals. Quits with exit code 1 when the content is broken.</summary>
@@ -108,6 +109,7 @@ public partial class GameRoot : Node3D
         _debug = new DebugView(_session, _presenter, _camera, _overlay, _network, presentation.Palette, () => _disasters.Fires, presentation.SettlementView.Streaming, presentation.SettlementView.GroundCover.Radius);
         _nature = new NatureDebug(_session, _camera, SetStatus);
         var view = presentation.DivineView;
+        _divineView = view;
         var hud = new Hud
         {
             Name = "Hud",
@@ -474,6 +476,7 @@ public partial class GameRoot : Node3D
     /// <summary>One-line world summary printed at the end of unattended runs.</summary>
     private string DescribeWorld() =>
         $"{DebugReadout.Summarize(_session.World, _session.Content.SettlementRules, _presenter.CrowdStatuses)}; terrain {_presenter.TerrainBackend}"
+        + "\n" + Pantheon.Game.Flow.SetupText.RunLines(_session.World, Pantheon.Simulation.Belief.VictorySystem.HoldSeconds(_session.Content.DivineRules, _session.World.Victory), id => _divineView?.ColorIndex(_session.World, id) ?? id - 1)
         + string.Concat(_network.Lines(_session).Select(line => "\n" + line)) + "\n" + _debug.Report();
 
     /// <summary>Shows a status line, when there is one.</summary>

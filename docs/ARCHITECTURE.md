@@ -1414,6 +1414,9 @@ flowchart LR
   the setup, the hold and the colours; a version 36 save loads with the defaults and its gods in
   their ids' colours. Protocol version 23 carries them to players, in the whole world they join and
   in the gods' section.
+- **Seats** (ADR-083): `NetworkProtocol.MaxClients` is 7, a player for every rival of an eight-god world. The
+  host's ENet accepts `MaxConnections`, one more, so a player arriving at a full world is refused
+  with "No god is free" rather than hearing nothing; a world of fewer gods has fewer seats.
 
 
 ## Seasons, extremes and the land's life

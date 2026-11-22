@@ -41,4 +41,28 @@ public static class SetupText
             holdSeconds,
             colors.Length > 0 ? ", colours " + colors : string.Empty);
     }
+
+    /// <summary>
+    /// How the world was made and who its gods are, for the end of unattended runs: the debug line,
+    /// then each god with its controller, personality, Creature and colour, so a host's world and a
+    /// player's replica can be compared as text.
+    /// </summary>
+    /// <param name="world">World state.</param>
+    /// <param name="holdSeconds">How long its victory must be held.</param>
+    /// <param name="colorIndex">Each god's colour, an index into the god colours.</param>
+    /// <returns>Two lines.</returns>
+    public static string RunLines(WorldState world, float holdSeconds, Func<int, int> colorIndex)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(colorIndex);
+        var gods = world.Gods.ConvertAll(g => string.Format(
+            CultureInfo.InvariantCulture,
+            "{0} ({1}, {2}, {3}, colour {4})",
+            g.Name,
+            g.Controller,
+            g.Personality,
+            world.Creatures.Find(c => c.GodId == g.Id)?.Name ?? "no Creature",
+            colorIndex(g.Id) + 1));
+        return DebugLine(world, holdSeconds) + "\nGods: " + string.Join(", ", gods);
+    }
 }

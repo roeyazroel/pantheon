@@ -1,6 +1,6 @@
 # ADR-082: The New World page's choices: your god, the gods, the rivals and the rules
 
-- Status: Accepted
+- Status: Accepted; its shared worlds' seats amended by ADR-083
 - Date: 2026-11-22
 - Amends: [ADR-027](ADR-027-world-sizes-victories-and-large-worlds.md) (a size no longer fixes the number of gods
   or the pantheon victory's size), [ADR-060](ADR-060-main-menu-and-local-sqlite-profile.md) (the New

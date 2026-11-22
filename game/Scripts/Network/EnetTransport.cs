@@ -41,7 +41,7 @@ internal sealed class EnetTransport : INetworkTransport
     public static (EnetTransport? Transport, string? Failure) Host(int port)
     {
         var peer = new ENetMultiplayerPeer();
-        var error = peer.CreateServer(port, NetworkProtocol.MaxClients, 2);
+        var error = peer.CreateServer(port, NetworkProtocol.MaxConnections, 2);
         return error == Error.Ok ? (new EnetTransport(peer, isHost: true), null) : (null, $"Could not host on port {port}: {error}");
     }
 

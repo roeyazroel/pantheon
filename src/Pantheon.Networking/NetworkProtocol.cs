@@ -30,8 +30,18 @@ public static class NetworkProtocol
     /// <summary>The host's peer id; players get ids from 2.</summary>
     public const int HostPeerId = 1;
 
-    /// <summary>Most players connected to one host besides the host itself (one per god the AI plays).</summary>
-    public const int MaxClients = 3;
+    /// <summary>
+    /// Most players connected to one host besides the host itself: one for every rival god of a world
+    /// of up to eight (spec: "1–8 gods", ADR-083). A world of fewer gods has fewer seats; its host
+    /// refuses a player when no god is free.
+    /// </summary>
+    public const int MaxClients = 7;
+
+    /// <summary>
+    /// Connections a host's transport accepts: one more than <see cref="MaxClients"/>, so a player who
+    /// arrives when every seat is taken is told no god is free rather than hearing nothing (ADR-083).
+    /// </summary>
+    public const int MaxConnections = MaxClients + 1;
 
     /// <summary>Encoded messages at least this long are compressed.</summary>
     public const int CompressFromBytes = 512;

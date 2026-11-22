@@ -82,7 +82,7 @@ followed or the target has been measured.
   rivalry, respect and trust. Allies' Creatures become friends, friends refuse to fight when their
   gods go to war, and a beaten Creature is banished with a scar, shaken loyalty and its people's
   doubt.
-- Up to four players can share a world. One player hosts; the others join over the network and
+- Up to eight players can share a world, one for each of its gods (four until part 60). One player hosts; the others join over the network and
   each takes over a god the AI played. The host's world is the only real one: joined players'
   commands are intents that the host checks and answers. Each part of the world reaches players at
   its own rate, and every event at once:
@@ -285,7 +285,7 @@ followed or the target has been measured.
   8 gods, few or many villages, peaceful or warlike rivals and how strongly they play, how often
   calamities strike, and how long a victory is held. A shared world is made the same way, and the page
   remembers the choices (part 60).
-- 2083 xUnit tests pass headless (2038 at the end of part 59, 853 at the end of Milestone 15).
+- 2084 xUnit tests pass headless (2038 at the end of part 59, 853 at the end of Milestone 15).
   The solution builds with no warnings.
 - Milestone 3 was built and played on macOS 26 (Apple M3 Pro, Metal 4), at about 120 FPS at
   1600 × 900 with eight grown settlements and 300 citizens shown. Milestones 1 and 2 were built

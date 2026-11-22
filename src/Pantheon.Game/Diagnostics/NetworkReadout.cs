@@ -25,7 +25,7 @@ public static class NetworkReadout
         var seats = host.Seats;
         var lines = new List<string>
         {
-            Format("Network: hosting on port {0}, {1} of {2} players joined; {3}", port, seats.Count - 1, NetworkProtocol.MaxClients, Traffic(host.Stats, host.Traffic)),
+            Format("Network: hosting on port {0}, {1} of {2} players joined; {3}", port, seats.Count - 1, Math.Min(NetworkProtocol.MaxClients, Math.Max(0, session.World.Gods.Count - 1)), Traffic(host.Stats, host.Traffic)),
             "  authority: this host simulates the world and decides every act; players send intents and receive its sections",
             listed is null
                 ? Format("  local network: not listed (UDP {0} unavailable); players join by address", LanCodec.Port)

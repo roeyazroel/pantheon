@@ -110,6 +110,8 @@ public sealed class NewWorldPageTests
         Assert.Equal("Made with 3 gods and many villages; harsh calamities; strong, warlike rivals; a victory is held for twenty minutes.", SetupText.Sentence(world, 1200f));
         Assert.Equal("Setup: 3 gods, many villages, calamities harsh, rivals strong and warlike, victory held 1200 s, colours 1:2 2:1", SetupText.DebugLine(world, 1200f));
 
+        Assert.EndsWith("Gods: Ilyra (Human, None, Bramble, colour 2), Vael (Ai, Tyrant, Gristle, colour 1), Seren (Ai, Opportunist, Thistle, colour 3)", SetupText.RunLines(world, 1200f, id => TestContent.DivineView.ColorIndex(world, id)), StringComparison.Ordinal);
+
         var plain = WorldMaker.Generate(TestContent.Small, Seed, new NewWorldOptions(Victory: VictorySettings.Sandbox)).State;
         Assert.Equal("Made with 4 gods and its size's villages; normal calamities; even rivals; no victory.", SetupText.Sentence(plain, 600f));
     }

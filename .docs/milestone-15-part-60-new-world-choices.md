@@ -60,6 +60,7 @@ flowchart LR
 - [x] Protocol version 23
 - [x] The website's port, fixture, tests and form
 - [x] ADR-082, docs
+- [x] Seats for seven players, and a spare connection to turn an eighth away with the reason
 
 ## Test plan
 
@@ -100,7 +101,7 @@ flowchart LR
 
 ## Results
 
-2083 tests pass (2038 before) and the site's 487.
+2084 tests pass (2038 before) and the site's 487.
 
 On the M3 Pro:
 
@@ -118,9 +119,30 @@ On the M3 Pro:
     passed the by-id colour as a method group. It now reads the world's colours on the main thread,
     and the by-id colour is `IdColor`, so the mistake cannot compile again.
 
+**A shared world** (asked for after the first push), eight Godot processes on the M3 Pro, joining
+over the Mac's network address 10.100.102.135 rather than loopback, each with its own scratch profile:
+
+- **The host:** seed 1234, Large, 8 gods, Morwen in Azure, warlike, strong, harsh, a 20-minute hold.
+- **Six headless players at once,** one through LAN discovery (`--join=lan`). Each replica printed the
+  host's setup line word for word, and the same names, Creatures, personalities and colours
+  (`SetupText.RunLines`, added to the end of unattended runs for this).
+- **A windowed player** drew Morwen's chip in Azure, Vexion's in Gold, and "60% for 20:00 wins".
+- **A bug found:** the host took at most three players (`MaxClients` was 3), right only for four gods.
+  It is now 7 ([ADR-083](../docs/ADR/ADR-083-a-seat-for-every-rival-god.md)).
+- **Seven seated at once,** then an eighth:
+  - before the fix, ENet dropped the eighth silently, and it read "the host did not answer";
+  - with one spare connection (`MaxConnections`), it reads "No god is free".
+- **Crowding one Mac:** with seven players loading at the same moment, each blocked about 9 s
+  building the large world's visuals. On one CPU those stalls ran past ENet's timeout, and the host
+  dropped them. Joined one after another, all seven stayed. Separate computers would not share the
+  load.
+- `MultiplayerSessionTests` seats seven players in an eight-god world, refuses an eighth, and checks
+  the replica's setup, hold, names and colours.
+
 Not yet tried:
 
-- a hosted world joined from a second computer with these choices;
+- two physical computers. No second machine was reachable from this session; every process ran on
+  one Mac, over its network address;
 - the Settings-like dropdowns at the smallest interface size.
 
 Not part of this change: Godot's warning that `instance_reset_physics_interpolation()` is deprecated,
