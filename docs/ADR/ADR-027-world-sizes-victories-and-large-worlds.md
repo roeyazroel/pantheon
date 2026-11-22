@@ -1,6 +1,6 @@
 # ADR-027: World sizes, conquest, cultural and sandbox victories, and large worlds
 
-- Status: Accepted
+- Status: Accepted; its gods and pantheon victory amended by ADR-082
 - Date: 2026-10-19
 - Builds on: [ADR-015](ADR-015-four-gods-coalitions-and-pantheon-victory.md) (four gods and
   pantheon victory),

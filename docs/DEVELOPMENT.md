@@ -271,7 +271,8 @@ counts.
 
 - **F1** shows the debug panel (hidden at the start): frame rate, tick, seed with the island's
   width and the world's victories ("Seed 42   4096 m island   Ascendancy, conquest and cultural
-  victory"), terrain renderer,
+  victory"), how the world was made ("Setup: 8 gods, normal villages, calamities harsh, rivals
+  strong and warlike, victory held 1200 s, colours 1:3 3:1", ADR-082), terrain renderer,
   camera band, the performance metrics (frame time, the simulation's share of a frame and a tick's
   time, ticks per second, memory, the engine's objects, nodes and draw calls, the citizens drawn,
   the last save's times, and the simulation budget: how often it cut a frame short and the ticks
@@ -355,7 +356,8 @@ counts.
   and who leads its influence by how much, and the selected settlement's Old Faith and sanctuary.
   `--rank` and `--domains` try out domains at once, and `--focus=siteN` looks at a holy site.
 - The command-line options below reproduce a world (`--seed`, `--load`, `--world-size`,
-  `--victory`), force a renderer
+  `--victory`, and the New World page's other choices such as `--gods`, `--villages` and
+  `--calamities`), force a renderer
   (`--terrain`), start from a grown settlement up close (`--advance-ticks`,
   `--camera-distance`) and script smoke runs (`--quit-after-frames`, `--screenshot`).
   Unattended runs end by logging one summary line per settlement, with its tier and the
@@ -446,6 +448,15 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--world-size=small\|large\|huge\|vast` | The size of a new world (see [World sizes](../README.md#world-sizes)). An unknown size makes a small world. |
 | `--victory=all\|sandbox\|<list>` | How a new world may be won: every way, no way, or a list of `ascendancy`, `conquest` and `cultural` separated by commas, for example `--victory=conquest,cultural`. Default: ascendancy. |
 | `--seasons=on\|off` | Whether a new world turns through four seasons (default on; see [Seasons](../README.md#a-living-world)). |
+| `--god-name=<name>` | Your god's name in a new world, 1 to 18 characters (ADR-082). A rival with that name takes your god's old one. |
+| `--creature-name=<name>` | Your Creature's name in a new world. |
+| `--gods=<n>` | How many gods a new world holds, yours among them: 2 up to one for every two villages, and at most 8. |
+| `--villages=few\|normal\|many` | Found a new island with three quarters, all or five quarters of its size's villages. |
+| `--color=<n>` | Your colour, from 1 (gold) to 8 (ivory) in `divine_view.json`'s order; the god that wore it takes yours. |
+| `--rival-temper=mixed\|peaceful\|warlike` | Which personalities a new world's rivals may be born with. |
+| `--rival-strength=weak\|even\|strong` | How much Divine Power the rivals start with, and how surely their AI chooses. |
+| `--calamities=gentle\|normal\|harsh` | How often disasters, plagues and the beast begin in a new world. |
+| `--hold=<minutes>` | How long a new world's victory must be held, 1 to 600 minutes; the New World page offers 10, 20 or 40. |
 | `--season=spring\|summer\|autumn\|winter` | Begin this season at the start, giving an even-climate world seasons (debug). |
 | `--hour=<0..24>` | Hold this hour for the whole run (for captures, ADR-079). |
 | `--rank=<rank>` | Your god starts at this rank, such as LesserGod or God (debug). |
@@ -453,7 +464,7 @@ Pass options after `--`, for example `godot --path game -- --seed=42 --terrain=f
 | `--domains-panel=on\|off` | Open the Domains panel (G) at the start. |
 | `--settings-page=on\|off` | Open the settings page at the start. |
 | `--tutorial=on\|<step>` | Start the tutorial, or at a step from 1 to 15 (for captures, ADR-064). |
-| `--title-page=new\|worlds\|together\|settings\|minds\|keys` | Open the title screen on a page; `minds` and `keys` are the settings' Minds and Keys tabs (for captures, ADR-060, ADR-065, ADR-068). |
+| `--title-page=new\|new-god\|new-rivals\|new-victory\|host\|worlds\|together\|settings\|minds\|keys` | Open the title screen on a page; `new-god`, `new-rivals` and `new-victory` are the New World page's tabs and `host` the page for a shared world (ADR-082); `minds` and `keys` are the settings' Minds and Keys tabs (for captures, ADR-060, ADR-065, ADR-068). |
 | `--bar=book\|villages\|gods\|council\|domains\|history\|map\|overview\|keys\|debug\|menu` | Press one of the god's bar's buttons at the start: for example `keys` opens the key map, `map` the overlays' chooser and `debug` the debug palette (for captures, ADR-068). |
 | `--minds=scribes\|claude\|openai\|gemini\|local` | Who writes the gods of new worlds, and speaks for them, in this run, over the settings' choice (ADR-065, ADR-067). |
 | `--pantheon=on\|off` | Bear the world's gods anew at the start, by the minds chosen, and show their page (ADR-065). |

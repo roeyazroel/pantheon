@@ -1,9 +1,10 @@
-// "Meet your pantheon": the gods the game's scribes write for any seed, size and species, in the
-// browser (ADR-076), shown as the game's own page of the gods shows them.
+// "Meet your pantheon": the gods the game's scribes write for any seed, size, species, number of gods,
+// temper and name of your god, in the browser (ADR-076, ADR-082), shown as the game's own page of the
+// gods shows them.
 
 import { angelName } from './angel.js';
 import { content, escapeHtml } from './content.js';
-import { kindOf, nature, title, writePantheon } from './scribes.js';
+import { godsFor, kindOf, maxGods, nature, title, writePantheon } from './scribes.js';
 
 const LEANINGS = [
   ['aggression', 'War'],
@@ -46,6 +47,9 @@ export async function initPantheon(root) {
   const seedInput = root.querySelector('#seed');
   const sizeSelect = root.querySelector('#size');
   const speciesSelect = root.querySelector('#species');
+  const godsSelect = root.querySelector('#god-count');
+  const temperSelect = root.querySelector('#temper');
+  const nameInput = root.querySelector('#god-name');
   const meta = root.querySelector('#forge-meta');
   const list = root.querySelector('#gods');
   const player = root.querySelector('#player-god');
@@ -56,6 +60,20 @@ export async function initPantheon(root) {
   });
   speciesSelect.add(new Option(`${gods.Gods[0].CreatureSpecies} (the default)`, ''));
   creatures.Species.forEach((s) => speciesSelect.add(new Option(s.Name, s.Name)));
+  nameInput.placeholder = gods.Gods.find((g) => g.Controller === 'Human')?.Name ?? 'your god';
+
+  // The gods a size allows, its own first; a number chosen is kept where the size allows it.
+  const fillGods = (wanted) => {
+    const own = godsFor(gods, sizes, sizeSelect.value);
+    godsSelect.innerHTML = '';
+    godsSelect.add(new Option(`${own} gods (the size's own)`, ''));
+    for (let n = 2; n <= maxGods(gods, sizes, sizeSelect.value); n++) {
+      if (n !== own) {
+        godsSelect.add(new Option(`${n} gods`, String(n)));
+      }
+    }
+    godsSelect.value = [...godsSelect.options].some((o) => o.value === wanted) ? wanted : '';
+  };
 
   const fromHash = new URLSearchParams(location.hash.replace(/^#pantheon\??/, ''));
   if (fromHash.get('seed')) {
@@ -67,10 +85,18 @@ export async function initPantheon(root) {
   if (fromHash.get('species')) {
     speciesSelect.value = fromHash.get('species');
   }
+  if (fromHash.get('temper')) {
+    temperSelect.value = fromHash.get('temper');
+  }
+  if (fromHash.get('name')) {
+    nameInput.value = fromHash.get('name');
+  }
+  fillGods(fromHash.get('gods') ?? '');
 
   let changed = false;
   const render = () => {
-    const written = writePantheon({ lore: minds.Lore, gods, sizes }, seedInput.value, sizeSelect.value, speciesSelect.value || null);
+    const choices = { gods: godsSelect.value ? Number(godsSelect.value) : null, godName: nameInput.value, temper: temperSelect.value || 'Mixed' };
+    const written = writePantheon({ lore: minds.Lore, gods, sizes }, seedInput.value, sizeSelect.value, speciesSelect.value || null, choices);
     if (!written) {
       list.innerHTML = '<p class="empty">Type a seed: a number, or any words.</p>';
       meta.textContent = '';
@@ -91,6 +117,15 @@ export async function initPantheon(root) {
     if (speciesSelect.value) {
       share.set('species', speciesSelect.value);
     }
+    if (godsSelect.value) {
+      share.set('gods', godsSelect.value);
+    }
+    if (temperSelect.value && temperSelect.value !== 'Mixed') {
+      share.set('temper', temperSelect.value);
+    }
+    if (nameInput.value.trim()) {
+      share.set('name', nameInput.value.trim());
+    }
     if (changed) {
       history.replaceState(null, '', `#pantheon?${share}`);
     }
@@ -101,8 +136,14 @@ export async function initPantheon(root) {
   };
 
   seedInput.addEventListener('input', change);
-  sizeSelect.addEventListener('change', change);
+  sizeSelect.addEventListener('change', () => {
+    fillGods(godsSelect.value);
+    change();
+  });
   speciesSelect.addEventListener('change', change);
+  godsSelect.addEventListener('change', change);
+  temperSelect.addEventListener('change', change);
+  nameInput.addEventListener('input', change);
   root.querySelector('#reroll').addEventListener('click', () => {
     const pick = () => RANDOM_WORDS[Math.floor(Math.random() * RANDOM_WORDS.length)];
     seedInput.value = Math.random() < 0.5 ? String(Math.floor(Math.random() * 1e9)) : `${pick()} ${pick()}`;

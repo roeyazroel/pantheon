@@ -33,7 +33,7 @@ internal sealed class DivineController
     private readonly DivineHand _hand;
     private readonly DivineViewSettings _view;
     private readonly Action<string> _setStatus;
-    private readonly AlertFeed _feed = new();
+    private readonly AlertFeed _feed;
     private readonly Dictionary<Alert, double> _shownAt = [];
     private double _clock;
     private (OverlayKind Kind, long Step, WorldState World)? _shownOverlay;
@@ -49,6 +49,7 @@ internal sealed class DivineController
     public DivineController(GameSession session, Hud hud, DivinePresenter presenter, DivineViewSettings view, Action<string> setStatus, CreaturePresenter creatures, DivineHand hand)
     {
         _session = session;
+        _feed = new AlertFeed(victorySeconds: session.Content.DivineRules.VictorySeconds);
         _hud = hud;
         _presenter = presenter;
         _view = view;

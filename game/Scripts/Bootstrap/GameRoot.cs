@@ -113,7 +113,7 @@ public partial class GameRoot : Node3D
             Name = "Hud",
             MiracleLook = id => (MiracleGlyphs.For(id, view.EffectFor(id).Style), view.EffectFor(id).Color.ToGodot()),
             CooldownOf = id => (content.Miracles.Find(id)?.CooldownTicks ?? 0) / SimulationScheduler.DefaultTicksPerSecond,
-            GodColor = id => view.GodColor(id).ToGodot(),
+            GodColor = id => view.GodColor(_session.World, id).ToGodot(),
             LocalGod = () => _session.LocalGodId,
         };
         AddChild(hud);
@@ -129,7 +129,7 @@ public partial class GameRoot : Node3D
         politics.Setup(_session, _camera, SetStatus, options);
         var flow = new GameFlow { Name = "GameFlow" };
         AddChild(flow);
-        flow.Setup(_session, _network, _divine, (politics.Diplomacy, hud), _camera, SetStatus, options, (settings, minds));
+        flow.Setup(_session, _network, _divine, (politics.Diplomacy, hud), _camera, SetStatus, options, (settings, minds, presentation.DivineView));
         _flow = flow;
         _debug.AgentLines = flow.AgentLines;
         var audio = new Pantheon.Client.Presentation.Audio.AudioPresenter { Name = "Audio" };

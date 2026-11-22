@@ -52,8 +52,9 @@ public static class PantheonPrompt
     /// <param name="setup">The world's gods as the content gives them, at the world's size.</param>
     /// <param name="world">The world in a few words, for example "a large island of 20 villages, with four seasons".</param>
     /// <param name="minds">The minds' content, for the effort and length.</param>
+    /// <param name="allowed">The personalities the world's temper allows (ADR-082); every one when <c>null</c> or all of them.</param>
     /// <returns>The question.</returns>
-    public static ModelQuestion Question(PantheonSetup setup, string world, MindContent minds)
+    public static ModelQuestion Question(PantheonSetup setup, string world, MindContent minds, IReadOnlyCollection<GodPersonality>? allowed = null)
     {
         ArgumentNullException.ThrowIfNull(setup);
         ArgumentNullException.ThrowIfNull(minds);
@@ -65,6 +66,11 @@ public static class PantheonPrompt
             text.Append(slot.Controller == GodController.Human
                 ? string.Create(CultureInfo.InvariantCulture, $"Slot {i}: the player, {slot.Name}, whose Creature is {slot.CreatureName} the {slot.CreatureSpecies.ToLowerInvariant()}. Do not write this god.\n")
                 : string.Create(CultureInfo.InvariantCulture, $"Slot {i}: a rival god whose Creature is a {slot.CreatureSpecies.ToLowerInvariant()}.\n"));
+        }
+
+        if (Narrowed(allowed) is { } only)
+        {
+            text.Append(CultureInfo.InvariantCulture, $"Give each rival a personality from these only: {string.Join(", ", only)}.\n");
         }
 
         text.Append("Write one god for every rival slot, giving its slot number.");
@@ -82,8 +88,9 @@ public static class PantheonPrompt
     /// <param name="json">The answer.</param>
     /// <param name="scribed">The scribes' gods for the same world, one per slot.</param>
     /// <param name="author">The model's name.</param>
+    /// <param name="allowed">The personalities the world's temper allows (ADR-082): a god of another is the scribes'; any when <c>null</c>.</param>
     /// <returns>The gods, one per slot, and why any are the scribes'.</returns>
-    public static BornPantheon Read(string json, BornPantheon scribed, string author)
+    public static BornPantheon Read(string json, BornPantheon scribed, string author, IReadOnlyCollection<GodPersonality>? allowed = null)
     {
         ArgumentNullException.ThrowIfNull(scribed);
         var written = new Dictionary<int, BornGod>();
@@ -120,7 +127,8 @@ public static class PantheonPrompt
                 continue;
             }
 
-            var god = written.TryGetValue(i, out var theirs) && !names.Contains(theirs.Name) && !creatures.Contains(theirs.CreatureName) ? theirs : mine;
+            var god = written.TryGetValue(i, out var theirs) && !names.Contains(theirs.Name) && !creatures.Contains(theirs.CreatureName)
+                && (allowed is null || allowed.Contains(theirs.Personality)) ? theirs : mine;
             if (ReferenceEquals(god, mine))
             {
                 fallbacks++;
@@ -256,5 +264,17 @@ public static class PantheonPrompt
             ["additionalProperties"] = false,
         };
         return JsonSerializer.Serialize(root);
+    }
+
+    /// <summary>The personalities allowed, in the enum's order, when they are fewer than all; <c>null</c> when any may be drawn.</summary>
+    private static List<GodPersonality>? Narrowed(IReadOnlyCollection<GodPersonality>? allowed)
+    {
+        if (allowed is null)
+        {
+            return null;
+        }
+
+        var only = Enum.GetValues<GodPersonality>().Where(p => p != GodPersonality.None && allowed.Contains(p)).ToList();
+        return only.Count is > 0 && only.Count < Enum.GetValues<GodPersonality>().Length - 1 ? only : null;
     }
 }

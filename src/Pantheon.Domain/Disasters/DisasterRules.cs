@@ -119,6 +119,39 @@ public sealed record DisasterRules
 
     /// <summary>The plague, eclipses, reformations and the world's other great events (ADR-034); none when absent.</summary>
     public GreatEvents.GreatEventRules GreatEvents { get; init; } = Pantheon.Domain.GreatEvents.GreatEventRules.None;
+
+    /// <summary>How each world's calamity level scales the onset of disasters, plagues and the beast (ADR-082); all 1 when absent.</summary>
+    public CalamityScales Calamities { get; init; } = CalamityScales.Even;
+}
+
+/// <summary>
+/// How much more or less often calamities begin at each level a world may be made with (ADR-082): the
+/// chances of natural earthquakes and fires, eruptions, landslides, meteors, tornadoes, swarms, blight,
+/// outbreaks of plague and the beast's waking. How they spread and what they do are not scaled.
+/// </summary>
+public sealed record CalamityScales
+{
+    /// <summary>Scale for a gentle world.</summary>
+    public required float Gentle { get; init; }
+
+    /// <summary>Scale for a normal world: 1 keeps the content's rates.</summary>
+    public required float Normal { get; init; }
+
+    /// <summary>Scale for a harsh world.</summary>
+    public required float Harsh { get; init; }
+
+    /// <summary>Every level at the content's rates.</summary>
+    public static CalamityScales Even { get; } = new() { Gentle = 1f, Normal = 1f, Harsh = 1f };
+
+    /// <summary>The scale of a level.</summary>
+    /// <param name="level">The level.</param>
+    /// <returns>The scale.</returns>
+    public float Of(World.CalamityLevel level) => level switch
+    {
+        World.CalamityLevel.Gentle => Gentle,
+        World.CalamityLevel.Normal => Normal,
+        World.CalamityLevel.Harsh => Harsh,
+    };
 }
 
 /// <summary>How a settlement's buildings and technology lessen what disasters do to it (spec §21, §36, ADR-023).</summary>

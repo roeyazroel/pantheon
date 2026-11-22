@@ -18,6 +18,9 @@ public sealed record GodAiRules
     /// <summary>Largest random addition to a candidate's utility.</summary>
     public required float DecisionJitter { get; init; }
 
+    /// <summary>How each strength a world's rivals may be given changes them (ADR-082); all as the rules say when absent.</summary>
+    public RivalStrengths Strengths { get; init; } = RivalStrengths.Unchanged;
+
     /// <summary>Settlements of this population count as fully valuable; smaller ones count less (square root).</summary>
     public required float ReferencePopulation { get; init; }
 
@@ -93,4 +96,46 @@ public sealed record GodProfile
 
     /// <summary>The domains it takes up, in order, as its rank allows (spec §47's preferred domains, ADR-021).</summary>
     public required IReadOnlyList<GodDomain> Domains { get; init; }
+}
+
+/// <summary>What a world's rival strength changes in its AI gods (ADR-082), as multiples of the rules' own numbers.</summary>
+public sealed record RivalStrengthRules
+{
+    /// <summary>Multiple of <c>gods.json</c>'s starting Divine Power each AI god begins with.</summary>
+    public required float Power { get; init; }
+
+    /// <summary>Multiple of <see cref="GodAiRules.Patience"/>: more waits more.</summary>
+    public required float Patience { get; init; }
+
+    /// <summary>Multiple of <see cref="GodAiRules.DecisionJitter"/>: more chooses less surely.</summary>
+    public required float Jitter { get; init; }
+
+    /// <summary>The rules' own numbers.</summary>
+    public static RivalStrengthRules Same { get; } = new() { Power = 1f, Patience = 1f, Jitter = 1f };
+}
+
+/// <summary>The rival strengths a world may be made with (ADR-082).</summary>
+public sealed record RivalStrengths
+{
+    /// <summary>Weak rivals.</summary>
+    public required RivalStrengthRules Weak { get; init; }
+
+    /// <summary>Even rivals: the rules' own numbers keep the AI as it plays.</summary>
+    public required RivalStrengthRules Even { get; init; }
+
+    /// <summary>Strong rivals.</summary>
+    public required RivalStrengthRules Strong { get; init; }
+
+    /// <summary>Every strength the same as the rules.</summary>
+    public static RivalStrengths Unchanged { get; } = new() { Weak = RivalStrengthRules.Same, Even = RivalStrengthRules.Same, Strong = RivalStrengthRules.Same };
+
+    /// <summary>The rules of a strength.</summary>
+    /// <param name="strength">The strength.</param>
+    /// <returns>Its rules.</returns>
+    public RivalStrengthRules Of(World.RivalStrength strength) => strength switch
+    {
+        World.RivalStrength.Weak => Weak,
+        World.RivalStrength.Even => Even,
+        World.RivalStrength.Strong => Strong,
+    };
 }

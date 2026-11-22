@@ -75,4 +75,10 @@ public sealed class GodState
     /// thought, and none for a player's god.
     /// </summary>
     public string? Journal { get; set; }
+
+    /// <summary>
+    /// The god's colour, an index into <c>divine_view.json</c>'s god colours, when the player chose one for a new
+    /// world (ADR-082); its id's colour when <c>null</c>.
+    /// </summary>
+    public int? Color { get; set; }
 }

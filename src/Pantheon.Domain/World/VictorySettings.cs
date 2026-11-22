@@ -12,8 +12,11 @@ public sealed record VictorySettings
     /// <summary>Cultural victory: lead the cultural share of the world's villages long enough without eliminating rivals.</summary>
     public bool Cultural { get; init; }
 
-    /// <summary>The most gods that may win a pantheon victory together; the divine rules' number when <c>null</c>. Set by the world's size.</summary>
+    /// <summary>The most gods that may win a pantheon victory together; the divine rules' number when <c>null</c>. Set by the world's number of gods (ADR-082).</summary>
     public int? PantheonMaxGods { get; init; }
+
+    /// <summary>How long, in simulated seconds, a victory's share must be held (spec §53's configurable duration, ADR-082); the divine rules' <c>VictorySeconds</c> when <c>null</c>.</summary>
+    public float? HoldSeconds { get; init; }
 
     /// <summary>Divine Ascendancy only: the default (spec §53).</summary>
     public static VictorySettings Default { get; } = new();

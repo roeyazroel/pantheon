@@ -54,7 +54,7 @@ public static class NavigationOverlay
 
         foreach (var (from, path, godId) in Walkers(world))
         {
-            Way(grid, from, path, godId is { } god ? view.GodColor(god) : view.UnaffiliatedColor, 1f, region);
+            Way(grid, from, path, godId is { } god ? view.GodColor(world, god) : view.UnaffiliatedColor, 1f, region);
         }
     }
 

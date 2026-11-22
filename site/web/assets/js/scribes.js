@@ -1,6 +1,7 @@
-// The scribes (ADR-065), ported from C# (PersonaScribe, PersonaText and WorldMaker.PantheonFor): they
-// write a new world's rival gods from its seed and the lore in minds.json, as the game does when no
-// model is chosen. The same seed, size and species give the same gods as the game (ADR-076).
+// The scribes (ADR-065), ported from C# (PersonaScribe, PersonaText, WorldMaker.PantheonFor and
+// WorldChoices): they write a new world's rival gods from its seed and the lore in minds.json, as the
+// game does when no model is chosen. The same seed, size, species and New World choices (the number of
+// gods, the player's names and the rivals' temper, ADR-082) give the same gods as the game (ADR-076).
 
 import { SimulationRandom, derive, parseSeed, roundHalfEven } from './random.js';
 
@@ -29,18 +30,97 @@ export function personalityName(personality) {
   return personality === 'None' ? '' : SPOKEN[personality] ?? personality;
 }
 
+const NAME_LENGTH = 18;
+const MIN_GODS = 2;
+
+/** A name a player typed, trimmed and without control characters; null when empty or too long (WorldChoices.CleanName). */
+export function cleanName(text) {
+  if (text == null) {
+    return null;
+  }
+  // eslint-disable-next-line no-control-regex
+  const name = String(text).replace(/[\u0000-\u001f\u007f-\u009f]/g, '').trim();
+  return name.length > 0 && name.length <= NAME_LENGTH ? name : null;
+}
+
+function presetOf(sizesContent, size) {
+  const sizes = sizesContent?.Sizes ?? [];
+  const named = size == null ? null : sizes.find((s) => s.Name.toLowerCase() === String(size).toLowerCase());
+  return named ?? sizes[0] ?? null;
+}
+
+/** The personalities a temper lets rivals draw, in the enum's order (WorldSizes.PersonalitiesOf). */
+export function personalitiesOf(sizesContent, temper = 'Mixed') {
+  const list = temper === 'Peaceful' ? sizesContent?.Tempers?.Peaceful : temper === 'Warlike' ? sizesContent?.Tempers?.Warlike : null;
+  return list && list.length > 0 ? PERSONALITIES.filter((p) => list.includes(p)) : [...PERSONALITIES];
+}
+
+/** The most gods a world of a size may hold (WorldChoices.MaxGods), with the size's own villages. */
+export function maxGods(godsContent, sizesContent, size) {
+  const named = godsContent.Gods.length + (godsContent.ExtraGods?.length ?? 0);
+  const villages = Math.max(2, presetOf(sizesContent, size)?.Settlements ?? 2);
+  return Math.max(MIN_GODS, Math.min(named, Math.floor(villages / Math.max(1, sizesContent?.VillagesPerGod ?? 2))));
+}
+
+/** How many gods a world is made with: the number asked, or the size's own, within the limits (WorldChoices.GodsFor). */
+export function godsFor(godsContent, sizesContent, size, wanted = null) {
+  const own = presetOf(sizesContent, size)?.Gods ?? godsContent.Gods.length;
+  return Math.min(Math.max(wanted ?? own, MIN_GODS), maxGods(godsContent, sizesContent, size));
+}
+
+function swapName(gods, player, name, key) {
+  const old = gods[player][key];
+  gods.forEach((god, i) => {
+    if (i !== player && god[key].toUpperCase() === name.toUpperCase()) {
+      god[key] = old;
+    }
+  });
+  gods[player][key] = name;
+}
+
 /**
- * The gods of a world as the content gives them, at a size and with the player's Creature of a
- * species (WorldMaker.PantheonFor): the first size, or an unknown one, has gods.json's own gods.
+ * The gods of a world as the content gives them (WorldMaker.PantheonFor): at a size, as many as asked
+ * (gods.json's gods, then its extra gods), the rivals within a temper, the player's Creature of a
+ * species and the player's god and Creature named as asked.
  */
-export function pantheonFor(godsContent, sizesContent, size, species) {
+export function pantheonFor(godsContent, sizesContent, size, species, choices = {}) {
   const sizes = sizesContent?.Sizes ?? [];
   const preset = size == null ? null : sizes.find((s) => s.Name.toLowerCase() === String(size).toLowerCase());
   let gods = godsContent.Gods.map((g) => ({ ...g }));
   if (preset && preset !== sizes[0]) {
     gods = gods.concat(godsContent.ExtraGods.slice(0, Math.max(0, preset.Gods - gods.length)).map((g) => ({ ...g })));
   }
+  const count = godsFor(godsContent, sizesContent, preset?.Name ?? null, choices.gods ?? null);
+  if (count !== gods.length) {
+    const all = godsContent.Gods.concat(godsContent.ExtraGods ?? []).map((g) => ({ ...g }));
+    gods = all.slice(0, count);
+    const human = all.findIndex((g) => g.Controller === 'Human');
+    if (human >= count && gods.length > 0) {
+      gods[gods.length - 1] = all[human];
+    }
+  }
+  const allowed = personalitiesOf(sizesContent, choices.temper);
+  let rivals = 0;
+  gods.forEach((god) => {
+    if (god.Controller === 'Human') {
+      return;
+    }
+    if (!allowed.includes(god.Personality)) {
+      god.Personality = allowed[rivals % allowed.length];
+    }
+    rivals++;
+  });
   const player = gods.findIndex((g) => g.Controller === 'Human');
+  if (player >= 0) {
+    const godName = cleanName(choices.godName);
+    if (godName) {
+      swapName(gods, player, godName, 'Name');
+    }
+    const creatureName = cleanName(choices.creatureName);
+    if (creatureName) {
+      swapName(gods, player, creatureName, 'CreatureName');
+    }
+  }
   if (species && player >= 0) {
     const given = gods[player].CreatureSpecies;
     gods.forEach((god, i) => {
@@ -196,17 +276,17 @@ export function nature(god) {
 
 /**
  * The gods the scribes write for a world (PersonaScribe.Write): one per slot, the player's god as
- * the content names it, and each rival with a personality, a name, a Creature, a history and a
- * temper. Returns null for an empty seed.
+ * the player names it, and each rival with a personality its temper allows, a name, a Creature, a
+ * history and a temper. Returns null for an empty seed.
  */
-export function writePantheon({ lore, gods: godsContent, sizes }, seedText, size = null, species = null) {
+export function writePantheon({ lore, gods: godsContent, sizes }, seedText, size = null, species = null, choices = {}) {
   const seed = parseSeed(seedText);
   if (seed === null) {
     return null;
   }
-  const setup = pantheonFor(godsContent, sizes, size, species);
+  const setup = pantheonFor(godsContent, sizes, size, species, choices);
   const random = new SimulationRandom(derive(seed, 'pantheon-personas'));
-  const personalities = [...PERSONALITIES];
+  const personalities = personalitiesOf(sizes, choices.temper);
   shuffle(personalities, random);
   const humans = setup.filter((g) => g.Controller === 'Human');
   const names = new NameSet(humans.map((g) => g.Name));

@@ -60,7 +60,7 @@ public sealed class MigrationPresenter
         foreach (var group in world.Migration.Groups)
         {
             _seen.Add(group.Id);
-            var color = (MigrationModel.MainGod(group.Beliefs) is { } god ? _view.GodColor(god) : _view.UnaffiliatedColor).ToGodot();
+            var color = (MigrationModel.MainGod(group.Beliefs) is { } god ? _view.GodColor(world, god) : _view.UnaffiliatedColor).ToGodot();
             if (!_views.TryGetValue(group.Id, out var view) || view.Color != color)
             {
                 view?.Free();

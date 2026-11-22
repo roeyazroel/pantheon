@@ -28,13 +28,15 @@ public static class PersonaScribe
     /// <param name="lore">The scribes' lore.</param>
     /// <param name="setup">The world's gods as the content gives them, at the world's size.</param>
     /// <param name="seed">The world's seed.</param>
+    /// <param name="allowed">The personalities the rivals may draw, for the world's temper (ADR-082); every one but none when <c>null</c> or empty.</param>
     /// <returns>The gods, one per slot.</returns>
-    public static BornPantheon Write(PersonaLore lore, PantheonSetup setup, WorldSeed seed)
+    public static BornPantheon Write(PersonaLore lore, PantheonSetup setup, WorldSeed seed, IReadOnlyList<GodPersonality>? allowed = null)
     {
         ArgumentNullException.ThrowIfNull(lore);
         ArgumentNullException.ThrowIfNull(setup);
         var random = new SimulationRandom(SeedMixer.Derive(seed, "pantheon-personas"));
-        var personalities = Enum.GetValues<GodPersonality>().Where(p => p != GodPersonality.None).ToList();
+        var personalities = allowed is { Count: > 0 } ? allowed.Where(p => p != GodPersonality.None).Distinct().ToList() : [];
+        personalities = personalities.Count > 0 ? personalities : Enum.GetValues<GodPersonality>().Where(p => p != GodPersonality.None).ToList();
         Shuffle(personalities, random);
         var names = new HashSet<string>(setup.Gods.Where(g => g.Controller == GodController.Human).Select(g => g.Name), StringComparer.OrdinalIgnoreCase);
         var creatures = new HashSet<string>(setup.Gods.Where(g => g.Controller == GodController.Human).Select(g => g.CreatureName), StringComparer.OrdinalIgnoreCase);

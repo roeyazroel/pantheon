@@ -24,7 +24,9 @@ public static class PantheonBirth
     public static BornPantheon Write(GameContent content, MindContent minds, WorldSeed seed, NewWorldOptions options)
     {
         ArgumentNullException.ThrowIfNull(minds);
-        return PersonaScribe.Write(minds.Lore, WorldMaker.PantheonFor(content, options), seed);
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(options);
+        return PersonaScribe.Write(minds.Lore, WorldMaker.PantheonFor(content, options), seed, content.Sizes.PersonalitiesOf(options.Temper));
     }
 
     /// <summary>Asks a model for a world's gods, the scribes writing what it does not.</summary>
@@ -42,11 +44,12 @@ public static class PantheonBirth
         ArgumentNullException.ThrowIfNull(minds);
         ArgumentNullException.ThrowIfNull(options);
         var setup = WorldMaker.PantheonFor(content, options);
-        var scribed = PersonaScribe.Write(minds.Lore, setup, seed);
+        var allowed = content.Sizes.PersonalitiesOf(options.Temper);
+        var scribed = PersonaScribe.Write(minds.Lore, setup, seed, allowed);
         ModelAnswer answer;
         try
         {
-            answer = await model.Ask(PantheonPrompt.Question(setup, Describe(content, setup, options), minds), cancel).ConfigureAwait(false);
+            answer = await model.Ask(PantheonPrompt.Question(setup, Describe(content, setup, options), minds, allowed), cancel).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -55,7 +58,7 @@ public static class PantheonBirth
         }
 
         return answer.Outcome == ModelOutcome.Answered
-            ? PantheonPrompt.Read(answer.Json, scribed, model.Name)
+            ? PantheonPrompt.Read(answer.Json, scribed, model.Name, allowed)
             : scribed with { Problem = $"{model.Name} wrote no gods ({answer.Problem}), so the scribes wrote them." };
     }
 
@@ -69,7 +72,7 @@ public static class PantheonBirth
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(setup);
         ArgumentNullException.ThrowIfNull(options);
-        var (worldGen, _) = WorldMaker.AtSize(content, options.Size);
+        var (worldGen, _) = WorldMaker.AtSize(content, options.Size, options.Villages);
         var across = worldGen.HeightmapResolution * worldGen.VertexSpacing / 1000f;
         return string.Format(
             CultureInfo.InvariantCulture,

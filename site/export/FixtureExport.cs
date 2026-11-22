@@ -31,6 +31,22 @@ internal static class FixtureExport
 
     private static readonly string?[] Species = [null, "Lion", "Cow", "Tortoise", "Wolf", "Ape"];
 
+    // The New World page's choices that change who the scribes write (ADR-082): how many gods, the player's
+    // names (some a rival's own, which the rival then gives up) and the rivals' temper.
+    private static readonly (string Seed, string Size, string? Species, Choice Choice)[] Chosen =
+    [
+        ("1234", "Small", null, new(2, null, null, RivalTemper.Mixed)),
+        ("1234", "Large", "Wolf", new(8, "Morwen", "Pebble", RivalTemper.Peaceful)),
+        ("first light", "Huge", null, new(5, "vael", "Gristle", RivalTemper.Warlike)),
+        ("77", "Vast", "Lion", new(3, "Seren", null, RivalTemper.Peaceful)),
+        ("ember tide", "Small", "Ape", new(null, "  Ilyra  ", "Quill", RivalTemper.Warlike)),
+        ("PANTHEON", "Large", null, new(1, "A name far too long to keep", "\u0007", RivalTemper.Mixed)),
+        ("Ωmega 🙂", "Huge", "Cow", new(30, "Ωmega", "Dawnhoof", RivalTemper.Warlike)),
+    ];
+
+    // How many numbered seeds are also asked with a number of gods and a temper.
+    private const int ChosenSeeds = 14;
+
     // How great a conduct's deeds may be.
     private static readonly float[] Scales = [0.6f, 3f, 8f, 30f];
 
@@ -47,35 +63,55 @@ internal static class FixtureExport
     public static int WriteScribes(GameContent content, MindContent minds, AngelContent angel, string path)
     {
         var sizes = content.Sizes.Sizes.Select(s => s.Name).ToList();
-        var cases = new List<(string Seed, string Size, string? Species)>();
+        var cases = new List<(string Seed, string Size, string? Species, Choice Choice)>();
         foreach (var size in sizes)
         {
-            cases.Add(("1234", size, null));
+            cases.Add(("1234", size, null, Choice.None));
         }
 
         for (var i = 0; i < NumberedSeeds; i++)
         {
-            cases.Add(((i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture), sizes[i % sizes.Count], Species[i % Species.Length]));
+            cases.Add(((i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture), sizes[i % sizes.Count], Species[i % Species.Length], Choice.None));
         }
 
         for (var i = 0; i < TextSeeds.Length; i++)
         {
-            cases.Add((TextSeeds[i], sizes[(i + 1) % sizes.Count], Species[(i + 2) % Species.Length]));
+            cases.Add((TextSeeds[i], sizes[(i + 1) % sizes.Count], Species[(i + 2) % Species.Length], Choice.None));
         }
+
+        var tempers = Enum.GetValues<RivalTemper>();
+        for (var i = 0; i < ChosenSeeds; i++)
+        {
+            cases.Add(((i + 100).ToString(System.Globalization.CultureInfo.InvariantCulture), sizes[i % sizes.Count], Species[(i + 3) % Species.Length], new(2 + (i % 7), null, null, tempers[i % tempers.Length])));
+        }
+
+        cases.AddRange(Chosen);
 
         using var stream = File.Create(path);
         using var json = new Utf8JsonWriter(stream);
         json.WriteStartArray();
-        foreach (var (text, size, species) in cases)
+        foreach (var (text, size, species, choice) in cases)
         {
             var seed = WorldSeed.Parse(text);
-            var options = new NewWorldOptions(Species: species, Size: size);
+            var options = new NewWorldOptions(Species: species, Size: size) { Gods = choice.Gods, GodName = choice.GodName, CreatureName = choice.CreatureName, Temper = choice.Temper };
             var setup = WorldMaker.PantheonFor(content, options);
             var born = PantheonBirth.Write(content, minds, seed, options);
             json.WriteStartObject();
             json.WriteString("seed", text);
             json.WriteString("size", size);
             json.WriteString("species", species);
+            if (choice.Gods is { } gods)
+            {
+                json.WriteNumber("godCount", gods);
+            }
+            else
+            {
+                json.WriteNull("godCount");
+            }
+
+            json.WriteString("godName", choice.GodName);
+            json.WriteString("creatureName", choice.CreatureName);
+            json.WriteString("temper", choice.Temper.ToString());
             json.WriteString("seedValue", seed.ToString());
             json.WriteString("angel", angel.NameFor(seed, 1));
             json.WriteStartArray("gods");
@@ -200,4 +236,10 @@ internal static class FixtureExport
         Traits = [],
         Persona = persona,
     };
+
+    /// <summary>The choices of a New World page that change the gods the scribes write (ADR-082); none keeps the content's.</summary>
+    private sealed record Choice(int? Gods, string? GodName, string? CreatureName, RivalTemper Temper)
+    {
+        public static Choice None { get; } = new(null, null, null, RivalTemper.Mixed);
+    }
 }

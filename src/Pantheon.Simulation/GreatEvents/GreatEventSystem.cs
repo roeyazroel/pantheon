@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Pantheon.Domain.Disasters;
 using Pantheon.Domain.Events;
 using Pantheon.Domain.GreatEvents;
 using Pantheon.Domain.Roads;
@@ -25,13 +26,15 @@ public sealed class GreatEventSystem : ISimulationSystem
     private readonly RoadRules _roads;
     private readonly Domain.Belief.DivineRules _divine;
     private readonly int _intervalTicks;
+    private readonly CalamityScales _calamities;
 
     /// <summary>Creates the system.</summary>
     /// <param name="rules">Great event rules.</param>
     /// <param name="roads">Road rules, for the plague's spread along roads.</param>
     /// <param name="divine">Divine rules, for the gods' influence at an anomaly.</param>
     /// <param name="intervalTicks">Ticks between its steps.</param>
-    public GreatEventSystem(GreatEventRules rules, RoadRules roads, Domain.Belief.DivineRules divine, int intervalTicks)
+    /// <param name="calamities">How each calamity level scales the plague's outbreaks (ADR-082); the content's rates at every level when <c>null</c>.</param>
+    public GreatEventSystem(GreatEventRules rules, RoadRules roads, Domain.Belief.DivineRules divine, int intervalTicks, CalamityScales? calamities = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(roads);
@@ -41,6 +44,7 @@ public sealed class GreatEventSystem : ISimulationSystem
         _roads = roads;
         _divine = divine;
         _intervalTicks = intervalTicks;
+        _calamities = calamities ?? CalamityScales.Even;
     }
 
     /// <inheritdoc />
@@ -73,7 +77,7 @@ public sealed class GreatEventSystem : ISimulationSystem
             {
                 sick.Add(settlement);
             }
-            else if (random.NextDouble() < rules.OutbreakPerHour / 3600.0 * seconds * PlagueModel.Ripeness(rules, world, settlement))
+            else if (random.NextDouble() < rules.OutbreakPerHour / 3600.0 * seconds * Disasters.DisasterModel.CalamityScale(_calamities, world) * PlagueModel.Ripeness(rules, world, settlement))
             {
                 settlement.Plague = PlagueModel.Onset;
                 events.Add(new PlagueStruck { Tick = world.Tick, SettlementId = settlement.Id });

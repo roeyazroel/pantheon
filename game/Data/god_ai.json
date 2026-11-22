@@ -5,6 +5,13 @@
   "EvaluationIntervalTicks": 30,
   "Patience": 0.12,
   "DecisionJitter": 0.05,
+  // A world's rival strength (ADR-082): multiples of gods.json's StartingDivinePower for each AI god, and of
+  // Patience and DecisionJitter. Even keeps the AI as these numbers make it.
+  "Strengths": {
+    "Weak": { "Power": 0.5, "Patience": 2.0, "Jitter": 5.0 },
+    "Even": { "Power": 1.0, "Patience": 1.0, "Jitter": 1.0 },
+    "Strong": { "Power": 1.5, "Patience": 0.5, "Jitter": 0.0 }
+  },
   "ReferencePopulation": 100.0,
   "CreatureSendDistance": 250.0,
 

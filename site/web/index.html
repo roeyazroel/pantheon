@@ -148,8 +148,9 @@
           <h2>Meet your pantheon</h2>
           <p class="lead">Every new world's rival gods are born with it: a name and an epithet, a history the island
             tells of it, a voice, a desire and a dread, a personality, and a temper that tilts how it plays. Type any
-            seed: these are exactly the gods you'll meet when you start a New World with it and the offline scribes
-            write them. With a model chosen, the model writes them instead.</p>
+            seed and choose as the New World page lets you, how many gods, their temper and your own god's name: these
+            are exactly the gods you'll meet when you start a New World with them and the offline scribes write them.
+            With a model chosen, the model writes them instead.</p>
         </div>
         <form class="forge reveal" id="forge">
           <label class="field">Seed
@@ -160,6 +161,19 @@
           </label>
           <label class="field">Your Creature
             <select id="species"></select>
+          </label>
+          <label class="field">Gods
+            <select id="god-count"></select>
+          </label>
+          <label class="field">Their temper
+            <select id="temper">
+              <option value="Mixed">Mixed</option>
+              <option value="Peaceful">Peaceful</option>
+              <option value="Warlike">Warlike</option>
+            </select>
+          </label>
+          <label class="field">Your god's name
+            <input id="god-name" maxlength="18" autocomplete="off" spellcheck="false" placeholder="Ilyra">
           </label>
           <button class="button small" type="button" id="reroll">Another seed</button>
           <button class="button small ghost" type="button" id="copy-link">Copy a link</button>

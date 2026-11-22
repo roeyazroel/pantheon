@@ -97,6 +97,7 @@ silently:
 | [ADR-079](ADR-079-day-and-night.md) | Day and night, the sky, and figures with some life | Accepted (amends ADR-055 and ADR-077) |
 | [ADR-080](ADR-080-people-go-home-at-night.md) | People go home at night, and the small hours of a village | Accepted (amends ADR-079) |
 | [ADR-081](ADR-081-finding-worlds-on-the-local-network.md) | Finding worlds on the local network | Accepted (amends ADR-018) |
+| [ADR-082](ADR-082-the-new-world-choices.md) | The New World page's choices: your god, the gods, the rivals and the rules | Accepted (amends ADR-018, ADR-027, ADR-060 and ADR-065) |
 
 ADR-004 and ADR-008 were written before the owner's complete specification
 ([PANTHEON_SPEC.md](../PANTHEON_SPEC.md)) was added, and cite later milestones by the earlier

@@ -67,7 +67,7 @@ internal sealed partial class VillagerController : Node
         foreach (var villager in world.Villagers)
         {
             _seen.Add(villager.Id);
-            var color = _presentation.DivineView.GodColor(villager.FollowerGodId).ToGodot();
+            var color = _presentation.DivineView.GodColor(world, villager.FollowerGodId).ToGodot();
             if (!_views.TryGetValue(villager.Id, out var view) || view.GodColor != color)
             {
                 view?.Free();

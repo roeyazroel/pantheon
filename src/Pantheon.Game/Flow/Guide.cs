@@ -47,15 +47,17 @@ public sealed class Guide
     /// <summary>What the step says.</summary>
     /// <param name="godName">The player's god.</param>
     /// <param name="creatureName">Its Creature.</param>
+    /// <param name="rivals">How many other gods the world holds (ADR-082).</param>
+    /// <param name="hold">How long a victory is held, in words, for example "ten minutes".</param>
     /// <returns>The text; empty when done.</returns>
-    public string Text(string godName, string creatureName) => Step switch
+    public string Text(string godName, string creatureName, int rivals = 3, string hold = "ten minutes") => Step switch
     {
         GuideStep.Welcome => $"You are {godName}. The villages near your shrine believe in you: their worship is your Divine Power, shown at the top with your followers.",
         GuideStep.Domain => "Choose what you are a god of: press G and take up a domain. Each changes how you play and opens a miracle of its own; you gain more as you rise.",
         GuideStep.Cast => "Pick a miracle with 1-9 and click a village inside your influence (O shows it). Food for the hungry, Heal for the sick, Lightning for those who doubt you.",
         GuideStep.Teach => $"{creatureName} is your Creature and decides for itself. When it does something you like, reward it (Z); punish what you dislike (X). It learns.",
-        GuideStep.Diplomacy => "Three other gods want the same people. Press P to see what they think of you, and to ally, make peace or declare war.",
-        GuideStep.Win => "Hold 60% of all belief for ten minutes to win. Holy sites (G) give power to the god whose influence holds them. H shows the world's history, and Esc pauses.",
+        GuideStep.Diplomacy => (rivals == 1 ? "Another god wants" : RivalWords(rivals) + " other gods want") + " the same people. Press P to see what they think of you, and to ally, make peace or declare war.",
+        GuideStep.Win => $"Hold 60% of all belief for {hold} to win. Holy sites (G) give power to the god whose influence holds them. H shows the world's history, and Esc pauses.",
         GuideStep.Done => string.Empty,
     };
 
@@ -109,4 +111,16 @@ public sealed class Guide
 
         return false;
     }
+
+    /// <summary>A number of rivals in words, capitalised: "Three", or "12" past seven.</summary>
+    private static string RivalWords(int rivals) => rivals switch
+    {
+        2 => "Two",
+        3 => "Three",
+        4 => "Four",
+        5 => "Five",
+        6 => "Six",
+        7 => "Seven",
+        _ => rivals.ToString(System.Globalization.CultureInfo.InvariantCulture),
+    };
 }

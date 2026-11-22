@@ -172,6 +172,9 @@ internal static class SaveMigrations
             case 35:
                 PersonaSaveMigration.UpgradeFrom35(root);
                 break;
+            case 36:
+                SetupSaveMigration.UpgradeFrom36(root);
+                break;
             default:
                 throw new InvalidOperationException($"No save migration is defined from version {version}.");
         }

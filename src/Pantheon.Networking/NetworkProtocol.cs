@@ -19,9 +19,10 @@ public static class NetworkProtocol
     /// version 18 (part 19) offerings in the hand and the hand's new action, version 19 (part 22) the
     /// villagers the gods follow and the intent to follow one, version 20 (part 24) the land's
     /// reshapings by Divine Acts, version 21 (part 27) the structural integrity of settlements' houses,
-    /// version 22 (part 51) the gods' journals, and the gods' and Creatures' words.
+    /// version 22 (part 51) the gods' journals, and the gods' and Creatures' words, version 23 (part 60)
+    /// the world's setup, its victory's hold and the gods' chosen colours (ADR-082).
     /// </summary>
-    public const int Version = 22;
+    public const int Version = 23;
 
     /// <summary>The UDP port a host listens on unless told otherwise.</summary>
     public const int DefaultPort = 7777;

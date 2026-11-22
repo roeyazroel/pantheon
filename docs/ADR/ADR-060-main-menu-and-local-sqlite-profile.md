@@ -1,6 +1,6 @@
 # ADR-060: A main menu and the player's profile in local SQLite
 
-- Status: Accepted (amends ADR-020: saves and settings live in the profile)
+- Status: Accepted (amends ADR-020: saves and settings live in the profile); its New World page amended by ADR-082
 - Date: 2026-10-20
 - Builds on: [ADR-006](ADR-006-simulation-state-separate-from-scenes.md) (versioned JSON saves of
   `WorldState`), [ADR-020](ADR-020-game-flow-and-history.md) (the game's flow) and

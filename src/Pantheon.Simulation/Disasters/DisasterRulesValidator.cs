@@ -16,6 +16,10 @@ public static class DisasterRulesValidator
         var errors = new RuleErrors();
 
         errors.RequireAtLeast(rules.StepIntervalTicks, 1, nameof(rules.StepIntervalTicks));
+        if (!(rules.Calamities.Gentle is >= 0f and <= 10f) || !(rules.Calamities.Normal is >= 0f and <= 10f) || !(rules.Calamities.Harsh is >= 0f and <= 10f))
+        {
+            errors.Add("Every Calamities scale must lie from 0 to 10.");
+        }
         errors.RequireNonNegative(rules.LightningIgnitionPerSecond, nameof(rules.LightningIgnitionPerSecond));
         errors.RequireShare(rules.LightningMiracleIgnition, nameof(rules.LightningMiracleIgnition));
         errors.RequireShare(rules.HearthFirePerSecond, nameof(rules.HearthFirePerSecond));

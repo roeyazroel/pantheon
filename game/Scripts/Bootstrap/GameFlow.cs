@@ -65,8 +65,8 @@ internal sealed partial class GameFlow : Node
     /// <param name="camera">The camera, which circles the island on the title screen.</param>
     /// <param name="setStatus">Shows a status line.</param>
     /// <param name="options">Launch options: the title screen (by default when there are no options), the guide, and the history panel or pause menu open from the start.</param>
-    /// <param name="choices">The player's settings, for the settings page, and the gods' minds (ADR-065), for new worlds' gods.</param>
-    public void Setup(GameSession session, NetworkDriver network, DivineController divine, (DiplomacyPanel Diplomacy, Hud Hud) ui, GodCameraController camera, Action<string> setStatus, Game.Launch.LaunchOptions options, (Game.Settings.GameSettings Settings, Game.Minds.MindContent? Minds) choices)
+    /// <param name="choices">The player's settings, for the settings page, the gods' minds (ADR-065), for new worlds' gods, and the god colours, for the New World page (ADR-082).</param>
+    public void Setup(GameSession session, NetworkDriver network, DivineController divine, (DiplomacyPanel Diplomacy, Hud Hud) ui, GodCameraController camera, Action<string> setStatus, Game.Launch.LaunchOptions options, (Game.Settings.GameSettings Settings, Game.Minds.MindContent? Minds, Game.Presentation.DivineViewSettings View) choices)
     {
         var settings = choices.Settings;
         ArgumentNullException.ThrowIfNull(options);
@@ -81,6 +81,10 @@ internal sealed partial class GameFlow : Node
         _menu = new MenuScreen { Name = "Menus" };
         _menu.Species = session.Content.Creatures.Species.Select(s => (s.Name, s.Description)).ToList();
         _menu.Sizes = session.Content.Sizes.Sizes.Select(s => (s.Name, WorldMaker.Describe(s))).ToList();
+        _menu.Content = session.Content;
+        _menu.GodColors = choices.View.GodColors.Select((c, i) => (choices.View.GodColorNames[i], c.ToGodot())).ToList();
+        _menu.Choices = NewWorldChoices.FromJson(Startup.Profile.ReadValue(NewWorldChoices.ProfileKey));
+        _menu.ChoicesKept += kept => Startup.Profile.WriteValue(NewWorldChoices.ProfileKey, kept.ToJson());
         _menu.Settings = settings;
         _menu.Minds = choices.Minds;
         _menu.ContentFingerprint = session.Content.Fingerprint;
@@ -231,7 +235,7 @@ internal sealed partial class GameFlow : Node
         }
 
         _guide.Observe([], _session.LocalGodId, _session.LocalCreature?.Id, _diplomacy.PanelVisible);
-        _guidePanel.ShowStep(_guide.IsVisible && !_menu.IsOpen && !_tutorial.IsActive ? _guide.Text(_session.LocalGod?.Name ?? "a god", _session.LocalCreature?.Name ?? "Your Creature") : string.Empty, _guide.CanSkipStep);
+        _guidePanel.ShowStep(_guide.IsVisible && !_menu.IsOpen && !_tutorial.IsActive ? _guide.Text(_session.LocalGod?.Name ?? "a god", _session.LocalCreature?.Name ?? "Your Creature", Math.Max(1, _session.World.Gods.Count - 1), VictoryText.Span(Pantheon.Simulation.Belief.VictorySystem.HoldSeconds(_session.Content.DivineRules, _session.World.Victory))) : string.Empty, _guide.CanSkipStep);
         if (_history.PanelVisible)
         {
             _history.ShowEntries(HistoryReadout.Build(_session.World, _session.Content.History, _session.LocalGodId));
@@ -304,10 +308,10 @@ internal sealed partial class GameFlow : Node
             _library.Delete(worldId);
             _menu.ShowWorlds(TitleData());
         };
-        _menu.HostChosen += (seed, name, port) => _births.Bear(seed, new NewWorldOptions(), (born, note) =>
+        _menu.HostChosen += (seed, world, worldName, name, port) => _births.Bear(seed, world, (born, note) =>
         {
             _setStatus(SessionCommands.NewWorld(_session, seed, born));
-            _library.Begin(_session, "A shared world", DateTime.UtcNow);
+            _library.Begin(_session, worldName.Length > 0 ? worldName : "A shared world", DateTime.UtcNow);
             _network.Host(_session, port, name, upnp: false);
             _setStatus(note ?? "Your shared world begins");
             ShowGods(note ?? string.Empty);

@@ -326,16 +326,20 @@ The game opens on its title screen, over the living island:
 - **Continue** picks up your newest save, once you have one.
 - **Tutorial** teaches you by doing, in fifteen short steps on a sandbox island: the camera,
   miracles, your Creature, your hand, time, diplomacy and how to win.
-- **New World** lets you shape the island before you begin:
-  - its name and seed (every seed makes its own island);
-  - your Creature's species;
-  - the island's size;
-  - how it can be won;
-  - its climate: four seasons, or an even climate all year;
-  - whether the gods start as strangers or already know each other.
+- **New World** lets you shape the world before you begin, in four tabs:
+  - **The world:** its name and seed (every seed makes its own island), its size, few or many
+    villages, and its climate (four seasons, or an even climate all year).
+  - **Your god:** your god's name, your Creature's species and name, and your colour. A rival that
+    would have worn your colour, or had your name, takes your old one.
+  - **The rivals:** how many gods share the world (2 to 8, as many as the island has room for), their
+    temper (any personality, only peaceful ones or only warlike ones), how strongly they play, and
+    whether they start as strangers or already know each other.
+  - **Victory:** how the world can be won, how long a victory must be held (10, 20 or 40 minutes),
+    and how often calamities strike.
 
-  Then you meet the rival gods born with that world, written by the mind you chose in
-  Settings > Minds, or by the scribes.
+  A line under the tabs sums up your world. The page remembers your choices for next time, apart
+  from the seed and the name. Then you meet the rival gods born with that world, written by the mind
+  you chose in Settings > Minds, or by the scribes.
 - **Your Worlds** loads or forgets any world you've played.
 - **Play Together** hosts a world or joins a friend's (see [Playing together](#playing-together)).
 - **Settings** covers graphics, sound, controls, the interface and the gods' minds.
@@ -831,13 +835,15 @@ their faith altogether.
 
 You choose how a world can be won when you make it:
 
-- **Divine Ascendancy** (the default): hold 60% of all belief for ten minutes. Allies count
+Each victory must be held without a break for the time you chose: ten minutes unless you chose 20 or
+40.
+
+- **Divine Ascendancy** (the default): hold 60% of all belief. Allies count
   together, so an alliance with a strong god can be your road to victory, or theirs. Near a joint
   victory, a treacherous ally may break away to win alone.
-- **Conquest:** bring every god outside your alliances below 5% of all belief and keep them there
-  for ten minutes.
-- **Culture:** lead three in four of the living villages for ten minutes, while some rival keeps
-  at least 5% of all belief.
+- **Conquest:** bring every god outside your alliances below 5% of all belief and keep them there.
+- **Culture:** lead three in four of the living villages, while some rival keeps at least 5% of all
+  belief.
 - **Every victory** puts all three in play, and the first reached wins.
 - **Sandbox:** nobody wins, and the world goes on as long as you like.
 
@@ -849,16 +855,27 @@ Shaking of Elar (12 dead)"), with your own moments in gold.
 
 ### World sizes
 
-| Size | Island | Villages at the start | Gods | Gods who can win together |
+| Size | Island | Villages at the start (few, normal, many) | Gods offered first | Most gods |
 | --- | --- | --- | --- | --- |
-| Small (the default) | 2 km across | 8 | 4 | 2 |
-| Large | 4 km across | 20 | 6 | 3 |
-| Huge | 8 km across | 40 | 8 | 4 |
-| Vast | 12 km across | 48 | 8 | 4 |
+| Small (the default) | 2 km across | 6, 8, 10 | 4 | 3, 4, 5 |
+| Large | 4 km across | 15, 20, 25 | 6 | 7, 8, 8 |
+| Huge | 8 km across | 30, 40, 50 | 8 | 8 |
+| Vast | 12 km across | 36, 48, 60 | 8 | 8 |
 
-Larger worlds bring more rivals, each with a Creature of its own, and take longer to win, since
-six or eight gods hold each other in check. Crowded villages found new ones, so every world grows
-as you play.
+You can choose from 2 gods to the most an island has room for: one for every two villages, so some
+villages always begin free. Half the gods, rounded down, can win together as a pantheon: 2 of 4,
+3 of 6, 4 of 8, and nobody shares a victory in a world of 2 or 3. More rivals, each with a Creature
+of its own, make a world take longer to win, since they hold each other in check. Crowded villages
+found new ones, so every world grows as you play.
+
+**Your rivals.** A peaceful temper gives them only Guardians, Nature Keepers, Tricksters and
+Isolationists; a warlike one only Tyrants, Opportunists, Zealots and Warlords. Weak rivals start
+with half your Divine Power and choose slowly and unsurely; strong ones start with half as much
+again and choose quickly and surely.
+
+**Calamities.** Gentle ones come less than half as often as normal, and harsh ones twice as often:
+earthquakes, wildfires, eruptions, landslides, meteors, tornadoes, locusts, blight, plague and the
+ancient beast's waking. Once begun, a disaster is as bad as ever.
 
 ## Controls
 
@@ -928,11 +945,12 @@ unless you turn on Settings > Interface > Debug tools, and they're listed in
 
 ## Playing together
 
-One player hosts a world and up to three others join it, each taking over a god the AI would
-otherwise play. There's no server and no account: the host's computer runs the world.
+One player hosts a world and others join it, each taking over a god the AI would otherwise play:
+as many as the world has rival gods. There's no server and no account: the host's computer runs the world.
 
-- **To host or join,** choose **Play Together** on the title screen. The host picks a seed, a
-  name and a port. The others type their name and, if they like, the god they want to play.
+- **To host or join,** choose **Play Together** on the title screen. The host presses **Set up a
+  shared world…** and makes a world with every choice of a new one, plus their name and a port. The
+  others type their name and, if they like, the god they want to play.
 - **On the same network** (a LAN party, or the same Wi-Fi), the host's world shows up under
   **On your network**, with its seed, season, who plays and the gods still free. Press **Join**.
   A world you can't join is shown greyed, with the reason, such as another version of the game.
@@ -942,8 +960,7 @@ otherwise play. There's no server and no account: the host's computer runs the w
 - **Playing.** You play as usual: miracles, your Creature, diplomacy and your refugee policy.
   Each command goes to the host, which checks it and replies, so the status line says "Asking the
   host..." and then what happened. The HUD names who plays each god.
-- **The host decides** the speed and pausing, and only the host saves and loads. Hosting from the
-  title screen makes a small world.
+- **The host decides** the speed and pausing, and only the host saves and loads.
 - **The host thinks for the gods.** The host's computer runs every god's and Creature's mind, with
   the host's chosen model, and only the host can talk to the gods. Each player has an angel of
   their own.

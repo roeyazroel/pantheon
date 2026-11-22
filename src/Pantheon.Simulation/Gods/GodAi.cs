@@ -113,7 +113,8 @@ public sealed class GodAi
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(god);
-        var candidates = new List<AiCandidate> { new(AiActionKind.Wait, null, null, default, _rules.Patience, 0f, _rules.Patience, "save power") };
+        var patience = _rules.Patience * StrengthOf(world, god).Patience;
+        var candidates = new List<AiCandidate> { new(AiActionKind.Wait, null, null, default, patience, 0f, patience, "save power") };
         if (profile is null)
         {
             return candidates;
@@ -164,9 +165,10 @@ public sealed class GodAi
         var candidates = Evaluate(world, god);
         var best = candidates[0];
         var bestScore = float.NegativeInfinity;
+        var jitter = _rules.DecisionJitter * StrengthOf(world, god).Jitter;
         foreach (var candidate in candidates)
         {
-            var score = candidate.Utility + (_rules.DecisionJitter * random.NextFloat());
+            var score = candidate.Utility + (jitter * random.NextFloat());
             if (score > bestScore)
             {
                 bestScore = score;
@@ -482,4 +484,11 @@ public sealed class GodAi
 
         return null;
     }
+
+    /// <summary>What the world's rival strength makes of an AI god (ADR-082); a player's god is weighed as the rules say.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="god">The god.</param>
+    /// <returns>The multiples of the rules' patience and jitter.</returns>
+    private RivalStrengthRules StrengthOf(WorldState world, GodState god) =>
+        god.Controller == GodController.Ai ? _rules.Strengths.Of(world.Setup.Rivals) : RivalStrengthRules.Same;
 }

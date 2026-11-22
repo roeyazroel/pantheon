@@ -84,8 +84,8 @@ public sealed class RivalPresentationTests
 
         foreach (var image in new[] { influence, religion })
         {
-            Assert.Equal(RgbColor.ToByte(view.GodColor(1).R), image.Rgba[world.Settlements[0].RegionId * 4]);
-            Assert.Equal(RgbColor.ToByte(view.GodColor(RivalWorlds.RivalId).R), image.Rgba[world.Settlements[1].RegionId * 4]);
+            Assert.Equal(RgbColor.ToByte(view.IdColor(1).R), image.Rgba[world.Settlements[0].RegionId * 4]);
+            Assert.Equal(RgbColor.ToByte(view.IdColor(RivalWorlds.RivalId).R), image.Rgba[world.Settlements[1].RegionId * 4]);
         }
     }
 

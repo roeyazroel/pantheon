@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using Pantheon.Game;
@@ -81,6 +82,9 @@ internal sealed class TerritoryPresenter
         var extent = world.Regions.Columns * world.Regions.RegionSize;
         var me = session.LocalGodId;
         var terrain = session.Terrain;
+
+        // Each god's colour, the one it chose among them (ADR-082), read here rather than on the painting thread.
+        var colors = world.Gods.ToDictionary(g => g.Id, g => _view.GodColor(world, g.Id));
         _decal.Position = new Vector3(extent / 2f, Depth / 4f, extent / 2f);
         _decal.Size = new Vector3(extent, Depth, extent);
         _painting = Task.Run(() =>
@@ -88,7 +92,7 @@ internal sealed class TerritoryPresenter
             var side = TerritoryImage.SideFor(extent);
             var territories = Territories.Build(fields, extent);
             var look = TerritoryLook.For(extent, TerritoryLook.DistanceOf(band));
-            return (TerritoryImage.Render(territories, side, _view.GodColor, me, look, (x, z) => terrain.SampleHeight(x, z) > 0.3f), side);
+            return (TerritoryImage.Render(territories, side, id => colors.TryGetValue(id, out var color) ? color : _view.IdColor(id), me, look, (x, z) => terrain.SampleHeight(x, z) > 0.3f), side);
         });
     }
 

@@ -106,7 +106,7 @@ internal sealed class SettlementView
         _siteView.Dress(look);
         var temple = settlement.Society.Buildings.Find(b => b.Kind == Domain.Society.BuildingKind.Temple);
         var templeStyle = temple?.GodId is { } templeGod && style?.GodId == templeGod && style.Strength >= _buildings.Settings.MotifStrength ? style.Motif : (StyleMotif?)null;
-        _civicView.Show(settlement, Site, _terrain, temple?.GodId is { } god ? _divine.GodColor(god) : null, look, templeStyle);
+        _civicView.Show(settlement, Site, _terrain, temple?.GodId is { } god ? _divine.GodColor(world, god) : null, look, templeStyle);
 
         // The god's pieces are laid out again only when the style or the village's reach changes.
         var count = style is null ? 0 : (int)System.MathF.Round(_style.MaxPieces * style.Strength * System.Math.Min(1f, (Site.Houses.Count + 2) / 14f));
@@ -148,7 +148,7 @@ internal sealed class SettlementView
         _label.Priority = settlement.Population;
 
         var main = SettlementLabel.MainBelief(settlement);
-        var tint = main is { Adherence: >= 0.5f } ? _divine.GodColor(main.GodId).ToGodot() : Colors.White;
+        var tint = main is { Adherence: >= 0.5f } ? _divine.GodColor(world, main.GodId).ToGodot() : Colors.White;
         if (_label.Modulate != tint)
         {
             _label.Modulate = tint;

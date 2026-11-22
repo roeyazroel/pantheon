@@ -40,7 +40,7 @@ public sealed class NotablePresenter
         foreach (var notable in world.Notables)
         {
             _seen.Add(notable.Id);
-            var color = _view.GodColor(notable.GodId).ToGodot();
+            var color = _view.GodColor(world, notable.GodId).ToGodot();
             if (!_views.TryGetValue(notable.Id, out var view) || view.Color != color)
             {
                 // An elder who turns takes their new god's colour.

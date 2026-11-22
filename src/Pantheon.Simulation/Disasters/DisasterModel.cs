@@ -158,4 +158,15 @@ public static class DisasterModel
         ArgumentNullException.ThrowIfNull(settlement);
         return settlement.ShieldedUntilTick > tick;
     }
+
+    /// <summary>How much more or less often calamities begin in a world: its calamity level's scale (ADR-082).</summary>
+    /// <param name="calamities">The scales of the levels.</param>
+    /// <param name="world">World state.</param>
+    /// <returns>The scale of the chances that calamities begin; 1 at the content's rates.</returns>
+    public static float CalamityScale(CalamityScales calamities, WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(calamities);
+        ArgumentNullException.ThrowIfNull(world);
+        return calamities.Of(world.Setup.Calamities);
+    }
 }

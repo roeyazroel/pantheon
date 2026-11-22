@@ -346,7 +346,7 @@ public static class HudReadout
         {
             if (world.Victory.Ascendancy && god.DominantSinceTick is { } since)
             {
-                var left = (VictorySystem.TicksToWin(rules) - (world.Tick - since)) / session.Scheduler.TicksPerSecond;
+                var left = (VictorySystem.TicksToWin(rules, world) - (world.Tick - since)) / session.Scheduler.TicksPerSecond;
                 var (share, allies) = VictorySystem.StandingOf(rules, world, god.Id);
                 var who = new List<int>(allies) { god.Id };
                 who.Sort();
@@ -364,14 +364,14 @@ public static class HudReadout
         {
             var (living, led) = VictorySystem.CultureCount(world, local.Id);
             return world.Victory.Cultural
-                ? Format("You lead {0} of {1} villages; lead {2:0} for {3} to win the world's culture", led, living, MathF.Ceiling(rules.CulturalShare * living), DivineText.Clock(rules.VictorySeconds))
-                : Format("Bring every rival below {0:0%} of all belief for {1} to conquer the world", rules.ConquestShare, DivineText.Clock(rules.VictorySeconds));
+                ? Format("You lead {0} of {1} villages; lead {2:0} for {3} to win the world's culture", led, living, MathF.Ceiling(rules.CulturalShare * living), DivineText.Clock(VictorySystem.HoldSeconds(rules, world.Victory)))
+                : Format("Bring every rival below {0:0%} of all belief for {1} to conquer the world", rules.ConquestShare, DivineText.Clock(VictorySystem.HoldSeconds(rules, world.Victory)));
         }
 
         var (mine, mates) = VictorySystem.StandingOf(rules, world, local.Id);
         return mates.Count == 0
-            ? Format("You hold {0:0%} of all belief; {1:0%} for {2} wins", mine, rules.VictoryShare, DivineText.Clock(rules.VictorySeconds))
-            : Format("{0} hold {1:0%} of all belief together; {2:0%} for {3} wins together", DivineText.Names(world, [.. mates, local.Id], local.Id), mine, rules.VictoryShare, DivineText.Clock(rules.VictorySeconds));
+            ? Format("You hold {0:0%} of all belief; {1:0%} for {2} wins", mine, rules.VictoryShare, DivineText.Clock(VictorySystem.HoldSeconds(rules, world.Victory)))
+            : Format("{0} hold {1:0%} of all belief together; {2:0%} for {3} wins together", DivineText.Names(world, [.. mates, local.Id], local.Id), mine, rules.VictoryShare, DivineText.Clock(VictorySystem.HoldSeconds(rules, world.Victory)));
     }
 
     /// <summary>A god on its way to a conquest or a cultural victory (ADR-027), if any.</summary>
@@ -386,7 +386,7 @@ public static class HudReadout
             if (god.ConquestSinceTick is { } conquest)
             {
                 favoursPlayer = mine;
-                var left = (VictorySystem.TicksToWin(rules) - (world.Tick - conquest)) / session.Scheduler.TicksPerSecond;
+                var left = (VictorySystem.TicksToWin(rules, world) - (world.Tick - conquest)) / session.Scheduler.TicksPerSecond;
                 return mine ? Format("Your rivals are all but gone: you conquer the world in {0}", DivineText.Clock(left))
                     : Format("{0} has all but crushed its rivals: it conquers the world in {1}", god.Name, DivineText.Clock(left));
             }
@@ -394,7 +394,7 @@ public static class HudReadout
             if (god.CulturalSinceTick is { } culture)
             {
                 favoursPlayer = mine;
-                var left = (VictorySystem.TicksToWin(rules) - (world.Tick - culture)) / session.Scheduler.TicksPerSecond;
+                var left = (VictorySystem.TicksToWin(rules, world) - (world.Tick - culture)) / session.Scheduler.TicksPerSecond;
                 var (living, led) = VictorySystem.CultureCount(world, god.Id);
                 return mine ? Format("You lead {0} of {1} villages: you win the world's culture in {2}", led, living, DivineText.Clock(left))
                     : Format("{0} leads {1} of {2} villages: it wins the world's culture in {3}", god.Name, led, living, DivineText.Clock(left));

@@ -18,6 +18,13 @@ public static class GodAiRulesValidator
         errors.RequireAtLeast(rules.EvaluationIntervalTicks, 1, nameof(rules.EvaluationIntervalTicks));
         errors.RequireNonNegative(rules.Patience, nameof(rules.Patience));
         errors.RequireNonNegative(rules.DecisionJitter, nameof(rules.DecisionJitter));
+        foreach (var (name, strength) in new[] { ("Weak", rules.Strengths.Weak), ("Even", rules.Strengths.Even), ("Strong", rules.Strengths.Strong) })
+        {
+            if (!(strength.Power is > 0f and <= 10f) || !(strength.Patience is >= 0f and <= 10f) || !(strength.Jitter is >= 0f and <= 20f))
+            {
+                errors.Add($"Strengths.{name} needs a Power above 0 and at most 10, a Patience from 0 to 10 and a Jitter from 0 to 20.");
+            }
+        }
         errors.RequirePositive(rules.ReferencePopulation, nameof(rules.ReferencePopulation));
         if (!(rules.RainDrought is >= 0f and < 1f))
         {

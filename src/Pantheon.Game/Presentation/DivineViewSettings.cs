@@ -14,8 +14,11 @@ public sealed record DivineViewSettings
     /// <summary>File name of the divine view content file.</summary>
     public const string FileName = "divine_view.json";
 
-    /// <summary>Colour of each god, by id order (god 1 takes the first); repeated when there are more gods.</summary>
+    /// <summary>Colour of each god, by id order (god 1 takes the first); repeated when there are more gods. A god may hold another (ADR-082).</summary>
     public required IReadOnlyList<RgbColor> GodColors { get; init; }
+
+    /// <summary>The name of each god colour, for the New World page (ADR-082).</summary>
+    public required IReadOnlyList<string> GodColorNames { get; init; }
 
     /// <summary>Colour of people who follow no god.</summary>
     public required RgbColor UnaffiliatedColor { get; init; }
@@ -42,6 +45,12 @@ public sealed record DivineViewSettings
         if (settings.GodColors.Count == 0 || !(settings.OverlayOpacity is > 0f and <= 1f))
         {
             throw new ContentFormatException($"{FileName}: GodColors must not be empty and OverlayOpacity must lie above 0 and at most 1.");
+        }
+
+        if (settings.GodColorNames.Count != settings.GodColors.Count || settings.GodColorNames.Any(string.IsNullOrWhiteSpace)
+            || settings.GodColorNames.Distinct(StringComparer.OrdinalIgnoreCase).Count() != settings.GodColorNames.Count)
+        {
+            throw new ContentFormatException($"{FileName}: GodColorNames needs a name of its own for each of the {settings.GodColors.Count} god colours.");
         }
 
         foreach (var effect in settings.Effects)
@@ -84,10 +93,39 @@ public sealed record DivineViewSettings
         return CreatureLooks.Count > 0 ? CreatureLooks[0] : CreatureLook.Default;
     }
 
-    /// <summary>Colour of a god.</summary>
+    /// <summary>The colour a god of an id has unless it holds another (ADR-082): the colours in turn by id. Use <see cref="GodColor"/> for a world's god.</summary>
     /// <param name="godId">God id, from 1.</param>
     /// <returns>The colour.</returns>
-    public RgbColor GodColor(int godId) => GodColors[(int)((uint)Math.Max(0, godId - 1) % (uint)GodColors.Count)];
+    public RgbColor IdColor(int godId) => GodColors[SlotColor(godId)];
+
+    /// <summary>The colour of a world's god: the one it holds (ADR-082), or its id's.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">God id, from 1.</param>
+    /// <returns>The colour.</returns>
+    public RgbColor GodColor(Domain.World.WorldState world, int godId) => GodColors[ColorIndex(world, godId)];
+
+    /// <summary>The index of a world's god's colour among <see cref="GodColors"/>: the one it holds (ADR-082), or its id's.</summary>
+    /// <param name="world">World state.</param>
+    /// <param name="godId">God id, from 1.</param>
+    /// <returns>The index.</returns>
+    public int ColorIndex(Domain.World.WorldState world, int godId)
+    {
+        ArgumentNullException.ThrowIfNull(world);
+        foreach (var god in world.Gods)
+        {
+            if (god.Id == godId)
+            {
+                return god.Color is { } held && held >= 0 && held < GodColors.Count ? held : SlotColor(godId);
+            }
+        }
+
+        return SlotColor(godId);
+    }
+
+    /// <summary>The index of the colour a god of an id has unless it holds another.</summary>
+    /// <param name="godId">God id, from 1.</param>
+    /// <returns>The index.</returns>
+    public int SlotColor(int godId) => (int)((uint)Math.Max(0, godId - 1) % (uint)GodColors.Count);
 
     /// <summary>The look of a miracle, or a golden shower when the file does not list it.</summary>
     /// <param name="miracleId">Miracle id.</param>

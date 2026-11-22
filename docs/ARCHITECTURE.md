@@ -604,9 +604,12 @@ and a Lumen an Ape. A missing,
 
 ### Application (`Pantheon.Game`)
 
-- `WorldMaker` (ADR-027) makes new worlds from `NewWorldOptions` (the Creature's species, the
-  size and the victories): `AtSize` turns a `world_sizes.json` size into generation settings and
-  gods, and `Validate` checks every size as part of the content's strict parsing.
+- `WorldMaker` (ADR-027, ADR-082) makes new worlds from `NewWorldOptions` (the Creature's species,
+  the size and the victories, and the New World page's other choices: the player's names and colour,
+  the gods, the villages, the rivals' temper and strength, the calamities and the hold): `AtSize`
+  turns a `world_sizes.json` size and a village count into generation settings and gods,
+  `PantheonFor` makes the slots, and `Validate` checks every size and choice as part of the content's
+  strict parsing. `WorldChoices` holds the limits the page, the launch options and the tests share.
 - `GameSession`: creates or loads worlds, owns `WorldState` + `TerrainField`, runs the
   scheduler, saves and loads (`SessionStore` reads a save with its reshaped terrain), and raises
   `WorldReplaced` so presentation rebuilds, and `TerrainChanged` when a Divine Act reshaped the land
@@ -1119,7 +1122,8 @@ with their shipped values and the measurements.
   settlements that fall and are settled again. It is saved, replicated as a section, worded by
   `HistoryText` and shown in the History panel and on the end screen.
 - **Victory** (amending ADR-015): a god counts with its strongest direct allies only, up to
-  `PantheonMaxGods`, or the world's own number when its size sets one (ADR-027).
+  `PantheonMaxGods`, or the world's own number, half its gods (ADR-027, ADR-082). A share is held
+  for the world's `VictorySettings.HoldSeconds`, or `VictorySeconds` in a world made before it.
 - **Flow**: `GameFlow` puts menus over the running world. The title screen shows when the game starts
   without options, over the island running on; the pause menu pauses a world the player owns (a joined player's keeps running);
   the end screen opens once per world when it has winners. The guide's steps advance on the events
@@ -1321,7 +1325,7 @@ ADR-027 records the decisions, and the plan
 flowchart LR
     sizes[world_sizes.json] --> maker[WorldMaker.AtSize]
     gods[gods.json: Gods, ExtraGods] --> maker
-    options["NewWorldOptions: start screen, --world-size, --victory"] --> maker
+    options["NewWorldOptions: New World page, --world-size, --victory, --gods, --villages"] --> maker
     maker --> gen[WorldGenerator.Generate]
     gen --> state[WorldState: Generation, gods, Victory]
     state --> system[VictorySystem: ascendancy, conquest, culture]
@@ -1336,10 +1340,11 @@ flowchart LR
 ```
 
 - **Sizes.** Small (2 km), Large (4 km), Huge (8 km) and Vast (12 km). A size is generation
-  settings, gods and a pantheon size: `WorldMaker.AtSize` scales the island, the regions (32 to
+  settings and the gods offered first: `WorldMaker.AtSize` scales the island, the regions (32 to
   128 a side), the settlements founded, the rivers and the hydrology's cell, adds the extra names,
-  and makes up its number of gods from the first of `ExtraGods`. `WorldMaker.Generate` writes the
-  size's `PantheonMaxGods` (two of four gods, three of six, four of eight) into the world's
+  and makes up its number of gods from the first of `ExtraGods`. Since ADR-082 the player chooses
+  the number of gods; `WorldMaker.Generate` writes `PantheonShare` of them, rounded down (two of
+  four gods, three of six, four of eight, none of two or three), into the world's
   `VictorySettings`, and `VictorySystem.StandingOf` uses it. The first size must
   be the world `worldgen.json` and `gods.json` make, so that world is unchanged. The save keeps
   the generation settings, so a world loads at its size.
@@ -1367,9 +1372,48 @@ flowchart LR
   world's village labels rarely overlap, so it looks as before. `GodCameraModel.MaxDistance` and the
   fog scale with the island's width.
 - **Not modelled:** worlds beyond 12 km (the heightfield is still generated whole, in 1.1 s for a
-  vast world; its detail streams since ADR-050), more than eight gods, a size chosen on the start screen's
-  host page (`--host` with `--world-size` hosts any size), victories chosen per player, and history
-  records of more than two winners.
+  vast world; its detail streams since ADR-050), more than eight gods, victories chosen per player,
+  and history records of more than two winners. A hosted world takes every New World choice since
+  ADR-082.
+
+### The New World page's choices
+
+ADR-082 records the decisions, and the plan
+([.docs/milestone-15-part-60-new-world-choices.md](../.docs/milestone-15-part-60-new-world-choices.md))
+the tasks.
+
+```mermaid
+flowchart LR
+    page["NewWorldPage: four tabs, or the host page"] --> choices[NewWorldChoices]
+    choices -->|ToJson| profile[(profile: new-world-choices)]
+    profile -->|FromJson| page
+    launch["--god-name, --gods, --villages, --color, --rival-temper, --rival-strength, --calamities, --hold"] --> options
+    choices -->|Options| options[NewWorldOptions]
+    limits[WorldChoices: MaxGods, VillagesAt, HoldMinutes, CleanName] --> page
+    limits --> maker
+    options --> maker[WorldMaker: AtSize, PantheonFor, Generate]
+    options --> births[PantheonBirth: the temper's personalities]
+    births --> maker
+    maker --> state["WorldState.Setup, Victory.HoldSeconds, GodState.Color, rivals' power"]
+    state --> rules["DisasterModel.CalamityScale, GodAi strength, VictorySystem.TicksToWin"]
+    state --> view["DivineViewSettings.GodColor(world, id)"]
+    state --> words["SetupText: F1 and the Book; VictoryText.Span: HUD, alerts, guide"]
+```
+
+- **Made once:** the player's god and Creature names (a rival that had one gives it up for the
+  player's old name), the number of gods (2 up to the content's 8, one god for every
+  `VillagesPerGod` villages), the villages (`FewVillages` or `ManyVillages` of the size's number,
+  with `MoreSettlementNames` only when they are needed, so other worlds keep their names), the rivals'
+  personalities (the scribes and the model draw from the temper's list), and their starting power.
+- **Read for as long as the world lasts:** `WorldSetup.Calamities` scales the onset chances of natural
+  quakes and fires, eruptions, landslides, meteors, tornadoes, swarms, blight, plague and the beast;
+  `WorldSetup.Rivals` scales an AI god's patience and jitter; `VictorySettings.HoldSeconds` is the
+  hold; `GodState.Color` is a god's colour, the player's and the god that wore it swapped.
+- **Unchanged worlds:** the normal, even and mixed choices multiply by 1, exactly, and draw from the
+  same lists, so a world made without choices plays and is written as before. Save version 37 adds
+  the setup, the hold and the colours; a version 36 save loads with the defaults and its gods in
+  their ids' colours. Protocol version 23 carries them to players, in the whole world they join and
+  in the gods' section.
 
 
 ## Seasons, extremes and the land's life
@@ -3081,7 +3125,8 @@ flowchart LR
 
 - **The exporter** is a console project in the solution, built against the current code. It
   generates three islands at the first size, with the scribes' gods, and samples each on a
-  257 × 257 grid; and it runs the scribes for 63 seeds and the angel for 400 conducts.
+  257 × 257 grid; and it runs the scribes for 84 pantheons (21 of them with the New World page's number of gods, names
+  and temper, ADR-082) and the angel for 400 conducts.
 - **The ports** (`random.js`, `scribes.js`, `angel.js`) follow the C# step for step: 64-bit
   arithmetic in `BigInt`, float arithmetic through `Math.fround`, round-half-to-even, the same order
   of draws. The tests compare them with the fixtures word for word and float for float.
@@ -3100,9 +3145,10 @@ flowchart LR
   `SaveMigrations` step from the previous version, tested against a save written by the
   previous build.
 - The step, the layout, the tiers and the views iterate over every settlement, and world
-  generation founds 8, 20, 40 or 48 by the world's size (ADR-027). Four gods share them since Milestone 9; more gods are more entries in
-  `gods.json` (and god colours in `divine_view.json`), as the AI, belief, diplomacy and victory
-  rules handle any number.
+  generation founds 8, 20, 40 or 48 by the world's size (ADR-027), three quarters or five quarters
+  of that with few or many (ADR-082). From two to eight gods share them, as the player chooses; more
+  gods are more entries in `gods.json` (with a god colour and its name in `divine_view.json`), as the
+  AI, belief, diplomacy and victory rules handle any number.
 - A new Tier 3 individual is state in `WorldState` with its own system, like the notables
   (ADR-032). Promoting ordinary villagers into agents whose effects write back to the aggregates
   would need a new ADR.

@@ -65,7 +65,7 @@ public sealed class StateOverlayTests
 
         Assert.StartsWith("Politics overlay", image.Legend, System.StringComparison.Ordinal);
         Assert.Equal(Pixel(image, world.Settlements[1].RegionId)[..3], Pixel(image, world.Settlements[2].RegionId)[..3]);
-        Assert.Equal(new[] { RgbColor.ToByte(view.GodColor(2).R), RgbColor.ToByte(view.GodColor(2).G), RgbColor.ToByte(view.GodColor(2).B) }, Pixel(image, world.Settlements[1].RegionId)[..3]);
+        Assert.Equal(new[] { RgbColor.ToByte(view.IdColor(2).R), RgbColor.ToByte(view.IdColor(2).G), RgbColor.ToByte(view.IdColor(2).B) }, Pixel(image, world.Settlements[1].RegionId)[..3]);
     }
 
     /// <summary>The overlay for the local god 1.</summary>

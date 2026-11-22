@@ -84,7 +84,7 @@ public sealed class DivinePresentationTests
         Assert.Equal(DivineWorlds.RegionsPerSide, image.Width);
         Assert.Equal(DivineWorlds.RegionsPerSide * DivineWorlds.RegionsPerSide * 4, image.Rgba.Length);
         var home = world.Settlements[0].RegionId * 4;
-        Assert.Equal(RgbColor.ToByte(view.GodColor(1).R), image.Rgba[home]);
+        Assert.Equal(RgbColor.ToByte(view.IdColor(1).R), image.Rgba[home]);
         var influence = Pantheon.Simulation.Belief.InfluenceField.Build(DivineWorlds.Rules, world, 1).At(world.Regions.GetRegionCenter(world.Settlements[0].RegionId));
         Assert.Equal(RgbColor.ToByte(influence * view.OverlayOpacity), image.Rgba[home + 3]);
         Assert.Equal(0, image.Rgba[(DivineWorlds.RegionsPerSide - 1) * 4 + 3]);

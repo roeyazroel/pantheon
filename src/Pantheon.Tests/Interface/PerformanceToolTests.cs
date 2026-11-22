@@ -101,7 +101,7 @@ public sealed class PerformanceToolTests
         Assert.StartsWith("Navigation overlay - Navigation: land walkers may cross in green", image.Legend, StringComparison.Ordinal);
         Assert.True(Pixel(image, rubble.Id)[0] > Pixel(image, rubble.Id)[1]);
         Assert.True(Pixel(image, land.Id)[1] > Pixel(image, land.Id)[0]);
-        Assert.Equal(TestContent.DivineView.GodColor(1), Color(image, onTheWay));
+        Assert.Equal(TestContent.DivineView.IdColor(1), Color(image, onTheWay));
         Assert.Equal(255, Pixel(image, onTheWay)[3]);
         Assert.Single(NavigationOverlay.Walkers(world));
     }

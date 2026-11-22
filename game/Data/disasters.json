@@ -8,6 +8,11 @@
   // towards FuelHeat x flammability, scorches the land (eating its fuel), spreads to neighbours (more
   // downwind) and dies in the rain, under firefighting or for want of fuel. Scorched land regrows.
   "StepIntervalTicks": 10,
+
+  // How a world's calamities (chosen on the New World page, ADR-082) scale the chances that natural
+  // earthquakes and fires, eruptions, landslides, meteors, tornadoes, swarms, blight, plague and the
+  // beast's waking begin. How they spread and what they do are not scaled.
+  "Calamities": { "Gentle": 0.4, "Normal": 1.0, "Harsh": 2.0 },
   "LightningIgnitionPerSecond": 0.004,
   // A god's bolt of lightning sets the struck region alight with this chance per unit of its
   // flammability, as a storm's does (spec section 15, ADR-041).

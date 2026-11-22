@@ -135,7 +135,7 @@ public sealed class SimulationEngine
         [
             new IntervalSystem(new DisasterSystem(disasterRules, settlementRules, divineRules, weatherRules, domainRules, ecologyRules, creatureRules.Callings), disasterRules.StepIntervalTicks),
             new IntervalSystem(new HazardSystem(disasterRules, settlementRules, divineRules, weatherRules, disasterRules.StepIntervalTicks, domainRules, creatureRules.Callings), disasterRules.StepIntervalTicks),
-            new IntervalSystem(new GreatEvents.GreatEventSystem(disasterRules.GreatEvents, settlementRules.Roads, divineRules, disasterRules.StepIntervalTicks), disasterRules.StepIntervalTicks),
+            new IntervalSystem(new GreatEvents.GreatEventSystem(disasterRules.GreatEvents, settlementRules.Roads, divineRules, disasterRules.StepIntervalTicks, disasterRules.Calamities), disasterRules.StepIntervalTicks),
             new IntervalSystem(new GreatEvents.BeastSystem(disasterRules, settlementRules, divineRules, creatureRules, Creatures.Brain, disasterRules.StepIntervalTicks, domainRules), disasterRules.StepIntervalTicks),
         ]);
         if (ecologyRules is not null)

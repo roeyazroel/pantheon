@@ -37,8 +37,11 @@ internal sealed partial class MenuScreen : CanvasLayer
     /// <summary>A world to forget, with its saves.</summary>
     public event Action<long>? DeleteWorldChosen;
 
-    /// <summary>Host a new shared world: its seed, the host's name and the port.</summary>
-    public event Action<WorldSeed, string, int>? HostChosen;
+    /// <summary>Host a new shared world (ADR-018, ADR-082): its seed, how to make it, its name, the host's name and the port.</summary>
+    public event Action<WorldSeed, Pantheon.Game.NewWorldOptions, string, string, int>? HostChosen;
+
+    /// <summary>The New World page's choices, kept for the next time it opens (ADR-082).</summary>
+    public event Action<NewWorldChoices>? ChoicesKept;
 
     /// <summary>Join a host: its address and port, the player's name and the god asked for.</summary>
     public event Action<string, int, string, string?>? JoinChosen;
@@ -63,6 +66,15 @@ internal sealed partial class MenuScreen : CanvasLayer
 
     /// <summary>The world sizes the new-world page offers, first the default, each in words.</summary>
     public IReadOnlyList<(string Name, string Description)> Sizes { get; set; } = [];
+
+    /// <summary>The content, for the New World page's limits: the gods and villages each size allows, and the hold times (ADR-082).</summary>
+    public Pantheon.Game.GameContent? Content { get; set; }
+
+    /// <summary>The god colours the New World page offers, by name, in the content's order (ADR-082).</summary>
+    public IReadOnlyList<(string Name, Color Color)> GodColors { get; set; } = [];
+
+    /// <summary>The New World page's last choices, which it opens on (ADR-082).</summary>
+    public NewWorldChoices Choices { get; set; } = new();
 
     /// <summary>The settings the settings page shows and changes.</summary>
     public Pantheon.Game.Settings.GameSettings Settings { get; set; } = new();
@@ -127,22 +139,26 @@ internal sealed partial class MenuScreen : CanvasLayer
         }
 
         TitleChoice("Your Worlds", () => OpenPage(WorldsPage.Build(this, _data.Worlds)));
-        TitleChoice("Play Together", () => OpenPage(MultiplayerPage.Build(this, _data.Seed)));
+        TitleChoice("Play Together", () => OpenPage(MultiplayerPage.Build(this)));
         TitleChoice("Settings", () => OpenPage(SettingsPage.Build(this)));
         TitleChoice("Quit", () => QuitChosen?.Invoke());
         _footer.Text = $"Your worlds and settings are kept on this computer ({data.ProfileKind}).";
         _page.Visible = false;
     }
 
-    /// <summary>Opens a page of the title screen by name (new, worlds, together, settings, minds or keys), for captures.</summary>
+    /// <summary>Opens a page of the title screen by name (new, a tab of it as new-god, new-rivals or new-victory, host, worlds, together, settings, minds or keys), for captures.</summary>
     /// <param name="page">The page.</param>
     public void OpenTitlePage(string page) => OpenPage(page switch
     {
+        "new-god" => NewWorldPage.Build(this, _data.Seed, tab: 1),
+        "new-rivals" => NewWorldPage.Build(this, _data.Seed, tab: 2),
+        "new-victory" => NewWorldPage.Build(this, _data.Seed, tab: 3),
         "worlds" => WorldsPage.Build(this, _data.Worlds),
-        "together" => MultiplayerPage.Build(this, _data.Seed),
+        "together" => MultiplayerPage.Build(this),
         "settings" => SettingsPage.Build(this),
         "minds" => SettingsPage.Build(this, "Minds"),
         "keys" => SettingsPage.Build(this, "Keys"),
+        "host" => NewWorldPage.Build(this, _data.Seed, host: true),
         _ => NewWorldPage.Build(this, _data.Seed),
     });
 
@@ -244,7 +260,7 @@ internal sealed partial class MenuScreen : CanvasLayer
         }
 
         _column.AddChild(UiKit.Button("Keep watching", () => ResumeChosen?.Invoke()));
-        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(seed, new Pantheon.Game.NewWorldOptions(), string.Empty)));
+        _column.AddChild(UiKit.Button("New world", () => NewWorldChosen?.Invoke(seed, Content is { } content ? Choices.Options(content) : new Pantheon.Game.NewWorldOptions(), string.Empty)));
         _column.AddChild(UiKit.Button("Leave to the title", () => MainMenuChosen?.Invoke()));
     }
 
@@ -258,7 +274,17 @@ internal sealed partial class MenuScreen : CanvasLayer
     internal void ChooseDelete(long worldId) => DeleteWorldChosen?.Invoke(worldId);
 
     /// <summary>Reports hosting (for the pages).</summary>
-    internal void ChooseHost(WorldSeed seed, string name, int port) => HostChosen?.Invoke(seed, name, port);
+    internal void ChooseHost(WorldSeed seed, Pantheon.Game.NewWorldOptions options, string worldName, string name, int port) => HostChosen?.Invoke(seed, options, worldName, name, port);
+
+    /// <summary>Opens the New World page to host a shared world (for the Play Together page).</summary>
+    internal void OpenHostPage() => OpenPage(NewWorldPage.Build(this, _data.Seed, host: true));
+
+    /// <summary>Keeps the New World page's choices and reports them, so the profile keeps them (for the page).</summary>
+    internal void KeepChoices(NewWorldChoices choices)
+    {
+        Choices = choices;
+        ChoicesKept?.Invoke(choices);
+    }
 
     /// <summary>Reports joining (for the pages).</summary>
     internal void ChooseJoin(string address, int port, string name, string? god) => JoinChosen?.Invoke(address, port, name, god);

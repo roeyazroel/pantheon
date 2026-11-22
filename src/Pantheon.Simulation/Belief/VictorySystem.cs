@@ -14,7 +14,7 @@ namespace Pantheon.Simulation.Belief;
 /// by the victories the world was made with: Divine Ascendancy (a god holds <c>VictoryShare</c> of
 /// all followers, alone or with its allies when pantheon victory is on), conquest (every opponent
 /// below <c>ConquestShare</c>) or a cultural victory (it leads <c>CulturalShare</c> of the living
-/// villages while a rival lives on), each for <c>VictorySeconds</c> without a break. Dominance is
+/// villages while a rival lives on), each for the world's hold (<c>VictorySeconds</c> unless it was made with another, ADR-082) without a break. Dominance is
 /// tracked whatever the victories, for the council and the AI. The world goes on afterwards. A
 /// world with fewer than two gods has no contest and no winner.
 /// </summary>
@@ -59,6 +59,28 @@ public sealed class VictorySystem : ISimulationSystem
     {
         ArgumentNullException.ThrowIfNull(rules);
         return (long)MathF.Round(rules.VictorySeconds * SimulationTime.TicksPerSecond);
+    }
+
+    /// <summary>Ticks of unbroken dominance that win a world: the hold it was made with (spec §53, ADR-082), or the rules' own.</summary>
+    /// <param name="rules">Divine rules.</param>
+    /// <param name="world">World state.</param>
+    /// <returns>The ticks.</returns>
+    public static long TicksToWin(DivineRules rules, WorldState world)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(world);
+        return (long)MathF.Round(HoldSeconds(rules, world.Victory) * SimulationTime.TicksPerSecond);
+    }
+
+    /// <summary>How long, in simulated seconds, a world's victory must be held: the hold it was made with (ADR-082), or the rules' own.</summary>
+    /// <param name="rules">Divine rules.</param>
+    /// <param name="victory">The world's victory settings.</param>
+    /// <returns>The seconds.</returns>
+    public static float HoldSeconds(DivineRules rules, VictorySettings victory)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        ArgumentNullException.ThrowIfNull(victory);
+        return victory.HoldSeconds is { } hold && hold > 0f ? hold : rules.VictorySeconds;
     }
 
     /// <summary>
@@ -120,7 +142,7 @@ public sealed class VictorySystem : ISimulationSystem
                 context.Events.Add(new DominanceChanged { Tick = world.Tick, GodId = god.Id, Started = true, Allies = allies });
             }
 
-            if (world.Victory.Ascendancy && world.Tick - god.DominantSinceTick.Value >= TicksToWin(_rules))
+            if (world.Victory.Ascendancy && world.Tick - god.DominantSinceTick.Value >= TicksToWin(_rules, world))
             {
                 Win(world, god.Id, allies, allies.Count > 0 ? VictoryKind.Pantheon : VictoryKind.Ascendancy, context.Events);
             }
@@ -130,12 +152,12 @@ public sealed class VictorySystem : ISimulationSystem
         {
             god.ConquestSinceTick = Track(world, god.ConquestSinceTick, world.Victory.Conquest && Conquers(world, god.Id));
             god.CulturalSinceTick = Track(world, god.CulturalSinceTick, world.Victory.Cultural && LeadsCulture(world, god.Id));
-            if (god.ConquestSinceTick is { } conquest && world.Tick - conquest >= TicksToWin(_rules))
+            if (god.ConquestSinceTick is { } conquest && world.Tick - conquest >= TicksToWin(_rules, world))
             {
                 Win(world, god.Id, DiplomacyModel.AlliesOf(world, god.Id), VictoryKind.Conquest, context.Events);
             }
 
-            if (god.CulturalSinceTick is { } culture && world.Tick - culture >= TicksToWin(_rules))
+            if (god.CulturalSinceTick is { } culture && world.Tick - culture >= TicksToWin(_rules, world))
             {
                 Win(world, god.Id, [], VictoryKind.Cultural, context.Events);
             }

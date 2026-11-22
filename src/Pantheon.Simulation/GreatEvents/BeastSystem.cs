@@ -34,6 +34,7 @@ public sealed class BeastSystem : ISimulationSystem
     private const float RavageReach = 40f;
 
     private readonly GreatEventRules _rules;
+    private readonly CalamityScales _calamities;
     private readonly BeastRules _beast;
     private readonly CreatureRules _creatures;
     private readonly DisasterDamage _damage;
@@ -54,6 +55,7 @@ public sealed class BeastSystem : ISimulationSystem
         ArgumentNullException.ThrowIfNull(creatures);
         ArgumentOutOfRangeException.ThrowIfLessThan(intervalTicks, 1);
         _rules = disasters.GreatEvents;
+        _calamities = disasters.Calamities;
         _beast = _rules.Beast;
         _creatures = creatures;
         _damage = new DisasterDamage(disasters, settlements, divine, domains, creatures.Callings);
@@ -78,7 +80,7 @@ public sealed class BeastSystem : ISimulationSystem
             case BeastPhase.Sleeping:
                 var rested = world.Tick >= (long)(_beast.FirstSleepSeconds * SimulationTime.TicksPerSecond);
                 // Nothing wakes it in its first sleep, so it comes when the world is grown.
-                if (rested && (BeastModel.Disturbed(_beast, world, beast) || random.NextDouble() < _beast.WakePerHour / 3600.0 * seconds))
+                if (rested && (BeastModel.Disturbed(_beast, world, beast) || random.NextDouble() < _beast.WakePerHour / 3600.0 * seconds * Disasters.DisasterModel.CalamityScale(_calamities, world)))
                 {
                     BeastModel.Wake(_rules, world, beast, context.Events);
                 }

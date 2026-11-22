@@ -152,7 +152,7 @@ public static class OverlayMap
         foreach (var god in world.Gods)
         {
             var influence = InfluenceField.Build(rules, world, god.Id).SampleRegions(world.Regions);
-            var color = view.GodColor(god.Id);
+            var color = view.GodColor(world, god.Id);
             for (var i = 0; i < influence.Length; i++)
             {
                 if (influence[i] > strongest[i])
@@ -234,7 +234,7 @@ public static class OverlayMap
         var grid = world.Regions;
         foreach (var group in world.Migration.Groups)
         {
-            var color = Simulation.Migration.MigrationModel.MainGod(group.Beliefs) is { } god ? view.GodColor(god) : view.UnaffiliatedColor;
+            var color = Simulation.Migration.MigrationModel.MainGod(group.Beliefs) is { } god ? view.GodColor(world, god) : view.UnaffiliatedColor;
             var from = group.Position;
             foreach (var to in group.Path)
             {
@@ -264,7 +264,7 @@ public static class OverlayMap
         foreach (var settlement in world.Settlements)
         {
             var main = SettlementLabel.MainBelief(settlement);
-            var color = main is null ? view.UnaffiliatedColor : view.GodColor(main.GodId);
+            var color = main is null ? view.UnaffiliatedColor : view.GodColor(world, main.GodId);
             var share = main is null ? 0.5f : 0.35f + (0.65f * main.Adherence);
             PaintTerritory(world.Regions, settlement.RegionId, rgba, color, share * view.OverlayOpacity);
         }

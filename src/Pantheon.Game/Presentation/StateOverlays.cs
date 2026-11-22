@@ -115,7 +115,7 @@ public static class StateOverlays
             }
 
             var leader = DiplomacyModel.BlocOf(world, main).OrderByDescending(g => GodStanding.CountFollowers(world, g)).ThenBy(g => g).First();
-            var color = view.GodColor(leader);
+            var color = view.GodColor(world, leader);
             if (DiplomacyModel.AreAtWar(world, godId, main))
             {
                 color = RgbColor.Lerp(color, new RgbColor(0f, 0f, 0f), 0.55f);

@@ -32,7 +32,7 @@ public sealed class WorldSizeTests
         var content = TestContent.Shipped;
 
         Assert.Equal(["Small", "Large", "Huge", "Vast"], content.Sizes.Sizes.Select(s => s.Name));
-        Assert.Equal([2, 3, 4, 4], content.Sizes.Sizes.Select(s => s.PantheonMaxGods));
+        Assert.Equal([2, 3, 4, 4], content.Sizes.Sizes.Select(s => WorldChoices.PantheonMaxGods(content.Sizes, s.Gods)));
         Assert.Same(content.WorldGen, WorldMaker.AtSize(content, "small").WorldGen);
         Assert.Same(content.Pantheon, WorldMaker.AtSize(content, "small").Pantheon);
         Assert.Same(content.WorldGen, WorldMaker.AtSize(content, "Gigantic").WorldGen);
@@ -79,7 +79,7 @@ public sealed class WorldSizeTests
         Assert.Equal(6, world.Gods.Count);
         Assert.Equal(6, world.Gods.Select(g => g.Name).Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(species, world.Creatures.Single(c => c.GodId == 1).Species);
-        Assert.Equal(VictorySettings.All with { PantheonMaxGods = 3 }, world.Victory);
+        Assert.Equal(VictorySettings.All with { PantheonMaxGods = 3, HoldSeconds = content.DivineRules.VictorySeconds }, world.Victory);
         Assert.Equal(2, GameSession.CreateNew(content, new WorldSeed(5)).World.Victory.PantheonMaxGods);
     }
 
@@ -102,9 +102,12 @@ public sealed class WorldSizeTests
 
         Assert.Contains("own name", Refusal(sizes with { Sizes = [sizes.Sizes[0], sizes.Sizes[1] with { Name = "SMALL" }] }), StringComparison.Ordinal);
         Assert.Contains("between 2 and 8 gods", Refusal(sizes with { Sizes = [sizes.Sizes[0], sizes.Sizes[1] with { Gods = 9 }] }), StringComparison.Ordinal);
-        Assert.Contains("must describe the world", Refusal(sizes with { Sizes = [sizes.Sizes[0] with { Settlements = 5 }] }), StringComparison.Ordinal);
+        Assert.Contains("must describe the world", Refusal(sizes with { Sizes = [sizes.Sizes[0] with { Settlements = 9 }] }), StringComparison.Ordinal);
         Assert.Contains("Names", Refusal(sizes with { Sizes = [sizes.Sizes[0], sizes.Sizes[1] with { Settlements = 200 }] }), StringComparison.Ordinal);
-        Assert.Contains("win together", Refusal(sizes with { Sizes = [sizes.Sizes[0], sizes.Sizes[1] with { PantheonMaxGods = 7 }] }), StringComparison.Ordinal);
+        Assert.Contains("has room for", Refusal(sizes with { Sizes = [sizes.Sizes[0], sizes.Sizes[1] with { Settlements = 5 }] }), StringComparison.Ordinal);
+        Assert.Contains("PantheonShare", Refusal(sizes with { PantheonShare = 0f }), StringComparison.Ordinal);
+        Assert.Contains("HoldMinutes", Refusal(sizes with { HoldMinutes = [10, 10] }), StringComparison.Ordinal);
+        Assert.Contains("Warlike temper", Refusal(sizes with { Tempers = sizes.Tempers with { Warlike = [Domain.Gods.GodPersonality.None] } }), StringComparison.Ordinal);
 
         string Refusal(WorldSizes bad) => Assert.Throws<ArgumentException>(() => WorldMaker.Validate(bad, content.WorldGen, content.Pantheon)).Message;
     }
@@ -167,6 +170,5 @@ public sealed class WorldSizeTests
         Rivers = 7,
         MainRivers = 4,
         HydrologyCellSize = 8f,
-        PantheonMaxGods = gods / 2,
     };
 }

@@ -123,7 +123,7 @@ public sealed class DisasterSystem : ISimulationSystem
     /// <summary>Perhaps an earthquake strikes under a random land region, usually a small one.</summary>
     private void NaturalQuake(WorldState world, SimulationRandom random, float seconds, List<WorldEvent> events)
     {
-        if (random.NextDouble() >= _rules.EarthquakesPerHour / 3600.0 * seconds)
+        if (random.NextDouble() >= _rules.EarthquakesPerHour / 3600.0 * seconds * DisasterModel.CalamityScale(_rules.Calamities, world))
         {
             return;
         }

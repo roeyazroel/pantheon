@@ -40,6 +40,7 @@ public sealed class SaveMigrationV35Tests
     {
         var expected = ReadFixture();
         Version36Expectations.Apply(expected);
+        Version37Expectations.Apply(expected);
 
         var resaved = JsonNode.Parse(WorldSaveSerializer.Serialize(WorldSaveSerializer.LoadFromFile(Version35SavePath)));
 

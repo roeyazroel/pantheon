@@ -115,7 +115,7 @@ public sealed class HazardSystem : ISimulationSystem
         switch (volcano.Phase)
         {
             case VolcanoPhase.Dormant:
-                if (world.Tick >= volcano.PhaseEndsTick && random.NextDouble() < rules.EruptionsPerHour / 3600.0 * seconds)
+                if (world.Tick >= volcano.PhaseEndsTick && random.NextDouble() < rules.EruptionsPerHour / 3600.0 * seconds * DisasterModel.CalamityScale(_rules.Calamities, world))
                 {
                     HazardModel.Wake(rules, world);
                     events.Add(new VolcanoChanged { Tick = world.Tick, RegionId = volcano.RegionId, Phase = VolcanoPhase.Rumbling });
@@ -210,7 +210,7 @@ public sealed class HazardSystem : ISimulationSystem
             var shaking = shaken ? DisasterModel.ShakingAt(world.Disasters, grid.GetRegionCenter(region.Id)) : 0f;
             // A cleared slope slides the sooner (ADR-033).
             var soaked = region.SoilMoisture >= rules.WetSoil ? rules.SlidePerSecond * seconds * (1f + (_clearedLandslide * Resources.ResourceModel.Cleared(region))) : 0f;
-            var chance = soaked + (rules.ShakeChance * shaking * seconds);
+            var chance = (soaked + (rules.ShakeChance * shaking * seconds)) * DisasterModel.CalamityScale(_rules.Calamities, world);
             if (chance <= 0f || HazardModel.Downhill(grid, region.Id) is not { } below || below.Drop < rules.MinDrop || random.NextDouble() >= chance)
             {
                 continue;
@@ -230,7 +230,7 @@ public sealed class HazardSystem : ISimulationSystem
     private void Meteors(WorldState world, SimulationRandom random, float seconds, List<WorldEvent> events)
     {
         var rules = _hazards.Meteor;
-        if (rules.PerHour <= 0f || random.NextDouble() >= rules.PerHour / 3600.0 * seconds)
+        if (rules.PerHour <= 0f || random.NextDouble() >= rules.PerHour / 3600.0 * seconds * DisasterModel.CalamityScale(_rules.Calamities, world))
         {
             return;
         }

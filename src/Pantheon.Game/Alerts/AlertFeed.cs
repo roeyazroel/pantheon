@@ -24,16 +24,20 @@ public sealed class AlertFeed
 {
     private readonly List<Alert> _recent = [];
     private readonly Dictionary<string, double> _lastRaised = new(StringComparer.Ordinal);
+    private readonly float _victorySeconds;
 
     /// <summary>Creates an empty feed.</summary>
     /// <param name="repeatSeconds">Simulated seconds before the same alert may be raised again.</param>
     /// <param name="capacity">Most alerts kept in <see cref="Recent"/>.</param>
-    public AlertFeed(double repeatSeconds = 30.0, int capacity = 6)
+    /// <param name="victorySeconds">The divine rules' <c>VictorySeconds</c>, how long a victory is held in a world that keeps no time of its own (ADR-082).</param>
+    public AlertFeed(double repeatSeconds = 30.0, int capacity = 6, float victorySeconds = 600f)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(repeatSeconds);
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 1);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(victorySeconds);
         RepeatSeconds = repeatSeconds;
         Capacity = capacity;
+        _victorySeconds = victorySeconds;
     }
 
     /// <summary>Simulated seconds before the same alert may be raised again.</summary>
@@ -65,7 +69,7 @@ public sealed class AlertFeed
         var raised = new List<Alert>();
         foreach (var worldEvent in events)
         {
-            if (Describe(worldEvent, world, localGodId) is not { } entry)
+            if (Describe(worldEvent, world, localGodId, Flow.VictoryText.Span(world.Victory.HoldSeconds ?? _victorySeconds)) is not { } entry)
             {
                 continue;
             }
@@ -106,7 +110,7 @@ public sealed class AlertFeed
     }
 
     /// <summary>The alert for an event, or <c>null</c> when the event does not concern the player.</summary>
-    private static (string Key, string Text, AlertSeverity Severity, GroundPosition? Location)? Describe(WorldEvent worldEvent, WorldState world, int? localGodId)
+    private static (string Key, string Text, AlertSeverity Severity, GroundPosition? Location)? Describe(WorldEvent worldEvent, WorldState world, int? localGodId, string hold)
     {
         switch (worldEvent)
         {
@@ -127,14 +131,14 @@ public sealed class AlertFeed
             case MiracleCast cast when cast.GodId != localGodId:
                 return DescribeRivalCast(cast, world, localGodId);
             case DominanceChanged dominance when GodStanding.Find(world, dominance.GodId) is { } dominant:
-                return dominance.Allies.Count > 0 ? DescribeJointDominance(dominance, world, localGodId) : DescribeDominance(dominance, dominant, localGodId);
+                return dominance.Allies.Count > 0 ? DescribeJointDominance(dominance, world, localGodId, hold) : DescribeDominance(dominance, dominant, localGodId, hold);
             case DiplomacyChanged change:
                 return DescribeDiplomacy(change, world, localGodId);
             case VictoryAchieved victory when victory.GodIds.Count > 0:
                 return localGodId is { } me && victory.GodIds.Contains(me)
                     ? (Key("victory", victory.GodIds[0]), victory.GodIds.Count > 1
-                        ? Format("{0} have won together: {1}.", DivineText.Names(world, victory.GodIds, localGodId), Flow.VictoryText.Reason(victory.Kind))
-                        : Format("You have won: {0}.", Flow.VictoryText.Reason(victory.Kind)), AlertSeverity.Good, null)
+                        ? Format("{0} have won together: {1}.", DivineText.Names(world, victory.GodIds, localGodId), Flow.VictoryText.Reason(victory.Kind, hold))
+                        : Format("You have won: {0}.", Flow.VictoryText.Reason(victory.Kind, hold)), AlertSeverity.Good, null)
                     : (Key("victory", victory.GodIds[0]), Format("{0} {1} {2}.", DivineText.Names(world, victory.GodIds, localGodId), victory.GodIds.Count > 1 ? "have" : "has", Flow.VictoryText.Deed(victory.Kind)), AlertSeverity.Danger, null);
             case CreatureChanged changed when world.Creatures.Find(c => c.Id == changed.CreatureId) is { } creature && creature.GodId == localGodId:
                 return DescribeChange(changed, creature);
@@ -320,7 +324,7 @@ public sealed class AlertFeed
     /// An alliance began or ceased to dominate the world's belief together (ADR-015). Every member
     /// reports it, so only the member with the lowest id raises the alert.
     /// </summary>
-    private static (string, string, AlertSeverity, GroundPosition?)? DescribeJointDominance(DominanceChanged dominance, WorldState world, int? localGodId)
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeJointDominance(DominanceChanged dominance, WorldState world, int? localGodId, string hold)
     {
         var bloc = new List<int>(dominance.Allies) { dominance.GodId };
         bloc.Sort();
@@ -334,24 +338,24 @@ public sealed class AlertFeed
         var ours = localGodId is { } me && bloc.Contains(me);
         return dominance.Started
             ? (key, ours
-                ? Format("{0} hold most of the world's belief together: keep it for ten minutes to win together.", names)
-                : Format("{0} hold most of the world's belief together: they win together in ten minutes unless you stop them.", names), ours ? AlertSeverity.Good : AlertSeverity.Danger, null)
+                ? Format("{0} hold most of the world's belief together: keep it for {1} to win together.", names, hold)
+                : Format("{0} hold most of the world's belief together: they win together in {1} unless you stop them.", names, hold), ours ? AlertSeverity.Good : AlertSeverity.Danger, null)
             : (key, Format("{0} no longer hold most of the world's belief together.", names), ours ? AlertSeverity.Warning : AlertSeverity.Good, null);
     }
 
     /// <summary>A god began or ceased to dominate the world's belief.</summary>
-    private static (string, string, AlertSeverity, GroundPosition?)? DescribeDominance(DominanceChanged dominance, Domain.Gods.GodState god, int? localGodId)
+    private static (string, string, AlertSeverity, GroundPosition?)? DescribeDominance(DominanceChanged dominance, Domain.Gods.GodState god, int? localGodId, string hold)
     {
         var key = Key(dominance.Started ? "dominant" : "contested", god.Id);
         if (god.Id == localGodId)
         {
             return dominance.Started
-                ? (key, "You hold most of the world's belief: keep it for ten minutes to win.", AlertSeverity.Good, null)
+                ? (key, Format("You hold most of the world's belief: keep it for {0} to win.", hold), AlertSeverity.Good, null)
                 : (key, "You no longer hold most of the world's belief.", AlertSeverity.Warning, null);
         }
 
         return dominance.Started
-            ? (key, Format("{0} holds most of the world's belief: it wins in ten minutes unless you stop it.", god.Name), AlertSeverity.Danger, null)
+            ? (key, Format("{0} holds most of the world's belief: it wins in {1} unless you stop it.", god.Name, hold), AlertSeverity.Danger, null)
             : (key, Format("{0} no longer holds most of the world's belief.", god.Name), AlertSeverity.Good, null);
     }
 

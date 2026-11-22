@@ -1,14 +1,31 @@
 {
   // The sizes a new world may be made at (spec section 6, ADR-027). The first is the world worldgen.json
   // describes, and must match it; larger ones change the island's size, its regions, the settlements founded at
-  // the start, the gods (gods.json's, then its ExtraGods) and the rivers. Regions are 64 m across (96 m on the vast
-  // island). PantheonMaxGods is how many gods may win a pantheon victory together.
+  // the start, the gods offered first (gods.json's, then its ExtraGods) and the rivers. Regions are 64 m across
+  // (96 m on the vast island).
   "Sizes": [
-    { "Name": "Small", "HeightmapResolution": 1024, "VertexSpacing": 2.0, "RegionsPerSide": 32, "Settlements": 8, "Gods": 4, "Rivers": 7, "MainRivers": 4, "HydrologyCellSize": 8.0, "PantheonMaxGods": 2 },
-    { "Name": "Large", "HeightmapResolution": 1024, "VertexSpacing": 4.0, "RegionsPerSide": 64, "Settlements": 20, "Gods": 6, "Rivers": 14, "MainRivers": 8, "HydrologyCellSize": 8.0, "PantheonMaxGods": 3 },
-    { "Name": "Huge", "HeightmapResolution": 2048, "VertexSpacing": 4.0, "RegionsPerSide": 128, "Settlements": 40, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 16.0, "PantheonMaxGods": 4 },
-    { "Name": "Vast", "HeightmapResolution": 2048, "VertexSpacing": 6.0, "RegionsPerSide": 128, "Settlements": 48, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 12.0, "PantheonMaxGods": 4 }
+    { "Name": "Small", "HeightmapResolution": 1024, "VertexSpacing": 2.0, "RegionsPerSide": 32, "Settlements": 8, "Gods": 4, "Rivers": 7, "MainRivers": 4, "HydrologyCellSize": 8.0 },
+    { "Name": "Large", "HeightmapResolution": 1024, "VertexSpacing": 4.0, "RegionsPerSide": 64, "Settlements": 20, "Gods": 6, "Rivers": 14, "MainRivers": 8, "HydrologyCellSize": 8.0 },
+    { "Name": "Huge", "HeightmapResolution": 2048, "VertexSpacing": 4.0, "RegionsPerSide": 128, "Settlements": 40, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 16.0 },
+    { "Name": "Vast", "HeightmapResolution": 2048, "VertexSpacing": 6.0, "RegionsPerSide": 128, "Settlements": 48, "Gods": 8, "Rivers": 24, "MainRivers": 14, "HydrologyCellSize": 12.0 }
   ],
+
+  // The New World page's other choices (ADR-082). A world holds from 2 gods to as many as gods.json names
+  // (Gods, then ExtraGods), and at most one for every VillagesPerGod villages, so some villages begin free.
+  // PantheonShare of its gods, rounded down, may win a pantheon victory together (2 of 4, 3 of 6, 4 of 8; a
+  // world of 2 or 3 gods has no shared victory). An island of few or many villages is founded with
+  // FewVillages or ManyVillages of its size's villages, rounded. A victory is held for one of HoldMinutes
+  // (divine_rules.json's VictorySeconds among them). Peaceful and warlike rivals draw their personalities
+  // from these lists; mixed ones from every personality.
+  "VillagesPerGod": 2,
+  "PantheonShare": 0.5,
+  "FewVillages": 0.75,
+  "ManyVillages": 1.25,
+  "HoldMinutes": [10, 20, 40],
+  "Tempers": {
+    "Peaceful": ["Guardian", "NatureKeeper", "Trickster", "Isolationist"],
+    "Warlike": ["Tyrant", "Opportunist", "Zealot", "Warlord"]
+  },
   // Names added to worldgen.json's for larger worlds (two to spare, for the stress world of ADR-044).
   "ExtraSettlementNames": [
     "Oakhaven", "Stonebridge", "Mistvale", "Ravenmoor", "Goldmere", "Briarwood", "Coldharbour", "Highcrest",
@@ -16,6 +33,11 @@
     "Westerly", "Northmarch", "Lindenholm", "Amberly", "Caskmoor", "Dunmere", "Foxhollow", "Glimmerdeep",
     "Hollin", "Marrowby", "Pinecrest", "Quarrytown", "Rookhaven", "Silverdale", "Tidewell", "Yarrowby",
     "Larkmere", "Thornbury"
+  ],
+  // Names added after those only when a world of many villages needs more, so the other worlds keep theirs.
+  "MoreSettlementNames": [
+    "Brackenford", "Dewhollow", "Elderwick", "Fallowmead", "Gullhaven", "Hazelby", "Ivyreach", "Kettlewell",
+    "Lowmoor", "Nettlebed", "Oxbury", "Pebblecombe", "Tansy Hill", "Underwood", "Wickerby", "Sorrelby"
   ],
   "ExtraRiverNames": [
     "Amberrun", "Brackwell", "Copperflow", "Deepwater", "Eskmoor", "Foamfall", "Gloamwater",

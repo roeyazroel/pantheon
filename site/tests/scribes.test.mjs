@@ -1,5 +1,6 @@
 // The site's scribes write what the game's scribes write: every pantheon in the exporter's fixture,
-// which the C# PersonaScribe and PersonaText wrote, word for word (ADR-076).
+// which the C# PersonaScribe and PersonaText wrote, word for word (ADR-076), with the New World page's
+// choices of the number of gods, the player's names and the rivals' temper (ADR-082).
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -20,9 +21,17 @@ test('the fixture holds pantheons of every size', () => {
   assert.deepEqual(new Set(cases.map((c) => c.size)), new Set(content.sizes.Sizes.map((s) => s.Name)));
 });
 
+test('the fixture holds pantheons of every number of gods and every temper', () => {
+  assert.deepEqual(new Set(cases.map((c) => c.godCount).filter((g) => g !== null)), new Set([1, 2, 3, 4, 5, 6, 7, 8, 30]));
+  assert.deepEqual(new Set(cases.map((c) => c.temper)), new Set(['Mixed', 'Peaceful', 'Warlike']));
+});
+
 for (const expected of cases) {
-  test(`seed "${expected.seed}", ${expected.size}, ${expected.species ?? 'the default species'}`, () => {
-    const written = writePantheon(content, expected.seed, expected.size, expected.species);
+  const chosen = expected.godCount === null && expected.godName === null && expected.creatureName === null && expected.temper === 'Mixed'
+    ? '' : `, ${expected.godCount ?? 'the size\'s'} gods, ${expected.temper}, named ${expected.godName ?? '-'} and ${expected.creatureName ?? '-'}`;
+  test(`seed "${expected.seed}", ${expected.size}, ${expected.species ?? 'the default species'}${chosen}`, () => {
+    const choices = { gods: expected.godCount, godName: expected.godName, creatureName: expected.creatureName, temper: expected.temper };
+    const written = writePantheon(content, expected.seed, expected.size, expected.species, choices);
     assert.equal(written.seed.toString(), expected.seedValue);
     assert.equal(angelName(angelNames, written.seed, 1), expected.angel);
     assert.equal(written.gods.length, expected.gods.length);

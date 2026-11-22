@@ -20,6 +20,7 @@ namespace Pantheon.Simulation.Disasters;
 internal sealed class LivingHazards
 {
     private readonly HazardRules _rules;
+    private readonly CalamityScales _calamities;
     private readonly SettlementRules _settlementRules;
     private readonly WeatherRules _weather;
     private readonly DisasterDamage _damage;
@@ -28,6 +29,7 @@ internal sealed class LivingHazards
     public LivingHazards(DisasterRules rules, SettlementRules settlementRules, WeatherRules weather, DisasterDamage damage)
     {
         _rules = rules.Hazards;
+        _calamities = rules.Calamities;
         _settlementRules = settlementRules;
         _weather = weather;
         _damage = damage;
@@ -53,7 +55,7 @@ internal sealed class LivingHazards
                 var point = new GroundPosition(cell.X, cell.Z);
                 if (WeatherModel.Classify(_weather, cell) == WeatherKind.Thunderstorm && !WeatherModel.IsOverSea(world.Regions, cell.X, cell.Z)
                     && WeatherModel.GroundTemperature(world.Regions, cell.X, cell.Z, 0f, warmth) >= rules.MinTemperature
-                    && random.NextDouble() < rules.PerStormPerSecond * seconds)
+                    && random.NextDouble() < rules.PerStormPerSecond * seconds * DisasterModel.CalamityScale(_calamities, world))
                 {
                     var heading = MathF.Atan2(cell.VelocityZ, cell.VelocityX) + ((random.NextFloat() - 0.5f) * 0.8f);
                     var life = rules.MinSeconds + (random.NextFloat() * (rules.MaxSeconds - rules.MinSeconds));
@@ -93,7 +95,7 @@ internal sealed class LivingHazards
     private void Swarms(WorldState world, SimulationRandom random, float seconds, float warmth, List<WorldEvent> events)
     {
         var rules = _rules.Locusts;
-        if (rules.SwarmsPerHour > 0f && random.NextDouble() < rules.SwarmsPerHour / 3600.0 * seconds)
+        if (rules.SwarmsPerHour > 0f && random.NextDouble() < rules.SwarmsPerHour / 3600.0 * seconds * DisasterModel.CalamityScale(_calamities, world))
         {
             var land = world.Regions.Cells.FindAll(r => r.Biome != Biome.Sea && r.SoilMoisture <= rules.MaxSoil && r.Temperature + warmth >= rules.MinTemperature);
             if (land.Count > 0)
@@ -170,7 +172,7 @@ internal sealed class LivingHazards
             var thrives = region.Temperature + warmth >= rules.MinTemperature && region.SoilMoisture >= rules.WetSoil && region.Snow < 0.3f;
             if (region.Blight <= 0f)
             {
-                if (thrives && random.NextDouble() < rules.EmergencePerSecond * seconds)
+                if (thrives && random.NextDouble() < rules.EmergencePerSecond * seconds * DisasterModel.CalamityScale(_calamities, world))
                 {
                     region.Blight = 0.05f;
                 }

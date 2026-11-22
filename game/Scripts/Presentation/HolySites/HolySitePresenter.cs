@@ -52,7 +52,7 @@ public sealed class HolySitePresenter
 
             var keeper = site.KeeperGodId is { } k ? world.Gods.Find(g => g.Id == k)?.Name : null;
             var text = keeper is null ? site.Name : site.Name + "\n" + keeper;
-            view.Show(text, site.KeeperGodId is { } kept ? _view.GodColor(kept).ToGodot() : null, site.ClaimantGodId is { } claimant ? _view.GodColor(claimant).ToGodot() : null);
+            view.Show(text, site.KeeperGodId is { } kept ? _view.GodColor(world, kept).ToGodot() : null, site.ClaimantGodId is { } claimant ? _view.GodColor(world, claimant).ToGodot() : null);
         }
     }
 }

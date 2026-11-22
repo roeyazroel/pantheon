@@ -33,6 +33,7 @@ public static class WorldPage
         {
             new("The world", BookTone.Heading),
             new(Format("Seed {0}, an island {1:0} m across, won by {2}.", world.Seed.Value, world.Regions.Columns * world.Regions.RegionSize, VictoryText.Settings(world.Victory).ToLowerInvariant())),
+            new(SetupText.Sentence(world, VictorySystem.HoldSeconds(content.DivineRules, world.Victory)), BookTone.Muted),
             new("The land: " + Presentation.BiomeText.Census(world.Regions) + ".", BookTone.Muted),
             new(Format("{0} played. {1}{2}", DivineText.Clock(world.Tick / (double)SimulationTime.TicksPerSecond), SeasonText.Describe(content.Weather, world) is { } season ? season + ". " : string.Empty, WeatherText.Describe(world.Weather, world.Tick))),
             new(Format(
@@ -109,7 +110,7 @@ public static class WorldPage
             yield break;
         }
 
-        var needed = session.Content.DivineRules.VictorySeconds;
+        var needed = VictorySystem.HoldSeconds(session.Content.DivineRules, world.Victory);
         var any = false;
         foreach (var god in world.Gods)
         {

@@ -98,7 +98,7 @@ internal sealed class Wildfires
 
                 var coverage = WeatherModel.Coverage(_weather, cell, world.Regions.GetRegionCenter(region.Id));
                 var flammability = coverage > 0f ? DisasterModel.Flammability(_rules, region) * _season : 0f;
-                var chance = _rules.LightningIgnitionPerSecond * cell.ElectricalActivity * coverage * flammability * seconds;
+                var chance = _rules.LightningIgnitionPerSecond * cell.ElectricalActivity * coverage * flammability * seconds * DisasterModel.CalamityScale(_rules.Calamities, world);
                 if (chance > 0f && random.NextDouble() < chance && DisasterModel.Ignite(_rules, region, _rules.IgnitionIntensity))
                 {
                     events.Add(new WildfireStarted { Tick = world.Tick, RegionId = region.Id, Cause = FireCause.Lightning });
@@ -117,7 +117,7 @@ internal sealed class Wildfires
             var c = Math.Clamp(column + random.NextInt(-1, 2), 0, grid.Columns - 1);
             var r = Math.Clamp(row + random.NextInt(-1, 2), 0, grid.Rows - 1);
             var region = grid.Cells[(r * grid.Columns) + c];
-            var chance = _rules.HearthFirePerSecond * Math.Max(0, settlement.Population) / 100f * DisasterModel.Flammability(_rules, region) * _season * seconds;
+            var chance = _rules.HearthFirePerSecond * Math.Max(0, settlement.Population) / 100f * DisasterModel.Flammability(_rules, region) * _season * seconds * DisasterModel.CalamityScale(_rules.Calamities, world);
             if (region.Fire <= 0f && chance > 0f && random.NextDouble() < chance && DisasterModel.Ignite(_rules, region, _rules.IgnitionIntensity))
             {
                 events.Add(new WildfireStarted { Tick = world.Tick, RegionId = region.Id, Cause = FireCause.Hearth });
